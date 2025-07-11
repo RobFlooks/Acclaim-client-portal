@@ -1,0 +1,54 @@
+# Complete Source Code Archive
+
+This file contains references to all the source files in the Acclaim Credit Management System.
+
+## Core Application Files
+
+### Database Schema (shared/schema.ts)
+- Complete PostgreSQL schema with Drizzle ORM
+- All tables: users, organisations, cases, messages, documents, payments, etc.
+- Type definitions and validation schemas
+
+### Server Files (server/)
+- index.ts - Main server entry point
+- routes.ts - All API endpoints
+- db.ts - Database connection
+- storage.ts - Database operations
+- replitAuth.ts - Authentication system
+- vite.ts - Development server setup
+
+### Client Files (client/src/)
+- App.tsx - Main application component
+- pages/ - All page components (Home, Landing, Admin, etc.)
+- components/ - Reusable UI components
+- hooks/ - Custom React hooks
+- lib/ - Utility functions
+
+### Configuration Files
+- package.json - Dependencies and scripts
+- vite.config.ts - Build configuration
+- tailwind.config.ts - Styling configuration
+- tsconfig.json - TypeScript configuration
+- drizzle.config.ts - Database configuration
+
+## To Get Complete Source Code:
+
+1. **Download from Replit**: Use the download button in Replit to get the complete project
+2. **Clone Repository**: If this is in a Git repository, clone it
+3. **Individual Files**: I can provide the complete content of any specific file you need
+
+## Key Files for Migration:
+
+### Essential Files:
+- All files in `/server/` directory
+- All files in `/client/src/` directory  
+- All files in `/shared/` directory
+- package.json
+- Configuration files (vite.config.ts, tailwind.config.ts, etc.)
+
+### Optional Files:
+- `/uploads/` directory (contains uploaded files)
+- `/node_modules/` (will be regenerated with npm install)
+- `/dist/` (build output, will be regenerated)
+
+Would you like me to provide the complete content of specific files, or would you prefer to download the entire project from Replit?
