@@ -62,6 +62,7 @@ export const cases = pgTable("cases", {
   debtorEmail: varchar("debtor_email"),
   debtorPhone: varchar("debtor_phone"),
   debtorAddress: text("debtor_address"),
+  debtorType: varchar("debtor_type", { length: 50 }).notNull().default("individual"), // 'individual', 'company', 'sole_trader', 'company_and_individual'
   originalAmount: decimal("original_amount", { precision: 10, scale: 2 }).notNull(),
   outstandingAmount: decimal("outstanding_amount", { precision: 10, scale: 2 }).notNull(),
   status: varchar("status", { length: 50 }).notNull().default("active"),
@@ -225,7 +226,9 @@ export type InsertPayment = typeof payments.$inferInsert;
 
 // Schemas
 export const insertOrganisationSchema = createInsertSchema(organisations);
-export const insertCaseSchema = createInsertSchema(cases);
+export const insertCaseSchema = createInsertSchema(cases).extend({
+  debtorType: z.enum(['individual', 'company', 'sole_trader', 'company_and_individual']).default('individual'),
+});
 export const insertCaseActivitySchema = createInsertSchema(caseActivities);
 export const insertMessageSchema = createInsertSchema(messages);
 export const insertDocumentSchema = createInsertSchema(documents);

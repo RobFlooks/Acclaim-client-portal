@@ -39,7 +39,7 @@ Preferred communication style: Simple, everyday language.
 ### Database Schema
 - **Users**: User profiles linked to organizations
 - **Organizations**: Multi-tenant structure for different clients
-- **Cases**: Debt recovery cases with status tracking
+- **Cases**: Debt recovery cases with status tracking and debtor type classification
 - **Case Activities**: Timeline of actions taken on cases
 - **Messages**: Communication system between users and recovery team
 - **Documents**: File attachments related to cases
@@ -80,6 +80,7 @@ Preferred communication style: Simple, everyday language.
 5. **Communication**: Messages can be case-specific or general
 6. **File Management**: Documents are uploaded to local storage with metadata in database
 7. **Case Submission**: Complete form with file upload support, organization name field isolation
+8. **Debtor Classification**: Cases are automatically categorized by debtor type (individual, company, sole trader, company and individual) for internal tracking
 
 ## External Dependencies
 
