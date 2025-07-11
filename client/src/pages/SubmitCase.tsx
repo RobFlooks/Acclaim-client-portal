@@ -29,6 +29,11 @@ const submitCaseSchema = z.object({
     required_error: "Please select debtor type",
   }),
   debtorName: z.string().min(1, "Debtor name is required"),
+  
+  // Principal of Business details (for Individual/Sole Trader)
+  principalSalutation: z.string().optional(),
+  principalFirstName: z.string().optional(),
+  principalLastName: z.string().optional(),
   addressLine1: z.string().min(1, "Address line 1 is required"),
   addressLine2: z.string().optional(),
   city: z.string().min(1, "City is required"),
@@ -49,6 +54,15 @@ const submitCaseSchema = z.object({
   }),
   paymentTermsDays: z.number().min(1).optional(),
   paymentTermsOther: z.string().optional(),
+}).refine((data) => {
+  // If Individual/Sole Trader is selected, principal details are required
+  if (data.debtorType === "individual") {
+    return data.principalSalutation && data.principalFirstName && data.principalLastName;
+  }
+  return true;
+}, {
+  message: "Principal of Business details are required for Individual/Sole Trader",
+  path: ["principalFirstName"],
 });
 
 type SubmitCaseForm = z.infer<typeof submitCaseSchema>;
@@ -58,6 +72,7 @@ export default function SubmitCase() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [showOtherTerms, setShowOtherTerms] = useState(false);
+  const [debtorType, setDebtorType] = useState("individual");
 
   const form = useForm<SubmitCaseForm>({
     resolver: zodResolver(submitCaseSchema),
@@ -67,6 +82,9 @@ export default function SubmitCase() {
       clientPhone: "",
       debtorType: "individual",
       debtorName: "",
+      principalSalutation: "",
+      principalFirstName: "",
+      principalLastName: "",
       addressLine1: "",
       addressLine2: "",
       city: "",
@@ -249,7 +267,10 @@ export default function SubmitCase() {
                     <FormLabel>Type of Debtor</FormLabel>
                     <FormControl>
                       <RadioGroup
-                        onValueChange={field.onChange}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          setDebtorType(value);
+                        }}
                         defaultValue={field.value}
                         className="flex flex-col space-y-2"
                       >
@@ -281,6 +302,72 @@ export default function SubmitCase() {
                   </FormItem>
                 )}
               />
+
+              {/* Principal of Business Details - Only show for Individual/Sole Trader */}
+              {debtorType === "individual" && (
+                <div className="border-t pt-4">
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Principal of Business Details</h3>
+                    <p className="text-sm text-gray-600">Please provide details of the principal/owner of the business</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="principalSalutation"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Salutation</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select title" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="mr">Mr</SelectItem>
+                              <SelectItem value="mrs">Mrs</SelectItem>
+                              <SelectItem value="miss">Miss</SelectItem>
+                              <SelectItem value="ms">Ms</SelectItem>
+                              <SelectItem value="dr">Dr</SelectItem>
+                              <SelectItem value="prof">Prof</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="principalFirstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>First Name</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Enter first name" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="principalLastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Last Name</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Enter last name" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
