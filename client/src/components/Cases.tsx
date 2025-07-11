@@ -143,11 +143,9 @@ export default function Cases() {
                   </div>
                   
                   <div className="text-center">
+                    <p className="text-sm text-gray-600">Outstanding Amount</p>
                     <p className="font-semibold text-gray-900">
                       {formatCurrency(case_.outstandingAmount)}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Original: {formatCurrency(case_.originalAmount)}
                     </p>
                     <p className="text-xs text-gray-500">*May include interest and costs</p>
                   </div>
