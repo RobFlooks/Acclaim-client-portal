@@ -2,10 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Download, FileText, User, Calendar, Banknote, TrendingUp } from "lucide-react";
+import { ArrowLeft, Download, FileText, User, Calendar, Banknote, TrendingUp, FileSpreadsheet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Link } from "wouter";
+import * as XLSX from 'xlsx';
 
 export default function CaseSummaryReport() {
   const { toast } = useToast();
@@ -134,6 +135,96 @@ export default function CaseSummaryReport() {
     window.print();
   };
 
+  const handleExportExcel = () => {
+    if (!cases || cases.length === 0) {
+      toast({
+        title: "No Data",
+        description: "No cases available to export.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Prepare data for Excel export
+      const excelData = cases.map((caseItem: any) => ({
+        'Account Number': caseItem.accountNumber,
+        'Debtor Name': caseItem.debtorName,
+        'Status': caseItem.status.charAt(0).toUpperCase() + caseItem.status.slice(1),
+        'Stage': caseItem.stage.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+        'Original Amount': parseFloat(caseItem.originalAmount),
+        'Total Payments': getTotalPayments(caseItem),
+        'Outstanding Amount': parseFloat(caseItem.outstandingAmount),
+        'Case Handler': caseItem.assignedTo || 'Unassigned',
+        'Created Date': formatDate(caseItem.createdAt),
+        'Last Updated': formatDate(caseItem.updatedAt)
+      }));
+
+      // Add summary row
+      const summaryRow = {
+        'Account Number': 'TOTALS',
+        'Debtor Name': '',
+        'Status': '',
+        'Stage': '',
+        'Original Amount': getTotalOriginalAmount(),
+        'Total Payments': getTotalPaymentsReceived(),
+        'Outstanding Amount': getTotalOutstandingAmount(),
+        'Case Handler': '',
+        'Created Date': '',
+        'Last Updated': ''
+      };
+
+      excelData.push(summaryRow);
+
+      // Create workbook and worksheet
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(excelData);
+
+      // Auto-size columns
+      const colWidths = [
+        { wch: 15 }, // Account Number
+        { wch: 25 }, // Debtor Name
+        { wch: 12 }, // Status
+        { wch: 15 }, // Stage
+        { wch: 15 }, // Original Amount
+        { wch: 15 }, // Total Payments
+        { wch: 18 }, // Outstanding Amount
+        { wch: 20 }, // Case Handler
+        { wch: 12 }, // Created Date
+        { wch: 12 }  // Last Updated
+      ];
+      ws['!cols'] = colWidths;
+
+      // Style the summary row
+      const summaryRowIndex = excelData.length;
+      const summaryRowRange = XLSX.utils.encode_range({
+        s: { c: 0, r: summaryRowIndex },
+        e: { c: 9, r: summaryRowIndex }
+      });
+
+      XLSX.utils.book_append_sheet(wb, ws, 'Case Summary Report');
+
+      // Generate filename with current date
+      const now = new Date();
+      const filename = `case-summary-report-${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}.xlsx`;
+
+      // Save file
+      XLSX.writeFile(wb, filename);
+
+      toast({
+        title: "Export Successful",
+        description: "Case summary report has been exported to Excel.",
+      });
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to export case summary report.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (statsLoading || casesLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -161,10 +252,16 @@ export default function CaseSummaryReport() {
             <p className="text-gray-600">Generated on {formatDate(new Date().toISOString())}</p>
           </div>
         </div>
-        <Button onClick={handlePrint} variant="outline">
-          <Download className="h-4 w-4 mr-2" />
-          Print Report
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleExportExcel} variant="outline">
+            <FileSpreadsheet className="h-4 w-4 mr-2" />
+            Export to Excel
+          </Button>
+          <Button onClick={handlePrint} variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            Print Report
+          </Button>
+        </div>
       </div>
 
       {/* Summary Statistics */}
