@@ -367,9 +367,21 @@ export default function SubmitCase() {
                         onValueChange={(value) => {
                           field.onChange(value);
                           setDebtorType(value);
-                          // Clear organization name when switching to organization
+                          // Clear all organization fields when switching to organization
                           if (value === "organization") {
                             form.setValue("organizationName", "");
+                            form.setValue("organizationTradingName", "");
+                            form.setValue("companyNumber", "");
+                            // Clear individual fields
+                            form.setValue("tradingName", "");
+                            form.setValue("principalSalutation", "");
+                            form.setValue("principalFirstName", "");
+                            form.setValue("principalLastName", "");
+                          } else {
+                            // Clear organization fields when switching to individual
+                            form.setValue("organizationName", "");
+                            form.setValue("organizationTradingName", "");
+                            form.setValue("companyNumber", "");
                           }
                         }}
                         defaultValue={field.value}
@@ -400,7 +412,12 @@ export default function SubmitCase() {
                       <FormItem>
                         <FormLabel>Organisation Name</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Enter organisation name" />
+                          <Input 
+                            {...field} 
+                            key={`org-name-${debtorType}`}
+                            placeholder="Enter organisation name" 
+                            value={field.value || ""}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
