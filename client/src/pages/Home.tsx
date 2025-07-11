@@ -9,10 +9,25 @@ import { Search, Bell } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
 
 export default function Home() {
   const [activeSection, setActiveSection] = useState("dashboard");
   const { user } = useAuth();
+
+  // Fetch messages to get unread count
+  const { data: messages } = useQuery({
+    queryKey: ["/api/messages"],
+    retry: false,
+  });
+
+  // Calculate unread message count
+  const unreadCount = messages?.filter((msg: any) => !msg.isRead).length || 0;
+
+  // Handle notification bell click
+  const handleNotificationClick = () => {
+    setActiveSection("messages");
+  };
 
   const renderContent = () => {
     switch (activeSection) {
@@ -86,11 +101,13 @@ export default function Home() {
                 />
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               </div>
-              <Button variant="ghost" size="icon" className="relative">
+              <Button variant="ghost" size="icon" className="relative" onClick={handleNotificationClick}>
                 <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  2
-                </span>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                )}
               </Button>
             </div>
           </div>

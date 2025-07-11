@@ -2,6 +2,7 @@ import { Scale, Home, FolderOpen, MessageSquare, BarChart3, FileText, User, LogO
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 
 interface SidebarProps {
   activeSection: string;
@@ -16,10 +17,19 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
     window.location.href = "/api/logout";
   };
 
+  // Fetch messages to get unread count
+  const { data: messages } = useQuery({
+    queryKey: ["/api/messages"],
+    retry: false,
+  });
+
+  // Calculate unread message count
+  const unreadCount = messages?.filter((msg: any) => !msg.isRead).length || 0;
+
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: Home },
     { id: "cases", label: "Cases", icon: FolderOpen },
-    { id: "messages", label: "Messages", icon: MessageSquare, badge: 3 },
+    { id: "messages", label: "Messages", icon: MessageSquare, badge: unreadCount > 0 ? unreadCount : undefined },
     { id: "reports", label: "Reports", icon: BarChart3 },
     { id: "documents", label: "Documents", icon: FileText },
     // Only show admin link to admin users
