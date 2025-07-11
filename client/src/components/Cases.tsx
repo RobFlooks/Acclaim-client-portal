@@ -107,7 +107,6 @@ export default function Cases() {
           </div>
         </CardContent>
       </Card>
-
       {/* Cases List */}
       <Card>
         <CardHeader>
@@ -130,7 +129,7 @@ export default function Cases() {
                   className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border"
                 >
                   <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-acclaim-teal bg-opacity-10 rounded-full flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#f9fafb]">
                       {getDebtorIcon(case_.debtorName)}
                     </div>
                     <div>
