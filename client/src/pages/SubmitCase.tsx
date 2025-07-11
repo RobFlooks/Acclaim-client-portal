@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { useLocation } from "wouter";
 
 const submitCaseSchema = z.object({
   // Client details (pre-populated)
@@ -55,6 +56,7 @@ type SubmitCaseForm = z.infer<typeof submitCaseSchema>;
 export default function SubmitCase() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [showOtherTerms, setShowOtherTerms] = useState(false);
 
   const form = useForm<SubmitCaseForm>({
@@ -124,7 +126,7 @@ export default function SubmitCase() {
         description: "Your case has been submitted successfully. We will review it and contact you soon.",
       });
       // Redirect to dashboard
-      window.location.href = "#/";
+      setLocation('/');
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -163,7 +165,7 @@ export default function SubmitCase() {
       <div className="flex items-center space-x-4">
         <Button
           variant="ghost"
-          onClick={() => window.location.href = "#/"}
+          onClick={() => setLocation('/')}
           className="text-acclaim-teal hover:text-acclaim-teal/90"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />

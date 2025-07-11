@@ -5,9 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { FolderOpen, CheckCircle, PoundSterling, TrendingUp, User, Building, Factory, Clock, FileText, Check, AlertTriangle, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { useLocation } from "wouter";
 
 export default function Dashboard() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/dashboard/stats"],
@@ -129,7 +131,7 @@ export default function Dashboard() {
         </div>
         <Button 
           className="bg-acclaim-teal hover:bg-acclaim-teal/90 text-white"
-          onClick={() => window.location.href = '#/submit-case'}
+          onClick={() => setLocation('/submit-case')}
         >
           <Plus className="h-4 w-4 mr-2" />
           Submit New Case
