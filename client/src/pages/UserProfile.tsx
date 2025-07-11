@@ -10,10 +10,11 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 import { useQueryClient } from "@tanstack/react-query";
-import { User, Settings, Key, Phone, Mail, Calendar, Shield } from "lucide-react";
+import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { updateUserSchema, changePasswordSchema } from "@shared/schema";
 import { z } from "zod";
+import { Link } from "wouter";
 
 type UpdateProfileForm = z.infer<typeof updateUserSchema>;
 type ChangePasswordForm = z.infer<typeof changePasswordSchema>;
@@ -195,9 +196,17 @@ export default function UserProfile() {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Profile Settings</h1>
-          <p className="text-gray-600">Manage your account information and security settings</p>
+        <div className="flex items-center space-x-4">
+          <Link href="/">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Home
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold">Profile Settings</h1>
+            <p className="text-gray-600">Manage your account information and security settings</p>
+          </div>
         </div>
       </div>
 
