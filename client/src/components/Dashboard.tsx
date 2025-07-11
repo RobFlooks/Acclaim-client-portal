@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FolderOpen, CheckCircle, PoundSterling, TrendingUp, User, Building, Factory, Clock, FileText, Check, AlertTriangle, Plus, Download, UserCog, Users, Store } from "lucide-react";
+import { FolderOpen, CheckCircle, PoundSterling, TrendingUp, User, Building, Factory, Clock, FileText, Check, AlertTriangle, Plus, Download, UserCog, Users, Store, UserCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation } from "wouter";
@@ -118,7 +118,7 @@ export default function Dashboard() {
       case 'sole_trader':
         return <Store className="text-acclaim-teal h-4 w-4" />;
       case 'company_and_individual':
-        return <Users className="text-acclaim-teal h-4 w-4" />;
+        return <UserCheck className="text-acclaim-teal h-4 w-4" />;
       default:
         return <User className="text-acclaim-teal h-4 w-4" />;
     }

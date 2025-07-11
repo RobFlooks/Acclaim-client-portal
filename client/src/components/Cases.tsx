@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Search, User, Building, Factory, Clock, Check, AlertTriangle, Eye, UserCog, Users, Store } from "lucide-react";
+import { Search, User, Building, Factory, Clock, Check, AlertTriangle, Eye, UserCog, Users, Store, UserCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import CaseDetail from "./CaseDetail";
@@ -71,7 +71,7 @@ export default function Cases() {
       case 'sole_trader':
         return <Store className="text-acclaim-teal h-5 w-5" />;
       case 'company_and_individual':
-        return <Users className="text-acclaim-teal h-5 w-5" />;
+        return <UserCheck className="text-acclaim-teal h-5 w-5" />;
       default:
         return <User className="text-acclaim-teal h-5 w-5" />;
     }
