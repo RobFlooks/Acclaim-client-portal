@@ -277,6 +277,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const messageData = insertMessageSchema.parse({
         ...req.body,
+        caseId: req.body.caseId ? parseInt(req.body.caseId) : undefined,
         senderId: userId,
         attachmentFileName: req.file?.originalname,
         attachmentFilePath: req.file?.path,
