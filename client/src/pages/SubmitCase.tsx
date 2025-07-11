@@ -113,9 +113,9 @@ export default function SubmitCase() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [showOtherTerms, setShowOtherTerms] = useState(false);
-  const [debtorType, setDebtorType] = useState("individual");
-  const [individualType, setIndividualType] = useState("individual");
-  const [singleInvoice, setSingleInvoice] = useState("yes");
+  const [debtorType, setDebtorType] = useState("");
+  const [individualType, setIndividualType] = useState("");
+  const [singleInvoice, setSingleInvoice] = useState("");
 
   const form = useForm<SubmitCaseForm>({
     resolver: zodResolver(submitCaseSchema),
@@ -124,9 +124,9 @@ export default function SubmitCase() {
       clientEmail: user?.email || "",
       clientPhone: "",
       creditorName: "",
-      debtorType: "individual",
+      debtorType: "",
       debtorName: "",
-      individualType: "individual",
+      individualType: "",
       tradingName: "",
       organizationName: "",
       organizationTradingName: "",
@@ -145,11 +145,11 @@ export default function SubmitCase() {
       altEmail: "",
       debtDetails: "",
       totalDebtAmount: 0,
-      currency: "GBP",
-      paymentTermsType: "days_from_invoice",
+      currency: "",
+      paymentTermsType: "",
       paymentTermsDays: 30,
       paymentTermsOther: "",
-      singleInvoice: "yes",
+      singleInvoice: "",
       firstOverdueDate: "",
       lastOverdueDate: "",
       additionalInfo: "",
@@ -384,7 +384,7 @@ export default function SubmitCase() {
                             form.setValue("companyNumber", "");
                           }
                         }}
-                        defaultValue={field.value}
+                        value={field.value}
                         className="flex flex-col space-y-2"
                       >
                         <div className="flex items-center space-x-2">
@@ -464,7 +464,7 @@ export default function SubmitCase() {
                               field.onChange(value);
                               setIndividualType(value);
                             }}
-                            defaultValue={field.value}
+                            value={field.value}
                             className="flex flex-col space-y-2"
                           >
                             <div className="flex items-center space-x-2">
@@ -515,7 +515,7 @@ export default function SubmitCase() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Salutation</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select title" />
@@ -753,7 +753,7 @@ export default function SubmitCase() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Currency</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select currency" />
@@ -784,7 +784,7 @@ export default function SubmitCase() {
                           field.onChange(value);
                           handlePaymentTermsChange(value);
                         }}
-                        defaultValue={field.value}
+                        value={field.value}
                         className="flex flex-col space-y-2"
                       >
                         <div className="flex items-center space-x-2">
@@ -869,7 +869,7 @@ export default function SubmitCase() {
                               form.setValue("firstOverdueDate", "");
                             }
                           }}
-                          defaultValue={field.value}
+                          value={field.value}
                           className="flex flex-col space-y-2"
                         >
                           <div className="flex items-center space-x-2">
