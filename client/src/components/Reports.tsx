@@ -116,11 +116,11 @@ export default function Reports() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-4 bg-acclaim-teal bg-opacity-10 rounded-lg">
+            <div className="p-4 rounded-lg bg-[#00b5b5]">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-[#00f2f5]">Total Cases</p>
-                  <p className="text-2xl font-bold text-[#00f2f5]">
+                  <p className="text-sm text-[#0f766e]">Total Cases</p>
+                  <p className="text-2xl font-bold text-[#0f766e]">
                     {casesLoading ? "..." : cases?.length || 0}
                   </p>
                 </div>
