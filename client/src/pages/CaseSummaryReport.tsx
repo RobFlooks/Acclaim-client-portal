@@ -241,10 +241,10 @@ export default function CaseSummaryReport() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center space-x-4">
-          <Link href="/reports">
+          <Link href="/">
             <Button variant="outline" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Reports
+              Back to Dashboard
             </Button>
           </Link>
           <div>
