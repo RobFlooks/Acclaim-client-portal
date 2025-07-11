@@ -24,6 +24,9 @@ const submitCaseSchema = z.object({
   clientEmail: z.string().email("Invalid email address"),
   clientPhone: z.string().min(1, "Phone number is required"),
   
+  // Creditor details
+  creditorName: z.string().min(1, "Creditor name is required"),
+  
   // Debtor details
   debtorType: z.enum(["individual", "organization"], {
     required_error: "Please select debtor type",
@@ -34,6 +37,11 @@ const submitCaseSchema = z.object({
   individualType: z.enum(["individual", "business"]).optional(),
   tradingName: z.string().optional(),
   
+  // Organization specific fields
+  organizationName: z.string().optional(),
+  organizationTradingName: z.string().optional(),
+  companyNumber: z.string().optional(),
+  
   // Principal of Business details (for Individual/Sole Trader)
   principalSalutation: z.string().optional(),
   principalFirstName: z.string().optional(),
@@ -43,14 +51,15 @@ const submitCaseSchema = z.object({
   city: z.string().min(1, "City is required"),
   county: z.string().min(1, "County is required"),
   postcode: z.string().min(1, "Postcode is required"),
-  mainPhone: z.string().min(1, "Main phone is required"),
+  mainPhone: z.string().optional(),
   altPhone: z.string().optional(),
-  mainEmail: z.string().email("Invalid email address"),
+  mainEmail: z.string().email("Invalid email address").optional().or(z.literal("")),
   altEmail: z.string().email("Invalid email address").optional().or(z.literal("")),
   
   // Debt details
   debtDetails: z.string().min(1, "Debt details are required"),
   totalDebtAmount: z.number().min(0.01, "Debt amount must be greater than 0"),
+  currency: z.string().default("GBP"),
   
   // Payment terms
   paymentTermsType: z.enum(["days_from_invoice", "days_from_month_end", "other"], {
@@ -58,6 +67,16 @@ const submitCaseSchema = z.object({
   }),
   paymentTermsDays: z.number().min(1).optional(),
   paymentTermsOther: z.string().optional(),
+  
+  // Invoice details
+  singleInvoice: z.enum(["yes", "no"], {
+    required_error: "Please specify if this relates to a single invoice",
+  }),
+  firstOverdueDate: z.string().min(1, "First overdue invoice date is required"),
+  lastOverdueDate: z.string().min(1, "Last overdue invoice date is required"),
+  
+  // Additional information
+  additionalInfo: z.string().optional(),
 }).refine((data) => {
   // If Individual/Sole Trader is selected, individual type is required
   if (data.debtorType === "individual") {
@@ -103,10 +122,14 @@ export default function SubmitCase() {
       clientName: user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() : "",
       clientEmail: user?.email || "",
       clientPhone: "",
+      creditorName: "",
       debtorType: "individual",
       debtorName: "",
       individualType: "individual",
       tradingName: "",
+      organizationName: "",
+      organizationTradingName: "",
+      companyNumber: "",
       principalSalutation: "",
       principalFirstName: "",
       principalLastName: "",
@@ -121,9 +144,14 @@ export default function SubmitCase() {
       altEmail: "",
       debtDetails: "",
       totalDebtAmount: 0,
+      currency: "GBP",
       paymentTermsType: "days_from_invoice",
       paymentTermsDays: 30,
       paymentTermsOther: "",
+      singleInvoice: "yes",
+      firstOverdueDate: "",
+      lastOverdueDate: "",
+      additionalInfo: "",
     },
   });
 
@@ -285,9 +313,22 @@ export default function SubmitCase() {
                 name="clientPhone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Your Telephone Number</FormLabel>
+                    <FormLabel>Your Contact Number</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="Enter your phone number" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="creditorName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Who is owed the debt?</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Creditors' full name (including any trading name)" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -337,19 +378,47 @@ export default function SubmitCase() {
 
               {/* Show different fields based on debtor type */}
               {debtorType === "organization" ? (
-                <FormField
-                  control={form.control}
-                  name="debtorName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Company Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Enter company name" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="organizationName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Organisation Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter organisation name" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="organizationTradingName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Trading Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter trading name (if different)" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="companyNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Company Number</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Enter company registration number" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               ) : (
                 <div className="space-y-4">
                   <FormField
@@ -627,25 +696,50 @@ export default function SubmitCase() {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="totalDebtAmount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Total Debt Due to You as of Today (£)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field} 
-                        type="number" 
-                        step="0.01"
-                        placeholder="0.00"
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="totalDebtAmount"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Total Debt Due to You as of Today</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="number" 
+                          step="0.01"
+                          placeholder="0.00"
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="currency"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Currency</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select currency" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="GBP">GBP (£)</SelectItem>
+                          <SelectItem value="USD">USD ($)</SelectItem>
+                          <SelectItem value="EUR">EUR (€)</SelectItem>
+                          <SelectItem value="OTHER">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}
@@ -721,6 +815,91 @@ export default function SubmitCase() {
                   )}
                 />
               )}
+
+              {/* Invoice Details */}
+              <div className="border-t pt-6 mt-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Invoice Details</h3>
+                
+                <FormField
+                  control={form.control}
+                  name="singleInvoice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Does the debt relate to a single invoice?</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex flex-col space-y-2"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="yes" id="single-yes" />
+                            <Label htmlFor="single-yes">Yes</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="no" id="single-no" />
+                            <Label htmlFor="single-no">No</Label>
+                          </div>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <FormField
+                    control={form.control}
+                    name="firstOverdueDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>First Overdue Invoice Date</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="date" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="lastOverdueDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Last Overdue Invoice Date</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="date" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Additional Information */}
+              <div className="border-t pt-6 mt-6">
+                <FormField
+                  control={form.control}
+                  name="additionalInfo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Additional Information</FormLabel>
+                      <FormDescription>
+                        Enter any relevant additional information
+                      </FormDescription>
+                      <FormControl>
+                        <Textarea 
+                          {...field} 
+                          placeholder="Any additional details that might be relevant to the debt recovery"
+                          rows={4}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </CardContent>
           </Card>
 
@@ -731,7 +910,7 @@ export default function SubmitCase() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => window.location.href = "#/"}
+                  onClick={() => setLocation('/')}
                 >
                   Cancel
                 </Button>
