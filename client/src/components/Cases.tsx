@@ -177,7 +177,7 @@ export default function Cases() {
                         View Details
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                    <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto w-[95vw]">
                       <DialogHeader>
                         <DialogTitle>Case Details - {case_.debtorName}</DialogTitle>
                       </DialogHeader>
