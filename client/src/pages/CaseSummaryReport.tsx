@@ -153,6 +153,10 @@ export default function CaseSummaryReport() {
         'Status': caseItem.status === 'resolved' ? 'Closed' : caseItem.status.charAt(0).toUpperCase() + caseItem.status.slice(1),
         'Stage': caseItem.stage.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
         'Original Amount': parseFloat(caseItem.originalAmount),
+        'Costs Added': parseFloat(caseItem.costsAdded || 0),
+        'Interest Added': parseFloat(caseItem.interestAdded || 0),
+        'Fees Added': parseFloat(caseItem.feesAdded || 0),
+        'Total Additional Charges': parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0),
         'Total Payments': getTotalPayments(caseItem),
         'Outstanding Amount': parseFloat(caseItem.outstandingAmount),
         'Case Handler': caseItem.assignedTo || 'Unassigned',
@@ -167,6 +171,10 @@ export default function CaseSummaryReport() {
         'Status': '',
         'Stage': '',
         'Original Amount': getTotalOriginalAmount(),
+        'Costs Added': cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.costsAdded || 0), 0),
+        'Interest Added': cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.interestAdded || 0), 0),
+        'Fees Added': cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.feesAdded || 0), 0),
+        'Total Additional Charges': cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0), 0),
         'Total Payments': getTotalPaymentsReceived(),
         'Outstanding Amount': getTotalOutstandingAmount(),
         'Case Handler': '',
@@ -187,6 +195,10 @@ export default function CaseSummaryReport() {
         { wch: 12 }, // Status
         { wch: 15 }, // Stage
         { wch: 15 }, // Original Amount
+        { wch: 12 }, // Costs Added
+        { wch: 12 }, // Interest Added
+        { wch: 12 }, // Fees Added
+        { wch: 18 }, // Total Additional Charges
         { wch: 15 }, // Total Payments
         { wch: 18 }, // Outstanding Amount
         { wch: 20 }, // Case Handler
@@ -199,7 +211,7 @@ export default function CaseSummaryReport() {
       const summaryRowIndex = excelData.length;
       const summaryRowRange = XLSX.utils.encode_range({
         s: { c: 0, r: summaryRowIndex },
-        e: { c: 9, r: summaryRowIndex }
+        e: { c: 13, r: summaryRowIndex }
       });
 
       XLSX.utils.book_append_sheet(wb, ws, 'Case Summary Report');
@@ -398,6 +410,97 @@ export default function CaseSummaryReport() {
                   </tr>
                 ))}
               </tbody>
+            </table>
+          </div>
+          
+          {(!cases || cases.length === 0) && (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No cases found</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Additional Charges Breakdown Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Additional Charges Breakdown</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-gray-200">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                    Account Number
+                  </th>
+                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                    Debtor Name
+                  </th>
+                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                    Costs Added
+                  </th>
+                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                    Interest Added
+                  </th>
+                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                    Other Fees
+                  </th>
+                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                    Total Additional Charges
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {cases?.map((caseItem: any) => {
+                  const costsAdded = parseFloat(caseItem.costsAdded || 0);
+                  const interestAdded = parseFloat(caseItem.interestAdded || 0);
+                  const feesAdded = parseFloat(caseItem.feesAdded || 0);
+                  const totalAdditional = costsAdded + interestAdded + feesAdded;
+                  
+                  return (
+                    <tr key={caseItem.id} className="hover:bg-gray-50">
+                      <td className="border border-gray-200 px-4 py-3 text-sm text-gray-900">
+                        {caseItem.accountNumber}
+                      </td>
+                      <td className="border border-gray-200 px-4 py-3 text-sm text-gray-900">
+                        {caseItem.debtorName}
+                      </td>
+                      <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-gray-900">
+                        {formatCurrency(costsAdded)}
+                      </td>
+                      <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-gray-900">
+                        {formatCurrency(interestAdded)}
+                      </td>
+                      <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-gray-900">
+                        {formatCurrency(feesAdded)}
+                      </td>
+                      <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-orange-600">
+                        {formatCurrency(totalAdditional)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                <tr className="bg-gray-100 font-medium">
+                  <td className="border border-gray-200 px-4 py-3 text-sm text-gray-900" colSpan={2}>
+                    TOTALS
+                  </td>
+                  <td className="border border-gray-200 px-4 py-3 text-sm font-bold text-gray-900">
+                    {formatCurrency(cases?.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.costsAdded || 0), 0) || 0)}
+                  </td>
+                  <td className="border border-gray-200 px-4 py-3 text-sm font-bold text-gray-900">
+                    {formatCurrency(cases?.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.interestAdded || 0), 0) || 0)}
+                  </td>
+                  <td className="border border-gray-200 px-4 py-3 text-sm font-bold text-gray-900">
+                    {formatCurrency(cases?.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.feesAdded || 0), 0) || 0)}
+                  </td>
+                  <td className="border border-gray-200 px-4 py-3 text-sm font-bold text-orange-600">
+                    {formatCurrency(cases?.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0), 0) || 0)}
+                  </td>
+                </tr>
+              </tfoot>
             </table>
           </div>
           

@@ -65,6 +65,9 @@ export const cases = pgTable("cases", {
   debtorType: varchar("debtor_type", { length: 50 }).notNull().default("individual"), // 'individual', 'company', 'sole_trader', 'company_and_individual'
   originalAmount: decimal("original_amount", { precision: 10, scale: 2 }).notNull(),
   outstandingAmount: decimal("outstanding_amount", { precision: 10, scale: 2 }).notNull(),
+  costsAdded: decimal("costs_added", { precision: 10, scale: 2 }).default("0.00"),
+  interestAdded: decimal("interest_added", { precision: 10, scale: 2 }).default("0.00"),
+  feesAdded: decimal("fees_added", { precision: 10, scale: 2 }).default("0.00"),
   status: varchar("status", { length: 50 }).notNull().default("active"),
   stage: varchar("stage", { length: 100 }).notNull().default("initial_contact"),
   organisationId: integer("organisation_id").references(() => organisations.id).notNull(),

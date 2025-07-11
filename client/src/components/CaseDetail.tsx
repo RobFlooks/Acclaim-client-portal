@@ -356,7 +356,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             <div>
               <p className="text-sm text-gray-600">Original Amount</p>
               <p className="font-medium">{formatCurrency(caseData.originalAmount)}</p>
@@ -385,6 +385,36 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                   "Start a conversation"
                 }
               </p>
+            </div>
+          </div>
+
+          {/* Additional Debt Information */}
+          <div className="border-t pt-4">
+            <h4 className="font-medium text-gray-900 mb-3">Additional Charges</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <p className="text-sm text-gray-600">Costs Added</p>
+                <p className="font-medium">{formatCurrency(caseData.costsAdded || 0)}</p>
+                <p className="text-xs text-gray-500 mt-1">Legal and recovery costs</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Interest Added</p>
+                <p className="font-medium">{formatCurrency(caseData.interestAdded || 0)}</p>
+                <p className="text-xs text-gray-500 mt-1">Accrued interest charges</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Other Fees</p>
+                <p className="font-medium">{formatCurrency(caseData.feesAdded || 0)}</p>
+                <p className="text-xs text-gray-500 mt-1">Administrative and other fees</p>
+              </div>
+            </div>
+            <div className="mt-4 pt-3 border-t bg-gray-50 rounded-lg p-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-gray-700">Total Additional Charges:</span>
+                <span className="text-lg font-bold text-gray-900">
+                  {formatCurrency((parseFloat(caseData.costsAdded || 0) + parseFloat(caseData.interestAdded || 0) + parseFloat(caseData.feesAdded || 0)))}
+                </span>
+              </div>
             </div>
           </div>
         </CardContent>
