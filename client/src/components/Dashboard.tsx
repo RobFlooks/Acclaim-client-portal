@@ -217,7 +217,7 @@ export default function Dashboard() {
                       className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
                     >
                       <div className="flex items-center">
-                        <div className="w-10 h-10 bg-acclaim-teal bg-opacity-10 rounded-full flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#ffffff]">
                           {getDebtorIcon(case_.debtorName)}
                         </div>
                         <div className="ml-4">
