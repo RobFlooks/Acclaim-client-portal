@@ -22,7 +22,8 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
     { id: "messages", label: "Messages", icon: MessageSquare, badge: 3 },
     { id: "reports", label: "Reports", icon: BarChart3 },
     { id: "documents", label: "Documents", icon: FileText },
-    { id: "admin", label: "Admin", icon: Settings, isRoute: true, route: "/admin" },
+    // Only show admin link to admin users
+    ...(user?.isAdmin ? [{ id: "admin", label: "Admin", icon: Settings, isRoute: true, route: "/admin" }] : []),
   ];
 
   return (

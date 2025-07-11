@@ -38,13 +38,13 @@ export default function Admin() {
   const [showAssignUser, setShowAssignUser] = useState(false);
 
   // Fetch users
-  const { data: users, isLoading: usersLoading } = useQuery({
+  const { data: users, isLoading: usersLoading, error: usersError } = useQuery({
     queryKey: ["/api/admin/users"],
     retry: false,
   });
 
   // Fetch organizations
-  const { data: organizations, isLoading: orgsLoading } = useQuery({
+  const { data: organizations, isLoading: orgsLoading, error: orgsError } = useQuery({
     queryKey: ["/api/admin/organizations"],
     retry: false,
   });
@@ -137,6 +137,24 @@ export default function Admin() {
       });
     },
   });
+
+  // Check for admin access errors
+  if (usersError || orgsError) {
+    const errorMessage = (usersError as any)?.message || (orgsError as any)?.message;
+    
+    if (errorMessage?.includes("Admin access required") || errorMessage?.includes("403")) {
+      return (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="text-red-500 text-6xl mb-4">🚫</div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
+            <p className="text-gray-600">You don't have admin privileges to access this panel.</p>
+            <p className="text-sm text-gray-500 mt-2">Contact your administrator to request admin access.</p>
+          </div>
+        </div>
+      );
+    }
+  }
 
   if (usersLoading || orgsLoading) {
     return (

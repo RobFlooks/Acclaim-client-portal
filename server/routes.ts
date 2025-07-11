@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, RequestHandler } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -11,6 +11,26 @@ const upload = multer({
   dest: "uploads/",
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
 });
+
+// Admin middleware - checks if user is an admin
+const isAdmin: RequestHandler = async (req, res, next) => {
+  try {
+    const userId = (req as any).user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const user = await storage.getUser(userId);
+    if (!user || !user.isAdmin) {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    next();
+  } catch (error) {
+    console.error("Admin check error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -425,7 +445,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin routes
-  app.get('/api/admin/users', isAuthenticated, async (req: any, res) => {
+  app.get('/api/admin/users', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const currentUser = await storage.getUser(userId);
@@ -444,7 +464,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/organizations', isAuthenticated, async (req: any, res) => {
+  app.get('/api/admin/organizations', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const currentUser = await storage.getUser(userId);
@@ -461,7 +481,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/organizations', isAuthenticated, async (req: any, res) => {
+  app.post('/api/admin/organizations', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const currentUser = await storage.getUser(userId);
@@ -486,7 +506,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/admin/users/:userId/assign', isAuthenticated, async (req: any, res) => {
+  app.put('/api/admin/users/:userId/assign', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const currentUserId = req.user.claims.sub;
       const currentUser = await storage.getUser(currentUserId);
