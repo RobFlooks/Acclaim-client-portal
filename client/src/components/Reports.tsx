@@ -119,8 +119,8 @@ export default function Reports() {
             <div className="p-4 bg-acclaim-teal bg-opacity-10 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Cases</p>
-                  <p className="text-2xl font-bold text-[#4b5563]">
+                  <p className="text-sm text-[#00f2f5]">Total Cases</p>
+                  <p className="text-2xl font-bold text-[#00f2f5]">
                     {casesLoading ? "..." : cases?.length || 0}
                   </p>
                 </div>
