@@ -96,10 +96,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User organization not found" });
       }
 
-      const caseData = insertCaseSchema.parse({
-        ...req.body,
+      // Generate account number
+      const accountNumber = `ACC-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
+
+      const caseData = {
+        accountNumber,
+        debtorName: req.body.debtorName,
+        debtorEmail: req.body.debtorEmail,
+        debtorPhone: req.body.debtorPhone,
+        debtorAddress: req.body.debtorAddress,
+        originalAmount: req.body.originalAmount,
+        outstandingAmount: req.body.outstandingAmount,
+        status: req.body.status || 'active',
+        stage: req.body.stage || 'new',
         organizationId: user.organizationId,
-      });
+        assignedTo: 'System',
+      };
 
       const newCase = await storage.createCase(caseData);
       
@@ -107,7 +119,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.addCaseActivity({
         caseId: newCase.id,
         activityType: "case_created",
-        description: "Case created",
+        description: `Case created by ${user.firstName || 'User'} ${user.lastName || ''}. Debt details: ${req.body.debtDetails || 'N/A'}`,
         performedBy: userId,
       });
 

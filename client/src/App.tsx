@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
 import Home from "@/pages/Home";
+import SubmitCase from "@/pages/SubmitCase";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -16,7 +17,10 @@ function Router() {
       {isLoading || !isAuthenticated ? (
         <Route path="/" component={Landing} />
       ) : (
-        <Route path="/" component={Home} />
+        <>
+          <Route path="/" component={Home} />
+          <Route path="/submit-case" component={SubmitCase} />
+        </>
       )}
       <Route component={NotFound} />
     </Switch>

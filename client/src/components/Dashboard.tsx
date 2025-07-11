@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FolderOpen, CheckCircle, PoundSterling, TrendingUp, User, Building, Factory, Clock, FileText, Check, AlertTriangle } from "lucide-react";
+import { FolderOpen, CheckCircle, PoundSterling, TrendingUp, User, Building, Factory, Clock, FileText, Check, AlertTriangle, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 
@@ -121,6 +121,21 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
+      {/* Dashboard Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600 mt-1">Welcome to your debt recovery portal</p>
+        </div>
+        <Button 
+          className="bg-acclaim-teal hover:bg-acclaim-teal/90 text-white"
+          onClick={() => window.location.href = '#/submit-case'}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Submit New Case
+        </Button>
+      </div>
+
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>

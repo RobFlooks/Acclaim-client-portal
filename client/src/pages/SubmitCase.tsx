@@ -1,0 +1,566 @@
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { z } from "zod";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { ArrowLeft, FileText, User, Building } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { apiRequest } from "@/lib/queryClient";
+import { isUnauthorizedError } from "@/lib/authUtils";
+
+const submitCaseSchema = z.object({
+  // Client details (pre-populated)
+  clientName: z.string().min(1, "Name is required"),
+  clientEmail: z.string().email("Invalid email address"),
+  clientPhone: z.string().min(1, "Phone number is required"),
+  
+  // Debtor details
+  debtorType: z.enum(["individual", "organization"], {
+    required_error: "Please select debtor type",
+  }),
+  debtorName: z.string().min(1, "Debtor name is required"),
+  addressLine1: z.string().min(1, "Address line 1 is required"),
+  addressLine2: z.string().optional(),
+  city: z.string().min(1, "City is required"),
+  county: z.string().min(1, "County is required"),
+  postcode: z.string().min(1, "Postcode is required"),
+  mainPhone: z.string().min(1, "Main phone is required"),
+  altPhone: z.string().optional(),
+  mainEmail: z.string().email("Invalid email address"),
+  altEmail: z.string().email("Invalid email address").optional().or(z.literal("")),
+  
+  // Debt details
+  debtDetails: z.string().min(1, "Debt details are required"),
+  totalDebtAmount: z.number().min(0.01, "Debt amount must be greater than 0"),
+  
+  // Payment terms
+  paymentTermsType: z.enum(["days_from_invoice", "days_from_month_end", "other"], {
+    required_error: "Please select payment terms",
+  }),
+  paymentTermsDays: z.number().min(1).optional(),
+  paymentTermsOther: z.string().optional(),
+});
+
+type SubmitCaseForm = z.infer<typeof submitCaseSchema>;
+
+export default function SubmitCase() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [showOtherTerms, setShowOtherTerms] = useState(false);
+
+  const form = useForm<SubmitCaseForm>({
+    resolver: zodResolver(submitCaseSchema),
+    defaultValues: {
+      clientName: user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() : "",
+      clientEmail: user?.email || "",
+      clientPhone: "",
+      debtorType: "individual",
+      debtorName: "",
+      addressLine1: "",
+      addressLine2: "",
+      city: "",
+      county: "",
+      postcode: "",
+      mainPhone: "",
+      altPhone: "",
+      mainEmail: "",
+      altEmail: "",
+      debtDetails: "",
+      totalDebtAmount: 0,
+      paymentTermsType: "days_from_invoice",
+      paymentTermsDays: 30,
+      paymentTermsOther: "",
+    },
+  });
+
+  const submitCaseMutation = useMutation({
+    mutationFn: async (data: SubmitCaseForm) => {
+      const debtorAddress = `${data.addressLine1}${data.addressLine2 ? ', ' + data.addressLine2 : ''}, ${data.city}, ${data.county}, ${data.postcode}`;
+      
+      let paymentTerms = "";
+      if (data.paymentTermsType === "days_from_invoice") {
+        paymentTerms = `${data.paymentTermsDays} days from invoice date`;
+      } else if (data.paymentTermsType === "days_from_month_end") {
+        paymentTerms = `${data.paymentTermsDays} days from end of month`;
+      } else {
+        paymentTerms = data.paymentTermsOther || "";
+      }
+
+      const caseData = {
+        debtorName: data.debtorName,
+        debtorEmail: data.mainEmail,
+        debtorPhone: data.mainPhone,
+        debtorAddress,
+        originalAmount: data.totalDebtAmount,
+        outstandingAmount: data.totalDebtAmount,
+        status: "active",
+        stage: "new",
+        debtDetails: data.debtDetails,
+        paymentTerms,
+        clientDetails: {
+          name: data.clientName,
+          email: data.clientEmail,
+          phone: data.clientPhone,
+        },
+        debtorType: data.debtorType,
+        altPhone: data.altPhone,
+        altEmail: data.altEmail,
+      };
+
+      return await apiRequest("POST", "/api/cases", caseData);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Your case has been submitted successfully. We will review it and contact you soon.",
+      });
+      // Redirect to dashboard
+      window.location.href = "#/";
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to submit case. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: SubmitCaseForm) => {
+    submitCaseMutation.mutate(data);
+  };
+
+  const handlePaymentTermsChange = (value: string) => {
+    setShowOtherTerms(value === "other");
+    if (value !== "other") {
+      form.setValue("paymentTermsOther", "");
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center space-x-4">
+        <Button
+          variant="ghost"
+          onClick={() => window.location.href = "#/"}
+          className="text-acclaim-teal hover:text-acclaim-teal/90"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Dashboard
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Submit New Case</h1>
+          <p className="text-gray-600 mt-1">Please fill in the details below to submit a new debt recovery case</p>
+        </div>
+      </div>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Client Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <User className="h-5 w-5 mr-2 text-acclaim-teal" />
+                Your Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="clientName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Your Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter your full name" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="clientEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Your Email Address</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="email" placeholder="Enter your email" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={form.control}
+                name="clientPhone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Your Telephone Number</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Enter your phone number" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Debtor Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Building className="h-5 w-5 mr-2 text-acclaim-teal" />
+                Debtor Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="debtorType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Type of Debtor</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-2"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="individual" id="individual" />
+                          <Label htmlFor="individual">Individual / Sole Trader (non-limited entity)</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="organization" id="organization" />
+                          <Label htmlFor="organization">Organisation (Limited company, PLC, LLP)</Label>
+                        </div>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="debtorName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Debtor Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Enter debtor's name or company name" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="addressLine1"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Address Line 1</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter address line 1" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="addressLine2"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Address Line 2 (Optional)</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter address line 2" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>City</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter city" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="county"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>County</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter county" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="postcode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Postcode</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter postcode" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="mainPhone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Main Telephone</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter main phone number" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="altPhone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Alternative Telephone (Optional)</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter alternative phone number" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="mainEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Main Email</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="email" placeholder="Enter main email address" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="altEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Alternative Email (Optional)</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="email" placeholder="Enter alternative email address" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Debt Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <FileText className="h-5 w-5 mr-2 text-acclaim-teal" />
+                Debt Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="debtDetails"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Details of Debt</FormLabel>
+                    <FormDescription>
+                      What is the debt for? (e.g., goods sold and delivered on credit terms)
+                    </FormDescription>
+                    <FormControl>
+                      <Textarea 
+                        {...field} 
+                        placeholder="Describe the nature of the debt and what it relates to"
+                        rows={4}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="totalDebtAmount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Total Debt Due to You as of Today (£)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        type="number" 
+                        step="0.01"
+                        placeholder="0.00"
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="paymentTermsType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Terms of Payment</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          handlePaymentTermsChange(value);
+                        }}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-2"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="days_from_invoice" id="days_from_invoice" />
+                          <Label htmlFor="days_from_invoice">Number of days from date of invoice</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="days_from_month_end" id="days_from_month_end" />
+                          <Label htmlFor="days_from_month_end">Number of days from end of month of invoice</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="other" id="other" />
+                          <Label htmlFor="other">Other</Label>
+                        </div>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {form.watch("paymentTermsType") !== "other" && (
+                <FormField
+                  control={form.control}
+                  name="paymentTermsDays"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Number of Days</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="number" 
+                          placeholder="30"
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {showOtherTerms && (
+                <FormField
+                  control={form.control}
+                  name="paymentTermsOther"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Payment Terms (Other)</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          {...field} 
+                          placeholder="Please specify your payment terms"
+                          rows={3}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Submit Button */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex justify-end space-x-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => window.location.href = "#/"}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="bg-acclaim-teal hover:bg-acclaim-teal/90"
+                  disabled={submitCaseMutation.isPending}
+                >
+                  {submitCaseMutation.isPending ? "Submitting..." : "Submit Case"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </form>
+      </Form>
+    </div>
+  );
+}
