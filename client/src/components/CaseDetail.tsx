@@ -34,6 +34,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   const [newMessage, setNewMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [messageAttachment, setMessageAttachment] = useState<File | null>(null);
+  const [activeTab, setActiveTab] = useState("timeline");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -46,6 +47,10 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   const getOutstandingAmount = () => {
     const totalPayments = getTotalPayments();
     return parseFloat(caseData.originalAmount) - totalPayments;
+  };
+
+  const handlePaymentsClick = () => {
+    setActiveTab("payments");
   };
 
   const { data: activities, isLoading: activitiesLoading } = useQuery({
@@ -300,7 +305,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div>
               <p className="text-sm text-gray-600">Account Number</p>
               <p className="font-medium">{caseData.accountNumber}</p>
@@ -313,6 +318,16 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
             <div>
               <p className="text-sm text-gray-600">Original Amount</p>
               <p className="font-medium">{formatCurrency(caseData.originalAmount)}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Total Payments</p>
+              <button 
+                onClick={handlePaymentsClick}
+                className="font-medium text-green-600 hover:text-green-800 hover:underline cursor-pointer text-left"
+              >
+                {formatCurrency(getTotalPayments())}
+              </button>
+              <p className="text-xs text-gray-500 mt-1">Click to view details</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Case Handler</p>
@@ -362,7 +377,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
         </CardContent>
       </Card>
       {/* Tabbed Content */}
-      <Tabs defaultValue="timeline" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
