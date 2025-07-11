@@ -33,14 +33,14 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
-  organizationId: integer("organization_id").references(() => organizations.id),
+  organisationId: integer("organisation_id").references(() => organisations.id),
   isAdmin: boolean("is_admin").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Organizations table
-export const organizations = pgTable("organizations", {
+export const organisations = pgTable("organisations", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   contactEmail: varchar("contact_email"),
@@ -62,7 +62,7 @@ export const cases = pgTable("cases", {
   outstandingAmount: decimal("outstanding_amount", { precision: 10, scale: 2 }).notNull(),
   status: varchar("status", { length: 50 }).notNull().default("active"),
   stage: varchar("stage", { length: 100 }).notNull().default("initial_contact"),
-  organizationId: integer("organization_id").references(() => organizations.id).notNull(),
+  organisationId: integer("organisation_id").references(() => organisations.id).notNull(),
   assignedTo: varchar("assigned_to"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -100,30 +100,30 @@ export const documents = pgTable("documents", {
   fileType: varchar("file_type", { length: 100 }),
   filePath: varchar("file_path", { length: 500 }).notNull(),
   uploadedBy: varchar("uploaded_by").references(() => users.id),
-  organizationId: integer("organization_id").references(() => organizations.id).notNull(),
+  organisationId: integer("organisation_id").references(() => organisations.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
-  organization: one(organizations, {
-    fields: [users.organizationId],
-    references: [organizations.id],
+  organization: one(organisations, {
+    fields: [users.organisationId],
+    references: [organisations.id],
   }),
   sentMessages: many(messages),
   uploadedDocuments: many(documents),
 }));
 
-export const organizationsRelations = relations(organizations, ({ many }) => ({
+export const organisationsRelations = relations(organisations, ({ many }) => ({
   users: many(users),
   cases: many(cases),
   documents: many(documents),
 }));
 
 export const casesRelations = relations(cases, ({ one, many }) => ({
-  organization: one(organizations, {
-    fields: [cases.organizationId],
-    references: [organizations.id],
+  organization: one(organisations, {
+    fields: [cases.organisationId],
+    references: [organisations.id],
   }),
   activities: many(caseActivities),
   messages: many(messages),
@@ -157,9 +157,9 @@ export const documentsRelations = relations(documents, ({ one }) => ({
     fields: [documents.uploadedBy],
     references: [users.id],
   }),
-  organization: one(organizations, {
-    fields: [documents.organizationId],
-    references: [organizations.id],
+  organization: one(organisations, {
+    fields: [documents.organisationId],
+    references: [organisations.id],
   }),
 }));
 
@@ -167,8 +167,8 @@ export const documentsRelations = relations(documents, ({ one }) => ({
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 
-export type Organization = typeof organizations.$inferSelect;
-export type InsertOrganization = typeof organizations.$inferInsert;
+export type Organization = typeof organisations.$inferSelect;
+export type InsertOrganization = typeof organisations.$inferInsert;
 
 export type Case = typeof cases.$inferSelect;
 export type InsertCase = typeof cases.$inferInsert;
@@ -183,7 +183,7 @@ export type Document = typeof documents.$inferSelect;
 export type InsertDocument = typeof documents.$inferInsert;
 
 // Schemas
-export const insertOrganizationSchema = createInsertSchema(organizations);
+export const insertOrganizationSchema = createInsertSchema(organisations);
 export const insertCaseSchema = createInsertSchema(cases);
 export const insertCaseActivitySchema = createInsertSchema(caseActivities);
 export const insertMessageSchema = createInsertSchema(messages);

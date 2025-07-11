@@ -63,11 +63,11 @@ export default function Landing() {
             <Card className="text-center">
               <CardHeader>
                 <Users className="h-12 w-12 text-acclaim-teal mx-auto mb-4" />
-                <CardTitle>Multi-Organization Access</CardTitle>
+                <CardTitle>Multi-Organisation Access</CardTitle>
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  Secure access for multiple team members within your organization
+                  Secure access for multiple team members within your organisation
                 </CardDescription>
               </CardContent>
             </Card>

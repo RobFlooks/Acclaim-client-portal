@@ -17,12 +17,12 @@ interface User {
   email: string;
   firstName: string;
   lastName: string;
-  organizationId: number | null;
-  organizationName?: string;
+  organisationId: number | null;
+  organisationName?: string;
   createdAt: string;
 }
 
-interface Organization {
+interface Organisation {
   id: number;
   name: string;
   createdAt: string;
@@ -44,16 +44,16 @@ export default function Admin() {
     retry: false,
   });
 
-  // Fetch organizations
-  const { data: organizations, isLoading: orgsLoading, error: orgsError } = useQuery({
-    queryKey: ["/api/admin/organizations"],
+  // Fetch organisations
+  const { data: organisations, isLoading: orgsLoading, error: orgsError } = useQuery({
+    queryKey: ["/api/admin/organisations"],
     retry: false,
   });
 
-  // Create organization mutation
+  // Create organisation mutation
   const createOrgMutation = useMutation({
     mutationFn: async (name: string) => {
-      const response = await fetch("/api/admin/organizations", {
+      const response = await fetch("/api/admin/organisations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name }),
@@ -68,9 +68,9 @@ export default function Admin() {
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Organization created successfully",
+        description: "Organisation created successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/organizations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/organisations"] });
       setNewOrgName("");
       setShowCreateOrg(false);
     },
@@ -88,19 +88,19 @@ export default function Admin() {
       }
       toast({
         title: "Error",
-        description: "Failed to create organization",
+        description: "Failed to create organisation",
         variant: "destructive",
       });
     },
   });
 
-  // Assign user to organization mutation
+  // Assign user to organisation mutation
   const assignUserMutation = useMutation({
-    mutationFn: async ({ userId, organizationId }: { userId: string; organizationId: number }) => {
+    mutationFn: async ({ userId, organisationId }: { userId: string; organisationId: number }) => {
       const response = await fetch(`/api/admin/users/${userId}/assign`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ organizationId }),
+        body: JSON.stringify({ organisationId }),
       });
       
       if (!response.ok) {
@@ -112,10 +112,10 @@ export default function Admin() {
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "User assigned to organization successfully",
+        description: "User assigned to organisation successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/organizations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/organisations"] });
       setSelectedUser(null);
       setSelectedOrgId("");
       setShowAssignUser(false);
@@ -134,7 +134,7 @@ export default function Admin() {
       }
       toast({
         title: "Error",
-        description: "Failed to assign user to organization",
+        description: "Failed to assign user to organisation",
         variant: "destructive",
       });
     },
@@ -175,7 +175,7 @@ export default function Admin() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Admin Panel</h1>
-          <p className="text-gray-600">Manage users and organizations</p>
+          <p className="text-gray-600">Manage users and organisations</p>
         </div>
       </div>
 
@@ -189,19 +189,19 @@ export default function Admin() {
           <CardContent>
             <div className="text-2xl font-bold">{users?.length || 0}</div>
             <p className="text-xs text-muted-foreground">
-              {users?.filter((u: User) => !u.organizationId).length || 0} unassigned
+              {users?.filter((u: User) => !u.organisationId).length || 0} unassigned
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Organizations</CardTitle>
+            <CardTitle className="text-sm font-medium">Organisations</CardTitle>
             <Building className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{organizations?.length || 0}</div>
-            <p className="text-xs text-muted-foreground">Active organizations</p>
+            <div className="text-2xl font-bold">{organisations?.length || 0}</div>
+            <p className="text-xs text-muted-foreground">Active organisations</p>
           </CardContent>
         </Card>
       </div>
@@ -211,21 +211,21 @@ export default function Admin() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Organizations</CardTitle>
-              <CardDescription>Manage client organizations</CardDescription>
+              <CardTitle>Organisations</CardTitle>
+              <CardDescription>Manage client organisations</CardDescription>
             </div>
             <Dialog open={showCreateOrg} onOpenChange={setShowCreateOrg}>
               <DialogTrigger asChild>
                 <Button className="bg-acclaim-teal hover:bg-acclaim-teal/90">
                   <Plus className="h-4 w-4 mr-2" />
-                  Create Organization
+                  Create Organisation
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Create New Organization</DialogTitle>
+                  <DialogTitle>Create New Organisation</DialogTitle>
                   <DialogDescription>
-                    Add a new client organization to the system
+                    Add a new client organisation to the system
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={(e) => {
@@ -236,12 +236,12 @@ export default function Admin() {
                 }}>
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="orgName">Organization Name</Label>
+                      <Label htmlFor="orgName">Organisation Name</Label>
                       <Input
                         id="orgName"
                         value={newOrgName}
                         onChange={(e) => setNewOrgName(e.target.value)}
-                        placeholder="Enter organization name"
+                        placeholder="Enter organisation name"
                         autoFocus
                         required
                       />
@@ -262,7 +262,7 @@ export default function Admin() {
                         disabled={!newOrgName.trim() || createOrgMutation.isPending}
                         className="bg-acclaim-teal hover:bg-acclaim-teal/90"
                       >
-                        {createOrgMutation.isPending ? "Creating..." : "Create Organization"}
+                        {createOrgMutation.isPending ? "Creating..." : "Create Organisation"}
                       </Button>
                     </div>
                   </div>
@@ -282,7 +282,7 @@ export default function Admin() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {organizations?.map((org: Organization) => (
+              {organisations?.map((org: Organization) => (
                 <TableRow key={org.id}>
                   <TableCell className="font-medium">{org.name}</TableCell>
                   <TableCell>{org.userCount}</TableCell>
@@ -303,7 +303,7 @@ export default function Admin() {
       <Card>
         <CardHeader>
           <CardTitle>Users</CardTitle>
-          <CardDescription>Manage user access and organization assignments</CardDescription>
+          <CardDescription>Manage user access and organisation assignments</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -311,7 +311,7 @@ export default function Admin() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Organization</TableHead>
+                <TableHead>Organisation</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -324,14 +324,14 @@ export default function Admin() {
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
-                    {user.organizationName ? (
-                      <Badge variant="secondary">{user.organizationName}</Badge>
+                    {user.organisationName ? (
+                      <Badge variant="secondary">{user.organisationName}</Badge>
                     ) : (
                       <Badge variant="outline">Unassigned</Badge>
                     )}
                   </TableCell>
                   <TableCell>
-                    {user.organizationId ? (
+                    {user.organisationId ? (
                       <Badge className="bg-green-100 text-green-800">Active</Badge>
                     ) : (
                       <Badge variant="destructive">No Access</Badge>
@@ -360,9 +360,9 @@ export default function Admin() {
       <Dialog open={showAssignUser} onOpenChange={setShowAssignUser}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Assign User to Organization</DialogTitle>
+            <DialogTitle>Assign User to Organisation</DialogTitle>
             <DialogDescription>
-              Select an organization for {selectedUser?.firstName} {selectedUser?.lastName}
+              Select an organisation for {selectedUser?.firstName} {selectedUser?.lastName}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={(e) => {
@@ -370,22 +370,22 @@ export default function Admin() {
             if (selectedUser && selectedOrgId) {
               assignUserMutation.mutate({
                 userId: selectedUser.id,
-                organizationId: parseInt(selectedOrgId),
+                organisationId: parseInt(selectedOrgId),
               });
             }
           }}>
             <div className="space-y-4">
               <div>
-                <Label>Organization</Label>
+                <Label>Organisation</Label>
                 <Select
                   value={selectedOrgId}
                   onValueChange={setSelectedOrgId}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select an organization" />
+                    <SelectValue placeholder="Select an organisation" />
                   </SelectTrigger>
                   <SelectContent>
-                    {organizations?.map((org: Organization) => (
+                    {organisations?.map((org: Organization) => (
                       <SelectItem key={org.id} value={org.id.toString()}>
                         {org.name}
                       </SelectItem>

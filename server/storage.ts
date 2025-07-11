@@ -1,6 +1,6 @@
 import {
   users,
-  organizations,
+  organisations,
   cases,
   caseActivities,
   messages,
@@ -26,13 +26,13 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   
-  // Organization operations
-  getOrganization(id: number): Promise<Organization | undefined>;
-  createOrganization(org: InsertOrganization): Promise<Organization>;
+  // Organisation operations
+  getOrganisation(id: number): Promise<Organization | undefined>;
+  createOrganisation(org: InsertOrganization): Promise<Organization>;
   
   // Case operations
-  getCasesForOrganization(organizationId: number): Promise<Case[]>;
-  getCase(id: number, organizationId: number): Promise<Case | undefined>;
+  getCasesForOrganisation(organisationId: number): Promise<Case[]>;
+  getCase(id: number, organisationId: number): Promise<Case | undefined>;
   createCase(caseData: InsertCase): Promise<Case>;
   updateCase(id: number, caseData: Partial<InsertCase>): Promise<Case>;
   
@@ -48,12 +48,12 @@ export interface IStorage {
   
   // Document operations
   getDocumentsForCase(caseId: number): Promise<Document[]>;
-  getDocumentsForOrganization(organizationId: number): Promise<Document[]>;
+  getDocumentsForOrganisation(organisationId: number): Promise<Document[]>;
   createDocument(document: InsertDocument): Promise<Document>;
-  deleteDocument(id: number, organizationId: number): Promise<void>;
+  deleteDocument(id: number, organisationId: number): Promise<void>;
   
   // Statistics
-  getCaseStats(organizationId: number): Promise<{
+  getCaseStats(organisationId: number): Promise<{
     activeCases: number;
     resolvedCases: number;
     totalOutstanding: string;
@@ -62,8 +62,8 @@ export interface IStorage {
 
   // Admin operations
   getAllUsers(): Promise<User[]>;
-  getAllOrganizations(): Promise<Organization[]>;
-  assignUserToOrganization(userId: string, organizationId: number): Promise<User | null>;
+  getAllOrganisations(): Promise<Organization[]>;
+  assignUserToOrganisation(userId: string, organisationId: number): Promise<User | null>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -87,29 +87,29 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getOrganization(id: number): Promise<Organization | undefined> {
-    const [org] = await db.select().from(organizations).where(eq(organizations.id, id));
+  async getOrganisation(id: number): Promise<Organization | undefined> {
+    const [org] = await db.select().from(organisations).where(eq(organisations.id, id));
     return org;
   }
 
-  async createOrganization(org: InsertOrganization): Promise<Organization> {
-    const [newOrg] = await db.insert(organizations).values(org).returning();
+  async createOrganisation(org: InsertOrganization): Promise<Organization> {
+    const [newOrg] = await db.insert(organisations).values(org).returning();
     return newOrg;
   }
 
-  async getCasesForOrganization(organizationId: number): Promise<Case[]> {
+  async getCasesForOrganisation(organisationId: number): Promise<Case[]> {
     return await db
       .select()
       .from(cases)
-      .where(eq(cases.organizationId, organizationId))
+      .where(eq(cases.organisationId, organisationId))
       .orderBy(desc(cases.updatedAt));
   }
 
-  async getCase(id: number, organizationId: number): Promise<Case | undefined> {
+  async getCase(id: number, organisationId: number): Promise<Case | undefined> {
     const [case_] = await db
       .select()
       .from(cases)
-      .where(and(eq(cases.id, id), eq(cases.organizationId, organizationId)));
+      .where(and(eq(cases.id, id), eq(cases.organisationId, organisationId)));
     return case_;
   }
 
@@ -176,11 +176,11 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(documents.createdAt));
   }
 
-  async getDocumentsForOrganization(organizationId: number): Promise<Document[]> {
+  async getDocumentsForOrganisation(organisationId: number): Promise<Document[]> {
     return await db
       .select()
       .from(documents)
-      .where(eq(documents.organizationId, organizationId))
+      .where(eq(documents.organisationId, organisationId))
       .orderBy(desc(documents.createdAt));
   }
 
@@ -189,13 +189,13 @@ export class DatabaseStorage implements IStorage {
     return newDocument;
   }
 
-  async deleteDocument(id: number, organizationId: number): Promise<void> {
+  async deleteDocument(id: number, organisationId: number): Promise<void> {
     await db
       .delete(documents)
-      .where(and(eq(documents.id, id), eq(documents.organizationId, organizationId)));
+      .where(and(eq(documents.id, id), eq(documents.organisationId, organisationId)));
   }
 
-  async getCaseStats(organizationId: number): Promise<{
+  async getCaseStats(organisationId: number): Promise<{
     activeCases: number;
     resolvedCases: number;
     totalOutstanding: string;
@@ -209,7 +209,7 @@ export class DatabaseStorage implements IStorage {
         totalCases: sql<number>`COUNT(*)`,
       })
       .from(cases)
-      .where(eq(cases.organizationId, organizationId));
+      .where(eq(cases.organisationId, organisationId));
 
     const recoveryRate = stats.totalCases > 0 ? (stats.resolvedCases / stats.totalCases) * 100 : 0;
 
@@ -229,37 +229,37 @@ export class DatabaseStorage implements IStorage {
         email: users.email,
         firstName: users.firstName,
         lastName: users.lastName,
-        organizationId: users.organizationId,
+        organisationId: users.organisationId,
         createdAt: users.createdAt,
-        organizationName: organizations.name,
+        organizationName: organisations.name,
       })
       .from(users)
-      .leftJoin(organizations, eq(users.organizationId, organizations.id))
+      .leftJoin(organizations, eq(users.organisationId, organisations.id))
       .orderBy(users.createdAt);
     
     return result;
   }
 
-  async getAllOrganizations(): Promise<Organization[]> {
+  async getAllOrganisations(): Promise<Organization[]> {
     const result = await db
       .select({
-        id: organizations.id,
-        name: organizations.name,
-        createdAt: organizations.createdAt,
+        id: organisations.id,
+        name: organisations.name,
+        createdAt: organisations.createdAt,
         userCount: sql<number>`count(${users.id})`,
       })
-      .from(organizations)
-      .leftJoin(users, eq(organizations.id, users.organizationId))
-      .groupBy(organizations.id, organizations.name, organizations.createdAt)
-      .orderBy(organizations.createdAt);
+      .from(organisations)
+      .leftJoin(users, eq(organisations.id, users.organisationId))
+      .groupBy(organisations.id, organisations.name, organisations.createdAt)
+      .orderBy(organisations.createdAt);
     
     return result;
   }
 
-  async assignUserToOrganization(userId: string, organizationId: number): Promise<User | null> {
+  async assignUserToOrganisation(userId: string, organisationId: number): Promise<User | null> {
     const [user] = await db
       .update(users)
-      .set({ organizationId, updatedAt: new Date() })
+      .set({ organisationId: organisationId, updatedAt: new Date() })
       .where(eq(users.id, userId))
       .returning();
     

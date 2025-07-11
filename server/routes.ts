@@ -54,11 +54,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.organizationId) {
-        return res.status(404).json({ message: "User organization not found" });
+      if (!user || !user.organisationId) {
+        return res.status(404).json({ message: "User organisation not found" });
       }
 
-      const stats = await storage.getCaseStats(user.organizationId);
+      const stats = await storage.getCaseStats(user.organisationId);
       res.json(stats);
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
@@ -72,11 +72,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.organizationId) {
-        return res.status(404).json({ message: "User organization not found" });
+      if (!user || !user.organisationId) {
+        return res.status(404).json({ message: "User organisation not found" });
       }
 
-      const cases = await storage.getCasesForOrganization(user.organizationId);
+      const cases = await storage.getCasesForOrganisation(user.organisationId);
       res.json(cases);
     } catch (error) {
       console.error("Error fetching cases:", error);
@@ -89,12 +89,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.organizationId) {
-        return res.status(404).json({ message: "User organization not found" });
+      if (!user || !user.organisationId) {
+        return res.status(404).json({ message: "User organisation not found" });
       }
 
       const caseId = parseInt(req.params.id);
-      const case_ = await storage.getCase(caseId, user.organizationId);
+      const case_ = await storage.getCase(caseId, user.organisationId);
       
       if (!case_) {
         return res.status(404).json({ message: "Case not found" });
@@ -112,8 +112,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.organizationId) {
-        return res.status(404).json({ message: "User organization not found" });
+      if (!user || !user.organisationId) {
+        return res.status(404).json({ message: "User organisation not found" });
       }
 
       // Parse the case data from JSON
@@ -139,7 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         outstandingAmount: parsedCaseData.outstandingAmount,
         status: parsedCaseData.status || 'active',
         stage: parsedCaseData.stage || 'new',
-        organizationId: user.organizationId,
+        organisationId: user.organisationId,
         assignedTo: 'System',
       };
 
@@ -157,7 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             fileSize: file.size,
             mimeType: file.mimetype,
             caseId: newCase.id,
-            organizationId: user.organizationId,
+            organisationId: user.organisationId,
             uploadedBy: userId,
           });
         }
@@ -188,12 +188,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.organizationId) {
-        return res.status(404).json({ message: "User organization not found" });
+      if (!user || !user.organisationId) {
+        return res.status(404).json({ message: "User organisation not found" });
       }
 
       const caseId = parseInt(req.params.id);
-      const case_ = await storage.getCase(caseId, user.organizationId);
+      const case_ = await storage.getCase(caseId, user.organisationId);
       
       if (!case_) {
         return res.status(404).json({ message: "Case not found" });
@@ -224,12 +224,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.organizationId) {
-        return res.status(404).json({ message: "User organization not found" });
+      if (!user || !user.organisationId) {
+        return res.status(404).json({ message: "User organisation not found" });
       }
 
       const caseId = parseInt(req.params.id);
-      const case_ = await storage.getCase(caseId, user.organizationId);
+      const case_ = await storage.getCase(caseId, user.organisationId);
       
       if (!case_) {
         return res.status(404).json({ message: "Case not found" });
@@ -265,15 +265,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.organizationId) {
-        return res.status(404).json({ message: "User organization not found" });
+      if (!user || !user.organisationId) {
+        return res.status(404).json({ message: "User organisation not found" });
       }
 
-      const documents = await storage.getDocumentsForOrganization(user.organizationId);
+      const documents = await storage.getDocumentsForOrganisation(user.organisationId);
       res.json(documents);
     } catch (error) {
-      console.error("Error fetching organization documents:", error);
-      res.status(500).json({ message: "Failed to fetch organization documents" });
+      console.error("Error fetching organisation documents:", error);
+      res.status(500).json({ message: "Failed to fetch organisation documents" });
     }
   });
 
@@ -282,8 +282,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.organizationId) {
-        return res.status(404).json({ message: "User organization not found" });
+      if (!user || !user.organisationId) {
+        return res.status(404).json({ message: "User organisation not found" });
       }
 
       if (!req.file) {
@@ -295,8 +295,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Case ID is required" });
       }
 
-      // Verify case belongs to user's organization
-      const case_ = await storage.getCase(caseId, user.organizationId);
+      // Verify case belongs to user's organisation
+      const case_ = await storage.getCase(caseId, user.organisationId);
       if (!case_) {
         return res.status(404).json({ message: "Case not found" });
       }
@@ -308,7 +308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fileType: req.file.mimetype,
         filePath: req.file.path,
         uploadedBy: userId,
-        organizationId: user.organizationId,
+        organisationId: user.organisationId,
       });
 
       res.json(document);
@@ -323,12 +323,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.organizationId) {
-        return res.status(404).json({ message: "User organization not found" });
+      if (!user || !user.organisationId) {
+        return res.status(404).json({ message: "User organisation not found" });
       }
 
       const documentId = parseInt(req.params.id);
-      const documents = await storage.getDocumentsForOrganization(user.organizationId);
+      const documents = await storage.getDocumentsForOrganisation(user.organisationId);
       const document = documents.find(doc => doc.id === documentId);
 
       if (!document) {
@@ -352,12 +352,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.organizationId) {
-        return res.status(404).json({ message: "User organization not found" });
+      if (!user || !user.organisationId) {
+        return res.status(404).json({ message: "User organisation not found" });
       }
 
       const caseId = parseInt(req.params.id);
-      const case_ = await storage.getCase(caseId, user.organizationId);
+      const case_ = await storage.getCase(caseId, user.organisationId);
       
       if (!case_) {
         return res.status(404).json({ message: "Case not found" });
@@ -376,12 +376,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.organizationId) {
-        return res.status(404).json({ message: "User organization not found" });
+      if (!user || !user.organisationId) {
+        return res.status(404).json({ message: "User organisation not found" });
       }
 
       const caseId = parseInt(req.params.id);
-      const case_ = await storage.getCase(caseId, user.organizationId);
+      const case_ = await storage.getCase(caseId, user.organisationId);
       
       if (!case_) {
         return res.status(404).json({ message: "Case not found" });
@@ -398,7 +398,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fileType: req.file.mimetype,
         filePath: req.file.path,
         uploadedBy: userId,
-        organizationId: user.organizationId,
+        organisationId: user.organisationId,
       });
 
       // Add case activity
@@ -421,12 +421,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.organizationId) {
-        return res.status(404).json({ message: "User organization not found" });
+      if (!user || !user.organisationId) {
+        return res.status(404).json({ message: "User organisation not found" });
       }
 
       const documentId = parseInt(req.params.id);
-      const documents = await storage.getDocumentsForOrganization(user.organizationId);
+      const documents = await storage.getDocumentsForOrganisation(user.organisationId);
       const document = documents.find(d => d.id === documentId);
       
       if (!document) {
@@ -464,7 +464,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/organizations', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.get('/api/admin/organisations', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const currentUser = await storage.getUser(userId);
@@ -473,15 +473,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const organizations = await storage.getAllOrganizations();
-      res.json(organizations);
+      const organisations = await storage.getAllOrganisations();
+      res.json(organisations);
     } catch (error) {
-      console.error("Error fetching organizations:", error);
-      res.status(500).json({ message: "Failed to fetch organizations" });
+      console.error("Error fetching organisations:", error);
+      res.status(500).json({ message: "Failed to fetch organisations" });
     }
   });
 
-  app.post('/api/admin/organizations', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.post('/api/admin/organisations', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const currentUser = await storage.getUser(userId);
@@ -492,17 +492,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { name } = req.body;
       if (!name || !name.trim()) {
-        return res.status(400).json({ message: "Organization name is required" });
+        return res.status(400).json({ message: "Organisation name is required" });
       }
 
-      const organization = await storage.createOrganization({
+      const organisation = await storage.createOrganisation({
         name: name.trim(),
       });
 
-      res.status(201).json(organization);
+      res.status(201).json(organisation);
     } catch (error) {
-      console.error("Error creating organization:", error);
-      res.status(500).json({ message: "Failed to create organization" });
+      console.error("Error creating organisation:", error);
+      res.status(500).json({ message: "Failed to create organisation" });
     }
   });
 
@@ -516,21 +516,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { userId } = req.params;
-      const { organizationId } = req.body;
+      const { organisationId } = req.body;
 
-      if (!organizationId) {
+      if (!organisationId) {
         return res.status(400).json({ message: "Organization ID is required" });
       }
 
-      const user = await storage.assignUserToOrganization(userId, organizationId);
+      const user = await storage.assignUserToOrganisation(userId, organisationId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
 
       res.json(user);
     } catch (error) {
-      console.error("Error assigning user to organization:", error);
-      res.status(500).json({ message: "Failed to assign user to organization" });
+      console.error("Error assigning user to organisation:", error);
+      res.status(500).json({ message: "Failed to assign user to organisation" });
     }
   });
 

@@ -28,7 +28,7 @@ const submitCaseSchema = z.object({
   creditorName: z.string().min(1, "Creditor name is required"),
   
   // Debtor details
-  debtorType: z.enum(["individual", "organization"], {
+  debtorType: z.enum(["individual", "organisation"], {
     required_error: "Please select debtor type",
   }),
   debtorName: z.string().min(1, "Debtor name is required"),
@@ -37,9 +37,9 @@ const submitCaseSchema = z.object({
   individualType: z.enum(["individual", "business"]).optional(),
   tradingName: z.string().optional(),
   
-  // Organization specific fields
-  organizationName: z.string().optional(),
-  organizationTradingName: z.string().optional(),
+  // Organisation specific fields
+  organisationName: z.string().optional(),
+  organisationTradingName: z.string().optional(),
   companyNumber: z.string().optional(),
   
   // Principal of Business details (for Individual/Sole Trader)
@@ -116,7 +116,7 @@ export default function SubmitCase() {
   const [debtorType, setDebtorType] = useState("");
   const [individualType, setIndividualType] = useState("");
   const [singleInvoice, setSingleInvoice] = useState("");
-  const [organizationNameValue, setOrganizationNameValue] = useState("");
+  const [organisationNameValue, setOrganisationNameValue] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
   const form = useForm<SubmitCaseForm>({
@@ -130,8 +130,8 @@ export default function SubmitCase() {
       debtorName: "",
       individualType: "",
       tradingName: "",
-      organizationName: "",
-      organizationTradingName: "",
+      organisationName: "",
+      organisationTradingName: "",
       companyNumber: "",
       principalSalutation: "",
       principalFirstName: "",
@@ -173,8 +173,8 @@ export default function SubmitCase() {
 
       // Build debtor name based on type
       let debtorName = "";
-      if (data.debtorType === "organization") {
-        debtorName = data.organizationName;
+      if (data.debtorType === "organisation") {
+        debtorName = data.organisationName;
       } else {
         // Individual/Sole Trader
         if (data.individualType === "business") {
@@ -204,8 +204,8 @@ export default function SubmitCase() {
         debtorType: data.debtorType,
         individualType: data.individualType,
         tradingName: data.tradingName,
-        organizationName: data.organizationName,
-        organizationTradingName: data.organizationTradingName,
+        organisationName: data.organisationName,
+        organisationTradingName: data.organisationTradingName,
         companyNumber: data.companyNumber,
         principalDetails: {
           salutation: data.principalSalutation,
@@ -379,28 +379,28 @@ export default function SubmitCase() {
                           field.onChange(value);
                           setDebtorType(value);
                           // Clear all fields when switching debtor type
-                          if (value === "organization") {
+                          if (value === "organisation") {
                             // Clear individual fields
                             form.setValue("individualType", "");
                             form.setValue("tradingName", "");
                             form.setValue("principalSalutation", "");
                             form.setValue("principalFirstName", "");
                             form.setValue("principalLastName", "");
-                            // Ensure organization fields are clean
-                            form.setValue("organizationName", "");
-                            form.setValue("organizationTradingName", "");
+                            // Ensure organisation fields are clean
+                            form.setValue("organisationName", "");
+                            form.setValue("organisationTradingName", "");
                             form.setValue("companyNumber", "");
-                            // Clear organization name state
-                            setOrganizationNameValue("");
+                            // Clear organisation name state
+                            setOrganisationNameValue("");
                             // Reset individual type state
                             setIndividualType("");
                           } else if (value === "individual") {
-                            // Clear organization fields
-                            form.setValue("organizationName", "");
-                            form.setValue("organizationTradingName", "");
+                            // Clear organisation fields
+                            form.setValue("organisationName", "");
+                            form.setValue("organisationTradingName", "");
                             form.setValue("companyNumber", "");
-                            // Clear organization name state
-                            setOrganizationNameValue("");
+                            // Clear organisation name state
+                            setOrganisationNameValue("");
                             // Reset individual type
                             setIndividualType("");
                           }
@@ -413,8 +413,8 @@ export default function SubmitCase() {
                           <Label htmlFor="individual">Individual / Sole Trader (non-limited entity)</Label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="organization" id="organization" />
-                          <Label htmlFor="organization">Organisation (Limited company, PLC, LLP)</Label>
+                          <RadioGroupItem value="organisation" id="organisation" />
+                          <Label htmlFor="organisation">Organisation (Limited company, PLC, LLP)</Label>
                         </div>
                       </RadioGroup>
                     </FormControl>
@@ -424,11 +424,11 @@ export default function SubmitCase() {
               />
 
               {/* Show different fields based on debtor type */}
-              {debtorType === "organization" ? (
+              {debtorType === "organisation" ? (
                 <div className="space-y-4">
                   <FormField
                     control={form.control}
-                    name="organizationName"
+                    name="organisationName"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Organisation Name</FormLabel>
@@ -436,9 +436,9 @@ export default function SubmitCase() {
                           <Input 
                             key={`org-name-${debtorType}`}
                             placeholder="Enter organisation name" 
-                            value={organizationNameValue}
+                            value={organisationNameValue}
                             onChange={(e) => {
-                              setOrganizationNameValue(e.target.value);
+                              setOrganisationNameValue(e.target.value);
                               field.onChange(e.target.value);
                             }}
                           />
@@ -449,7 +449,7 @@ export default function SubmitCase() {
                   />
                   <FormField
                     control={form.control}
-                    name="organizationTradingName"
+                    name="organisationTradingName"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Trading Name</FormLabel>
