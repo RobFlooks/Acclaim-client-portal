@@ -120,7 +120,7 @@ export default function Reports() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Total Cases</p>
-                  <p className="text-2xl font-bold text-acclaim-teal">
+                  <p className="text-2xl font-bold text-[#4b5563]">
                     {casesLoading ? "..." : cases?.length || 0}
                   </p>
                 </div>
@@ -166,7 +166,6 @@ export default function Reports() {
           </div>
         </CardContent>
       </Card>
-
       {/* Case Status Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
@@ -239,7 +238,6 @@ export default function Reports() {
           </CardContent>
         </Card>
       </div>
-
       {/* Download Reports */}
       <Card>
         <CardHeader>
