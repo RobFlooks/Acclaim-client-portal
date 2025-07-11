@@ -345,13 +345,6 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               <p className="text-xs text-gray-500 mt-1">*May include interest and recovery costs</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Original Amount</p>
-              <p className="font-medium">{formatCurrency(caseData.originalAmount)}</p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div>
               <p className="text-sm text-gray-600">Total Payments</p>
               <button 
                 onClick={handlePaymentsClick}
@@ -360,6 +353,13 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                 {formatCurrency(getTotalPayments())}
               </button>
               <p className="text-xs text-gray-500 mt-1">Click to view details</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <p className="text-sm text-gray-600">Original Amount</p>
+              <p className="font-medium">{formatCurrency(caseData.originalAmount)}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Case Handler</p>
