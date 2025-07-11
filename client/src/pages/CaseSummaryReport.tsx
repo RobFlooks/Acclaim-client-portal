@@ -75,7 +75,14 @@ export default function CaseSummaryReport() {
 
   const getTotalOutstandingAmount = () => {
     if (!cases) return 0;
-    return cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.outstandingAmount), 0);
+    return cases.reduce((sum: number, caseItem: any) => {
+      const totalDebt = parseFloat(caseItem.originalAmount) + 
+                        parseFloat(caseItem.costsAdded || 0) + 
+                        parseFloat(caseItem.interestAdded || 0) + 
+                        parseFloat(caseItem.feesAdded || 0);
+      const totalPayments = getTotalPayments(caseItem);
+      return sum + (totalDebt - totalPayments);
+    }, 0);
   };
 
   const formatCurrency = (amount: string | number) => {
@@ -157,8 +164,9 @@ export default function CaseSummaryReport() {
         'Interest Added': parseFloat(caseItem.interestAdded || 0),
         'Fees Added': parseFloat(caseItem.feesAdded || 0),
         'Total Additional Charges': parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0),
+        'Total Debt': parseFloat(caseItem.originalAmount) + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0),
         'Total Payments': getTotalPayments(caseItem),
-        'Outstanding Amount': parseFloat(caseItem.outstandingAmount),
+        'Outstanding Amount': parseFloat(caseItem.originalAmount) + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0) - getTotalPayments(caseItem),
         'Case Handler': caseItem.assignedTo || 'Unassigned',
         'Created Date': formatDate(caseItem.createdAt),
         'Last Updated': formatDate(caseItem.updatedAt)
@@ -175,6 +183,7 @@ export default function CaseSummaryReport() {
         'Interest Added': cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.interestAdded || 0), 0),
         'Fees Added': cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.feesAdded || 0), 0),
         'Total Additional Charges': cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0), 0),
+        'Total Debt': getTotalOriginalAmount() + cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0), 0),
         'Total Payments': getTotalPaymentsReceived(),
         'Outstanding Amount': getTotalOutstandingAmount(),
         'Case Handler': '',
@@ -199,6 +208,7 @@ export default function CaseSummaryReport() {
         { wch: 12 }, // Interest Added
         { wch: 12 }, // Fees Added
         { wch: 18 }, // Total Additional Charges
+        { wch: 15 }, // Total Debt
         { wch: 15 }, // Total Payments
         { wch: 18 }, // Outstanding Amount
         { wch: 20 }, // Case Handler
@@ -211,7 +221,7 @@ export default function CaseSummaryReport() {
       const summaryRowIndex = excelData.length;
       const summaryRowRange = XLSX.utils.encode_range({
         s: { c: 0, r: summaryRowIndex },
-        e: { c: 13, r: summaryRowIndex }
+        e: { c: 14, r: summaryRowIndex }
       });
 
       XLSX.utils.book_append_sheet(wb, ws, 'Case Summary Report');
@@ -282,7 +292,7 @@ export default function CaseSummaryReport() {
           <CardTitle>Summary Statistics</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4">
             <div className="p-4 bg-blue-50 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
@@ -317,6 +327,15 @@ export default function CaseSummaryReport() {
                   <p className="text-2xl font-bold text-purple-600">{formatCurrency(getTotalOriginalAmount())}</p>
                 </div>
                 <Banknote className="h-8 w-8 text-purple-600" />
+              </div>
+            </div>
+            <div className="p-4 bg-indigo-50 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Total Debt (inc. costs & interest)</p>
+                  <p className="text-2xl font-bold text-indigo-600">{formatCurrency(getTotalOriginalAmount() + (cases?.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0), 0) || 0))}</p>
+                </div>
+                <Banknote className="h-8 w-8 text-indigo-600" />
               </div>
             </div>
             <div className="p-4 bg-emerald-50 rounded-lg">
@@ -364,12 +383,27 @@ export default function CaseSummaryReport() {
                     Original Amount
                   </th>
                   <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                    Costs Added
+                  </th>
+                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                    Interest Added
+                  </th>
+                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                    Other Fees
+                  </th>
+                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                    Total Debt
+                    <div className="text-xs text-gray-500 mt-1 font-normal">
+                      Original + Costs + Interest + Fees
+                    </div>
+                  </th>
+                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
                     Total Payments
                   </th>
                   <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
                     Outstanding Amount
                     <div className="text-xs text-gray-500 mt-1 font-normal">
-                      *May include interest and recovery costs
+                      Total Debt - Total Payments
                     </div>
                   </th>
                   <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
@@ -395,11 +429,34 @@ export default function CaseSummaryReport() {
                     <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-gray-900">
                       {formatCurrency(caseItem.originalAmount)}
                     </td>
+                    <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-gray-900">
+                      {formatCurrency(caseItem.costsAdded || 0)}
+                    </td>
+                    <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-gray-900">
+                      {formatCurrency(caseItem.interestAdded || 0)}
+                    </td>
+                    <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-gray-900">
+                      {formatCurrency(caseItem.feesAdded || 0)}
+                    </td>
+                    <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-purple-600">
+                      {formatCurrency(
+                        parseFloat(caseItem.originalAmount) + 
+                        parseFloat(caseItem.costsAdded || 0) + 
+                        parseFloat(caseItem.interestAdded || 0) + 
+                        parseFloat(caseItem.feesAdded || 0)
+                      )}
+                    </td>
                     <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-green-600">
                       {formatCurrency(getTotalPayments(caseItem))}
                     </td>
                     <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-orange-600">
-                      {formatCurrency(caseItem.outstandingAmount)}
+                      {formatCurrency(
+                        parseFloat(caseItem.originalAmount) + 
+                        parseFloat(caseItem.costsAdded || 0) + 
+                        parseFloat(caseItem.interestAdded || 0) + 
+                        parseFloat(caseItem.feesAdded || 0) - 
+                        getTotalPayments(caseItem)
+                      )}
                     </td>
                     <td className="border border-gray-200 px-4 py-3 text-sm text-gray-900">
                       {caseItem.assignedTo || 'Unassigned'}
