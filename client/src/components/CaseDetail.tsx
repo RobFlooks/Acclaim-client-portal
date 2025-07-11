@@ -405,7 +405,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               <div>
                 <p className="text-sm text-gray-600">Other Fees</p>
                 <p className="font-medium">{formatCurrency(caseData.feesAdded || 0)}</p>
-                <p className="text-xs text-gray-500 mt-1">Compensation administrative and other fees</p>
+                <p className="text-xs text-gray-500 mt-1">Compensation, administrative and other fees</p>
               </div>
             </div>
             <div className="mt-4 pt-3 border-t bg-gray-50 rounded-lg p-3">
