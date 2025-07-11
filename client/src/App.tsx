@@ -10,6 +10,7 @@ import Home from "@/pages/Home";
 import SubmitCase from "@/pages/SubmitCase";
 import AdminEnhanced from "@/pages/AdminEnhanced";
 import UserProfile from "@/pages/UserProfile";
+import CaseSummaryReport from "@/pages/CaseSummaryReport";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -24,6 +25,7 @@ function Router() {
           <Route path="/submit-case" component={SubmitCase} />
           <Route path="/admin" component={AdminEnhanced} />
           <Route path="/profile" component={UserProfile} />
+          <Route path="/case-summary-report" component={CaseSummaryReport} />
         </>
       )}
       <Route component={NotFound} />

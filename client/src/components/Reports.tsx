@@ -5,8 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { BarChart3, Download, FileText, TrendingUp, PieChart, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
 
 export default function Reports() {
   const { toast } = useToast();
@@ -63,61 +61,19 @@ export default function Reports() {
     }).format(num);
   };
 
-  const handleDownloadReport = async (reportType: string) => {
+  const handleViewReport = (reportType: string) => {
     if (reportType === "Case Summary Report") {
-      await generateCaseSummaryPDF();
+      // Navigate to case summary report page
+      window.location.href = '/case-summary-report';
     } else {
       toast({
-        title: "Download Started",
-        description: `${reportType} report is being generated...`,
-      });
-      // Other report types can be implemented here
-    }
-  };
-
-  const generateCaseSummaryPDF = async () => {
-    try {
-      console.log('Starting PDF generation...');
-      
-      toast({
-        title: "Generating PDF",
-        description: "Creating case summary report...",
-      });
-
-      // Test with minimal PDF to verify jsPDF works
-      const doc = new jsPDF();
-      console.log('jsPDF instance created');
-      
-      // Very simple content
-      doc.text('Test PDF Generation', 20, 20);
-      doc.text('This is a test document', 20, 40);
-      doc.text('Generated on: ' + new Date().toString(), 20, 60);
-      
-      console.log('Content added to PDF');
-      
-      // Try to save
-      const filename = 'test-report.pdf';
-      console.log('Attempting to save with filename:', filename);
-      
-      doc.save(filename);
-      console.log('PDF save command executed');
-      
-      toast({
-        title: "PDF Generated",
-        description: "Test PDF has been downloaded successfully.",
-      });
-    } catch (error) {
-      console.error('Detailed error generating PDF:', error);
-      console.error('Error name:', error.name);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-      toast({
-        title: "Error",
-        description: `Failed to generate PDF: ${error.message}`,
-        variant: "destructive",
+        title: "Report View",
+        description: `${reportType} report view is not yet implemented.`,
       });
     }
   };
+
+
 
   const getStatusBreakdown = () => {
     if (!cases) return { active: 0, resolved: 0, inProgress: 0 };
@@ -287,10 +243,10 @@ export default function Reports() {
           </CardContent>
         </Card>
       </div>
-      {/* Download Reports */}
+      {/* View Reports */}
       <Card>
         <CardHeader>
-          <CardTitle>Download Reports</CardTitle>
+          <CardTitle>View Reports</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -303,11 +259,11 @@ export default function Reports() {
                 <FileText className="h-8 w-8 text-acclaim-teal" />
               </div>
               <Button 
-                onClick={() => handleDownloadReport("Case Summary")}
+                onClick={() => handleViewReport("Case Summary Report")}
                 className="w-full bg-acclaim-teal hover:bg-acclaim-teal/90"
               >
-                <Download className="h-4 w-4 mr-2" />
-                Download PDF
+                <FileText className="h-4 w-4 mr-2" />
+                View Report
               </Button>
             </div>
 
