@@ -126,7 +126,7 @@ export default function Dashboard() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
-              <div className="p-3 bg-acclaim-teal bg-opacity-10 rounded-lg">
+              <div className="p-3 rounded-lg bg-[#f5e7006e]">
                 <FolderOpen className="text-acclaim-teal h-6 w-6" />
               </div>
               <div className="ml-4">
@@ -187,7 +187,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
-
       {/* Recent Cases and Messages */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Cases */}
@@ -296,7 +295,6 @@ export default function Dashboard() {
           </Card>
         </div>
       </div>
-
       {/* Quick Actions */}
       <Card>
         <CardHeader>
