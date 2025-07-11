@@ -1,0 +1,195 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Search, User, Building, Factory, Clock, Check, AlertTriangle, Eye } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { isUnauthorizedError } from "@/lib/authUtils";
+import CaseDetail from "./CaseDetail";
+
+export default function Cases() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCase, setSelectedCase] = useState<any>(null);
+  const { toast } = useToast();
+
+  const { data: cases, isLoading } = useQuery({
+    queryKey: ["/api/cases"],
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to load cases",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const filteredCases = cases?.filter((case_: any) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      case_.debtorName.toLowerCase().includes(searchLower) ||
+      case_.accountNumber.toLowerCase().includes(searchLower) ||
+      case_.debtorEmail?.toLowerCase().includes(searchLower)
+    );
+  }) || [];
+
+  const getStatusBadge = (status: string, stage: string) => {
+    if (status === "resolved") {
+      return <Badge variant="secondary" className="bg-green-100 text-green-800"><Check className="w-3 h-3 mr-1" />Resolved</Badge>;
+    }
+    
+    switch (stage) {
+      case "payment_plan":
+        return <Badge variant="secondary" className="bg-green-100 text-green-800"><Check className="w-3 h-3 mr-1" />Payment Plan</Badge>;
+      case "legal_action":
+        return <Badge variant="destructive"><AlertTriangle className="w-3 h-3 mr-1" />Legal Action</Badge>;
+      default:
+        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800"><Clock className="w-3 h-3 mr-1" />In Progress</Badge>;
+    }
+  };
+
+  const getDebtorIcon = (debtorName: string) => {
+    if (debtorName.toLowerCase().includes("tech") || debtorName.toLowerCase().includes("solutions")) {
+      return <User className="text-acclaim-teal h-5 w-5" />;
+    }
+    if (debtorName.toLowerCase().includes("manufacturing") || debtorName.toLowerCase().includes("factory")) {
+      return <Factory className="text-acclaim-teal h-5 w-5" />;
+    }
+    return <Building className="text-acclaim-teal h-5 w-5" />;
+  };
+
+  const formatCurrency = (amount: string | number) => {
+    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+    return new Intl.NumberFormat('en-GB', {
+      style: 'currency',
+      currency: 'GBP',
+    }).format(num);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-GB', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Search and Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Search Cases</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Search by debtor name, account number, or email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Cases List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>All Cases ({filteredCases.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-20 bg-gray-200 rounded-lg"></div>
+                </div>
+              ))}
+            </div>
+          ) : filteredCases.length > 0 ? (
+            <div className="space-y-4">
+              {filteredCases.map((case_: any) => (
+                <div
+                  key={case_.id}
+                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-acclaim-teal bg-opacity-10 rounded-full flex items-center justify-center">
+                      {getDebtorIcon(case_.debtorName)}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{case_.debtorName}</p>
+                      <p className="text-sm text-gray-600">Account: {case_.accountNumber}</p>
+                      <p className="text-xs text-gray-500">
+                        Created: {formatDate(case_.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="text-center">
+                    <p className="font-semibold text-gray-900">
+                      {formatCurrency(case_.outstandingAmount)}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Original: {formatCurrency(case_.originalAmount)}
+                    </p>
+                  </div>
+                  
+                  <div className="text-center">
+                    {getStatusBadge(case_.status, case_.stage)}
+                    <p className="text-xs text-gray-500 mt-1">
+                      {case_.assignedTo && `Assigned to: ${case_.assignedTo}`}
+                    </p>
+                  </div>
+                  
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedCase(case_)}
+                        className="ml-4"
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        View Details
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Case Details - {case_.debtorName}</DialogTitle>
+                      </DialogHeader>
+                      <CaseDetail case={case_} />
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">
+                {searchTerm ? "No cases match your search" : "No cases found"}
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
