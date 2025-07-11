@@ -19,7 +19,7 @@ import {
   type InsertDocument,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, or } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
 
@@ -175,7 +175,7 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(messages)
-      .where(eq(messages.recipientId, userId))
+      .where(or(eq(messages.senderId, userId), eq(messages.recipientId, userId)))
       .orderBy(desc(messages.createdAt));
   }
 
