@@ -31,6 +31,7 @@ interface CaseDetailProps {
 export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   const [newMessage, setNewMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [messageAttachment, setMessageAttachment] = useState<File | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -90,12 +91,37 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
 
   const sendMessageMutation = useMutation({
     mutationFn: async (messageData: any) => {
-      await apiRequest("POST", "/api/messages", messageData);
+      if (messageAttachment) {
+        const formData = new FormData();
+        formData.append("caseId", messageData.caseId);
+        formData.append("recipientType", messageData.recipientType);
+        formData.append("recipientId", messageData.recipientId);
+        formData.append("subject", messageData.subject);
+        formData.append("content", messageData.content);
+        formData.append("attachment", messageAttachment);
+        
+        const response = await fetch("/api/messages", {
+          method: "POST",
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          throw new Error("Failed to send message");
+        }
+        
+        return response.json();
+      } else {
+        await apiRequest("POST", "/api/messages", messageData);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cases", caseData.id, "messages"] });
       queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
       setNewMessage("");
+      setMessageAttachment(null);
+      // Reset message attachment file input
+      const messageFileInput = document.getElementById("message-attachment") as HTMLInputElement;
+      if (messageFileInput) messageFileInput.value = "";
       toast({
         title: "Success",
         description: "Message sent successfully",
@@ -465,6 +491,27 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                         <p className="text-xs text-gray-500">{formatDate(message.createdAt)}</p>
                       </div>
                       <p className="text-sm text-gray-700">{message.content}</p>
+                      {message.attachmentFileName && (
+                        <div className="mt-2 p-2 bg-gray-50 rounded-md">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <FileText className="h-4 w-4 text-acclaim-teal" />
+                              <span className="text-sm font-medium">{message.attachmentFileName}</span>
+                              <span className="text-xs text-gray-500">
+                                ({message.attachmentFileSize ? Math.round(message.attachmentFileSize / 1024) : 0}KB)
+                              </span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => window.open(`/api/messages/${message.id}/download`, '_blank')}
+                              className="text-acclaim-teal hover:text-acclaim-teal"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -488,6 +535,26 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                   className="mt-2"
                   rows={3}
                 />
+                
+                {/* Message Attachment Section */}
+                <div className="mt-4">
+                  <Label htmlFor="message-attachment" className="text-sm font-medium text-gray-700">
+                    Attach File (Optional)
+                  </Label>
+                  <input
+                    id="message-attachment"
+                    type="file"
+                    onChange={(e) => setMessageAttachment(e.target.files?.[0] || null)}
+                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar,.xls,.xlsx,.csv"
+                    className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-acclaim-teal file:text-white hover:file:bg-acclaim-teal/90"
+                  />
+                  {messageAttachment && (
+                    <p className="text-sm text-gray-600 mt-1">
+                      Selected: {messageAttachment.name} ({(messageAttachment.size / 1024 / 1024).toFixed(2)} MB)
+                    </p>
+                  )}
+                </div>
+                
                 <Button
                   onClick={handleSendMessage}
                   disabled={!newMessage.trim() || sendMessageMutation.isPending}

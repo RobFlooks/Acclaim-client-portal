@@ -258,6 +258,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/messages', isAuthenticated, upload.single('attachment'), async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      
+      // Check if this is a case-specific message
+      if (req.body.caseId) {
+        const user = await storage.getUser(userId);
+        
+        if (!user || !user.organisationId) {
+          return res.status(404).json({ message: "User organisation not found" });
+        }
+
+        const caseId = parseInt(req.body.caseId);
+        const case_ = await storage.getCase(caseId, user.organisationId);
+        
+        if (!case_) {
+          return res.status(404).json({ message: "Case not found" });
+        }
+      }
+      
       const messageData = insertMessageSchema.parse({
         ...req.body,
         senderId: userId,
@@ -291,9 +308,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const messageId = parseInt(req.params.id);
       const userId = req.user.claims.sub;
       
-      // Get the message to verify user can access it
-      const messages = await storage.getMessagesForUser(userId);
-      const message = messages.find(m => m.id === messageId);
+      // Get all messages for the user (including case-specific ones)
+      const userMessages = await storage.getMessagesForUser(userId);
+      let message = userMessages.find(m => m.id === messageId);
+      
+      // If not found in user messages, check case-specific messages
+      if (!message) {
+        const user = await storage.getUser(userId);
+        if (user && user.organisationId) {
+          // Get all cases for the user's organisation
+          const cases = await storage.getCasesForOrganisation(user.organisationId);
+          
+          // Check each case's messages
+          for (const case_ of cases) {
+            const caseMessages = await storage.getMessagesForCase(case_.id);
+            message = caseMessages.find(m => m.id === messageId);
+            if (message) break;
+          }
+        }
+      }
       
       if (!message || !message.attachmentFilePath) {
         return res.status(404).json({ message: "File not found" });
