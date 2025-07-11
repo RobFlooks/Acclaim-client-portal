@@ -38,6 +38,17 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Calculate accurate outstanding amount
+  const getTotalPayments = () => {
+    if (!payments || payments.length === 0) return 0;
+    return payments.reduce((sum: number, payment: any) => sum + parseFloat(payment.amount), 0);
+  };
+
+  const getOutstandingAmount = () => {
+    const totalPayments = getTotalPayments();
+    return parseFloat(caseData.originalAmount) - totalPayments;
+  };
+
   const { data: activities, isLoading: activitiesLoading } = useQuery({
     queryKey: ["/api/cases", caseData.id, "activities"],
     enabled: !!caseData.id,
@@ -297,7 +308,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
             </div>
             <div>
               <p className="text-sm text-gray-600">Outstanding Amount</p>
-              <p className="font-medium">{formatCurrency(caseData.outstandingAmount)}</p>
+              <p className="font-medium">{formatCurrency(getOutstandingAmount())}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Original Amount</p>
@@ -671,22 +682,13 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                       <div>
                         <p className="text-sm font-medium text-green-800">Total Payments Received</p>
                         <p className="text-2xl font-bold text-green-600">
-                          {formatCurrency(
-                            payments.reduce((sum: number, payment: any) => 
-                              sum + parseFloat(payment.amount), 0
-                            )
-                          )}
+                          {formatCurrency(getTotalPayments())}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-medium text-gray-600">Outstanding Balance</p>
                         <p className="text-2xl font-bold text-gray-900">
-                          {formatCurrency(
-                            parseFloat(caseData.outstandingAmount) - 
-                            payments.reduce((sum: number, payment: any) => 
-                              sum + parseFloat(payment.amount), 0
-                            )
-                          )}
+                          {formatCurrency(getOutstandingAmount())}
                         </p>
                       </div>
                     </div>

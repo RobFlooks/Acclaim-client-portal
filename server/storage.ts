@@ -138,11 +138,37 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCasesForOrganisation(organisationId: number): Promise<Case[]> {
-    return await db
+    // Get all cases for the organisation
+    const allCases = await db
       .select()
       .from(cases)
       .where(eq(cases.organisationId, organisationId))
       .orderBy(desc(cases.updatedAt));
+
+    // For each case, calculate the accurate outstanding amount
+    const casesWithCalculatedBalance = await Promise.all(
+      allCases.map(async (case_) => {
+        // Get total payments for this case
+        const casePayments = await db
+          .select()
+          .from(payments)
+          .where(eq(payments.caseId, case_.id));
+        
+        const totalPayments = casePayments.reduce((sum, payment) => 
+          sum + parseFloat(payment.amount), 0);
+        
+        // Calculate outstanding amount: original amount minus total payments
+        const calculatedOutstanding = parseFloat(case_.originalAmount) - totalPayments;
+        
+        return {
+          ...case_,
+          outstandingAmount: calculatedOutstanding.toFixed(2),
+          totalPayments: totalPayments.toFixed(2)
+        };
+      })
+    );
+
+    return casesWithCalculatedBalance;
   }
 
   async getCase(id: number, organisationId: number): Promise<Case | undefined> {
