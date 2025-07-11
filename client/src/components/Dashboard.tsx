@@ -83,7 +83,7 @@ export default function Dashboard() {
 
   const getStatusBadge = (status: string, stage: string) => {
     if (status === "resolved") {
-      return <Badge variant="secondary" className="bg-green-100 text-green-800"><Check className="w-3 h-3 mr-1" />Resolved</Badge>;
+      return <Badge variant="secondary" className="bg-green-100 text-green-800"><Check className="w-3 h-3 mr-1" />Closed</Badge>;
     }
     
     switch (stage) {
@@ -185,7 +185,7 @@ export default function Dashboard() {
                 <CheckCircle className="text-green-600 h-6 w-6" />
               </div>
               <div className="ml-4">
-                <p className="text-gray-600 text-sm">Resolved Cases</p>
+                <p className="text-gray-600 text-sm">Closed Cases</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {statsLoading ? "..." : stats?.resolvedCases || 0}
                 </p>

@@ -122,7 +122,7 @@ export default function CaseSummaryReport() {
     return (
       <div className="flex gap-2">
         <Badge className={getStatusColor(status)}>
-          {status.charAt(0).toUpperCase() + status.slice(1)}
+          {status === 'resolved' ? 'Closed' : status.charAt(0).toUpperCase() + status.slice(1)}
         </Badge>
         <Badge className={getStageColor(stage)}>
           {stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
@@ -150,7 +150,7 @@ export default function CaseSummaryReport() {
       const excelData = cases.map((caseItem: any) => ({
         'Account Number': caseItem.accountNumber,
         'Debtor Name': caseItem.debtorName,
-        'Status': caseItem.status.charAt(0).toUpperCase() + caseItem.status.slice(1),
+        'Status': caseItem.status === 'resolved' ? 'Closed' : caseItem.status.charAt(0).toUpperCase() + caseItem.status.slice(1),
         'Stage': caseItem.stage.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
         'Original Amount': parseFloat(caseItem.originalAmount),
         'Total Payments': getTotalPayments(caseItem),
@@ -292,7 +292,7 @@ export default function CaseSummaryReport() {
             <div className="p-4 bg-green-50 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Resolved Cases</p>
+                  <p className="text-sm text-gray-600">Closed Cases</p>
                   <p className="text-2xl font-bold text-green-600">{stats?.resolvedCases || 0}</p>
                 </div>
                 <Calendar className="h-8 w-8 text-green-600" />

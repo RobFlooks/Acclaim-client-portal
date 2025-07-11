@@ -200,7 +200,7 @@ export default function Reports() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600">Resolved Cases</span>
+                  <span className="text-sm text-gray-600">Closed Cases</span>
                 </div>
                 <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                   {statusBreakdown.resolved}

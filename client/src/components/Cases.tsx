@@ -49,7 +49,7 @@ export default function Cases() {
 
   const getStatusBadge = (status: string, stage: string) => {
     if (status === "resolved") {
-      return <Badge variant="secondary" className="bg-green-100 text-green-800"><Check className="w-3 h-3 mr-1" />Resolved</Badge>;
+      return <Badge variant="secondary" className="bg-green-100 text-green-800"><Check className="w-3 h-3 mr-1" />Closed</Badge>;
     }
     
     switch (stage) {
