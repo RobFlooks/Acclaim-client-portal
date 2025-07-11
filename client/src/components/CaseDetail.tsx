@@ -63,6 +63,25 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
     }, 100);
   };
 
+  const handleMessagesClick = () => {
+    setActiveTab("messages");
+    // Scroll to messages section after a brief delay to allow tab to render
+    setTimeout(() => {
+      const messagesSection = document.querySelector('[data-tab="messages"]');
+      if (messagesSection) {
+        messagesSection.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }
+    }, 100);
+  };
+
+  const getLastMessage = () => {
+    if (!messages || messages.length === 0) return null;
+    return messages[0]; // Messages are ordered by newest first
+  };
+
   const { data: activities, isLoading: activitiesLoading } = useQuery({
     queryKey: ["/api/cases", caseData.id, "activities"],
     enabled: !!caseData.id,
@@ -315,7 +334,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             <div>
               <p className="text-sm text-gray-600">Account Number</p>
               <p className="font-medium">{caseData.accountNumber}</p>
@@ -329,6 +348,9 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               <p className="text-sm text-gray-600">Original Amount</p>
               <p className="font-medium">{formatCurrency(caseData.originalAmount)}</p>
             </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <p className="text-sm text-gray-600">Total Payments</p>
               <button 
@@ -342,6 +364,27 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
             <div>
               <p className="text-sm text-gray-600">Case Handler</p>
               <p className="font-medium">{caseData.assignedTo || "Unassigned"}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Last Message</p>
+              {getLastMessage() ? (
+                <button 
+                  onClick={handleMessagesClick}
+                  className="font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left"
+                >
+                  <p className="truncate max-w-48">
+                    {getLastMessage()?.content || "No content"}
+                  </p>
+                </button>
+              ) : (
+                <p className="font-medium text-gray-400">No messages yet</p>
+              )}
+              <p className="text-xs text-gray-500 mt-1">
+                {getLastMessage() ? 
+                  `${formatDate(getLastMessage().createdAt)} - Click to view` : 
+                  "Start a conversation"
+                }
+              </p>
             </div>
           </div>
         </CardContent>
@@ -526,7 +569,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
           </Card>
         </TabsContent>
 
-        <TabsContent value="messages" className="space-y-4">
+        <TabsContent value="messages" className="space-y-4" data-tab="messages">
           <Card>
             <CardHeader>
               <CardTitle>Messages</CardTitle>
