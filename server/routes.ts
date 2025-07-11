@@ -196,6 +196,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Documents routes
+  app.get('/api/documents', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.organizationId) {
+        return res.status(404).json({ message: "User organization not found" });
+      }
+
+      const documents = await storage.getDocumentsForOrganization(user.organizationId);
+      res.json(documents);
+    } catch (error) {
+      console.error("Error fetching organization documents:", error);
+      res.status(500).json({ message: "Failed to fetch organization documents" });
+    }
+  });
+
   app.get('/api/cases/:id/documents', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;

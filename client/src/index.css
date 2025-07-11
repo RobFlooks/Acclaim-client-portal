@@ -24,10 +24,10 @@
   --ring: hsl(20, 14.3%, 4.1%);
   --radius: 0.5rem;
   
-  /* Custom Acclaim colors */
-  --acclaim-teal: hsl(180, 100%, 27%);
-  --acclaim-blue: hsl(207, 100%, 32%);
-  --acclaim-light: hsl(0, 0%, 88%);
+  /* Custom Acclaim colors - Brand Specific */
+  --acclaim-teal: hsl(180, 100%, 27%); /* #008b8b */
+  --acclaim-blue: hsl(207, 100%, 32%); /* #005f99 */
+  --acclaim-light: hsl(0, 0%, 88%); /* #e0e0e0 */
 }
 
 .dark {
