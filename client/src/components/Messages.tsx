@@ -17,6 +17,8 @@ export default function Messages() {
   const [newSubject, setNewSubject] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [replyingTo, setReplyingTo] = useState<any>(null);
+  const [viewingMessage, setViewingMessage] = useState<any>(null);
+  const [messageViewOpen, setMessageViewOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -116,6 +118,30 @@ export default function Messages() {
     setNewSubject("");
   };
 
+  const markAsReadMutation = useMutation({
+    mutationFn: async (messageId: number) => {
+      await apiRequest("PUT", `/api/messages/${messageId}/read`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
+    },
+  });
+
+  const handleMessageClick = (message: any) => {
+    setViewingMessage(message);
+    setMessageViewOpen(true);
+    
+    // Mark as read if it's unread
+    if (!message.isRead) {
+      markAsReadMutation.mutate(message.id);
+    }
+  };
+
+  const handleCloseMessageView = () => {
+    setMessageViewOpen(false);
+    setViewingMessage(null);
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-GB', {
       year: 'numeric',
@@ -187,6 +213,64 @@ export default function Messages() {
         </CardHeader>
       </Card>
 
+      {/* Message View Dialog */}
+      <Dialog open={messageViewOpen} onOpenChange={handleCloseMessageView}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold">
+              {viewingMessage?.subject}
+            </DialogTitle>
+          </DialogHeader>
+          {viewingMessage && (
+            <div className="space-y-4">
+              <div className="border-b pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-acclaim-teal bg-opacity-10 rounded-full flex items-center justify-center">
+                      <User className="h-5 w-5 text-acclaim-teal" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {viewingMessage.senderName || viewingMessage.senderEmail || 'Unknown'}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {formatDate(viewingMessage.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        handleCloseMessageView();
+                        handleReply(viewingMessage);
+                      }}
+                      className="text-acclaim-teal border-acclaim-teal hover:bg-acclaim-teal hover:text-white"
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Reply
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              <div className="prose max-w-none">
+                <div className="whitespace-pre-wrap text-gray-700">
+                  {viewingMessage.content}
+                </div>
+              </div>
+              {viewingMessage.caseId && (
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium">Related to case:</span> Case #{viewingMessage.caseId}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Messages List */}
       <Card>
         <CardHeader>
@@ -206,11 +290,12 @@ export default function Messages() {
               {messages.map((message: any) => (
                 <div
                   key={message.id}
-                  className={`p-4 rounded-lg border transition-colors ${
+                  className={`p-4 rounded-lg border transition-colors cursor-pointer hover:shadow-md ${
                     message.isRead 
-                      ? "bg-gray-50 border-gray-200" 
-                      : "bg-white border-acclaim-teal shadow-sm"
+                      ? "bg-gray-50 border-gray-200 hover:bg-gray-100" 
+                      : "bg-white border-acclaim-teal shadow-sm hover:shadow-lg"
                   }`}
+                  onClick={() => handleMessageClick(message)}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-3">
@@ -247,7 +332,10 @@ export default function Messages() {
                       variant="ghost"
                       size="sm"
                       className="text-acclaim-teal hover:text-acclaim-teal"
-                      onClick={() => handleReply(message)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleReply(message);
+                      }}
                       title="Reply to this message"
                     >
                       <MessageSquare className="h-4 w-4" />
