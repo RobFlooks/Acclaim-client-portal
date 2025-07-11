@@ -30,6 +30,10 @@ const submitCaseSchema = z.object({
   }),
   debtorName: z.string().min(1, "Debtor name is required"),
   
+  // Individual/Sole Trader specific fields
+  individualType: z.enum(["individual", "business"]).optional(),
+  tradingName: z.string().optional(),
+  
   // Principal of Business details (for Individual/Sole Trader)
   principalSalutation: z.string().optional(),
   principalFirstName: z.string().optional(),
@@ -55,6 +59,24 @@ const submitCaseSchema = z.object({
   paymentTermsDays: z.number().min(1).optional(),
   paymentTermsOther: z.string().optional(),
 }).refine((data) => {
+  // If Individual/Sole Trader is selected, individual type is required
+  if (data.debtorType === "individual") {
+    return data.individualType;
+  }
+  return true;
+}, {
+  message: "Please specify if this is an individual or business",
+  path: ["individualType"],
+}).refine((data) => {
+  // If Individual/Sole Trader and business type, trading name is required
+  if (data.debtorType === "individual" && data.individualType === "business") {
+    return data.tradingName && data.tradingName.length > 0;
+  }
+  return true;
+}, {
+  message: "Trading name is required for business",
+  path: ["tradingName"],
+}).refine((data) => {
   // If Individual/Sole Trader is selected, principal details are required
   if (data.debtorType === "individual") {
     return data.principalSalutation && data.principalFirstName && data.principalLastName;
@@ -73,6 +95,7 @@ export default function SubmitCase() {
   const [, setLocation] = useLocation();
   const [showOtherTerms, setShowOtherTerms] = useState(false);
   const [debtorType, setDebtorType] = useState("individual");
+  const [individualType, setIndividualType] = useState("individual");
 
   const form = useForm<SubmitCaseForm>({
     resolver: zodResolver(submitCaseSchema),
@@ -82,6 +105,8 @@ export default function SubmitCase() {
       clientPhone: "",
       debtorType: "individual",
       debtorName: "",
+      individualType: "individual",
+      tradingName: "",
       principalSalutation: "",
       principalFirstName: "",
       principalLastName: "",
@@ -115,8 +140,22 @@ export default function SubmitCase() {
         paymentTerms = data.paymentTermsOther || "";
       }
 
+      // Build debtor name based on type
+      let debtorName = "";
+      if (data.debtorType === "organization") {
+        debtorName = data.debtorName;
+      } else {
+        // Individual/Sole Trader
+        if (data.individualType === "business") {
+          debtorName = data.tradingName || "";
+        } else {
+          // Individual - use principal name
+          debtorName = `${data.principalSalutation || ""} ${data.principalFirstName || ""} ${data.principalLastName || ""}`.trim();
+        }
+      }
+
       const caseData = {
-        debtorName: data.debtorName,
+        debtorName,
         debtorEmail: data.mainEmail,
         debtorPhone: data.mainPhone,
         debtorAddress,
@@ -132,6 +171,13 @@ export default function SubmitCase() {
           phone: data.clientPhone,
         },
         debtorType: data.debtorType,
+        individualType: data.individualType,
+        tradingName: data.tradingName,
+        principalDetails: {
+          salutation: data.principalSalutation,
+          firstName: data.principalFirstName,
+          lastName: data.principalLastName,
+        },
         altPhone: data.altPhone,
         altEmail: data.altEmail,
       };
@@ -289,19 +335,70 @@ export default function SubmitCase() {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="debtorName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Debtor Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Enter debtor's name or company name" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Show different fields based on debtor type */}
+              {debtorType === "organization" ? (
+                <FormField
+                  control={form.control}
+                  name="debtorName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Company Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter company name" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : (
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="individualType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Is this debtor an individual or business?</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              setIndividualType(value);
+                            }}
+                            defaultValue={field.value}
+                            className="flex flex-col space-y-2"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="individual" id="individual-person" />
+                              <Label htmlFor="individual-person">Individual</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="business" id="individual-business" />
+                              <Label htmlFor="individual-business">Business (Sole Trader)</Label>
+                            </div>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  {individualType === "business" && (
+                    <FormField
+                      control={form.control}
+                      name="tradingName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Trading Name</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Enter the business trading name" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
+              )}
 
               {/* Principal of Business Details - Only show for Individual/Sole Trader */}
               {debtorType === "individual" && (
