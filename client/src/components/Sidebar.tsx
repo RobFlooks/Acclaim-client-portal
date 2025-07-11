@@ -43,13 +43,16 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
     <div className="w-64 bg-acclaim-teal shadow-lg flex flex-col">
       {/* Brand Header */}
       <div className="flex items-center justify-center h-16 bg-acclaim-teal border-b border-teal-700">
-        <div className="flex items-center">
+        <button 
+          onClick={() => setActiveSection('dashboard')}
+          className="flex items-center hover:bg-teal-700 px-3 py-2 rounded-lg transition-colors"
+        >
           <img src={logoImage} alt="Acclaim Logo" className="w-8 h-8 mr-3 filter brightness-0 invert" />
           <div className="text-white">
             <div className="text-lg font-bold ml-[0px] mr-[0px] text-left">Acclaim</div>
             <div className="text-xs opacity-80 text-left">Credit Management & Recovery</div>
           </div>
-        </div>
+        </button>
       </div>
       {/* Navigation Menu */}
       <nav className="flex-1 px-4 py-6 space-y-2">
