@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Scale, Shield, Users, FileText } from "lucide-react";
+import { Shield, Users, FileText } from "lucide-react";
+import roseLogoPath from "@assets/Acclaim rose.Cur_1752277774829.png";
 
 export default function Landing() {
   const handleLogin = () => {
@@ -14,7 +15,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
-              <Scale className="h-8 w-8 text-acclaim-teal mr-3" />
+              <img src={roseLogoPath} alt="Acclaim Logo" className="h-8 w-8 mr-3" />
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Acclaim</h1>
                 <p className="text-sm text-gray-600">Credit Management & Recovery</p>
@@ -98,7 +99,7 @@ export default function Landing() {
 
             <Card className="text-center">
               <CardHeader>
-                <Scale className="h-12 w-12 text-acclaim-teal mx-auto mb-4" />
+                <img src={roseLogoPath} alt="Acclaim Logo" className="h-12 w-12 mx-auto mb-4" />
                 <CardTitle>Professional Service</CardTitle>
               </CardHeader>
               <CardContent>
@@ -116,7 +117,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
             <div className="flex items-center justify-center mb-4">
-              <Scale className="h-6 w-6 text-acclaim-teal mr-2" />
+              <img src={roseLogoPath} alt="Acclaim Logo" className="h-6 w-6 mr-2" />
               <span className="text-lg font-semibold text-gray-900">Acclaim Credit Management & Recovery</span>
             </div>
             <p className="text-gray-600 mb-4">
