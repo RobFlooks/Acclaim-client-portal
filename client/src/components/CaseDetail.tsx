@@ -194,7 +194,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               <p className="font-medium">{formatCurrency(caseData.originalAmount)}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">File Handler</p>
+              <p className="text-sm text-gray-600">Case Handler</p>
               <p className="font-medium">{caseData.assignedTo || "Unassigned"}</p>
             </div>
           </div>
