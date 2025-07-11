@@ -16,6 +16,7 @@ export default function Messages() {
   const [newMessage, setNewMessage] = useState("");
   const [newSubject, setNewSubject] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -93,6 +94,20 @@ export default function Messages() {
     });
   };
 
+  const handleReply = (message: any) => {
+    setReplyingTo(message);
+    setNewSubject(`Re: ${message.subject}`);
+    setNewMessage("");
+    setDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setReplyingTo(null);
+    setNewMessage("");
+    setNewSubject("");
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-GB', {
       year: 'numeric',
@@ -110,7 +125,7 @@ export default function Messages() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Messages</CardTitle>
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <Dialog open={dialogOpen} onOpenChange={handleCloseDialog}>
               <DialogTrigger asChild>
                 <Button className="bg-acclaim-teal hover:bg-acclaim-teal/90">
                   <Plus className="h-4 w-4 mr-2" />
@@ -119,7 +134,9 @@ export default function Messages() {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Send New Message</DialogTitle>
+                  <DialogTitle>
+                    {replyingTo ? `Reply to: ${replyingTo.subject}` : "Send New Message"}
+                  </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
@@ -131,6 +148,12 @@ export default function Messages() {
                       onChange={(e) => setNewSubject(e.target.value)}
                     />
                   </div>
+                  {replyingTo && (
+                    <div className="p-3 bg-gray-50 rounded border-l-4 border-acclaim-teal">
+                      <p className="text-sm font-medium text-gray-700 mb-1">Original Message:</p>
+                      <p className="text-sm text-gray-600">{replyingTo.content}</p>
+                    </div>
+                  )}
                   <div>
                     <Label htmlFor="message">Message</Label>
                     <Textarea
@@ -211,6 +234,8 @@ export default function Messages() {
                       variant="ghost"
                       size="sm"
                       className="text-acclaim-teal hover:text-acclaim-teal"
+                      onClick={() => handleReply(message)}
+                      title="Reply to this message"
                     >
                       <MessageSquare className="h-4 w-4" />
                     </Button>
