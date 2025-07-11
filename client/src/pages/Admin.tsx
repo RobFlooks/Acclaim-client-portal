@@ -36,6 +36,7 @@ export default function Admin() {
   const [newOrgName, setNewOrgName] = useState("");
   const [showCreateOrg, setShowCreateOrg] = useState(false);
   const [showAssignUser, setShowAssignUser] = useState(false);
+  const [selectedOrgId, setSelectedOrgId] = useState<string>("");
 
   // Fetch users
   const { data: users, isLoading: usersLoading, error: usersError } = useQuery({
@@ -116,6 +117,7 @@ export default function Admin() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/organizations"] });
       setSelectedUser(null);
+      setSelectedOrgId("");
       setShowAssignUser(false);
     },
     onError: (error) => {
@@ -226,31 +228,45 @@ export default function Admin() {
                     Add a new client organization to the system
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="orgName">Organization Name</Label>
-                    <Input
-                      id="orgName"
-                      value={newOrgName}
-                      onChange={(e) => setNewOrgName(e.target.value)}
-                      placeholder="Enter organization name"
-                    />
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  if (newOrgName.trim()) {
+                    createOrgMutation.mutate(newOrgName);
+                  }
+                }}>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="orgName">Organization Name</Label>
+                      <Input
+                        id="orgName"
+                        value={newOrgName}
+                        onChange={(e) => setNewOrgName(e.target.value)}
+                        placeholder="Enter organization name"
+                        autoFocus
+                        required
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setShowCreateOrg(false);
+                          setNewOrgName("");
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={!newOrgName.trim() || createOrgMutation.isPending}
+                        className="bg-acclaim-teal hover:bg-acclaim-teal/90"
+                      >
+                        {createOrgMutation.isPending ? "Creating..." : "Create Organization"}
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowCreateOrg(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={() => createOrgMutation.mutate(newOrgName)}
-                      disabled={!newOrgName.trim() || createOrgMutation.isPending}
-                    >
-                      {createOrgMutation.isPending ? "Creating..." : "Create"}
-                    </Button>
-                  </div>
-                </div>
+                </form>
               </DialogContent>
             </Dialog>
           </div>
@@ -349,40 +365,56 @@ export default function Admin() {
               Select an organization for {selectedUser?.firstName} {selectedUser?.lastName}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Organization</Label>
-              <Select
-                onValueChange={(value) => {
-                  if (selectedUser) {
-                    assignUserMutation.mutate({
-                      userId: selectedUser.id,
-                      organizationId: parseInt(value),
-                    });
-                  }
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select an organization" />
-                </SelectTrigger>
-                <SelectContent>
-                  {organizations?.map((org: Organization) => (
-                    <SelectItem key={org.id} value={org.id.toString()}>
-                      {org.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            if (selectedUser && selectedOrgId) {
+              assignUserMutation.mutate({
+                userId: selectedUser.id,
+                organizationId: parseInt(selectedOrgId),
+              });
+            }
+          }}>
+            <div className="space-y-4">
+              <div>
+                <Label>Organization</Label>
+                <Select
+                  value={selectedOrgId}
+                  onValueChange={setSelectedOrgId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select an organization" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {organizations?.map((org: Organization) => (
+                      <SelectItem key={org.id} value={org.id.toString()}>
+                        {org.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowAssignUser(false);
+                    setSelectedUser(null);
+                    setSelectedOrgId("");
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={!selectedOrgId || assignUserMutation.isPending}
+                  className="bg-acclaim-teal hover:bg-acclaim-teal/90"
+                >
+                  {assignUserMutation.isPending ? "Assigning..." : "Assign User"}
+                </Button>
+              </div>
             </div>
-            <div className="flex justify-end space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowAssignUser(false)}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
