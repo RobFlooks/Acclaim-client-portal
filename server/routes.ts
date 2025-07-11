@@ -2,7 +2,15 @@ import type { Express, RequestHandler } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertCaseSchema, insertMessageSchema, insertDocumentSchema } from "@shared/schema";
+import { 
+  insertCaseSchema, 
+  insertMessageSchema, 
+  insertDocumentSchema,
+  createUserSchema,
+  updateUserSchema,
+  changePasswordSchema,
+  resetPasswordSchema
+} from "@shared/schema";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -531,6 +539,184 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error assigning user to organisation:", error);
       res.status(500).json({ message: "Failed to assign user to organisation" });
+    }
+  });
+
+  // Enhanced admin user management routes
+  
+  // Create new user
+  app.post('/api/admin/users', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const userData = createUserSchema.parse(req.body);
+      
+      // Check if email can be assigned admin status (only @chadlaw.co.uk emails)
+      if (userData.isAdmin && !userData.email.endsWith('@chadlaw.co.uk')) {
+        return res.status(400).json({ 
+          message: "Admin privileges can only be assigned to @chadlaw.co.uk email addresses" 
+        });
+      }
+
+      const result = await storage.createUser(userData);
+      
+      // Return user info and temporary password (in production, this would be sent via email)
+      res.status(201).json({
+        user: result.user,
+        tempPassword: result.tempPassword,
+        message: "User created successfully. Please provide the temporary password to the user.",
+      });
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
+  // Update user details
+  app.put('/api/admin/users/:userId', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const userData = updateUserSchema.parse(req.body);
+
+      const user = await storage.updateUser(userId, userData);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  // Make user admin (only for @chadlaw.co.uk emails)
+  app.put('/api/admin/users/:userId/make-admin', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      
+      // Check if user has @chadlaw.co.uk email
+      const existingUser = await storage.getUser(userId);
+      if (!existingUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      if (!existingUser.email?.endsWith('@chadlaw.co.uk')) {
+        return res.status(400).json({ 
+          message: "Admin privileges can only be assigned to @chadlaw.co.uk email addresses" 
+        });
+      }
+
+      const user = await storage.makeUserAdmin(userId);
+      res.json({ user, message: "User granted admin privileges" });
+    } catch (error) {
+      console.error("Error making user admin:", error);
+      res.status(500).json({ message: "Failed to grant admin privileges" });
+    }
+  });
+
+  // Remove admin privileges
+  app.put('/api/admin/users/:userId/remove-admin', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const user = await storage.removeUserAdmin(userId);
+      res.json({ user, message: "Admin privileges removed" });
+    } catch (error) {
+      console.error("Error removing admin privileges:", error);
+      res.status(500).json({ message: "Failed to remove admin privileges" });
+    }
+  });
+
+  // Reset user password (admin function)
+  app.post('/api/admin/users/:userId/reset-password', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const tempPassword = await storage.resetUserPassword(userId);
+      
+      res.json({ 
+        tempPassword, 
+        message: "Password reset successfully. Please provide the temporary password to the user." 
+      });
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      res.status(500).json({ message: "Failed to reset password" });
+    }
+  });
+
+  // User self-management routes
+  
+  // Update own profile
+  app.put('/api/user/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const userData = updateUserSchema.parse(req.body);
+
+      const user = await storage.updateUser(userId, userData);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  // Change own password
+  app.post('/api/user/change-password', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const passwordData = changePasswordSchema.parse(req.body);
+
+      const success = await storage.changeUserPassword(
+        userId, 
+        passwordData.currentPassword, 
+        passwordData.newPassword
+      );
+
+      if (!success) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+
+      res.json({ message: "Password changed successfully" });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      res.status(500).json({ message: "Failed to change password" });
+    }
+  });
+
+  // Set new password (for first-time login or after reset)
+  app.post('/api/user/set-password', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const passwordData = resetPasswordSchema.parse(req.body);
+
+      // Check if user must change password
+      const mustChange = await storage.checkMustChangePassword(userId);
+      if (!mustChange) {
+        return res.status(400).json({ message: "Password change not required" });
+      }
+
+      const user = await storage.setUserPassword(userId, passwordData.newPassword);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ message: "Password set successfully" });
+    } catch (error) {
+      console.error("Error setting password:", error);
+      res.status(500).json({ message: "Failed to set password" });
+    }
+  });
+
+  // Check if password change is required
+  app.get('/api/user/password-status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const mustChange = await storage.checkMustChangePassword(userId);
+      res.json({ mustChangePassword: mustChange });
+    } catch (error) {
+      console.error("Error checking password status:", error);
+      res.status(500).json({ message: "Failed to check password status" });
     }
   });
 

@@ -20,6 +20,8 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, sql } from "drizzle-orm";
+import bcrypt from "bcrypt";
+import { nanoid } from "nanoid";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -64,6 +66,35 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   getAllOrganisations(): Promise<Organization[]>;
   assignUserToOrganisation(userId: string, organisationId: number): Promise<User | null>;
+  
+  // Enhanced user management operations
+  createUser(userData: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    organisationId?: number;
+    isAdmin?: boolean;
+  }): Promise<{ user: User; tempPassword: string }>;
+  
+  updateUser(userId: string, userData: {
+    firstName: string;
+    lastName: string;
+    phone?: string;
+  }): Promise<User | null>;
+  
+  makeUserAdmin(userId: string): Promise<User | null>;
+  removeUserAdmin(userId: string): Promise<User | null>;
+  
+  resetUserPassword(userId: string): Promise<string>; // Returns temp password
+  
+  changeUserPassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean>;
+  
+  setUserPassword(userId: string, newPassword: string): Promise<User | null>;
+  
+  verifyUserPassword(userId: string, password: string): Promise<boolean>;
+  
+  checkMustChangePassword(userId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -231,10 +262,12 @@ export class DatabaseStorage implements IStorage {
         lastName: users.lastName,
         organisationId: users.organisationId,
         createdAt: users.createdAt,
-        organizationName: organisations.name,
+        organisationName: organisations.name,
+        isAdmin: users.isAdmin,
+        phone: users.phone,
       })
       .from(users)
-      .leftJoin(organizations, eq(users.organisationId, organisations.id))
+      .leftJoin(organisations, eq(users.organisationId, organisations.id))
       .orderBy(users.createdAt);
     
     return result;
@@ -264,6 +297,143 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return user || null;
+  }
+
+  // Enhanced user management methods
+  async createUser(userData: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    organisationId?: number;
+    isAdmin?: boolean;
+  }): Promise<{ user: User; tempPassword: string }> {
+    const tempPassword = nanoid(12); // Generate temporary password
+    const passwordHash = await bcrypt.hash(tempPassword, 10);
+    const userId = nanoid(10);
+
+    const [user] = await db
+      .insert(users)
+      .values({
+        id: userId,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        phone: userData.phone,
+        organisationId: userData.organisationId,
+        isAdmin: userData.isAdmin || false,
+        passwordHash,
+        tempPassword,
+        mustChangePassword: true,
+      })
+      .returning();
+
+    return { user, tempPassword };
+  }
+
+  async updateUser(userId: string, userData: {
+    firstName: string;
+    lastName: string;
+    phone?: string;
+  }): Promise<User | null> {
+    const [user] = await db
+      .update(users)
+      .set({
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        phone: userData.phone,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+
+    return user || null;
+  }
+
+  async makeUserAdmin(userId: string): Promise<User | null> {
+    const [user] = await db
+      .update(users)
+      .set({ isAdmin: true, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+
+    return user || null;
+  }
+
+  async removeUserAdmin(userId: string): Promise<User | null> {
+    const [user] = await db
+      .update(users)
+      .set({ isAdmin: false, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+
+    return user || null;
+  }
+
+  async resetUserPassword(userId: string): Promise<string> {
+    const tempPassword = nanoid(12);
+    const passwordHash = await bcrypt.hash(tempPassword, 10);
+
+    await db
+      .update(users)
+      .set({
+        passwordHash,
+        tempPassword,
+        mustChangePassword: true,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+
+    return tempPassword;
+  }
+
+  async changeUserPassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean> {
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user || !user.passwordHash) return false;
+
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isCurrentPasswordValid) return false;
+
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+    await db
+      .update(users)
+      .set({
+        passwordHash: newPasswordHash,
+        tempPassword: null,
+        mustChangePassword: false,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+
+    return true;
+  }
+
+  async setUserPassword(userId: string, newPassword: string): Promise<User | null> {
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+    const [user] = await db
+      .update(users)
+      .set({
+        passwordHash: newPasswordHash,
+        tempPassword: null,
+        mustChangePassword: false,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+
+    return user || null;
+  }
+
+  async verifyUserPassword(userId: string, password: string): Promise<boolean> {
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user || !user.passwordHash) return false;
+
+    return await bcrypt.compare(password, user.passwordHash);
+  }
+
+  async checkMustChangePassword(userId: string): Promise<boolean> {
+    const [user] = await db.select({ mustChangePassword: users.mustChangePassword }).from(users).where(eq(users.id, userId));
+    return user?.mustChangePassword || false;
   }
 }
 

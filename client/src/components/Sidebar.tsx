@@ -1,4 +1,4 @@
-import { Scale, Home, FolderOpen, MessageSquare, BarChart3, FileText, User, LogOut, Settings } from "lucide-react";
+import { Scale, Home, FolderOpen, MessageSquare, BarChart3, FileText, User, LogOut, Settings, Shield, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
@@ -22,8 +22,11 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
     { id: "messages", label: "Messages", icon: MessageSquare, badge: 3 },
     { id: "reports", label: "Reports", icon: BarChart3 },
     { id: "documents", label: "Documents", icon: FileText },
-    // Only show admin link to admin users
-    ...(user?.isAdmin ? [{ id: "admin", label: "Admin", icon: Settings, isRoute: true, route: "/admin" }] : []),
+    // Only show admin links to admin users
+    ...(user?.isAdmin ? [
+      { id: "admin", label: "Admin Panel", icon: Settings, isRoute: true, route: "/admin" },
+      { id: "admin-enhanced", label: "Enhanced Admin", icon: Shield, isRoute: true, route: "/admin-enhanced" }
+    ] : []),
   ];
 
   return (
@@ -86,15 +89,26 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
             </div>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleLogout}
-          className="w-full justify-start text-white hover:bg-teal-700"
-        >
-          <LogOut className="w-4 h-4 mr-2" />
-          Logout
-        </Button>
+        <div className="flex space-x-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setLocation("/profile")}
+            className="flex-1 justify-start text-white hover:bg-teal-700"
+          >
+            <UserCog className="w-4 h-4 mr-2" />
+            Profile
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLogout}
+            className="flex-1 justify-start text-white hover:bg-teal-700"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
+          </Button>
+        </div>
       </div>
     </div>
   );

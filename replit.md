@@ -25,11 +25,14 @@ Preferred communication style: Simple, everyday language.
 - **Database Provider**: Neon serverless PostgreSQL
 - **Session Management**: Express sessions with PostgreSQL storage
 - **File Handling**: Multer for file uploads with 10MB limit
+- **Password Security**: bcrypt for password hashing with salt rounds
 
 ### Authentication & Authorization
 - **Provider**: Replit Auth using OpenID Connect
 - **Session Storage**: PostgreSQL-backed sessions with 1-week TTL
 - **Security**: HTTP-only cookies, secure flags, CSRF protection
+- **Enhanced Security**: Password management with temporary passwords, force password change on first login
+- **Admin Controls**: Email domain restrictions for admin privileges (@chadlaw.co.uk only)
 
 ## Key Components
 
@@ -48,6 +51,8 @@ Preferred communication style: Simple, everyday language.
 - **Cases**: `/api/cases/*` - Case management CRUD operations
 - **Messages**: `/api/messages/*` - Communication system
 - **Documents**: `/api/documents/*` - File upload and download
+- **Admin Management**: `/api/admin/*` - Enhanced admin user and organisation management
+- **User Self-Service**: `/api/user/*` - User profile and password management
 
 ### Frontend Components
 - **Dashboard**: Overview with statistics and recent activity
@@ -55,6 +60,16 @@ Preferred communication style: Simple, everyday language.
 - **Messages**: Communication interface with read/unread status
 - **Documents**: File management with upload/download capabilities
 - **Reports**: Analytics and reporting interface
+- **Enhanced Admin Panel**: Comprehensive user and organisation management with:
+  - User creation with temporary passwords
+  - Email domain restrictions for admin privileges
+  - Password reset functionality
+  - Organisation assignment
+  - Admin privilege management
+- **User Profile Management**: Self-service account management with:
+  - Profile information updates
+  - Password change functionality
+  - Account security settings
 
 ## Data Flow
 

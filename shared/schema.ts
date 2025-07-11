@@ -35,6 +35,10 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   organisationId: integer("organisation_id").references(() => organisations.id),
   isAdmin: boolean("is_admin").default(false),
+  phone: varchar("phone"),
+  passwordHash: varchar("password_hash"),
+  tempPassword: varchar("temp_password"),
+  mustChangePassword: boolean("must_change_password").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -183,8 +187,41 @@ export type Document = typeof documents.$inferSelect;
 export type InsertDocument = typeof documents.$inferInsert;
 
 // Schemas
-export const insertOrganizationSchema = createInsertSchema(organisations);
+export const insertOrganisationSchema = createInsertSchema(organisations);
 export const insertCaseSchema = createInsertSchema(cases);
 export const insertCaseActivitySchema = createInsertSchema(caseActivities);
 export const insertMessageSchema = createInsertSchema(messages);
 export const insertDocumentSchema = createInsertSchema(documents);
+
+// User management schemas
+export const createUserSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().optional(),
+  organisationId: z.number().optional(),
+  isAdmin: z.boolean().default(false),
+});
+
+export const updateUserSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  phone: z.string().optional(),
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z.string().min(8, "Password must be at least 8 characters"),
+  confirmPassword: z.string().min(1, "Password confirmation is required"),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+export const resetPasswordSchema = z.object({
+  newPassword: z.string().min(8, "Password must be at least 8 characters"),
+  confirmPassword: z.string().min(1, "Password confirmation is required"),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
