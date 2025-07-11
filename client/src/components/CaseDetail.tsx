@@ -26,10 +26,9 @@ import { apiRequest } from "@/lib/queryClient";
 
 interface CaseDetailProps {
   case: any;
-  onMessageSent?: () => void;
 }
 
-export default function CaseDetail({ case: caseData, onMessageSent }: CaseDetailProps) {
+export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   const [newMessage, setNewMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [messageAttachment, setMessageAttachment] = useState<File | null>(null);
@@ -127,8 +126,6 @@ export default function CaseDetail({ case: caseData, onMessageSent }: CaseDetail
         title: "Success",
         description: "Message sent successfully",
       });
-      // Call callback to close dialog
-      onMessageSent?.();
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {

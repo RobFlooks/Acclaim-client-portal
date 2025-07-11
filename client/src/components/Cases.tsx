@@ -177,10 +177,7 @@ export default function Cases() {
                       <DialogHeader>
                         <DialogTitle>Case Details - {case_.debtorName}</DialogTitle>
                       </DialogHeader>
-                      <CaseDetail 
-                        case={case_} 
-                        onMessageSent={() => setDialogOpen(false)}
-                      />
+                      <CaseDetail case={case_} />
                     </DialogContent>
                   </Dialog>
                 </div>
