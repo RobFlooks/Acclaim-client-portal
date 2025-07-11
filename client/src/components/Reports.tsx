@@ -116,7 +116,7 @@ export default function Reports() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-4 rounded-lg bg-[#00b5b5]">
+            <div className="p-4 rounded-lg bg-[#008a8a57]">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-[#313333]">Total Cases</p>
