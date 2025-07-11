@@ -64,6 +64,7 @@ Preferred communication style: Simple, everyday language.
 4. **Activity Tracking**: All case changes are logged as activities
 5. **Communication**: Messages can be case-specific or general
 6. **File Management**: Documents are uploaded to local storage with metadata in database
+7. **Case Submission**: Complete form with file upload support, organization name field isolation
 
 ## External Dependencies
 
