@@ -99,9 +99,10 @@ export default function UserProfile() {
         }, 500);
         return;
       }
+      console.error("Profile update error:", error);
       toast({
         title: "Error",
-        description: "Failed to update profile",
+        description: error.message || "Failed to update profile",
         variant: "destructive",
       });
     },
@@ -150,10 +151,13 @@ export default function UserProfile() {
   // Handle profile form submission
   const handleProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Profile form submitted with data:", profileData);
     try {
       const validatedData = updateUserSchema.parse(profileData);
+      console.log("Validated data:", validatedData);
       updateProfileMutation.mutate(validatedData);
     } catch (error) {
+      console.error("Profile form validation error:", error);
       if (error instanceof z.ZodError) {
         toast({
           title: "Validation Error",
