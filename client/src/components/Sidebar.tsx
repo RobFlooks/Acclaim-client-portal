@@ -1,6 +1,7 @@
-import { Scale, Home, FolderOpen, MessageSquare, BarChart3, FileText, User, LogOut } from "lucide-react";
+import { Scale, Home, FolderOpen, MessageSquare, BarChart3, FileText, User, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useLocation } from "wouter";
 
 interface SidebarProps {
   activeSection: string;
@@ -9,6 +10,7 @@ interface SidebarProps {
 
 export default function Sidebar({ activeSection, setActiveSection }: SidebarProps) {
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
 
   const handleLogout = () => {
     window.location.href = "/api/logout";
@@ -20,6 +22,7 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
     { id: "messages", label: "Messages", icon: MessageSquare, badge: 3 },
     { id: "reports", label: "Reports", icon: BarChart3 },
     { id: "documents", label: "Documents", icon: FileText },
+    { id: "admin", label: "Admin", icon: Settings, isRoute: true, route: "/admin" },
   ];
 
   return (
@@ -43,7 +46,13 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
           return (
             <button
               key={item.id}
-              onClick={() => setActiveSection(item.id)}
+              onClick={() => {
+                if (item.isRoute && item.route) {
+                  setLocation(item.route);
+                } else {
+                  setActiveSection(item.id);
+                }
+              }}
               className={`flex items-center w-full px-4 py-3 text-white rounded-lg transition-colors ${
                 isActive 
                   ? "bg-teal-700" 

@@ -59,6 +59,11 @@ export interface IStorage {
     totalOutstanding: string;
     recoveryRate: number;
   }>;
+
+  // Admin operations
+  getAllUsers(): Promise<User[]>;
+  getAllOrganizations(): Promise<Organization[]>;
+  assignUserToOrganization(userId: string, organizationId: number): Promise<User | null>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -214,6 +219,51 @@ export class DatabaseStorage implements IStorage {
       totalOutstanding: stats.totalOutstanding.toString(),
       recoveryRate: Math.round(recoveryRate),
     };
+  }
+
+  // Admin operations
+  async getAllUsers(): Promise<User[]> {
+    const result = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        organizationId: users.organizationId,
+        createdAt: users.createdAt,
+        organizationName: organizations.name,
+      })
+      .from(users)
+      .leftJoin(organizations, eq(users.organizationId, organizations.id))
+      .orderBy(users.createdAt);
+    
+    return result;
+  }
+
+  async getAllOrganizations(): Promise<Organization[]> {
+    const result = await db
+      .select({
+        id: organizations.id,
+        name: organizations.name,
+        createdAt: organizations.createdAt,
+        userCount: sql<number>`count(${users.id})`,
+      })
+      .from(organizations)
+      .leftJoin(users, eq(organizations.id, users.organizationId))
+      .groupBy(organizations.id, organizations.name, organizations.createdAt)
+      .orderBy(organizations.createdAt);
+    
+    return result;
+  }
+
+  async assignUserToOrganization(userId: string, organizationId: number): Promise<User | null> {
+    const [user] = await db
+      .update(users)
+      .set({ organizationId, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    return user || null;
   }
 }
 

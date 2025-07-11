@@ -8,6 +8,7 @@ import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
 import Home from "@/pages/Home";
 import SubmitCase from "@/pages/SubmitCase";
+import Admin from "@/pages/Admin";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -20,6 +21,7 @@ function Router() {
         <>
           <Route path="/" component={Home} />
           <Route path="/submit-case" component={SubmitCase} />
+          <Route path="/admin" component={Admin} />
         </>
       )}
       <Route component={NotFound} />

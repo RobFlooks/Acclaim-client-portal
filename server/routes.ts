@@ -424,6 +424,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin routes
+  app.get('/api/admin/users', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const currentUser = await storage.getUser(userId);
+      
+      // For now, allow any authenticated user to access admin
+      // In production, you'd want to check for admin role
+      if (!currentUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.get('/api/admin/organizations', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const currentUser = await storage.getUser(userId);
+      
+      if (!currentUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const organizations = await storage.getAllOrganizations();
+      res.json(organizations);
+    } catch (error) {
+      console.error("Error fetching organizations:", error);
+      res.status(500).json({ message: "Failed to fetch organizations" });
+    }
+  });
+
+  app.post('/api/admin/organizations', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const currentUser = await storage.getUser(userId);
+      
+      if (!currentUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const { name } = req.body;
+      if (!name || !name.trim()) {
+        return res.status(400).json({ message: "Organization name is required" });
+      }
+
+      const organization = await storage.createOrganization({
+        name: name.trim(),
+      });
+
+      res.status(201).json(organization);
+    } catch (error) {
+      console.error("Error creating organization:", error);
+      res.status(500).json({ message: "Failed to create organization" });
+    }
+  });
+
+  app.put('/api/admin/users/:userId/assign', isAuthenticated, async (req: any, res) => {
+    try {
+      const currentUserId = req.user.claims.sub;
+      const currentUser = await storage.getUser(currentUserId);
+      
+      if (!currentUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const { userId } = req.params;
+      const { organizationId } = req.body;
+
+      if (!organizationId) {
+        return res.status(400).json({ message: "Organization ID is required" });
+      }
+
+      const user = await storage.assignUserToOrganization(userId, organizationId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json(user);
+    } catch (error) {
+      console.error("Error assigning user to organization:", error);
+      res.status(500).json({ message: "Failed to assign user to organization" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
