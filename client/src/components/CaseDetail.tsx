@@ -51,6 +51,16 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
 
   const handlePaymentsClick = () => {
     setActiveTab("payments");
+    // Scroll to payments section after a brief delay to allow tab to render
+    setTimeout(() => {
+      const paymentsSection = document.querySelector('[data-tab="payments"]');
+      if (paymentsSection) {
+        paymentsSection.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }
+    }, 100);
   };
 
   const { data: activities, isLoading: activitiesLoading } = useQuery({
@@ -617,7 +627,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
           </Card>
         </TabsContent>
 
-        <TabsContent value="payments" className="space-y-4">
+        <TabsContent value="payments" className="space-y-4" data-tab="payments">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
