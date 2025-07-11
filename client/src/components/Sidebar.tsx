@@ -22,10 +22,9 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
     { id: "messages", label: "Messages", icon: MessageSquare, badge: 3 },
     { id: "reports", label: "Reports", icon: BarChart3 },
     { id: "documents", label: "Documents", icon: FileText },
-    // Only show admin links to admin users
+    // Only show admin link to admin users
     ...(user?.isAdmin ? [
-      { id: "admin", label: "Admin Panel", icon: Settings, isRoute: true, route: "/admin" },
-      { id: "admin-enhanced", label: "Enhanced Admin", icon: Shield, isRoute: true, route: "/admin-enhanced" }
+      { id: "admin", label: "Admin Panel", icon: Shield, isRoute: true, route: "/admin" }
     ] : []),
   ];
 

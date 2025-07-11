@@ -8,7 +8,6 @@ import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
 import Home from "@/pages/Home";
 import SubmitCase from "@/pages/SubmitCase";
-import Admin from "@/pages/Admin";
 import AdminEnhanced from "@/pages/AdminEnhanced";
 import UserProfile from "@/pages/UserProfile";
 
@@ -23,8 +22,7 @@ function Router() {
         <>
           <Route path="/" component={Home} />
           <Route path="/submit-case" component={SubmitCase} />
-          <Route path="/admin" component={Admin} />
-          <Route path="/admin-enhanced" component={AdminEnhanced} />
+          <Route path="/admin" component={AdminEnhanced} />
           <Route path="/profile" component={UserProfile} />
         </>
       )}

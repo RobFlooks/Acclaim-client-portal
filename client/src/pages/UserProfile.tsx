@@ -8,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
+import { useQueryClient } from "@tanstack/react-query";
 import { User, Settings, Key, Phone, Mail, Calendar, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { updateUserSchema, changePasswordSchema } from "@shared/schema";
@@ -32,6 +33,7 @@ interface UserData {
 export default function UserProfile() {
   const { toast } = useToast();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   
   const [profileData, setProfileData] = useState<UpdateProfileForm>({
     firstName: "",
