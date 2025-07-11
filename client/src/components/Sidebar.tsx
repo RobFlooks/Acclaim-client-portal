@@ -29,7 +29,7 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
         <div className="flex items-center">
           <Scale className="text-white text-2xl mr-3" />
           <div className="text-white">
-            <div className="text-lg font-bold">Acclaim</div>
+            <div className="text-lg font-bold ml-[41px] mr-[41px]">Acclaim</div>
             <div className="text-xs opacity-80">Credit Management & Recovery</div>
           </div>
         </div>
