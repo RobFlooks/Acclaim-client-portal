@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Search, User, Building, Factory, Clock, Check, AlertTriangle, Eye } from "lucide-react";
+import { Search, User, Building, Factory, Clock, Check, AlertTriangle, Eye, UserCog, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import CaseDetail from "./CaseDetail";
@@ -62,14 +62,19 @@ export default function Cases() {
     }
   };
 
-  const getDebtorIcon = (debtorName: string) => {
-    if (debtorName.toLowerCase().includes("tech") || debtorName.toLowerCase().includes("solutions")) {
-      return <User className="text-acclaim-teal h-5 w-5" />;
+  const getDebtorIcon = (debtorType: string) => {
+    switch (debtorType) {
+      case 'individual':
+        return <User className="text-acclaim-teal h-5 w-5" />;
+      case 'company':
+        return <Building className="text-acclaim-teal h-5 w-5" />;
+      case 'sole_trader':
+        return <UserCog className="text-acclaim-teal h-5 w-5" />;
+      case 'company_and_individual':
+        return <Users className="text-acclaim-teal h-5 w-5" />;
+      default:
+        return <User className="text-acclaim-teal h-5 w-5" />;
     }
-    if (debtorName.toLowerCase().includes("manufacturing") || debtorName.toLowerCase().includes("factory")) {
-      return <Factory className="text-acclaim-teal h-5 w-5" />;
-    }
-    return <Building className="text-acclaim-teal h-5 w-5" />;
   };
 
   const formatCurrency = (amount: string | number) => {
@@ -131,7 +136,7 @@ export default function Cases() {
                 >
                   <div className="flex items-center space-x-4">
                     <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#f9fafb]">
-                      {getDebtorIcon(case_.debtorName)}
+                      {getDebtorIcon(case_.debtorType)}
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">{case_.debtorName}</p>

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FolderOpen, CheckCircle, PoundSterling, TrendingUp, User, Building, Factory, Clock, FileText, Check, AlertTriangle, Plus, Download } from "lucide-react";
+import { FolderOpen, CheckCircle, PoundSterling, TrendingUp, User, Building, Factory, Clock, FileText, Check, AlertTriangle, Plus, Download, UserCog, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation } from "wouter";
@@ -109,14 +109,19 @@ export default function Dashboard() {
     }
   };
 
-  const getDebtorIcon = (debtorName: string) => {
-    if (debtorName.toLowerCase().includes("tech") || debtorName.toLowerCase().includes("solutions")) {
-      return <User className="text-acclaim-teal h-4 w-4" />;
+  const getDebtorIcon = (debtorType: string) => {
+    switch (debtorType) {
+      case 'individual':
+        return <User className="text-acclaim-teal h-4 w-4" />;
+      case 'company':
+        return <Building className="text-acclaim-teal h-4 w-4" />;
+      case 'sole_trader':
+        return <UserCog className="text-acclaim-teal h-4 w-4" />;
+      case 'company_and_individual':
+        return <Users className="text-acclaim-teal h-4 w-4" />;
+      default:
+        return <User className="text-acclaim-teal h-4 w-4" />;
     }
-    if (debtorName.toLowerCase().includes("manufacturing") || debtorName.toLowerCase().includes("factory")) {
-      return <Factory className="text-acclaim-teal h-4 w-4" />;
-    }
-    return <Building className="text-acclaim-teal h-4 w-4" />;
   };
 
   const formatCurrency = (amount: string | number) => {
@@ -253,7 +258,7 @@ export default function Dashboard() {
                     >
                       <div className="flex items-center">
                         <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#ffffff]">
-                          {getDebtorIcon(case_.debtorName)}
+                          {getDebtorIcon(case_.debtorType)}
                         </div>
                         <div className="ml-4">
                           <p className="font-medium text-gray-900">{case_.debtorName}</p>
