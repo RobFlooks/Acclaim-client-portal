@@ -90,7 +90,8 @@ export default function Messages() {
     
     // If this is a reply, include the original message
     if (replyingTo) {
-      messageContent = `${newMessage}\n\n--- Original Message ---\nFrom: ${replyingTo.senderId}\nDate: ${formatDate(replyingTo.createdAt)}\nSubject: ${replyingTo.subject}\n\n${replyingTo.content}`;
+      const fromName = replyingTo.senderName || replyingTo.senderEmail || replyingTo.senderId;
+      messageContent = `${newMessage}\n\n--- Original Message ---\nFrom: ${fromName}\nDate: ${formatDate(replyingTo.createdAt)}\nSubject: ${replyingTo.subject}\n\n${replyingTo.content}`;
     }
 
     sendMessageMutation.mutate({
@@ -225,7 +226,12 @@ export default function Messages() {
                             </Badge>
                           )}
                         </div>
-                        <p className="text-sm text-gray-600 mb-2">{message.content}</p>
+                        <div className="mb-2">
+                          <p className="text-xs text-gray-500 mb-1">
+                            From: {message.senderName || message.senderEmail || 'Unknown'}
+                          </p>
+                          <p className="text-sm text-gray-600">{message.content}</p>
+                        </div>
                         <div className="flex items-center space-x-2">
                           <p className="text-xs text-gray-500">{formatDate(message.createdAt)}</p>
                           {message.caseId && (

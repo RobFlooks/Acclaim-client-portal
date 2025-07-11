@@ -171,10 +171,23 @@ export class DatabaseStorage implements IStorage {
     return newActivity;
   }
 
-  async getMessagesForUser(userId: string): Promise<Message[]> {
+  async getMessagesForUser(userId: string): Promise<any[]> {
     return await db
-      .select()
+      .select({
+        id: messages.id,
+        senderId: messages.senderId,
+        recipientType: messages.recipientType,
+        recipientId: messages.recipientId,
+        caseId: messages.caseId,
+        subject: messages.subject,
+        content: messages.content,
+        isRead: messages.isRead,
+        createdAt: messages.createdAt,
+        senderName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
+        senderEmail: users.email,
+      })
       .from(messages)
+      .leftJoin(users, eq(messages.senderId, users.id))
       .where(or(eq(messages.senderId, userId), eq(messages.recipientId, userId)))
       .orderBy(desc(messages.createdAt));
   }
