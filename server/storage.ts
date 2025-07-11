@@ -5,6 +5,7 @@ import {
   caseActivities,
   messages,
   documents,
+  payments,
   type User,
   type UpsertUser,
   type Organization,
@@ -17,6 +18,8 @@ import {
   type InsertMessage,
   type Document,
   type InsertDocument,
+  type Payment,
+  type InsertPayment,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, sql, or } from "drizzle-orm";
@@ -53,6 +56,12 @@ export interface IStorage {
   getDocumentsForOrganisation(organisationId: number): Promise<Document[]>;
   createDocument(document: InsertDocument): Promise<Document>;
   deleteDocument(id: number, organisationId: number): Promise<void>;
+  
+  // Payment operations
+  getPaymentsForCase(caseId: number): Promise<Payment[]>;
+  createPayment(payment: InsertPayment): Promise<Payment>;
+  updatePayment(id: number, payment: Partial<InsertPayment>): Promise<Payment>;
+  deletePayment(id: number, organisationId: number): Promise<void>;
   
   // Statistics
   getCaseStats(organisationId: number): Promise<{
@@ -258,6 +267,34 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(documents)
       .where(and(eq(documents.id, id), eq(documents.organisationId, organisationId)));
+  }
+
+  // Payment operations
+  async getPaymentsForCase(caseId: number): Promise<Payment[]> {
+    return await db.select().from(payments)
+      .where(eq(payments.caseId, caseId))
+      .orderBy(desc(payments.paymentDate));
+  }
+
+  async createPayment(payment: InsertPayment): Promise<Payment> {
+    const [newPayment] = await db.insert(payments).values(payment).returning();
+    return newPayment;
+  }
+
+  async updatePayment(id: number, payment: Partial<InsertPayment>): Promise<Payment> {
+    const [updatedPayment] = await db.update(payments)
+      .set(payment)
+      .where(eq(payments.id, id))
+      .returning();
+    return updatedPayment;
+  }
+
+  async deletePayment(id: number, organisationId: number): Promise<void> {
+    await db.delete(payments)
+      .where(and(
+        eq(payments.id, id),
+        eq(payments.organisationId, organisationId)
+      ));
   }
 
   async getCaseStats(organisationId: number): Promise<{

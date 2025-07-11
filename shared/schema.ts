@@ -112,6 +112,20 @@ export const documents = pgTable("documents", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Payments table
+export const payments = pgTable("payments", {
+  id: serial("id").primaryKey(),
+  caseId: integer("case_id").references(() => cases.id).notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  paymentDate: timestamp("payment_date").notNull(),
+  paymentMethod: varchar("payment_method", { length: 50 }),
+  reference: varchar("reference", { length: 100 }),
+  notes: text("notes"),
+  recordedBy: varchar("recorded_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  organisationId: integer("organisation_id").references(() => organisations.id).notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   organization: one(organisations, {
@@ -136,6 +150,7 @@ export const casesRelations = relations(cases, ({ one, many }) => ({
   activities: many(caseActivities),
   messages: many(messages),
   documents: many(documents),
+  payments: many(payments),
 }));
 
 export const caseActivitiesRelations = relations(caseActivities, ({ one }) => ({
@@ -171,6 +186,21 @@ export const documentsRelations = relations(documents, ({ one }) => ({
   }),
 }));
 
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  case: one(cases, {
+    fields: [payments.caseId],
+    references: [cases.id],
+  }),
+  recorder: one(users, {
+    fields: [payments.recordedBy],
+    references: [users.id],
+  }),
+  organization: one(organisations, {
+    fields: [payments.organisationId],
+    references: [organisations.id],
+  }),
+}));
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -190,12 +220,16 @@ export type InsertMessage = typeof messages.$inferInsert;
 export type Document = typeof documents.$inferSelect;
 export type InsertDocument = typeof documents.$inferInsert;
 
+export type Payment = typeof payments.$inferSelect;
+export type InsertPayment = typeof payments.$inferInsert;
+
 // Schemas
 export const insertOrganisationSchema = createInsertSchema(organisations);
 export const insertCaseSchema = createInsertSchema(cases);
 export const insertCaseActivitySchema = createInsertSchema(caseActivities);
 export const insertMessageSchema = createInsertSchema(messages);
 export const insertDocumentSchema = createInsertSchema(documents);
+export const insertPaymentSchema = createInsertSchema(payments);
 
 // User management schemas
 export const createUserSchema = z.object({

@@ -18,8 +18,11 @@ import {
   User,
   Phone,
   Mail,
-  MapPin
+  MapPin,
+  PoundSterling,
+  Plus
 } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
@@ -73,6 +76,24 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
 
   const { data: messages, isLoading: messagesLoading } = useQuery({
     queryKey: ["/api/cases", caseData.id, "messages"],
+    enabled: !!caseData.id,
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+    },
+  });
+
+  const { data: payments, isLoading: paymentsLoading } = useQuery({
+    queryKey: ["/api/cases", caseData.id, "payments"],
     enabled: !!caseData.id,
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -331,10 +352,11 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
       </Card>
       {/* Tabbed Content */}
       <Tabs defaultValue="timeline" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="messages">Messages</TabsTrigger>
+          <TabsTrigger value="payments">Payments</TabsTrigger>
         </TabsList>
 
         <TabsContent value="timeline" className="space-y-4">
@@ -565,6 +587,120 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                   {sendMessageMutation.isPending ? "Sending..." : "Send Message"}
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="payments" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center">
+                  <PoundSterling className="h-5 w-5 mr-2" />
+                  Payment History
+                </CardTitle>
+                <Button
+                  size="sm"
+                  className="bg-acclaim-teal hover:bg-acclaim-teal/90"
+                  onClick={() => {
+                    // Future: Add payment recording functionality
+                    toast({
+                      title: "Coming Soon",
+                      description: "Payment recording functionality will be added soon.",
+                    });
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Record Payment
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {paymentsLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="h-16 bg-gray-200 rounded-lg"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : payments && payments.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="border rounded-lg overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Payment Date</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Method</TableHead>
+                          <TableHead>Reference</TableHead>
+                          <TableHead>Notes</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {payments.map((payment: any) => (
+                          <TableRow key={payment.id}>
+                            <TableCell className="font-medium">
+                              {formatDate(payment.paymentDate)}
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-green-600 font-semibold">
+                                {formatCurrency(payment.amount)}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">
+                                {payment.paymentMethod || "N/A"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-gray-600">
+                              {payment.reference || "N/A"}
+                            </TableCell>
+                            <TableCell className="text-gray-600">
+                              {payment.notes || "N/A"}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  
+                  {/* Payment Summary */}
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-green-800">Total Payments Received</p>
+                        <p className="text-2xl font-bold text-green-600">
+                          {formatCurrency(
+                            payments.reduce((sum: number, payment: any) => 
+                              sum + parseFloat(payment.amount), 0
+                            )
+                          )}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-gray-600">Outstanding Balance</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          {formatCurrency(
+                            parseFloat(caseData.outstandingAmount) - 
+                            payments.reduce((sum: number, payment: any) => 
+                              sum + parseFloat(payment.amount), 0
+                            )
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <PoundSterling className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">No payments recorded yet</p>
+                  <p className="text-sm text-gray-400 mt-2">
+                    Payments will appear here when they are recorded by the recovery team
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

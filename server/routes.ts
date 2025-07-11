@@ -503,6 +503,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Payment routes
+  app.get('/api/cases/:id/payments', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.organisationId) {
+        return res.status(404).json({ message: "User organisation not found" });
+      }
+
+      const caseId = parseInt(req.params.id);
+      const case_ = await storage.getCase(caseId, user.organisationId);
+      
+      if (!case_) {
+        return res.status(404).json({ message: "Case not found" });
+      }
+
+      const payments = await storage.getPaymentsForCase(caseId);
+      res.json(payments);
+    } catch (error) {
+      console.error("Error fetching case payments:", error);
+      res.status(500).json({ message: "Failed to fetch case payments" });
+    }
+  });
+
+  app.post('/api/cases/:id/payments', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.organisationId) {
+        return res.status(404).json({ message: "User organisation not found" });
+      }
+
+      const caseId = parseInt(req.params.id);
+      const case_ = await storage.getCase(caseId, user.organisationId);
+      
+      if (!case_) {
+        return res.status(404).json({ message: "Case not found" });
+      }
+
+      const payment = await storage.createPayment({
+        ...req.body,
+        caseId,
+        organisationId: user.organisationId,
+        recordedBy: userId,
+      });
+
+      // Add case activity
+      await storage.addCaseActivity({
+        caseId,
+        activityType: "payment_received",
+        description: `Payment received: £${req.body.amount}`,
+        performedBy: userId,
+      });
+
+      res.status(201).json(payment);
+    } catch (error) {
+      console.error("Error creating payment:", error);
+      res.status(500).json({ message: "Failed to create payment" });
+    }
+  });
+
   app.get('/api/documents/:id/download', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
