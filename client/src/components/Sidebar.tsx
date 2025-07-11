@@ -30,11 +30,10 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
           <Scale className="text-white text-2xl mr-3" />
           <div className="text-white">
             <div className="text-lg font-bold">Acclaim</div>
-            <div className="text-xs opacity-80">Credit Management</div>
+            <div className="text-xs opacity-80">Credit Management & Recovery</div>
           </div>
         </div>
       </div>
-
       {/* Navigation Menu */}
       <nav className="flex-1 px-4 py-6 space-y-2">
         {menuItems.map((item) => {
@@ -62,7 +61,6 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
           );
         })}
       </nav>
-
       {/* User Profile */}
       <div className="p-4 border-t border-teal-700">
         <div className="flex items-center mb-3">
