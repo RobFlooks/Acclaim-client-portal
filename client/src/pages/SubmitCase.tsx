@@ -116,6 +116,7 @@ export default function SubmitCase() {
   const [debtorType, setDebtorType] = useState("");
   const [individualType, setIndividualType] = useState("");
   const [singleInvoice, setSingleInvoice] = useState("");
+  const [organizationNameValue, setOrganizationNameValue] = useState("");
 
   const form = useForm<SubmitCaseForm>({
     resolver: zodResolver(submitCaseSchema),
@@ -367,21 +368,31 @@ export default function SubmitCase() {
                         onValueChange={(value) => {
                           field.onChange(value);
                           setDebtorType(value);
-                          // Clear all organization fields when switching to organization
+                          // Clear all fields when switching debtor type
                           if (value === "organization") {
-                            form.setValue("organizationName", "");
-                            form.setValue("organizationTradingName", "");
-                            form.setValue("companyNumber", "");
                             // Clear individual fields
+                            form.setValue("individualType", "");
                             form.setValue("tradingName", "");
                             form.setValue("principalSalutation", "");
                             form.setValue("principalFirstName", "");
                             form.setValue("principalLastName", "");
-                          } else {
-                            // Clear organization fields when switching to individual
+                            // Ensure organization fields are clean
                             form.setValue("organizationName", "");
                             form.setValue("organizationTradingName", "");
                             form.setValue("companyNumber", "");
+                            // Clear organization name state
+                            setOrganizationNameValue("");
+                            // Reset individual type state
+                            setIndividualType("");
+                          } else if (value === "individual") {
+                            // Clear organization fields
+                            form.setValue("organizationName", "");
+                            form.setValue("organizationTradingName", "");
+                            form.setValue("companyNumber", "");
+                            // Clear organization name state
+                            setOrganizationNameValue("");
+                            // Reset individual type
+                            setIndividualType("");
                           }
                         }}
                         value={field.value}
@@ -413,10 +424,13 @@ export default function SubmitCase() {
                         <FormLabel>Organisation Name</FormLabel>
                         <FormControl>
                           <Input 
-                            {...field} 
                             key={`org-name-${debtorType}`}
                             placeholder="Enter organisation name" 
-                            value={field.value || ""}
+                            value={organizationNameValue}
+                            onChange={(e) => {
+                              setOrganizationNameValue(e.target.value);
+                              field.onChange(e.target.value);
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
