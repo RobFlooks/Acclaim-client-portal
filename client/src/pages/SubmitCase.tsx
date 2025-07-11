@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -117,6 +117,7 @@ export default function SubmitCase() {
   const [individualType, setIndividualType] = useState("");
   const [singleInvoice, setSingleInvoice] = useState("");
   const [organizationNameValue, setOrganizationNameValue] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
   const form = useForm<SubmitCaseForm>({
     resolver: zodResolver(submitCaseSchema),
@@ -124,7 +125,7 @@ export default function SubmitCase() {
       clientName: user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() : "",
       clientEmail: user?.email || "",
       clientPhone: "",
-      creditorName: "",
+
       debtorType: "",
       debtorName: "",
       individualType: "",
@@ -221,7 +222,28 @@ export default function SubmitCase() {
         additionalInfo: data.additionalInfo,
       };
 
-      return await apiRequest("POST", "/api/cases", caseData);
+      // Create FormData for file upload
+      const formData = new FormData();
+      
+      // Add case data
+      formData.append("caseData", JSON.stringify(caseData));
+      
+      // Add files
+      uploadedFiles.forEach((file) => {
+        formData.append("files", file);
+      });
+      
+      // Use fetch directly for file upload
+      const response = await fetch("/api/cases", {
+        method: "POST",
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -332,19 +354,7 @@ export default function SubmitCase() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="creditorName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Who is owed the debt?</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Creditors' full name (including any trading name)" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
             </CardContent>
           </Card>
 
@@ -971,6 +981,64 @@ export default function SubmitCase() {
                     </FormItem>
                   )}
                 />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Supporting Documents */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Supporting Documents</CardTitle>
+              <CardDescription>
+                Upload any documents that support your case (invoices, contracts, correspondence, etc.)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Upload Files (Max 10MB each)
+                  </label>
+                  <input
+                    type="file"
+                    multiple
+                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif"
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      setUploadedFiles(prev => [...prev, ...files]);
+                    }}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#008a8a59] file:text-[#0f766e] hover:file:bg-[#008a8a80]"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Supported formats: PDF, DOC, DOCX, TXT, JPG, JPEG, PNG, GIF
+                  </p>
+                </div>
+
+                {/* Display uploaded files */}
+                {uploadedFiles.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Uploaded Files:</h4>
+                    {uploadedFiles.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <span className="text-sm">{file.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500">
+                            {(file.size / 1024 / 1024).toFixed(2)} MB
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+                            }}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

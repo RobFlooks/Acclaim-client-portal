@@ -87,7 +87,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/cases', isAuthenticated, async (req: any, res) => {
+  app.post('/api/cases', isAuthenticated, upload.array('files'), async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -96,30 +96,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User organization not found" });
       }
 
+      // Parse the case data from JSON
+      const caseDataJson = req.body.caseData;
+      let parsedCaseData;
+      
+      try {
+        parsedCaseData = JSON.parse(caseDataJson);
+      } catch (error) {
+        return res.status(400).json({ message: "Invalid case data format" });
+      }
+
       // Generate account number
       const accountNumber = `ACC-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
 
       const caseData = {
         accountNumber,
-        debtorName: req.body.debtorName,
-        debtorEmail: req.body.debtorEmail,
-        debtorPhone: req.body.debtorPhone,
-        debtorAddress: req.body.debtorAddress,
-        originalAmount: req.body.originalAmount,
-        outstandingAmount: req.body.outstandingAmount,
-        status: req.body.status || 'active',
-        stage: req.body.stage || 'new',
+        debtorName: parsedCaseData.debtorName,
+        debtorEmail: parsedCaseData.debtorEmail,
+        debtorPhone: parsedCaseData.debtorPhone,
+        debtorAddress: parsedCaseData.debtorAddress,
+        originalAmount: parsedCaseData.originalAmount,
+        outstandingAmount: parsedCaseData.outstandingAmount,
+        status: parsedCaseData.status || 'active',
+        stage: parsedCaseData.stage || 'new',
         organizationId: user.organizationId,
         assignedTo: 'System',
       };
 
       const newCase = await storage.createCase(caseData);
       
+      // Handle file uploads
+      const uploadedFiles = req.files as Express.Multer.File[];
+      
+      if (uploadedFiles && uploadedFiles.length > 0) {
+        for (const file of uploadedFiles) {
+          // Create document record
+          await storage.createDocument({
+            fileName: file.originalname,
+            filePath: file.path,
+            fileSize: file.size,
+            mimeType: file.mimetype,
+            caseId: newCase.id,
+            organizationId: user.organizationId,
+            uploadedBy: userId,
+          });
+        }
+      }
+      
       // Add initial activity
+      const fileInfo = uploadedFiles && uploadedFiles.length > 0 
+        ? ` Files uploaded: ${uploadedFiles.map(f => f.originalname).join(', ')}.`
+        : '';
+      
       await storage.addCaseActivity({
         caseId: newCase.id,
         activityType: "case_created",
-        description: `Case created by ${user.firstName || 'User'} ${user.lastName || ''}. Debt details: ${req.body.debtDetails || 'N/A'}`,
+        description: `Case created by ${user.firstName || 'User'} ${user.lastName || ''}. Debt details: ${parsedCaseData.debtDetails || 'N/A'}${fileInfo}`,
         performedBy: userId,
       });
 
