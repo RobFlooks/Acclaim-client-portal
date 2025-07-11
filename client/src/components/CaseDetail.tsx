@@ -194,13 +194,12 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               <p className="font-medium">{formatCurrency(caseData.originalAmount)}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Case Manager</p>
+              <p className="text-sm text-gray-600">File Handler</p>
               <p className="font-medium">{caseData.assignedTo || "Unassigned"}</p>
             </div>
           </div>
         </CardContent>
       </Card>
-
       {/* Debtor Information */}
       <Card>
         <CardHeader>
@@ -241,7 +240,6 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
           </div>
         </CardContent>
       </Card>
-
       {/* Tabbed Content */}
       <Tabs defaultValue="timeline" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
