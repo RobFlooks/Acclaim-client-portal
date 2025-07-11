@@ -196,10 +196,27 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(messages.createdAt));
   }
 
-  async getMessagesForCase(caseId: number): Promise<Message[]> {
+  async getMessagesForCase(caseId: number): Promise<any[]> {
     return await db
-      .select()
+      .select({
+        id: messages.id,
+        senderId: messages.senderId,
+        recipientType: messages.recipientType,
+        recipientId: messages.recipientId,
+        caseId: messages.caseId,
+        subject: messages.subject,
+        content: messages.content,
+        isRead: messages.isRead,
+        attachmentFileName: messages.attachmentFileName,
+        attachmentFilePath: messages.attachmentFilePath,
+        attachmentFileSize: messages.attachmentFileSize,
+        attachmentFileType: messages.attachmentFileType,
+        createdAt: messages.createdAt,
+        senderName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
+        senderEmail: users.email,
+      })
       .from(messages)
+      .leftJoin(users, eq(messages.senderId, users.id))
       .where(eq(messages.caseId, caseId))
       .orderBy(desc(messages.createdAt));
   }

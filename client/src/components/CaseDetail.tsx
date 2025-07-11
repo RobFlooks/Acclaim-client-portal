@@ -26,9 +26,10 @@ import { apiRequest } from "@/lib/queryClient";
 
 interface CaseDetailProps {
   case: any;
+  onMessageSent?: () => void;
 }
 
-export default function CaseDetail({ case: caseData }: CaseDetailProps) {
+export default function CaseDetail({ case: caseData, onMessageSent }: CaseDetailProps) {
   const [newMessage, setNewMessage] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [messageAttachment, setMessageAttachment] = useState<File | null>(null);
@@ -126,6 +127,8 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
         title: "Success",
         description: "Message sent successfully",
       });
+      // Call callback to close dialog
+      onMessageSent?.();
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -490,6 +493,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                         <p className="font-medium text-sm">{message.subject}</p>
                         <p className="text-xs text-gray-500">{formatDate(message.createdAt)}</p>
                       </div>
+                      <p className="text-xs text-gray-600 mb-2">From: {message.senderName || 'Unknown'}</p>
                       <p className="text-sm text-gray-700">{message.content}</p>
                       {message.attachmentFileName && (
                         <div className="mt-2 p-2 bg-gray-50 rounded-md">

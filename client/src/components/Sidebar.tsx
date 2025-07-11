@@ -1,4 +1,5 @@
 import { Scale, Home, FolderOpen, MessageSquare, BarChart3, FileText, User, LogOut, Settings, Shield, UserCog } from "lucide-react";
+import logoImage from "@assets/cl-bg_1752271318153.png";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
@@ -43,7 +44,7 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
       {/* Brand Header */}
       <div className="flex items-center justify-center h-16 bg-acclaim-teal border-b border-teal-700">
         <div className="flex items-center">
-          <Scale className="text-white text-2xl mr-3" />
+          <img src={logoImage} alt="Acclaim Logo" className="w-8 h-8 mr-3 filter brightness-0 invert" />
           <div className="text-white">
             <div className="text-lg font-bold ml-[0px] mr-[0px] text-center">Acclaim</div>
             <div className="text-xs opacity-80 text-center">Credit Management & Recovery</div>

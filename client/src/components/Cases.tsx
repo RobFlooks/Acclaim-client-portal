@@ -13,6 +13,7 @@ import CaseDetail from "./CaseDetail";
 export default function Cases() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCase, setSelectedCase] = useState<any>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const { data: cases, isLoading } = useQuery({
@@ -157,12 +158,15 @@ export default function Cases() {
                     </p>
                   </div>
                   
-                  <Dialog>
+                  <Dialog open={dialogOpen && selectedCase?.id === case_.id} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setSelectedCase(case_)}
+                        onClick={() => {
+                          setSelectedCase(case_);
+                          setDialogOpen(true);
+                        }}
                         className="ml-4"
                       >
                         <Eye className="w-4 h-4 mr-2" />
@@ -173,7 +177,10 @@ export default function Cases() {
                       <DialogHeader>
                         <DialogTitle>Case Details - {case_.debtorName}</DialogTitle>
                       </DialogHeader>
-                      <CaseDetail case={case_} />
+                      <CaseDetail 
+                        case={case_} 
+                        onMessageSent={() => setDialogOpen(false)}
+                      />
                     </DialogContent>
                   </Dialog>
                 </div>
