@@ -75,10 +75,7 @@ export default function UserProfile() {
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (data: UpdateProfileForm) => {
-      return await apiRequest(`/api/user/profile`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-      });
+      return await apiRequest(`/api/user/profile`, "PUT", data);
     },
     onSuccess: () => {
       toast({
@@ -111,10 +108,7 @@ export default function UserProfile() {
   // Change password mutation
   const changePasswordMutation = useMutation({
     mutationFn: async (data: ChangePasswordForm) => {
-      return await apiRequest(`/api/user/change-password`, {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return await apiRequest(`/api/user/change-password`, "POST", data);
     },
     onSuccess: () => {
       toast({
@@ -151,13 +145,10 @@ export default function UserProfile() {
   // Handle profile form submission
   const handleProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Profile form submitted with data:", profileData);
     try {
       const validatedData = updateUserSchema.parse(profileData);
-      console.log("Validated data:", validatedData);
       updateProfileMutation.mutate(validatedData);
     } catch (error) {
-      console.error("Profile form validation error:", error);
       if (error instanceof z.ZodError) {
         toast({
           title: "Validation Error",
