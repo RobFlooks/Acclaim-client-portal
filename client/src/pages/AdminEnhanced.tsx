@@ -80,10 +80,7 @@ export default function AdminEnhanced() {
   // Create organisation mutation
   const createOrganisationMutation = useMutation({
     mutationFn: async (name: string) => {
-      return await apiRequest(`/api/admin/organisations`, {
-        method: "POST",
-        body: JSON.stringify({ name }),
-      });
+      return await apiRequest("POST", `/api/admin/organisations`, { name });
     },
     onSuccess: () => {
       toast({
@@ -117,10 +114,7 @@ export default function AdminEnhanced() {
   // Assign user to organisation mutation
   const assignUserMutation = useMutation({
     mutationFn: async ({ userId, organisationId }: { userId: string; organisationId: number }) => {
-      return await apiRequest(`/api/admin/users/${userId}/assign`, {
-        method: "PUT",
-        body: JSON.stringify({ organisationId }),
-      });
+      return await apiRequest("PUT", `/api/admin/users/${userId}/assign`, { organisationId });
     },
     onSuccess: () => {
       toast({
@@ -156,10 +150,7 @@ export default function AdminEnhanced() {
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: async (userData: CreateUserForm) => {
-      return await apiRequest(`/api/admin/users`, {
-        method: "POST",
-        body: JSON.stringify(userData),
-      });
+      return await apiRequest("POST", `/api/admin/users`, userData);
     },
     onSuccess: (data) => {
       toast({
@@ -202,9 +193,7 @@ export default function AdminEnhanced() {
   // Reset password mutation
   const resetPasswordMutation = useMutation({
     mutationFn: async (userId: string) => {
-      return await apiRequest(`/api/admin/users/${userId}/reset-password`, {
-        method: "POST",
-      });
+      return await apiRequest("POST", `/api/admin/users/${userId}/reset-password`);
     },
     onSuccess: (data) => {
       toast({
@@ -238,9 +227,7 @@ export default function AdminEnhanced() {
   const toggleAdminMutation = useMutation({
     mutationFn: async ({ userId, makeAdmin }: { userId: string; makeAdmin: boolean }) => {
       const endpoint = makeAdmin ? "make-admin" : "remove-admin";
-      return await apiRequest(`/api/admin/users/${userId}/${endpoint}`, {
-        method: "PUT",
-      });
+      return await apiRequest("PUT", `/api/admin/users/${userId}/${endpoint}`);
     },
     onSuccess: (data) => {
       toast({
