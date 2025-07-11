@@ -86,11 +86,18 @@ export default function Messages() {
       return;
     }
 
+    let messageContent = newMessage;
+    
+    // If this is a reply, include the original message
+    if (replyingTo) {
+      messageContent = `${newMessage}\n\n--- Original Message ---\nFrom: ${replyingTo.senderId}\nDate: ${formatDate(replyingTo.createdAt)}\nSubject: ${replyingTo.subject}\n\n${replyingTo.content}`;
+    }
+
     sendMessageMutation.mutate({
       recipientType: "organization",
       recipientId: "support",
       subject: newSubject,
-      content: newMessage,
+      content: messageContent,
     });
   };
 
