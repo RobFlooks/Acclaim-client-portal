@@ -19,8 +19,7 @@ import {
   Phone,
   Mail,
   MapPin,
-  PoundSterling,
-  Plus
+  PoundSterling
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
@@ -606,26 +605,10 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
         <TabsContent value="payments" className="space-y-4">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center">
-                  <PoundSterling className="h-5 w-5 mr-2" />
-                  Payment History
-                </CardTitle>
-                <Button
-                  size="sm"
-                  className="bg-acclaim-teal hover:bg-acclaim-teal/90"
-                  onClick={() => {
-                    // Future: Add payment recording functionality
-                    toast({
-                      title: "Coming Soon",
-                      description: "Payment recording functionality will be added soon.",
-                    });
-                  }}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Record Payment
-                </Button>
-              </div>
+              <CardTitle className="flex items-center">
+                <PoundSterling className="h-5 w-5 mr-2" />
+                Payment History
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {paymentsLoading ? (
