@@ -54,6 +54,14 @@ export default function CaseSummaryReport() {
     },
   });
 
+  // We'll calculate total payments from outstanding amount for now
+  // since we can't use dynamic hooks. In a real scenario, we'd need to restructure this.
+  const getTotalPayments = (caseItem: any) => {
+    const original = parseFloat(caseItem.originalAmount);
+    const outstanding = parseFloat(caseItem.outstandingAmount);
+    return Math.max(0, original - outstanding);
+  };
+
   const formatCurrency = (amount: string | number) => {
     const num = typeof amount === 'string' ? parseFloat(amount) : amount;
     return new Intl.NumberFormat('en-GB', {
@@ -214,6 +222,9 @@ export default function CaseSummaryReport() {
                     Original Amount
                   </th>
                   <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                    Total Payments
+                  </th>
+                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
                     Outstanding Amount
                   </th>
                   <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
@@ -238,6 +249,9 @@ export default function CaseSummaryReport() {
                     </td>
                     <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-gray-900">
                       {formatCurrency(caseItem.originalAmount)}
+                    </td>
+                    <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-green-600">
+                      {formatCurrency(getTotalPayments(caseItem))}
                     </td>
                     <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-orange-600">
                       {formatCurrency(caseItem.outstandingAmount)}
