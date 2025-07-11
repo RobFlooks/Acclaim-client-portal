@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Download, FileText, User, Calendar, Banknote } from "lucide-react";
+import { ArrowLeft, Download, FileText, User, Calendar, Banknote, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Link } from "wouter";
@@ -60,6 +60,16 @@ export default function CaseSummaryReport() {
     const original = parseFloat(caseItem.originalAmount);
     const outstanding = parseFloat(caseItem.outstandingAmount);
     return Math.max(0, original - outstanding);
+  };
+
+  const getTotalOriginalAmount = () => {
+    if (!cases) return 0;
+    return cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.originalAmount), 0);
+  };
+
+  const getTotalPaymentsReceived = () => {
+    if (!cases) return 0;
+    return cases.reduce((sum: number, caseItem: any) => sum + getTotalPayments(caseItem), 0);
   };
 
   const formatCurrency = (amount: string | number) => {
@@ -158,7 +168,7 @@ export default function CaseSummaryReport() {
           <CardTitle>Summary Statistics</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <div className="p-4 bg-blue-50 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
@@ -186,10 +196,28 @@ export default function CaseSummaryReport() {
                 <Calendar className="h-8 w-8 text-green-600" />
               </div>
             </div>
+            <div className="p-4 bg-purple-50 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Total Original Amount</p>
+                  <p className="text-2xl font-bold text-purple-600">{formatCurrency(getTotalOriginalAmount())}</p>
+                </div>
+                <Banknote className="h-8 w-8 text-purple-600" />
+              </div>
+            </div>
+            <div className="p-4 bg-emerald-50 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Total Payments Received</p>
+                  <p className="text-2xl font-bold text-emerald-600">{formatCurrency(getTotalPaymentsReceived())}</p>
+                </div>
+                <Banknote className="h-8 w-8 text-emerald-600" />
+              </div>
+            </div>
             <div className="p-4 bg-orange-50 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Outstanding</p>
+                  <p className="text-sm text-gray-600">Total Outstanding (inc. costs & interest)</p>
                   <p className="text-2xl font-bold text-orange-600">{formatCurrency(stats?.totalOutstanding || 0)}</p>
                 </div>
                 <Banknote className="h-8 w-8 text-orange-600" />
@@ -226,6 +254,9 @@ export default function CaseSummaryReport() {
                   </th>
                   <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
                     Outstanding Amount
+                    <div className="text-xs text-gray-500 mt-1 font-normal">
+                      *May include interest and recovery costs
+                    </div>
                   </th>
                   <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
                     Case Handler
@@ -255,9 +286,6 @@ export default function CaseSummaryReport() {
                     </td>
                     <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-orange-600">
                       {formatCurrency(caseItem.outstandingAmount)}
-                      <div className="text-xs text-gray-500 mt-1">
-                        *May include interest and recovery costs
-                      </div>
                     </td>
                     <td className="border border-gray-200 px-4 py-3 text-sm text-gray-900">
                       {caseItem.assignedTo || 'Unassigned'}
