@@ -72,6 +72,11 @@ export default function CaseSummaryReport() {
     return cases.reduce((sum: number, caseItem: any) => sum + getTotalPayments(caseItem), 0);
   };
 
+  const getTotalOutstandingAmount = () => {
+    if (!cases) return 0;
+    return cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.outstandingAmount), 0);
+  };
+
   const formatCurrency = (amount: string | number) => {
     const num = typeof amount === 'string' ? parseFloat(amount) : amount;
     return new Intl.NumberFormat('en-GB', {
@@ -218,7 +223,7 @@ export default function CaseSummaryReport() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Total Outstanding (inc. costs & interest)</p>
-                  <p className="text-2xl font-bold text-orange-600">{formatCurrency(stats?.totalOutstanding || 0)}</p>
+                  <p className="text-2xl font-bold text-orange-600">{formatCurrency(getTotalOutstandingAmount())}</p>
                 </div>
                 <Banknote className="h-8 w-8 text-orange-600" />
               </div>
