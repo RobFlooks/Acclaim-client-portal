@@ -142,10 +142,9 @@ export class DatabaseStorage implements IStorage {
     const allCases = await db
       .select()
       .from(cases)
-      .where(eq(cases.organisationId, organisationId))
-      .orderBy(desc(cases.updatedAt));
+      .where(eq(cases.organisationId, organisationId));
 
-    // For each case, calculate the accurate outstanding amount
+    // For each case, calculate the accurate outstanding amount and last activity time
     const casesWithCalculatedBalance = await Promise.all(
       allCases.map(async (case_) => {
         // Get total payments for this case
@@ -160,15 +159,42 @@ export class DatabaseStorage implements IStorage {
         // Calculate outstanding amount: original amount minus total payments
         const calculatedOutstanding = parseFloat(case_.originalAmount) - totalPayments;
         
+        // Get the most recent message for this case
+        const latestMessage = await db
+          .select()
+          .from(messages)
+          .where(eq(messages.caseId, case_.id))
+          .orderBy(desc(messages.createdAt))
+          .limit(1);
+        
+        // Get the most recent activity for this case
+        const latestActivity = await db
+          .select()
+          .from(caseActivities)
+          .where(eq(caseActivities.caseId, case_.id))
+          .orderBy(desc(caseActivities.createdAt))
+          .limit(1);
+        
+        // Determine the most recent update time
+        const caseUpdateTime = case_.updatedAt ? new Date(case_.updatedAt).getTime() : 0;
+        const messageUpdateTime = latestMessage.length > 0 ? new Date(latestMessage[0].createdAt).getTime() : 0;
+        const activityUpdateTime = latestActivity.length > 0 ? new Date(latestActivity[0].createdAt).getTime() : 0;
+        
+        const lastActivityTime = Math.max(caseUpdateTime, messageUpdateTime, activityUpdateTime);
+        
         return {
           ...case_,
           outstandingAmount: calculatedOutstanding.toFixed(2),
-          totalPayments: totalPayments.toFixed(2)
+          totalPayments: totalPayments.toFixed(2),
+          lastActivityTime: new Date(lastActivityTime).toISOString()
         };
       })
     );
 
-    return casesWithCalculatedBalance;
+    // Sort by last activity time (most recent first)
+    return casesWithCalculatedBalance.sort((a, b) => 
+      new Date(b.lastActivityTime).getTime() - new Date(a.lastActivityTime).getTime()
+    );
   }
 
   async getCase(id: number, organisationId: number): Promise<Case | undefined> {
