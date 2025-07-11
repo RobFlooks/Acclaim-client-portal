@@ -226,7 +226,7 @@ export default function Messages() {
                       id="attachment"
                       type="file"
                       onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                      accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar"
+                      accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar,.xls,.xlsx,.csv"
                     />
                     {selectedFile && (
                       <p className="text-sm text-gray-600 mt-1">
