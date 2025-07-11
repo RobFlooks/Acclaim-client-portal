@@ -30,6 +30,7 @@ interface CaseDetailProps {
 
 export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   const [newMessage, setNewMessage] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -120,6 +121,56 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
     },
   });
 
+  const uploadDocumentMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("caseId", caseData.id.toString());
+      
+      const response = await fetch("/api/documents/upload", {
+        method: "POST",
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cases", caseData.id, "documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      setSelectedFile(null);
+      // Reset file input
+      const fileInput = document.getElementById("file-upload") as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
+      
+      toast({
+        title: "Success",
+        description: "Document uploaded successfully",
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to upload document",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSendMessage = () => {
     if (!newMessage.trim()) return;
 
@@ -130,6 +181,18 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
       subject: `Message regarding case ${caseData.accountNumber}`,
       content: newMessage,
     });
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const handleFileUpload = () => {
+    if (!selectedFile) return;
+    uploadDocumentMutation.mutate(selectedFile);
   };
 
   const getStatusBadge = (status: string, stage: string) => {
@@ -337,6 +400,44 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                   <p className="text-gray-500">No documents found</p>
                 </div>
               )}
+              
+              {/* Upload Document Section */}
+              <div className="mt-6 pt-6 border-t">
+                <Label htmlFor="file-upload" className="text-sm font-medium">
+                  Upload Document
+                </Label>
+                <div className="mt-2 space-y-3">
+                  <input
+                    id="file-upload"
+                    type="file"
+                    onChange={handleFileSelect}
+                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-acclaim-teal file:text-white hover:file:bg-acclaim-teal/90"
+                  />
+                  {selectedFile && (
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <FileText className="h-5 w-5 text-acclaim-teal" />
+                        <div>
+                          <p className="font-medium text-sm">{selectedFile.name}</p>
+                          <p className="text-xs text-gray-500">
+                            {Math.round(selectedFile.size / 1024)}KB
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={handleFileUpload}
+                        disabled={uploadDocumentMutation.isPending}
+                        className="bg-acclaim-teal hover:bg-acclaim-teal/90"
+                        size="sm"
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        {uploadDocumentMutation.isPending ? "Uploading..." : "Upload"}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

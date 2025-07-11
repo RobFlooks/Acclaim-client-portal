@@ -213,6 +213,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/documents/upload', isAuthenticated, upload.single('file'), async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.organizationId) {
+        return res.status(404).json({ message: "User organization not found" });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const caseId = parseInt(req.body.caseId);
+      if (!caseId) {
+        return res.status(400).json({ message: "Case ID is required" });
+      }
+
+      // Verify case belongs to user's organization
+      const case_ = await storage.getCase(caseId, user.organizationId);
+      if (!case_) {
+        return res.status(404).json({ message: "Case not found" });
+      }
+
+      const document = await storage.createDocument({
+        caseId,
+        fileName: req.file.originalname,
+        fileSize: req.file.size,
+        fileType: req.file.mimetype,
+        filePath: req.file.path,
+        uploadedBy: userId,
+        organizationId: user.organizationId,
+      });
+
+      res.json(document);
+    } catch (error) {
+      console.error("Error uploading document:", error);
+      res.status(500).json({ message: "Failed to upload document" });
+    }
+  });
+
+  app.get('/api/documents/:id/download', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.organizationId) {
+        return res.status(404).json({ message: "User organization not found" });
+      }
+
+      const documentId = parseInt(req.params.id);
+      const documents = await storage.getDocumentsForOrganization(user.organizationId);
+      const document = documents.find(doc => doc.id === documentId);
+
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+
+      // Check if file exists
+      if (!fs.existsSync(document.filePath)) {
+        return res.status(404).json({ message: "File not found on server" });
+      }
+
+      res.download(document.filePath, document.fileName);
+    } catch (error) {
+      console.error("Error downloading document:", error);
+      res.status(500).json({ message: "Failed to download document" });
+    }
+  });
+
   app.get('/api/cases/:id/documents', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
