@@ -115,6 +115,7 @@ export default function SubmitCase() {
   const [showOtherTerms, setShowOtherTerms] = useState(false);
   const [debtorType, setDebtorType] = useState("individual");
   const [individualType, setIndividualType] = useState("individual");
+  const [singleInvoice, setSingleInvoice] = useState("yes");
 
   const form = useForm<SubmitCaseForm>({
     resolver: zodResolver(submitCaseSchema),
@@ -171,7 +172,7 @@ export default function SubmitCase() {
       // Build debtor name based on type
       let debtorName = "";
       if (data.debtorType === "organization") {
-        debtorName = data.debtorName;
+        debtorName = data.organizationName;
       } else {
         // Individual/Sole Trader
         if (data.individualType === "business") {
@@ -201,6 +202,9 @@ export default function SubmitCase() {
         debtorType: data.debtorType,
         individualType: data.individualType,
         tradingName: data.tradingName,
+        organizationName: data.organizationName,
+        organizationTradingName: data.organizationTradingName,
+        companyNumber: data.companyNumber,
         principalDetails: {
           salutation: data.principalSalutation,
           firstName: data.principalFirstName,
@@ -208,6 +212,12 @@ export default function SubmitCase() {
         },
         altPhone: data.altPhone,
         altEmail: data.altEmail,
+        creditorName: data.creditorName,
+        currency: data.currency,
+        singleInvoice: data.singleInvoice,
+        firstOverdueDate: data.firstOverdueDate,
+        lastOverdueDate: data.lastOverdueDate,
+        additionalInfo: data.additionalInfo,
       };
 
       return await apiRequest("POST", "/api/cases", caseData);
@@ -357,6 +367,10 @@ export default function SubmitCase() {
                         onValueChange={(value) => {
                           field.onChange(value);
                           setDebtorType(value);
+                          // Clear organization name when switching to organization
+                          if (value === "organization") {
+                            form.setValue("organizationName", "");
+                          }
                         }}
                         defaultValue={field.value}
                         className="flex flex-col space-y-2"
@@ -828,7 +842,16 @@ export default function SubmitCase() {
                       <FormLabel>Does the debt relate to a single invoice?</FormLabel>
                       <FormControl>
                         <RadioGroup
-                          onValueChange={field.onChange}
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            setSingleInvoice(value);
+                            // Clear dates when switching
+                            if (value === "yes") {
+                              form.setValue("lastOverdueDate", "");
+                            } else {
+                              form.setValue("firstOverdueDate", "");
+                            }
+                          }}
                           defaultValue={field.value}
                           className="flex flex-col space-y-2"
                         >
@@ -847,34 +870,52 @@ export default function SubmitCase() {
                   )}
                 />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  <FormField
-                    control={form.control}
-                    name="firstOverdueDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>First Overdue Invoice Date</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="date" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="lastOverdueDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Last Overdue Invoice Date</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="date" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                {singleInvoice === "yes" ? (
+                  <div className="mt-4">
+                    <FormField
+                      control={form.control}
+                      name="firstOverdueDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Invoice Date</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="date" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <FormField
+                      control={form.control}
+                      name="firstOverdueDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>First Overdue Invoice Date</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="date" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="lastOverdueDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Last Overdue Invoice Date</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="date" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Additional Information */}
