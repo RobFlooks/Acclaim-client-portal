@@ -304,7 +304,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Button
               variant="outline"
-              className="flex items-center justify-center p-4 h-auto hover:bg-acclaim-teal hover:text-white border-acclaim-teal text-acclaim-teal bg-[#008a8a00]"
+              className="flex items-center justify-center p-4 h-auto hover:bg-acclaim-teal hover:text-white border-acclaim-teal bg-[#008a8a] text-[#161d2d]"
             >
               <FolderOpen className="mr-2 h-4 w-4" />
               View All Cases
