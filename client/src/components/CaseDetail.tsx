@@ -309,6 +309,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
             <div>
               <p className="text-sm text-gray-600">Outstanding Amount</p>
               <p className="font-medium">{formatCurrency(getOutstandingAmount())}</p>
+              <p className="text-xs text-gray-500 mt-1">*May include interest and recovery costs</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Original Amount</p>
@@ -690,6 +691,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                         <p className="text-2xl font-bold text-gray-900">
                           {formatCurrency(getOutstandingAmount())}
                         </p>
+                        <p className="text-xs text-gray-500 mt-1">*May include interest and recovery costs</p>
                       </div>
                     </div>
                   </div>

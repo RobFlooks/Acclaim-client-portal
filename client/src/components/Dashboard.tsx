@@ -200,6 +200,7 @@ export default function Dashboard() {
                 <p className="text-2xl font-bold text-gray-900">
                   {statsLoading ? "..." : formatCurrency(stats?.totalOutstanding || 0)}
                 </p>
+                <p className="text-xs text-gray-500 mt-1">*May include interest and costs</p>
               </div>
             </div>
           </CardContent>
@@ -398,7 +399,7 @@ export default function Dashboard() {
                           <TableRow>
                             <TableHead>Account Number</TableHead>
                             <TableHead>Debtor Name</TableHead>
-                            <TableHead>Outstanding Amount</TableHead>
+                            <TableHead>Outstanding Amount <span className="text-xs text-gray-500">*</span></TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Stage</TableHead>
                             <TableHead>Assigned To</TableHead>
@@ -429,6 +430,9 @@ export default function Dashboard() {
                           ))}
                         </TableBody>
                       </Table>
+                      <div className="p-3 bg-gray-50 text-xs text-gray-500">
+                        * Outstanding amounts may include interest and recovery costs
+                      </div>
                     </div>
                   ) : (
                     <div className="text-center py-8">
