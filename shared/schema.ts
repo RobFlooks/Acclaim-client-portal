@@ -92,6 +92,10 @@ export const messages = pgTable("messages", {
   subject: varchar("subject", { length: 255 }),
   content: text("content").notNull(),
   isRead: boolean("is_read").default(false),
+  attachmentFileName: varchar("attachment_file_name"),
+  attachmentFilePath: varchar("attachment_file_path"),
+  attachmentFileSize: integer("attachment_file_size"),
+  attachmentFileType: varchar("attachment_file_type"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

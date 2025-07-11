@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Send, MessageSquare, Plus, User } from "lucide-react";
+import { Send, MessageSquare, Plus, User, Paperclip, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
@@ -19,6 +19,7 @@ export default function Messages() {
   const [replyingTo, setReplyingTo] = useState<any>(null);
   const [viewingMessage, setViewingMessage] = useState<any>(null);
   const [messageViewOpen, setMessageViewOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -46,12 +47,32 @@ export default function Messages() {
 
   const sendMessageMutation = useMutation({
     mutationFn: async (messageData: any) => {
-      await apiRequest("POST", "/api/messages", messageData);
+      const formData = new FormData();
+      formData.append("recipientType", messageData.recipientType);
+      formData.append("recipientId", messageData.recipientId);
+      formData.append("subject", messageData.subject);
+      formData.append("content", messageData.content);
+      
+      if (selectedFile) {
+        formData.append("attachment", selectedFile);
+      }
+
+      const response = await fetch("/api/messages", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`${response.status}: ${response.statusText}`);
+      }
+
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
       setNewMessage("");
       setNewSubject("");
+      setSelectedFile(null);
       setDialogOpen(false);
       toast({
         title: "Success",
@@ -116,6 +137,7 @@ export default function Messages() {
     setReplyingTo(null);
     setNewMessage("");
     setNewSubject("");
+    setSelectedFile(null);
   };
 
   const markAsReadMutation = useMutation({
@@ -198,6 +220,20 @@ export default function Messages() {
                       rows={6}
                     />
                   </div>
+                  <div>
+                    <Label htmlFor="attachment">Attachment (optional)</Label>
+                    <Input
+                      id="attachment"
+                      type="file"
+                      onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                      accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar"
+                    />
+                    {selectedFile && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                      </p>
+                    )}
+                  </div>
                   <Button
                     onClick={handleSendMessage}
                     disabled={!newMessage.trim() || !newSubject.trim() || sendMessageMutation.isPending}
@@ -259,6 +295,31 @@ export default function Messages() {
                   {viewingMessage.content}
                 </div>
               </div>
+              {viewingMessage.attachmentFileName && (
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Paperclip className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm font-medium text-gray-700">
+                        {viewingMessage.attachmentFileName}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        ({(viewingMessage.attachmentFileSize / 1024 / 1024).toFixed(2)} MB)
+                      </span>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        window.open(`/api/messages/${viewingMessage.id}/download`, '_blank');
+                      }}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Download
+                    </Button>
+                  </div>
+                </div>
+              )}
               {viewingMessage.caseId && (
                 <div className="bg-gray-50 p-3 rounded-lg">
                   <p className="text-sm text-gray-600">
@@ -312,9 +373,17 @@ export default function Messages() {
                           )}
                         </div>
                         <div className="mb-2">
-                          <p className="text-xs text-gray-500 mb-1">
-                            From: {message.senderName || message.senderEmail || 'Unknown'}
-                          </p>
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-xs text-gray-500">
+                              From: {message.senderName || message.senderEmail || 'Unknown'}
+                            </p>
+                            {message.attachmentFileName && (
+                              <div className="flex items-center text-xs text-gray-500">
+                                <Paperclip className="h-3 w-3 mr-1" />
+                                <span>Attachment</span>
+                              </div>
+                            )}
+                          </div>
                           <p className="text-sm text-gray-600">{message.content}</p>
                         </div>
                         <div className="flex items-center space-x-2">

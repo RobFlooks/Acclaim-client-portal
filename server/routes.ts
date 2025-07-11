@@ -251,12 +251,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/messages', isAuthenticated, async (req: any, res) => {
+  app.post('/api/messages', isAuthenticated, upload.single('attachment'), async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const messageData = insertMessageSchema.parse({
         ...req.body,
         senderId: userId,
+        attachmentFileName: req.file?.originalname,
+        attachmentFilePath: req.file?.path,
+        attachmentFileSize: req.file?.size,
+        attachmentFileType: req.file?.mimetype,
       });
 
       const newMessage = await storage.createMessage(messageData);
@@ -275,6 +279,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error marking message as read:", error);
       res.status(500).json({ message: "Failed to mark message as read" });
+    }
+  });
+
+  app.get('/api/messages/:id/download', isAuthenticated, async (req: any, res) => {
+    try {
+      const messageId = parseInt(req.params.id);
+      const userId = req.user.claims.sub;
+      
+      // Get the message to verify user can access it
+      const messages = await storage.getMessagesForUser(userId);
+      const message = messages.find(m => m.id === messageId);
+      
+      if (!message || !message.attachmentFilePath) {
+        return res.status(404).json({ message: "File not found" });
+      }
+
+      const filePath = path.join(__dirname, '..', message.attachmentFilePath);
+      
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: "File not found on disk" });
+      }
+
+      res.download(filePath, message.attachmentFileName);
+    } catch (error) {
+      console.error("Error downloading file:", error);
+      res.status(500).json({ message: "Failed to download file" });
     }
   });
 
