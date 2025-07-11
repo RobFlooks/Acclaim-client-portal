@@ -77,31 +77,14 @@ export default function Reports() {
 
   const generateCaseSummaryPDF = async () => {
     try {
+      console.log('Starting PDF generation...');
+      
       toast({
         title: "Generating PDF",
         description: "Creating case summary report...",
       });
 
-      // Fetch detailed case data with all related information
-      const casesWithDetails = await Promise.all(
-        cases?.map(async (caseItem: any) => {
-          const [payments, activities, messages, documents] = await Promise.all([
-            fetch(`/api/cases/${caseItem.id}/payments`).then(res => res.json()),
-            fetch(`/api/cases/${caseItem.id}/activities`).then(res => res.json()),
-            fetch(`/api/cases/${caseItem.id}/messages`).then(res => res.json()),
-            fetch(`/api/cases/${caseItem.id}/documents`).then(res => res.json())
-          ]);
-
-          return {
-            ...caseItem,
-            payments,
-            activities,
-            messages,
-            documents
-          };
-        }) || []
-      );
-
+      // Create a simple PDF first to test
       const doc = new jsPDF();
       
       // Header
@@ -120,7 +103,7 @@ export default function Reports() {
       yPosition += 10;
       
       doc.setFontSize(10);
-      doc.text(`Total Cases: ${casesWithDetails.length}`, 20, yPosition);
+      doc.text(`Total Cases: ${cases?.length || 0}`, 20, yPosition);
       yPosition += 5;
       doc.text(`Active Cases: ${stats?.activeCases || 0}`, 20, yPosition);
       yPosition += 5;
@@ -129,126 +112,45 @@ export default function Reports() {
       doc.text(`Total Outstanding: ${formatCurrency(stats?.totalOutstanding || 0)}`, 20, yPosition);
       yPosition += 15;
 
-      // Case details
-      for (const caseItem of casesWithDetails) {
-        // Check if we need a new page
-        if (yPosition > 250) {
-          doc.addPage();
-          yPosition = 20;
-        }
-
-        // Calculate totals for this case
-        const totalPayments = caseItem.payments?.reduce((sum: number, payment: any) => 
-          sum + parseFloat(payment.amount), 0) || 0;
-        const outstandingAmount = parseFloat(caseItem.originalAmount) - totalPayments;
-
-        // Case header
-        doc.setFontSize(12);
-        doc.setFont(undefined, 'bold');
-        doc.text(`Case: ${caseItem.debtorName} (${caseItem.accountNumber})`, 20, yPosition);
-        yPosition += 8;
-        
-        doc.setFont(undefined, 'normal');
-        doc.setFontSize(10);
-        
-        // Case basic info
-        doc.text(`Status: ${caseItem.status} | Stage: ${caseItem.stage}`, 20, yPosition);
-        yPosition += 5;
-        doc.text(`Original Amount: ${formatCurrency(caseItem.originalAmount)}`, 20, yPosition);
-        yPosition += 5;
-        doc.text(`Outstanding Amount: ${formatCurrency(outstandingAmount)} (May include interest and recovery costs)`, 20, yPosition);
-        yPosition += 5;
-        doc.text(`Total Payments: ${formatCurrency(totalPayments)}`, 20, yPosition);
-        yPosition += 5;
-        doc.text(`Case Handler: ${caseItem.assignedTo || 'Unassigned'}`, 20, yPosition);
-        yPosition += 5;
-        doc.text(`Created: ${new Date(caseItem.createdAt).toLocaleDateString('en-GB')}`, 20, yPosition);
+      // Simple case list without fetching additional data
+      if (cases && cases.length > 0) {
+        doc.setFontSize(14);
+        doc.text('Case Summary', 20, yPosition);
         yPosition += 10;
-
-        // Payments table
-        if (caseItem.payments && caseItem.payments.length > 0) {
-          doc.setFontSize(10);
+        
+        cases.forEach((caseItem: any) => {
+          if (yPosition > 250) {
+            doc.addPage();
+            yPosition = 20;
+          }
+          
+          doc.setFontSize(12);
           doc.setFont(undefined, 'bold');
-          doc.text('Payments:', 20, yPosition);
-          yPosition += 5;
-          
-          const paymentData = caseItem.payments.map((payment: any) => [
-            new Date(payment.createdAt).toLocaleDateString('en-GB'),
-            formatCurrency(payment.amount),
-            payment.method || 'Not specified',
-            payment.description || 'No description'
-          ]);
-
-          autoTable(doc, {
-            startY: yPosition,
-            head: [['Date', 'Amount', 'Method', 'Description']],
-            body: paymentData,
-            theme: 'grid',
-            styles: { fontSize: 8 },
-            headStyles: { fillColor: [0, 138, 138] },
-            margin: { left: 20 },
-            tableWidth: 'auto'
-          });
-          
-          yPosition = (doc as any).lastAutoTable.finalY + 10;
-        }
-
-        // Recent activities
-        if (caseItem.activities && caseItem.activities.length > 0) {
-          doc.setFontSize(10);
-          doc.setFont(undefined, 'bold');
-          doc.text('Recent Activities:', 20, yPosition);
-          yPosition += 5;
-          
-          const recentActivities = caseItem.activities.slice(0, 3);
-          doc.setFont(undefined, 'normal');
-          doc.setFontSize(8);
-          
-          recentActivities.forEach((activity: any) => {
-            const date = new Date(activity.createdAt).toLocaleDateString('en-GB');
-            const text = `${date} - ${activity.activityType}: ${activity.description}`;
-            doc.text(text, 25, yPosition);
-            yPosition += 4;
-          });
-          yPosition += 5;
-        }
-
-        // Messages summary
-        if (caseItem.messages && caseItem.messages.length > 0) {
-          doc.setFontSize(10);
-          doc.setFont(undefined, 'bold');
-          doc.text(`Messages: ${caseItem.messages.length} total`, 20, yPosition);
-          yPosition += 5;
-          
-          const lastMessage = caseItem.messages[0];
-          doc.setFont(undefined, 'normal');
-          doc.setFontSize(8);
-          doc.text(`Last: ${new Date(lastMessage.createdAt).toLocaleDateString('en-GB')} - ${lastMessage.content.substring(0, 100)}...`, 25, yPosition);
-          yPosition += 8;
-        }
-
-        // Documents summary
-        if (caseItem.documents && caseItem.documents.length > 0) {
-          doc.setFontSize(10);
-          doc.setFont(undefined, 'bold');
-          doc.text(`Documents: ${caseItem.documents.length} files`, 20, yPosition);
-          yPosition += 5;
+          doc.text(`${caseItem.debtorName} (${caseItem.accountNumber})`, 20, yPosition);
+          yPosition += 6;
           
           doc.setFont(undefined, 'normal');
-          doc.setFontSize(8);
-          caseItem.documents.slice(0, 3).forEach((document: any) => {
-            doc.text(`- ${document.fileName}`, 25, yPosition);
-            yPosition += 4;
-          });
-          yPosition += 5;
-        }
-
-        yPosition += 10; // Space between cases
+          doc.setFontSize(10);
+          doc.text(`Status: ${caseItem.status} | Stage: ${caseItem.stage}`, 20, yPosition);
+          yPosition += 4;
+          doc.text(`Original Amount: ${formatCurrency(caseItem.originalAmount)}`, 20, yPosition);
+          yPosition += 4;
+          doc.text(`Case Handler: ${caseItem.assignedTo || 'Unassigned'}`, 20, yPosition);
+          yPosition += 4;
+          doc.text(`Created: ${new Date(caseItem.createdAt).toLocaleDateString('en-GB')}`, 20, yPosition);
+          yPosition += 10;
+        });
       }
 
+
+
       // Save the PDF
-      doc.save(`case-summary-report-${new Date().toISOString().split('T')[0]}.pdf`);
+      console.log('Saving PDF...');
+      const filename = `case-summary-report-${new Date().toISOString().split('T')[0]}.pdf`;
+      console.log('Filename:', filename);
+      doc.save(filename);
       
+      console.log('PDF saved successfully');
       toast({
         title: "PDF Generated",
         description: "Case summary report has been downloaded successfully.",
