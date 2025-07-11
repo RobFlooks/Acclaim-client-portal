@@ -5,8 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { BarChart3, Download, FileText, TrendingUp, PieChart, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 export default function Reports() {
   const { toast } = useToast();
@@ -84,82 +84,36 @@ export default function Reports() {
         description: "Creating case summary report...",
       });
 
-      // Create a simple PDF first to test
+      // Test with minimal PDF to verify jsPDF works
       const doc = new jsPDF();
+      console.log('jsPDF instance created');
       
-      // Header
-      doc.setFontSize(20);
-      doc.text('Acclaim Credit Management', 20, 20);
-      doc.setFontSize(16);
-      doc.text('Case Summary Report', 20, 30);
-      doc.setFontSize(10);
-      doc.text(`Generated: ${new Date().toLocaleDateString('en-GB')}`, 20, 40);
+      // Very simple content
+      doc.text('Test PDF Generation', 20, 20);
+      doc.text('This is a test document', 20, 40);
+      doc.text('Generated on: ' + new Date().toString(), 20, 60);
       
-      let yPosition = 50;
-
-      // Summary statistics
-      doc.setFontSize(14);
-      doc.text('Summary Statistics', 20, yPosition);
-      yPosition += 10;
+      console.log('Content added to PDF');
       
-      doc.setFontSize(10);
-      doc.text(`Total Cases: ${cases?.length || 0}`, 20, yPosition);
-      yPosition += 5;
-      doc.text(`Active Cases: ${stats?.activeCases || 0}`, 20, yPosition);
-      yPosition += 5;
-      doc.text(`Resolved Cases: ${stats?.resolvedCases || 0}`, 20, yPosition);
-      yPosition += 5;
-      doc.text(`Total Outstanding: ${formatCurrency(stats?.totalOutstanding || 0)}`, 20, yPosition);
-      yPosition += 15;
-
-      // Simple case list without fetching additional data
-      if (cases && cases.length > 0) {
-        doc.setFontSize(14);
-        doc.text('Case Summary', 20, yPosition);
-        yPosition += 10;
-        
-        cases.forEach((caseItem: any) => {
-          if (yPosition > 250) {
-            doc.addPage();
-            yPosition = 20;
-          }
-          
-          doc.setFontSize(12);
-          doc.setFont(undefined, 'bold');
-          doc.text(`${caseItem.debtorName} (${caseItem.accountNumber})`, 20, yPosition);
-          yPosition += 6;
-          
-          doc.setFont(undefined, 'normal');
-          doc.setFontSize(10);
-          doc.text(`Status: ${caseItem.status} | Stage: ${caseItem.stage}`, 20, yPosition);
-          yPosition += 4;
-          doc.text(`Original Amount: ${formatCurrency(caseItem.originalAmount)}`, 20, yPosition);
-          yPosition += 4;
-          doc.text(`Case Handler: ${caseItem.assignedTo || 'Unassigned'}`, 20, yPosition);
-          yPosition += 4;
-          doc.text(`Created: ${new Date(caseItem.createdAt).toLocaleDateString('en-GB')}`, 20, yPosition);
-          yPosition += 10;
-        });
-      }
-
-
-
-      // Save the PDF
-      console.log('Saving PDF...');
-      const filename = `case-summary-report-${new Date().toISOString().split('T')[0]}.pdf`;
-      console.log('Filename:', filename);
+      // Try to save
+      const filename = 'test-report.pdf';
+      console.log('Attempting to save with filename:', filename);
+      
       doc.save(filename);
+      console.log('PDF save command executed');
       
-      console.log('PDF saved successfully');
       toast({
         title: "PDF Generated",
-        description: "Case summary report has been downloaded successfully.",
+        description: "Test PDF has been downloaded successfully.",
       });
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      console.error('Detailed error generating PDF:', error);
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
       toast({
         title: "Error",
-        description: "Failed to generate PDF report. Please try again.",
+        description: `Failed to generate PDF: ${error.message}`,
         variant: "destructive",
       });
     }
