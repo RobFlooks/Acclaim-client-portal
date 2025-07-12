@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Download, FileText, User, Calendar, Banknote, TrendingUp, FileSpreadsheet } from "lucide-react";
+import { ArrowLeft, Download, User, Calendar, Banknote, TrendingUp, FileSpreadsheet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Link } from "wouter";
@@ -140,9 +140,7 @@ export default function CaseSummaryReport() {
     );
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
+
 
   const handleDownloadPDF = () => {
     if (!cases || cases.length === 0) {
@@ -441,10 +439,7 @@ export default function CaseSummaryReport() {
             <Download className="h-4 w-4 mr-2" />
             Download PDF
           </Button>
-          <Button onClick={handlePrint} variant="outline">
-            <FileText className="h-4 w-4 mr-2" />
-            Print Report
-          </Button>
+
         </div>
       </div>
 
