@@ -560,10 +560,16 @@ export default function AdminEnhanced() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => toggleAdminMutation.mutate({
-                                userId: user.id,
-                                makeAdmin: !user.isAdmin
-                              })}
+                              onClick={() => {
+                                const action = user.isAdmin ? 'remove admin privileges from' : 'grant admin privileges to';
+                                const confirmation = confirm(`Are you sure you want to ${action} ${user.firstName} ${user.lastName}?`);
+                                if (confirmation) {
+                                  toggleAdminMutation.mutate({
+                                    userId: user.id,
+                                    makeAdmin: !user.isAdmin
+                                  });
+                                }
+                              }}
                               disabled={toggleAdminMutation.isPending}
                             >
                               {user.isAdmin ? (
