@@ -15,6 +15,8 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const [selectedCase, setSelectedCase] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState<any>(null);
+  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/dashboard/stats"],
@@ -152,6 +154,11 @@ export default function Dashboard() {
   const handleCaseClick = (caseData: any) => {
     setSelectedCase(caseData);
     setDialogOpen(true);
+  };
+
+  const handleMessageClick = (messageData: any) => {
+    setSelectedMessage(messageData);
+    setMessageDialogOpen(true);
   };
 
   return (
@@ -330,7 +337,11 @@ export default function Dashboard() {
               ) : recentMessages.length > 0 ? (
                 <div className="space-y-4">
                   {recentMessages.map((message: any) => (
-                    <div key={message.id} className="flex items-start space-x-3">
+                    <div 
+                      key={message.id} 
+                      className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() => handleMessageClick(message)}
+                    >
                       <div className="w-8 h-8 bg-acclaim-teal bg-opacity-10 rounded-full flex items-center justify-center">
                         <User className="text-acclaim-teal h-4 w-4" />
                       </div>
@@ -367,6 +378,54 @@ export default function Dashboard() {
           </DialogHeader>
           {selectedCase && (
             <CaseDetail case={selectedCase} />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Message Detail Dialog */}
+      <Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Message Details</DialogTitle>
+          </DialogHeader>
+          {selectedMessage && (
+            <div className="space-y-4">
+              <div className="border-b pb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {selectedMessage.subject || "System Message"}
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  {formatDate(selectedMessage.createdAt)}
+                </p>
+                {selectedMessage.caseId && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    Related to Case ID: {selectedMessage.caseId}
+                  </p>
+                )}
+              </div>
+              
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-gray-900 whitespace-pre-wrap">
+                  {selectedMessage.content}
+                </p>
+              </div>
+              
+              <div className="flex items-center justify-between pt-4 border-t">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-acclaim-teal bg-opacity-10 rounded-full flex items-center justify-center">
+                    <User className="text-acclaim-teal h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">
+                      {selectedMessage.recipientType === 'user' ? 'From Team' : 'From You'}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {selectedMessage.isRead ? 'Read' : 'Unread'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </DialogContent>
       </Dialog>
