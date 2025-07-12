@@ -257,17 +257,12 @@ export default function Dashboard() {
         </div>
       </div>
       {/* Recent Cases and Messages */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Cases */}
-        <div className="lg:col-span-2">
+        <div>
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Recent Cases</CardTitle>
-                <Button variant="ghost" size="sm" className="text-acclaim-teal hover:text-acclaim-teal">
-                  View All
-                </Button>
-              </div>
+              <CardTitle>Recent Cases</CardTitle>
             </CardHeader>
             <CardContent>
               {casesLoading ? (
@@ -315,15 +310,10 @@ export default function Dashboard() {
         </div>
 
         {/* Recent Messages */}
-        <div className="lg:col-span-1">
+        <div>
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Recent Messages</CardTitle>
-                <Button variant="ghost" size="sm" className="text-acclaim-teal hover:text-acclaim-teal">
-                  View All
-                </Button>
-              </div>
+              <CardTitle>Recent Messages</CardTitle>
             </CardHeader>
             <CardContent>
               {messagesLoading ? (
