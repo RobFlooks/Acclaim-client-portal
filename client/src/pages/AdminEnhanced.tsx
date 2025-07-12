@@ -154,6 +154,7 @@ export default function AdminEnhanced() {
       return await apiRequest("POST", `/api/admin/users`, userData);
     },
     onSuccess: (data) => {
+      console.log("Create user response:", data);
       toast({
         title: "Success",
         description: "User created successfully",
@@ -168,7 +169,7 @@ export default function AdminEnhanced() {
         isAdmin: false,
       });
       setShowCreateUser(false);
-      setTempPassword(data.tempPassword);
+      setTempPassword(data.tempPassword || "");
       setShowPasswordDialog(true);
     },
     onError: (error) => {
@@ -197,11 +198,12 @@ export default function AdminEnhanced() {
       return await apiRequest("POST", `/api/admin/users/${userId}/reset-password`);
     },
     onSuccess: (data) => {
+      console.log("Reset password response:", data);
       toast({
         title: "Success",
         description: "Password reset successfully",
       });
-      setTempPassword(data.tempPassword);
+      setTempPassword(data.tempPassword || "");
       setShowPasswordDialog(true);
     },
     onError: (error) => {
@@ -739,6 +741,7 @@ export default function AdminEnhanced() {
               Please provide this temporary password to the user. They will be required to change it on first login.
             </DialogDescription>
           </DialogHeader>
+          {console.log("Dialog tempPassword state:", tempPassword)}
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label>Temporary Password</Label>
@@ -747,15 +750,22 @@ export default function AdminEnhanced() {
                   value={tempPassword}
                   readOnly
                   className="font-mono bg-gray-50"
+                  placeholder={!tempPassword ? "Loading..." : ""}
                 />
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => copyToClipboard(tempPassword)}
+                  disabled={!tempPassword}
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
+              {tempPassword && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Password length: {tempPassword.length} characters
+                </p>
+              )}
             </div>
             <div className="bg-amber-50 border border-amber-200 rounded p-3">
               <div className="flex items-center space-x-2">
