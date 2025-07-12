@@ -556,29 +556,34 @@ export default function AdminEnhanced() {
                           >
                             <Key className="h-3 w-3" />
                           </Button>
-                          {user.email?.endsWith('@chadlaw.co.uk') && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const action = user.isAdmin ? 'remove admin privileges from' : 'grant admin privileges to';
-                                const confirmation = confirm(`Are you sure you want to ${action} ${user.firstName} ${user.lastName}?`);
-                                if (confirmation) {
-                                  toggleAdminMutation.mutate({
-                                    userId: user.id,
-                                    makeAdmin: !user.isAdmin
-                                  });
-                                }
-                              }}
-                              disabled={toggleAdminMutation.isPending}
-                            >
-                              {user.isAdmin ? (
-                                <ShieldCheck className="h-3 w-3 text-blue-600" />
-                              ) : (
-                                <Shield className="h-3 w-3" />
-                              )}
-                            </Button>
-                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              // Check if trying to grant admin to non-chadlaw email
+                              if (!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk')) {
+                                alert('Admin privileges can only be granted to @chadlaw.co.uk email addresses.');
+                                return;
+                              }
+                              
+                              const action = user.isAdmin ? 'remove admin privileges from' : 'grant admin privileges to';
+                              const confirmation = confirm(`Are you sure you want to ${action} ${user.firstName} ${user.lastName}?`);
+                              if (confirmation) {
+                                toggleAdminMutation.mutate({
+                                  userId: user.id,
+                                  makeAdmin: !user.isAdmin
+                                });
+                              }
+                            }}
+                            disabled={toggleAdminMutation.isPending || (!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk'))}
+                            className={(!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk')) ? 'opacity-50 cursor-not-allowed' : ''}
+                          >
+                            {user.isAdmin ? (
+                              <ShieldCheck className="h-3 w-3 text-blue-600" />
+                            ) : (
+                              <Shield className="h-3 w-3" />
+                            )}
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
