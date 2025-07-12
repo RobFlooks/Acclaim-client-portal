@@ -627,6 +627,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin-only delete routes
+  app.delete('/api/admin/messages/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const messageId = parseInt(req.params.id);
+      await storage.deleteMessage(messageId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting message:", error);
+      res.status(500).json({ message: "Failed to delete message" });
+    }
+  });
+
+  app.delete('/api/admin/documents/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const documentId = parseInt(req.params.id);
+      await storage.deleteDocumentById(documentId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting document:", error);
+      res.status(500).json({ message: "Failed to delete document" });
+    }
+  });
+
   // Admin routes
   app.get('/api/admin/users', isAuthenticated, isAdmin, async (req: any, res) => {
     try {

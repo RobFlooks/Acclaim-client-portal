@@ -20,11 +20,13 @@ import {
   Mail,
   MapPin,
   PoundSterling,
-  Printer
+  Printer,
+  Trash2
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 
 interface CaseDetailProps {
@@ -38,6 +40,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   const [activeTab, setActiveTab] = useState("timeline");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // Calculate accurate outstanding amount
   const getTotalPayments = () => {
@@ -258,6 +261,74 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
       toast({
         title: "Error",
         description: "Failed to upload document",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMessageMutation = useMutation({
+    mutationFn: async (messageId: number) => {
+      await apiRequest(`/api/admin/messages/${messageId}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cases", caseData.id, "messages"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
+      toast({
+        title: "Success",
+        description: "Message deleted successfully",
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to delete message",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteDocumentMutation = useMutation({
+    mutationFn: async (documentId: number) => {
+      await apiRequest(`/api/admin/documents/${documentId}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cases", caseData.id, "documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      toast({
+        title: "Success",
+        description: "Document deleted successfully",
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to delete document",
         variant: "destructive",
       });
     },
@@ -811,14 +882,31 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                           </p>
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDownload(doc.id)}
-                        className="text-acclaim-teal hover:text-acclaim-teal"
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDownload(doc.id)}
+                          className="text-acclaim-teal hover:text-acclaim-teal"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        {user?.isAdmin && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              if (confirm("Are you sure you want to delete this document?")) {
+                                deleteDocumentMutation.mutate(doc.id);
+                              }
+                            }}
+                            className="text-red-600 hover:text-red-700"
+                            disabled={deleteDocumentMutation.isPending}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -890,7 +978,24 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                     <div key={message.id} className="p-3 border rounded-lg">
                       <div className="flex items-center justify-between mb-2">
                         <p className="font-medium text-sm">{message.subject}</p>
-                        <p className="text-xs text-gray-500">{formatDate(message.createdAt)}</p>
+                        <div className="flex items-center space-x-2">
+                          <p className="text-xs text-gray-500">{formatDate(message.createdAt)}</p>
+                          {user?.isAdmin && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                if (confirm("Are you sure you want to delete this message?")) {
+                                  deleteMessageMutation.mutate(message.id);
+                                }
+                              }}
+                              className="text-red-600 hover:text-red-700"
+                              disabled={deleteMessageMutation.isPending}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                       <p className="text-xs text-gray-600 mb-2">From: {message.senderName || 'Unknown'}</p>
                       <p className="text-sm text-gray-700">{message.content}</p>

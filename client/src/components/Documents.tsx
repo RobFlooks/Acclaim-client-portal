@@ -1,16 +1,20 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Download, Search, Upload, Calendar, User } from "lucide-react";
+import { FileText, Download, Search, Upload, Calendar, User, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { useAuth } from "@/hooks/useAuth";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Documents() {
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { data: documents, isLoading } = useQuery({
     queryKey: ["/api/documents"],
@@ -41,6 +45,39 @@ export default function Documents() {
       doc.fileType?.toLowerCase().includes(searchLower)
     );
   }) || [];
+
+  const deleteDocumentMutation = useMutation({
+    mutationFn: async (documentId: number) => {
+      await apiRequest(`/api/admin/documents/${documentId}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      toast({
+        title: "Success",
+        description: "Document deleted successfully",
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to delete document",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleDownload = (documentId: number) => {
     window.open(`/api/documents/${documentId}/download`, '_blank');
@@ -237,14 +274,31 @@ export default function Documents() {
                               </div>
                             )}
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDownload(doc.id)}
-                            className="text-acclaim-teal hover:text-acclaim-teal"
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDownload(doc.id)}
+                              className="text-acclaim-teal hover:text-acclaim-teal"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                            {user?.isAdmin && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  if (confirm("Are you sure you want to delete this document?")) {
+                                    deleteDocumentMutation.mutate(doc.id);
+                                  }
+                                }}
+                                className="text-red-600 hover:text-red-700"
+                                disabled={deleteDocumentMutation.isPending}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}

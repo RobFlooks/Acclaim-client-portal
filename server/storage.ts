@@ -52,12 +52,14 @@ export interface IStorage {
   getMessagesForCase(caseId: number): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
   markMessageAsRead(messageId: number): Promise<void>;
+  deleteMessage(id: number): Promise<void>; // Admin only - delete message by ID
   
   // Document operations
   getDocumentsForCase(caseId: number): Promise<Document[]>;
   getDocumentsForOrganisation(organisationId: number): Promise<Document[]>;
   createDocument(document: InsertDocument): Promise<Document>;
   deleteDocument(id: number, organisationId: number): Promise<void>;
+  deleteDocumentById(id: number): Promise<void>; // Admin only - delete document by ID without org restriction
   
   // Payment operations
   getPaymentsForCase(caseId: number): Promise<Payment[]>;
@@ -375,6 +377,11 @@ export class DatabaseStorage implements IStorage {
       .where(eq(messages.id, messageId));
   }
 
+  async deleteMessage(id: number): Promise<void> {
+    // Admin only - delete message by ID
+    await db.delete(messages).where(eq(messages.id, id));
+  }
+
   async getDocumentsForCase(caseId: number): Promise<Document[]> {
     return await db
       .select()
@@ -400,6 +407,11 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(documents)
       .where(and(eq(documents.id, id), eq(documents.organisationId, organisationId)));
+  }
+
+  async deleteDocumentById(id: number): Promise<void> {
+    // Admin only - delete document by ID without org restriction
+    await db.delete(documents).where(eq(documents.id, id));
   }
 
   // Payment operations

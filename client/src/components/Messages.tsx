@@ -7,9 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Send, MessageSquare, Plus, User, Paperclip, Download } from "lucide-react";
+import { Send, MessageSquare, Plus, User, Paperclip, Download, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function Messages() {
@@ -22,6 +23,7 @@ export default function Messages() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { data: messages, isLoading } = useQuery({
     queryKey: ["/api/messages"],
@@ -94,6 +96,39 @@ export default function Messages() {
       toast({
         title: "Error",
         description: "Failed to send message",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMessageMutation = useMutation({
+    mutationFn: async (messageId: number) => {
+      await apiRequest(`/api/admin/messages/${messageId}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
+      toast({
+        title: "Success",
+        description: "Message deleted successfully",
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to delete message",
         variant: "destructive",
       });
     },
@@ -287,6 +322,23 @@ export default function Messages() {
                       <MessageSquare className="h-4 w-4 mr-2" />
                       Reply
                     </Button>
+                    {user?.isAdmin && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (confirm("Are you sure you want to delete this message?")) {
+                            deleteMessageMutation.mutate(viewingMessage.id);
+                            handleCloseMessageView();
+                          }
+                        }}
+                        className="text-red-600 border-red-600 hover:bg-red-600 hover:text-white"
+                        disabled={deleteMessageMutation.isPending}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        {deleteMessageMutation.isPending ? "Deleting..." : "Delete"}
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
