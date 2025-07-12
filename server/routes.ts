@@ -329,8 +329,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/messages/:id/read', isAuthenticated, async (req: any, res) => {
     try {
       const messageId = parseInt(req.params.id);
-      await storage.markMessageAsRead(messageId);
-      res.json({ message: "Message marked as read" });
+      const userId = req.user.claims.sub;
+      
+      // Get the message to check if user should be able to mark it as read
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Get user's messages to verify access
+      const userMessages = await storage.getMessagesForUser(userId);
+      const message = userMessages.find(m => m.id === messageId);
+      
+      if (!message) {
+        return res.status(404).json({ message: "Message not found" });
+      }
+      
+      // Only mark as read if:
+      // 1. The user is the intended recipient (not the sender)
+      // 2. OR if the user is admin and the message is from a non-admin user
+      if (message.senderId !== userId) {
+        await storage.markMessageAsRead(messageId);
+        res.json({ message: "Message marked as read" });
+      } else {
+        // User is trying to mark their own message as read - don't allow this
+        res.json({ message: "Cannot mark own message as read" });
+      }
     } catch (error) {
       console.error("Error marking message as read:", error);
       res.status(500).json({ message: "Failed to mark message as read" });

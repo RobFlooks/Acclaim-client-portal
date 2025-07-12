@@ -207,6 +207,13 @@ export default function Messages() {
     });
   };
 
+  // Calculate unread messages count (only messages FROM other users TO current user)
+  const unreadCount = messages?.filter((message: any) => 
+    !message.isRead && message.senderId !== user?.id
+  ).length || 0;
+
+  const totalMessages = messages?.length || 0;
+
   return (
     <div className="space-y-6">
       {/* Header with New Message Button */}
@@ -385,7 +392,14 @@ export default function Messages() {
       {/* Messages List */}
       <Card>
         <CardHeader>
-          <CardTitle>All Messages ({messages?.length || 0})</CardTitle>
+          <CardTitle>
+            All Messages ({totalMessages})
+            {unreadCount > 0 && (
+              <Badge variant="secondary" className="ml-2 bg-red-100 text-red-800">
+                {unreadCount} new
+              </Badge>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -402,7 +416,7 @@ export default function Messages() {
                 <div
                   key={message.id}
                   className={`p-4 rounded-lg border transition-colors cursor-pointer hover:shadow-md ${
-                    message.isRead 
+                    message.isRead || message.senderId === user?.id
                       ? "bg-gray-50 border-gray-200 hover:bg-gray-100" 
                       : "bg-white border-acclaim-teal shadow-sm hover:shadow-lg"
                   }`}
@@ -416,7 +430,7 @@ export default function Messages() {
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-1">
                           <p className="font-medium text-gray-900">{message.subject}</p>
-                          {!message.isRead && (
+                          {!message.isRead && message.senderId !== user?.id && (
                             <Badge variant="secondary" className="bg-red-100 text-red-800">
                               New
                             </Badge>
