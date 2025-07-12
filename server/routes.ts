@@ -233,12 +233,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.organisationId) {
-        return res.status(404).json({ message: "User organisation not found" });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
       }
 
       const caseId = parseInt(req.params.id);
-      const case_ = await storage.getCase(caseId, user.organisationId);
+      let case_;
+      
+      if (user.isAdmin) {
+        // Admin can access any case across all organizations
+        case_ = await storage.getCaseById(caseId);
+      } else {
+        // Regular users can only access cases from their organization
+        if (!user.organisationId) {
+          return res.status(404).json({ message: "User organisation not found" });
+        }
+        case_ = await storage.getCase(caseId, user.organisationId);
+      }
       
       if (!case_) {
         return res.status(404).json({ message: "Case not found" });
@@ -269,12 +280,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.organisationId) {
-        return res.status(404).json({ message: "User organisation not found" });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
       }
 
       const caseId = parseInt(req.params.id);
-      const case_ = await storage.getCase(caseId, user.organisationId);
+      let case_;
+      
+      if (user.isAdmin) {
+        // Admin can access any case across all organizations
+        case_ = await storage.getCaseById(caseId);
+      } else {
+        // Regular users can only access cases from their organization
+        if (!user.organisationId) {
+          return res.status(404).json({ message: "User organisation not found" });
+        }
+        case_ = await storage.getCase(caseId, user.organisationId);
+      }
       
       if (!case_) {
         return res.status(404).json({ message: "Case not found" });
@@ -496,12 +518,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.organisationId) {
-        return res.status(404).json({ message: "User organisation not found" });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
       }
 
       const caseId = parseInt(req.params.id);
-      const case_ = await storage.getCase(caseId, user.organisationId);
+      let case_;
+      
+      if (user.isAdmin) {
+        // Admin can access any case across all organizations
+        case_ = await storage.getCaseById(caseId);
+      } else {
+        // Regular users can only access cases from their organization
+        if (!user.organisationId) {
+          return res.status(404).json({ message: "User organisation not found" });
+        }
+        case_ = await storage.getCase(caseId, user.organisationId);
+      }
       
       if (!case_) {
         return res.status(404).json({ message: "Case not found" });
@@ -566,12 +599,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.organisationId) {
-        return res.status(404).json({ message: "User organisation not found" });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
       }
 
       const caseId = parseInt(req.params.id);
-      const case_ = await storage.getCase(caseId, user.organisationId);
+      let case_;
+      
+      if (user.isAdmin) {
+        // Admin can access any case across all organizations
+        case_ = await storage.getCaseById(caseId);
+      } else {
+        // Regular users can only access cases from their organization
+        if (!user.organisationId) {
+          return res.status(404).json({ message: "User organisation not found" });
+        }
+        case_ = await storage.getCase(caseId, user.organisationId);
+      }
       
       if (!case_) {
         return res.status(404).json({ message: "Case not found" });
