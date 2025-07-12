@@ -81,7 +81,8 @@ export default function AdminEnhanced() {
   // Create organisation mutation
   const createOrganisationMutation = useMutation({
     mutationFn: async (name: string) => {
-      return await apiRequest("POST", `/api/admin/organisations`, { name });
+      const response = await apiRequest("POST", `/api/admin/organisations`, { name });
+      return await response.json();
     },
     onSuccess: () => {
       toast({
@@ -115,7 +116,8 @@ export default function AdminEnhanced() {
   // Assign user to organisation mutation
   const assignUserMutation = useMutation({
     mutationFn: async ({ userId, organisationId }: { userId: string; organisationId: number }) => {
-      return await apiRequest("PUT", `/api/admin/users/${userId}/assign`, { organisationId });
+      const response = await apiRequest("PUT", `/api/admin/users/${userId}/assign`, { organisationId });
+      return await response.json();
     },
     onSuccess: () => {
       toast({
@@ -151,7 +153,8 @@ export default function AdminEnhanced() {
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: async (userData: CreateUserForm) => {
-      return await apiRequest("POST", `/api/admin/users`, userData);
+      const response = await apiRequest("POST", `/api/admin/users`, userData);
+      return await response.json();
     },
     onSuccess: (data) => {
       console.log("Create user response:", data);
@@ -195,7 +198,8 @@ export default function AdminEnhanced() {
   // Reset password mutation
   const resetPasswordMutation = useMutation({
     mutationFn: async (userId: string) => {
-      return await apiRequest("POST", `/api/admin/users/${userId}/reset-password`);
+      const response = await apiRequest("POST", `/api/admin/users/${userId}/reset-password`);
+      return await response.json();
     },
     onSuccess: (data) => {
       console.log("Reset password response:", data);
@@ -230,7 +234,8 @@ export default function AdminEnhanced() {
   const toggleAdminMutation = useMutation({
     mutationFn: async ({ userId, makeAdmin }: { userId: string; makeAdmin: boolean }) => {
       const endpoint = makeAdmin ? "make-admin" : "remove-admin";
-      return await apiRequest("PUT", `/api/admin/users/${userId}/${endpoint}`);
+      const response = await apiRequest("PUT", `/api/admin/users/${userId}/${endpoint}`);
+      return await response.json();
     },
     onSuccess: (data) => {
       toast({
