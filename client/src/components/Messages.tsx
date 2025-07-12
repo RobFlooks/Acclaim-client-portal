@@ -13,6 +13,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
+import CaseDetail from "./CaseDetail";
 
 export default function Messages() {
   const [newMessage, setNewMessage] = useState("");
@@ -22,6 +23,8 @@ export default function Messages() {
   const [viewingMessage, setViewingMessage] = useState<any>(null);
   const [messageViewOpen, setMessageViewOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedCase, setSelectedCase] = useState<any>(null);
+  const [caseDialogOpen, setCaseDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -232,14 +235,13 @@ export default function Messages() {
   };
 
   const handleCaseClick = (caseId: number) => {
-    console.log('handleCaseClick called with caseId:', caseId);
-    handleCloseMessageView();
-    // Store the case ID in localStorage for the Cases component to pick up
-    localStorage.setItem('scrollToCaseId', caseId.toString());
-    console.log('Set localStorage scrollToCaseId to:', caseId.toString());
-    // Use window.location to ensure proper navigation
-    window.location.href = "/?section=cases";
-    console.log('Navigation set to: /?section=cases');
+    const caseData = cases?.find((c: any) => c.id === caseId);
+    if (caseData) {
+      handleCloseMessageView();
+      // Set the selected case and open the case detail dialog
+      setSelectedCase(caseData);
+      setCaseDialogOpen(true);
+    }
   };
 
   // Calculate unread messages count based on user type
@@ -544,6 +546,18 @@ export default function Messages() {
           )}
         </CardContent>
       </Card>
+
+      {/* Case Detail Dialog */}
+      <Dialog open={caseDialogOpen} onOpenChange={setCaseDialogOpen}>
+        <DialogContent className="max-w-7xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Case Details - {selectedCase?.debtorName}</DialogTitle>
+          </DialogHeader>
+          {selectedCase && (
+            <CaseDetail case={selectedCase} />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
