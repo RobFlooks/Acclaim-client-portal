@@ -435,6 +435,14 @@ export default function Messages() {
                     >
                       {getCaseAccountNumber(viewingMessage.caseId)}
                     </button>
+                    {(() => {
+                      const caseData = cases?.find((c: any) => c.id === viewingMessage.caseId);
+                      return caseData?.debtorName ? (
+                        <span className="text-gray-500 ml-2">
+                          - {caseData.debtorName}
+                        </span>
+                      ) : null;
+                    })()}
                   </p>
                 </div>
               )}
