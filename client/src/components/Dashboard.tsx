@@ -215,12 +215,12 @@ export default function Dashboard() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="p-3 bg-purple-100 rounded-lg">
-                <TrendingUp className="text-purple-600 h-6 w-6" />
+                <PoundSterling className="text-purple-600 h-6 w-6" />
               </div>
               <div className="ml-4">
-                <p className="text-gray-600 text-sm">Recovery Rate</p>
+                <p className="text-gray-600 text-sm">Total Recovery</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {statsLoading ? "..." : `${stats?.recoveryRate || 0}%`}
+                  {statsLoading ? "..." : `£${parseFloat(stats?.totalRecovery || '0').toLocaleString()}`}
                 </p>
               </div>
             </div>

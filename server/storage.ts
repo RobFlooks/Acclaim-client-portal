@@ -72,14 +72,14 @@ export interface IStorage {
     activeCases: number;
     resolvedCases: number;
     totalOutstanding: string;
-    recoveryRate: number;
+    totalRecovery: string;
   }>;
   
   getGlobalCaseStats(): Promise<{
     activeCases: number;
     resolvedCases: number;
     totalOutstanding: string;
-    recoveryRate: number;
+    totalRecovery: string;
   }>; // Admin only - get stats across all organizations
 
   // Admin operations
@@ -448,25 +448,31 @@ export class DatabaseStorage implements IStorage {
     activeCases: number;
     resolvedCases: number;
     totalOutstanding: string;
-    recoveryRate: number;
+    totalRecovery: string;
   }> {
     const [stats] = await db
       .select({
         activeCases: sql<number>`COUNT(CASE WHEN status = 'active' THEN 1 END)`,
         resolvedCases: sql<number>`COUNT(CASE WHEN status = 'resolved' THEN 1 END)`,
         totalOutstanding: sql<string>`COALESCE(SUM(CASE WHEN status = 'active' THEN outstanding_amount ELSE 0 END), 0)`,
-        totalCases: sql<number>`COUNT(*)`,
       })
       .from(cases)
       .where(eq(cases.organisationId, organisationId));
 
-    const recoveryRate = stats.totalCases > 0 ? (stats.resolvedCases / stats.totalCases) * 100 : 0;
+    // Calculate total recovery from payments
+    const [recoveryStats] = await db
+      .select({
+        totalRecovery: sql<string>`COALESCE(SUM(${payments.amount}), 0)`,
+      })
+      .from(payments)
+      .leftJoin(cases, eq(payments.caseId, cases.id))
+      .where(eq(cases.organisationId, organisationId));
 
     return {
       activeCases: stats.activeCases,
       resolvedCases: stats.resolvedCases,
       totalOutstanding: stats.totalOutstanding.toString(),
-      recoveryRate: Math.round(recoveryRate),
+      totalRecovery: recoveryStats.totalRecovery.toString(),
     };
   }
 
@@ -474,7 +480,7 @@ export class DatabaseStorage implements IStorage {
     activeCases: number;
     resolvedCases: number;
     totalOutstanding: string;
-    recoveryRate: number;
+    totalRecovery: string;
   }> {
     // Admin only - get stats across all organizations
     const [stats] = await db
@@ -482,17 +488,21 @@ export class DatabaseStorage implements IStorage {
         activeCases: sql<number>`COUNT(CASE WHEN status = 'active' THEN 1 END)`,
         resolvedCases: sql<number>`COUNT(CASE WHEN status = 'resolved' THEN 1 END)`,
         totalOutstanding: sql<string>`COALESCE(SUM(CASE WHEN status = 'active' THEN outstanding_amount ELSE 0 END), 0)`,
-        totalCases: sql<number>`COUNT(*)`,
       })
       .from(cases);
 
-    const recoveryRate = stats.totalCases > 0 ? (stats.resolvedCases / stats.totalCases) * 100 : 0;
+    // Calculate total recovery from payments across all organizations
+    const [recoveryStats] = await db
+      .select({
+        totalRecovery: sql<string>`COALESCE(SUM(${payments.amount}), 0)`,
+      })
+      .from(payments);
 
     return {
       activeCases: stats.activeCases,
       resolvedCases: stats.resolvedCases,
       totalOutstanding: stats.totalOutstanding.toString(),
-      recoveryRate: Math.round(recoveryRate),
+      totalRecovery: recoveryStats.totalRecovery.toString(),
     };
   }
 
