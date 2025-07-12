@@ -233,14 +233,10 @@ export default function Messages() {
 
   const handleCaseClick = (caseId: number) => {
     handleCloseMessageView();
-    setLocation("/cases");
-    // Small delay to ensure navigation happens then scroll to case
-    setTimeout(() => {
-      const caseElement = document.getElementById(`case-${caseId}`);
-      if (caseElement) {
-        caseElement.scrollIntoView({ behavior: "smooth" });
-      }
-    }, 100);
+    // Store the case ID in localStorage for the Cases component to pick up
+    localStorage.setItem('scrollToCaseId', caseId.toString());
+    // Navigate to home with a hash parameter
+    setLocation("/?section=cases");
   };
 
   // Calculate unread messages count based on user type

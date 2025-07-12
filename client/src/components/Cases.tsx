@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -39,6 +39,28 @@ export default function Cases() {
       });
     },
   });
+
+  // Handle scroll to case when navigated from Messages
+  useEffect(() => {
+    const scrollToCaseId = localStorage.getItem('scrollToCaseId');
+    if (scrollToCaseId && cases && cases.length > 0) {
+      // Remove the localStorage item
+      localStorage.removeItem('scrollToCaseId');
+      
+      // Small delay to ensure DOM is rendered
+      setTimeout(() => {
+        const caseElement = document.getElementById(`case-${scrollToCaseId}`);
+        if (caseElement) {
+          caseElement.scrollIntoView({ behavior: "smooth", block: "center" });
+          // Add a brief highlight effect
+          caseElement.classList.add('ring-2', 'ring-acclaim-teal', 'ring-opacity-50');
+          setTimeout(() => {
+            caseElement.classList.remove('ring-2', 'ring-acclaim-teal', 'ring-opacity-50');
+          }, 3000);
+        }
+      }, 100);
+    }
+  }, [cases]);
 
   const filteredCases = cases?.filter((case_: any) => {
     const searchLower = searchTerm.toLowerCase();

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Dashboard from "@/components/Dashboard";
 import Cases from "@/components/Cases";
@@ -9,10 +9,12 @@ import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 
 export default function Home() {
   const [activeSection, setActiveSection] = useState("dashboard");
   const { user } = useAuth();
+  const [location] = useLocation();
 
   // Fetch messages to get unread count
   const { data: messages } = useQuery({
@@ -22,6 +24,15 @@ export default function Home() {
 
   // Calculate unread message count
   const unreadCount = messages?.filter((msg: any) => !msg.isRead).length || 0;
+
+  // Handle URL parameters for navigation
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.split('?')[1] || '');
+    const section = urlParams.get('section');
+    if (section && ['dashboard', 'cases', 'messages', 'reports', 'documents'].includes(section)) {
+      setActiveSection(section);
+    }
+  }, [location]);
 
   // Handle notification bell click
   const handleNotificationClick = () => {
