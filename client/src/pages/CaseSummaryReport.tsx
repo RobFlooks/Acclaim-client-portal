@@ -210,7 +210,7 @@ export default function CaseSummaryReport() {
               </div>
               <div class="stat-card">
                 <div class="stat-label">Closed Cases</div>
-                <div class="stat-value">${stats?.resolvedCases || 0}</div>
+                <div class="stat-value">${stats?.closedCases || 0}</div>
               </div>
               <div class="stat-card">
                 <div class="stat-label">Total Original Amount</div>
@@ -472,7 +472,7 @@ export default function CaseSummaryReport() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Closed Cases</p>
-                  <p className="text-2xl font-bold text-green-600">{stats?.resolvedCases || 0}</p>
+                  <p className="text-2xl font-bold text-green-600">{stats?.closedCases || 0}</p>
                 </div>
                 <Calendar className="h-8 w-8 text-green-600" />
               </div>
