@@ -65,12 +65,22 @@ export default function Reports() {
     if (reportType === "Case Summary Report") {
       // Navigate to case summary report page
       window.location.href = '/case-summary-report';
+    } else if (reportType === "Recovery Analysis") {
+      // Navigate to recovery analysis report page
+      window.location.href = '/recovery-analysis-report';
     } else {
       toast({
         title: "Report View",
         description: `${reportType} report view is not yet implemented.`,
       });
     }
+  };
+
+  const handleDownloadReport = (reportType: string) => {
+    toast({
+      title: "Download Report",
+      description: `${reportType} report download is not yet implemented.`,
+    });
   };
 
 
@@ -276,12 +286,11 @@ export default function Reports() {
                 <BarChart3 className="h-8 w-8 text-blue-600" />
               </div>
               <Button 
-                onClick={() => handleDownloadReport("Recovery Analysis")}
-                variant="outline"
-                className="w-full border-blue-500 text-blue-600 hover:bg-blue-50"
+                onClick={() => handleViewReport("Recovery Analysis")}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               >
-                <Download className="h-4 w-4 mr-2" />
-                Download PDF
+                <FileText className="h-4 w-4 mr-2" />
+                View Report
               </Button>
             </div>
 
