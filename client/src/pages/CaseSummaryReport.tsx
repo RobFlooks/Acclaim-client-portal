@@ -155,105 +155,155 @@ export default function CaseSummaryReport() {
     }
 
     try {
-      const doc = new jsPDF();
-      const pageWidth = doc.internal.pageSize.width;
+      // Use browser's print functionality to generate PDF
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        throw new Error('Could not open print window');
+      }
+
+      const currentDate = formatDate(new Date().toISOString());
       
-      // Add title
-      doc.setFontSize(18);
-      doc.text('Case Summary Report', pageWidth / 2, 20, { align: 'center' });
+      // Create HTML content for PDF
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Case Summary Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .header h1 { margin: 0; font-size: 24px; }
+            .header p { margin: 5px 0; color: #666; }
+            .section { margin-bottom: 30px; }
+            .section h2 { font-size: 18px; margin-bottom: 15px; color: #333; }
+            .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+            .stat-card { padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+            .stat-label { font-size: 12px; color: #666; margin-bottom: 5px; }
+            .stat-value { font-size: 18px; font-weight: bold; color: #333; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { padding: 8px; text-align: left; border: 1px solid #ddd; font-size: 10px; }
+            th { background-color: #f5f5f5; font-weight: bold; }
+            .currency { text-align: right; }
+            .status-active { background-color: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 3px; }
+            .status-resolved { background-color: #d1fae5; color: #065f46; padding: 2px 6px; border-radius: 3px; }
+            .status-new { background-color: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 3px; }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Case Summary Report</h1>
+            <p>Generated on: ${currentDate}</p>
+          </div>
+          
+          <div class="section">
+            <h2>Summary Statistics</h2>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-label">Total Cases</div>
+                <div class="stat-value">${cases.length}</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Active Cases</div>
+                <div class="stat-value">${stats?.activeCases || 0}</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Closed Cases</div>
+                <div class="stat-value">${stats?.resolvedCases || 0}</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Total Original Amount</div>
+                <div class="stat-value">${formatCurrency(getTotalOriginalAmount())}</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Total Payments Received</div>
+                <div class="stat-value">${formatCurrency(getTotalPaymentsReceived())}</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Total Outstanding</div>
+                <div class="stat-value">${formatCurrency(getTotalOutstandingAmount())}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="section">
+            <h2>Detailed Case Information</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>Account Number</th>
+                  <th>Debtor Name</th>
+                  <th>Status</th>
+                  <th>Original Amount</th>
+                  <th>Costs Added</th>
+                  <th>Interest Added</th>
+                  <th>Other Fees</th>
+                  <th>Total Debt</th>
+                  <th>Total Payments</th>
+                  <th>Outstanding Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${cases.map((caseItem: any) => {
+                  const totalDebt = parseFloat(caseItem.originalAmount || 0) + 
+                                   parseFloat(caseItem.costsAdded || 0) + 
+                                   parseFloat(caseItem.interestAdded || 0) + 
+                                   parseFloat(caseItem.feesAdded || 0);
+                  const payments = getTotalPayments(caseItem);
+                  const outstanding = totalDebt - payments;
+                  
+                  return `
+                    <tr>
+                      <td>${caseItem.accountNumber || ''}</td>
+                      <td>${caseItem.debtorName || ''}</td>
+                      <td><span class="status-${caseItem.status}">${caseItem.status === 'resolved' ? 'Closed' : (caseItem.status || '').charAt(0).toUpperCase() + (caseItem.status || '').slice(1)}</span></td>
+                      <td class="currency">${formatCurrency(caseItem.originalAmount || 0)}</td>
+                      <td class="currency">${formatCurrency(caseItem.costsAdded || 0)}</td>
+                      <td class="currency">${formatCurrency(caseItem.interestAdded || 0)}</td>
+                      <td class="currency">${formatCurrency(caseItem.feesAdded || 0)}</td>
+                      <td class="currency">${formatCurrency(totalDebt)}</td>
+                      <td class="currency">${formatCurrency(payments)}</td>
+                      <td class="currency">${formatCurrency(outstanding)}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="section">
+            <p style="text-align: center; color: #666; font-size: 12px; margin-top: 40px;">
+              This report was generated by Acclaim Credit Management System<br>
+              All amounts are in GBP. Outstanding amounts include interest and recovery costs.
+            </p>
+          </div>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
       
-      // Add generation date
-      doc.setFontSize(12);
-      doc.text(`Generated on: ${formatDate(new Date().toISOString())}`, pageWidth / 2, 30, { align: 'center' });
-      
-      // Add summary statistics
-      doc.setFontSize(14);
-      doc.text('Summary Statistics', 20, 50);
-      
-      const summaryData = [
-        ['Total Cases', cases.length.toString()],
-        ['Active Cases', (stats?.activeCases || 0).toString()],
-        ['Closed Cases', (stats?.resolvedCases || 0).toString()],
-        ['Total Original Amount', formatCurrency(getTotalOriginalAmount())],
-        ['Total Payments Received', formatCurrency(getTotalPaymentsReceived())],
-        ['Total Outstanding', formatCurrency(getTotalOutstandingAmount())]
-      ];
-      
-      (doc as any).autoTable({
-        startY: 60,
-        head: [['Metric', 'Value']],
-        body: summaryData,
-        theme: 'grid',
-        styles: { fontSize: 10 },
-        columnStyles: {
-          0: { fontStyle: 'bold' },
-          1: { halign: 'right' }
-        }
-      });
-      
-      // Add case details table
-      doc.setFontSize(14);
-      doc.text('Detailed Case Information', 20, (doc as any).lastAutoTable.finalY + 20);
-      
-      const tableData = cases.map((caseItem: any) => [
-        caseItem.accountNumber,
-        caseItem.debtorName,
-        caseItem.status === 'resolved' ? 'Closed' : caseItem.status.charAt(0).toUpperCase() + caseItem.status.slice(1),
-        formatCurrency(caseItem.originalAmount),
-        formatCurrency(caseItem.costsAdded || 0),
-        formatCurrency(caseItem.interestAdded || 0),
-        formatCurrency(caseItem.feesAdded || 0),
-        formatCurrency(
-          parseFloat(caseItem.originalAmount) + 
-          parseFloat(caseItem.costsAdded || 0) + 
-          parseFloat(caseItem.interestAdded || 0) + 
-          parseFloat(caseItem.feesAdded || 0)
-        ),
-        formatCurrency(getTotalPayments(caseItem)),
-        formatCurrency(
-          parseFloat(caseItem.originalAmount) + 
-          parseFloat(caseItem.costsAdded || 0) + 
-          parseFloat(caseItem.interestAdded || 0) + 
-          parseFloat(caseItem.feesAdded || 0) - 
-          getTotalPayments(caseItem)
-        )
-      ]);
-      
-      (doc as any).autoTable({
-        startY: (doc as any).lastAutoTable.finalY + 30,
-        head: [['Account', 'Debtor', 'Status', 'Original', 'Costs', 'Interest', 'Fees', 'Total Debt', 'Payments', 'Outstanding']],
-        body: tableData,
-        theme: 'grid',
-        styles: { fontSize: 8 },
-        columnStyles: {
-          0: { cellWidth: 20 },
-          1: { cellWidth: 30 },
-          2: { cellWidth: 15 },
-          3: { cellWidth: 18, halign: 'right' },
-          4: { cellWidth: 15, halign: 'right' },
-          5: { cellWidth: 15, halign: 'right' },
-          6: { cellWidth: 15, halign: 'right' },
-          7: { cellWidth: 18, halign: 'right' },
-          8: { cellWidth: 18, halign: 'right' },
-          9: { cellWidth: 18, halign: 'right' }
-        }
-      });
-      
-      // Generate filename with current date
-      const now = new Date();
-      const filename = `case-summary-report-${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}.pdf`;
-      
-      doc.save(filename);
+      // Wait for content to load then print
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+          printWindow.close();
+        }, 250);
+      };
       
       toast({
-        title: "PDF Generated",
-        description: "Case summary report has been downloaded as PDF.",
+        title: "PDF Print Dialog Opened",
+        description: "Use your browser's print dialog to save as PDF.",
       });
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast({
         title: "PDF Generation Failed",
-        description: "Failed to generate PDF report.",
+        description: "Failed to generate PDF report. Please try the Excel export instead.",
         variant: "destructive",
       });
     }
