@@ -89,7 +89,7 @@ export default function Reports() {
     if (!cases) return { active: 0, resolved: 0, inProgress: 0 };
     
     return cases.reduce((acc: any, case_: any) => {
-      if (case_.status === 'resolved') {
+      if (case_.status?.toLowerCase() === 'closed') {
         acc.resolved++;
       } else if (case_.stage === 'payment_plan') {
         acc.inProgress++;
