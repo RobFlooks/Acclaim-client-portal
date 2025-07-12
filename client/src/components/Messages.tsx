@@ -232,11 +232,14 @@ export default function Messages() {
   };
 
   const handleCaseClick = (caseId: number) => {
+    console.log('handleCaseClick called with caseId:', caseId);
     handleCloseMessageView();
     // Store the case ID in localStorage for the Cases component to pick up
     localStorage.setItem('scrollToCaseId', caseId.toString());
+    console.log('Set localStorage scrollToCaseId to:', caseId.toString());
     // Navigate to home with a hash parameter
     setLocation("/?section=cases");
+    console.log('Navigation set to: /?section=cases');
   };
 
   // Calculate unread messages count based on user type

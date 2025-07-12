@@ -43,13 +43,17 @@ export default function Cases() {
   // Handle scroll to case when navigated from Messages
   useEffect(() => {
     const scrollToCaseId = localStorage.getItem('scrollToCaseId');
+    console.log('Cases useEffect - scrollToCaseId from localStorage:', scrollToCaseId);
+    console.log('Cases useEffect - cases loaded:', cases?.length);
     if (scrollToCaseId && cases && cases.length > 0) {
       // Remove the localStorage item
       localStorage.removeItem('scrollToCaseId');
+      console.log('Removed localStorage item and attempting to scroll to case:', scrollToCaseId);
       
       // Small delay to ensure DOM is rendered
       setTimeout(() => {
         const caseElement = document.getElementById(`case-${scrollToCaseId}`);
+        console.log('Found case element:', caseElement);
         if (caseElement) {
           caseElement.scrollIntoView({ behavior: "smooth", block: "center" });
           // Add a brief highlight effect
