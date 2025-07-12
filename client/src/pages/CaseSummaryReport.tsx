@@ -283,10 +283,7 @@ export default function CaseSummaryReport() {
         'Total Additional Charges': parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0),
         'Total Debt': parseFloat(caseItem.originalAmount) + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0),
         'Total Payments': getTotalPayments(caseItem),
-        'Outstanding Amount': parseFloat(caseItem.originalAmount) + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0) - getTotalPayments(caseItem),
-        'Case Handler': caseItem.assignedTo || 'Unassigned',
-        'Created Date': formatDate(caseItem.createdAt),
-        'Last Updated': formatDate(caseItem.updatedAt)
+        'Outstanding Amount': parseFloat(caseItem.originalAmount) + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0) - getTotalPayments(caseItem)
       }));
 
       // Add summary row
@@ -302,10 +299,7 @@ export default function CaseSummaryReport() {
         'Total Additional Charges': cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0), 0),
         'Total Debt': getTotalOriginalAmount() + cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0), 0),
         'Total Payments': getTotalPaymentsReceived(),
-        'Outstanding Amount': getTotalOutstandingAmount(),
-        'Case Handler': '',
-        'Created Date': '',
-        'Last Updated': ''
+        'Outstanding Amount': getTotalOutstandingAmount()
       };
 
       excelData.push(summaryRow);
@@ -327,10 +321,7 @@ export default function CaseSummaryReport() {
         { wch: 18 }, // Total Additional Charges
         { wch: 15 }, // Total Debt
         { wch: 15 }, // Total Payments
-        { wch: 18 }, // Outstanding Amount
-        { wch: 20 }, // Case Handler
-        { wch: 12 }, // Created Date
-        { wch: 12 }  // Last Updated
+        { wch: 18 }  // Outstanding Amount
       ];
       ws['!cols'] = colWidths;
 
@@ -338,7 +329,7 @@ export default function CaseSummaryReport() {
       const summaryRowIndex = excelData.length;
       const summaryRowRange = XLSX.utils.encode_range({
         s: { c: 0, r: summaryRowIndex },
-        e: { c: 14, r: summaryRowIndex }
+        e: { c: 11, r: summaryRowIndex }
       });
 
       XLSX.utils.book_append_sheet(wb, ws, 'Case Summary Report');
@@ -519,12 +510,6 @@ export default function CaseSummaryReport() {
                       Total Debt - Total Payments
                     </div>
                   </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                    Case Handler
-                  </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                    Created Date
-                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -570,12 +555,6 @@ export default function CaseSummaryReport() {
                         parseFloat(caseItem.feesAdded || 0) - 
                         getTotalPayments(caseItem)
                       )}
-                    </td>
-                    <td className="border border-gray-200 px-4 py-3 text-sm text-gray-900">
-                      {caseItem.assignedTo || 'Unassigned'}
-                    </td>
-                    <td className="border border-gray-200 px-4 py-3 text-sm text-gray-900">
-                      {formatDate(caseItem.createdAt)}
                     </td>
                   </tr>
                 ))}
