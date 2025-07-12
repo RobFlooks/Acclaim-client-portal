@@ -172,9 +172,6 @@ export default function Cases() {
                   
                   <div className="text-center">
                     {getStatusBadge(case_.status, case_.stage)}
-                    <p className="text-xs text-gray-500 mt-1">
-                      {case_.assignedTo && `Assigned to: ${case_.assignedTo}`}
-                    </p>
                   </div>
                   
                   <Dialog open={dialogOpen && selectedCase?.id === case_.id} onOpenChange={setDialogOpen}>
