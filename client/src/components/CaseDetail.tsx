@@ -355,15 +355,20 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   };
 
   const getStatusBadge = (status: string, stage: string) => {
-    if (status === "resolved") {
-      return <Badge variant="secondary" className="bg-green-100 text-green-800"><Check className="w-3 h-3 mr-1" />Resolved</Badge>;
+    if (status === "resolved" || status?.toLowerCase() === "closed") {
+      return <Badge variant="secondary" className="bg-green-100 text-green-800"><Check className="w-3 h-3 mr-1" />Closed</Badge>;
     }
     
-    switch (stage) {
-      case "payment_plan":
+    // Normalize stage for comparison
+    const normalizedStage = stage?.toLowerCase().replace(/[_-]/g, '');
+    
+    switch (normalizedStage) {
+      case "paymentplan":
         return <Badge variant="secondary" className="bg-green-100 text-green-800"><Check className="w-3 h-3 mr-1" />Payment Plan</Badge>;
-      case "legal_action":
+      case "legalaction":
         return <Badge variant="destructive"><AlertTriangle className="w-3 h-3 mr-1" />Legal Action</Badge>;
+      case "prelegal":
+        return <Badge variant="secondary" className="bg-blue-100 text-blue-800"><Clock className="w-3 h-3 mr-1" />Pre-Legal</Badge>;
       default:
         return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800"><Clock className="w-3 h-3 mr-1" />In Progress</Badge>;
     }
@@ -410,6 +415,28 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
       const currentDate = formatDate(new Date().toISOString());
       const totalPayments = getTotalPayments();
       const outstandingAmount = getOutstandingAmount();
+      
+      // Helper function to get status text and class for print
+      const getStatusForPrint = (status: string, stage: string) => {
+        if (status === "resolved" || status?.toLowerCase() === "closed") {
+          return { text: 'Closed', class: 'status-resolved' };
+        }
+        
+        const normalizedStage = stage?.toLowerCase().replace(/[_-]/g, '');
+        
+        switch (normalizedStage) {
+          case "paymentplan":
+            return { text: 'Payment Plan', class: 'status-resolved' };
+          case "legalaction":
+            return { text: 'Legal Action', class: 'status-legal' };
+          case "prelegal":
+            return { text: 'Pre-Legal', class: 'status-progress' };
+          default:
+            return { text: 'In Progress', class: 'status-progress' };
+        }
+      };
+      
+      const statusInfo = getStatusForPrint(caseData.status, caseData.stage);
       
       const htmlContent = `
         <!DOCTYPE html>
@@ -461,11 +488,8 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               <div class="info-card">
                 <div class="info-label">Status</div>
                 <div class="info-value">
-                  <span class="status-badge ${caseData.status === 'resolved' ? 'status-resolved' : 
-                    caseData.stage === 'legal_action' ? 'status-legal' : 'status-progress'}">
-                    ${caseData.status === 'resolved' ? 'Resolved' : 
-                      caseData.stage === 'payment_plan' ? 'Payment Plan' : 
-                      caseData.stage === 'legal_action' ? 'Legal Action' : 'In Progress'}
+                  <span class="status-badge ${statusInfo.class}">
+                    ${statusInfo.text}
                   </span>
                 </div>
               </div>
