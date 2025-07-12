@@ -77,14 +77,7 @@ export default function CaseSummaryReport() {
 
   const getTotalOutstandingAmount = () => {
     if (!cases) return 0;
-    return cases.reduce((sum: number, caseItem: any) => {
-      const totalDebt = parseFloat(caseItem.originalAmount) + 
-                        parseFloat(caseItem.costsAdded || 0) + 
-                        parseFloat(caseItem.interestAdded || 0) + 
-                        parseFloat(caseItem.feesAdded || 0);
-      const totalPayments = getTotalPayments(caseItem);
-      return sum + (totalDebt - totalPayments);
-    }, 0);
+    return cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.outstandingAmount || 0), 0);
   };
 
   const formatCurrency = (amount: string | number) => {

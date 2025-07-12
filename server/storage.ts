@@ -456,20 +456,7 @@ export class DatabaseStorage implements IStorage {
       .select({
         activeCases: sql<number>`COUNT(CASE WHEN LOWER(status) != 'closed' THEN 1 END)`,
         closedCases: sql<number>`COUNT(CASE WHEN LOWER(status) = 'closed' THEN 1 END)`,
-        totalOutstanding: sql<string>`
-          COALESCE(
-            SUM(
-              CASE WHEN LOWER(status) != 'closed' THEN 
-                (original_amount + COALESCE(costs_added, 0) + COALESCE(interest_added, 0) + COALESCE(fees_added, 0)) - 
-                COALESCE(
-                  (SELECT SUM(p.amount::decimal) FROM payments p WHERE p.case_id = cases.id), 
-                  0
-                )
-              ELSE 0 END
-            ), 
-            0
-          )
-        `,
+        totalOutstanding: sql<string>`COALESCE(SUM(outstanding_amount), 0)`,
       })
       .from(cases)
       .where(eq(cases.organisationId, organisationId));
@@ -502,20 +489,7 @@ export class DatabaseStorage implements IStorage {
       .select({
         activeCases: sql<number>`COUNT(CASE WHEN LOWER(status) != 'closed' THEN 1 END)`,
         closedCases: sql<number>`COUNT(CASE WHEN LOWER(status) = 'closed' THEN 1 END)`,
-        totalOutstanding: sql<string>`
-          COALESCE(
-            SUM(
-              CASE WHEN LOWER(status) != 'closed' THEN 
-                (original_amount + COALESCE(costs_added, 0) + COALESCE(interest_added, 0) + COALESCE(fees_added, 0)) - 
-                COALESCE(
-                  (SELECT SUM(p.amount::decimal) FROM payments p WHERE p.case_id = cases.id), 
-                  0
-                )
-              ELSE 0 END
-            ), 
-            0
-          )
-        `,
+        totalOutstanding: sql<string>`COALESCE(SUM(outstanding_amount), 0)`,
       })
       .from(cases);
 

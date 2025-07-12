@@ -88,7 +88,7 @@ export default function RecoveryAnalysisReport() {
                         return sum + parseFloat(payment.amount || 0);
                       }, 0) || 0);
 
-      const outstanding = totalDebt - payments;
+      const outstanding = parseFloat(caseItem.outstandingAmount || 0);
       const recovered = payments;
       // Calculate recovery rate based on original amount, capped at 100%
       const recoveryRate = originalAmount > 0 ? Math.min((recovered / originalAmount) * 100, 100) : 0;
