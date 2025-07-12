@@ -90,7 +90,8 @@ export default function RecoveryAnalysisReport() {
 
       const outstanding = totalDebt - payments;
       const recovered = payments;
-      const recoveryRate = originalAmount > 0 ? (recovered / originalAmount) * 100 : 0;
+      // Calculate recovery rate based on original amount, capped at 100%
+      const recoveryRate = originalAmount > 0 ? Math.min((recovered / originalAmount) * 100, 100) : 0;
 
       acc.totalOriginalAmount += originalAmount;
       acc.totalCostsAdded += costsAdded;
@@ -124,6 +125,11 @@ export default function RecoveryAnalysisReport() {
       } else {
         acc.noRecovery += 1;
       }
+      
+      // Calculate overall recovery rate for totals
+      acc.totalRecoveryRate = acc.totalOriginalAmount > 0 
+        ? Math.min((acc.totalRecovered / acc.totalOriginalAmount) * 100, 100) 
+        : 0;
 
       return acc;
     }, {
@@ -145,6 +151,7 @@ export default function RecoveryAnalysisReport() {
       mediumRecovery: 0,
       lowRecovery: 0,
       noRecovery: 0,
+      totalRecoveryRate: 0,
     });
 
     // Remove recovery rate calculations
@@ -198,7 +205,7 @@ export default function RecoveryAnalysisReport() {
         const totalDebt = originalAmount + costsAdded + interestAdded + feesAdded;
         const payments = getTotalPayments(caseItem);
         const outstanding = totalDebt - payments;
-        const recoveryRate = originalAmount > 0 ? (payments / originalAmount) * 100 : 0;
+        const recoveryRate = originalAmount > 0 ? Math.min((payments / originalAmount) * 100, 100) : 0;
 
         return {
           'Account Number': caseItem.accountNumber,
@@ -211,7 +218,7 @@ export default function RecoveryAnalysisReport() {
           'Total Debt': totalDebt,
           'Amount Recovered': payments,
           'Outstanding Amount': outstanding,
-
+          'Recovery Rate (%)': Math.round(recoveryRate),
           'Created Date': formatDate(caseItem.createdAt),
           'Last Updated': formatDate(caseItem.updatedAt),
         };
@@ -224,7 +231,7 @@ export default function RecoveryAnalysisReport() {
         { 'Metric': 'Total Debt (with costs)', 'Value': metrics?.totalDebt || 0 },
         { 'Metric': 'Total Recovered', 'Value': metrics?.totalRecovered || 0 },
         { 'Metric': 'Total Outstanding', 'Value': metrics?.totalOutstanding || 0 },
-
+        { 'Metric': 'Overall Recovery Rate (%)', 'Value': Math.round(metrics?.totalRecoveryRate || 0) },
       ];
 
       // Create workbook with multiple sheets
@@ -241,7 +248,7 @@ export default function RecoveryAnalysisReport() {
       // Auto-size columns
       const caseColWidths = [
         { wch: 15 }, { wch: 25 }, { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 12 }, 
-        { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 18 }, { wch: 12 }, { wch: 12 }
+        { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 18 }, { wch: 15 }, { wch: 12 }, { wch: 12 }
       ];
       caseSheet['!cols'] = caseColWidths;
       
@@ -332,7 +339,7 @@ export default function RecoveryAnalysisReport() {
             <div class="metrics-grid">
               <div class="metric-card">
                 <div class="metric-label">Overall Recovery Rate</div>
-                <div class="metric-value">${formatPercentage(metrics?.overallRecoveryRate || 0)}</div>
+                <div class="metric-value">${formatPercentage(metrics?.totalRecoveryRate || 0)}</div>
               </div>
               <div class="metric-card">
                 <div class="metric-label">Total Amount Recovered</div>
@@ -343,8 +350,8 @@ export default function RecoveryAnalysisReport() {
                 <div class="metric-value">${formatCurrency(metrics?.totalOutstanding || 0)}</div>
               </div>
               <div class="metric-card">
-                <div class="metric-label">Debt Recovery Rate</div>
-                <div class="metric-value">${formatPercentage(metrics?.debtRecoveryRate || 0)}</div>
+                <div class="metric-label">Total Cases</div>
+                <div class="metric-value">${metrics?.totalCases || 0}</div>
               </div>
             </div>
           </div>
@@ -379,7 +386,7 @@ export default function RecoveryAnalysisReport() {
                   <th>Total Debt</th>
                   <th>Amount Recovered</th>
                   <th>Outstanding</th>
-
+                  <th>Recovery Rate</th>
                 </tr>
               </thead>
               <tbody>
@@ -391,7 +398,11 @@ export default function RecoveryAnalysisReport() {
                   const totalDebt = originalAmount + costsAdded + interestAdded + feesAdded;
                   const payments = getTotalPayments(caseItem);
                   const outstanding = totalDebt - payments;
-
+                  const recoveryRate = originalAmount > 0 ? Math.min((payments / originalAmount) * 100, 100) : 0;
+                  
+                  let rateClass = 'low-recovery';
+                  if (recoveryRate >= 90) rateClass = 'high-recovery';
+                  else if (recoveryRate >= 50) rateClass = 'medium-recovery';
                   
                   return `
                     <tr>
@@ -402,6 +413,7 @@ export default function RecoveryAnalysisReport() {
                       <td class="currency">${formatCurrency(totalDebt)}</td>
                       <td class="currency">${formatCurrency(payments)}</td>
                       <td class="currency">${formatCurrency(outstanding)}</td>
+                      <td class="percentage ${rateClass}">${formatPercentage(recoveryRate)}</td>
                     </tr>
                   `;
                 }).join('')}
@@ -412,7 +424,7 @@ export default function RecoveryAnalysisReport() {
           <div class="section">
             <p style="text-align: center; color: #666; font-size: 12px; margin-top: 40px;">
               This report was generated by Acclaim Credit Management System<br>
-              All amounts are in GBP.
+              All amounts are in GBP. Recovery rates are calculated based on original debt amount and capped at 100%.
             </p>
           </div>
         </body>
@@ -485,7 +497,21 @@ export default function RecoveryAnalysisReport() {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm text-gray-600">Overall Recovery Rate</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center space-x-2">
+              <TrendingUp className="h-8 w-8 text-green-600" />
+              <span className="text-3xl font-bold text-green-600">
+                {formatPercentage(metrics?.totalRecoveryRate || 0)}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm text-gray-600">Total Amount Recovered</CardTitle>
@@ -529,8 +555,55 @@ export default function RecoveryAnalysisReport() {
         </Card>
       </div>
 
-      {/* Status-Based Recovery */}
-      <div className="grid grid-cols-1 gap-6 mb-8">
+      {/* Recovery Performance Breakdown */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Recovery Performance Breakdown</CardTitle>
+            <p className="text-sm text-gray-600">Based on original amount (max 100%)</p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span className="text-sm text-gray-600">High Recovery (90-100%)</span>
+                </div>
+                <Badge className="bg-green-100 text-green-800">
+                  {metrics?.highRecovery || 0}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                  <span className="text-sm text-gray-600">Medium Recovery (50-89%)</span>
+                </div>
+                <Badge className="bg-yellow-100 text-yellow-800">
+                  {metrics?.mediumRecovery || 0}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <span className="text-sm text-gray-600">Low Recovery (1-49%)</span>
+                </div>
+                <Badge className="bg-red-100 text-red-800">
+                  {metrics?.lowRecovery || 0}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+                  <span className="text-sm text-gray-600">No Recovery (0%)</span>
+                </div>
+                <Badge className="bg-gray-100 text-gray-800">
+                  {metrics?.noRecovery || 0}
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Status-Based Recovery</CardTitle>
@@ -597,6 +670,12 @@ export default function RecoveryAnalysisReport() {
                   <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
                     Outstanding
                   </th>
+                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                    Recovery Rate
+                    <div className="text-xs text-gray-500 mt-1 font-normal">
+                      Based on Original Amount (Max 100%)
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -608,7 +687,12 @@ export default function RecoveryAnalysisReport() {
                   const totalDebt = originalAmount + costsAdded + interestAdded + feesAdded;
                   const payments = getTotalPayments(caseItem);
                   const outstanding = totalDebt - payments;
-
+                  // Calculate recovery rate based on original amount, capped at 100%
+                  const recoveryRate = originalAmount > 0 ? Math.min((payments / originalAmount) * 100, 100) : 0;
+                  
+                  let rateColorClass = 'text-red-600';
+                  if (recoveryRate >= 90) rateColorClass = 'text-green-600';
+                  else if (recoveryRate >= 50) rateColorClass = 'text-yellow-600';
                   
                   return (
                     <tr key={caseItem.id} className="hover:bg-gray-50">
@@ -633,7 +717,9 @@ export default function RecoveryAnalysisReport() {
                       <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-orange-600">
                         {formatCurrency(outstanding)}
                       </td>
-
+                      <td className={`border border-gray-200 px-4 py-3 text-sm font-bold ${rateColorClass}`}>
+                        {formatPercentage(recoveryRate)}
+                      </td>
                     </tr>
                   );
                 })}
