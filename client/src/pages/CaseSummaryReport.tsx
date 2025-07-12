@@ -7,6 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Link } from "wouter";
 import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 export default function CaseSummaryReport() {
   const { toast } = useToast();
@@ -140,6 +142,121 @@ export default function CaseSummaryReport() {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadPDF = () => {
+    if (!cases || cases.length === 0) {
+      toast({
+        title: "No Data",
+        description: "No cases available to generate PDF.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.width;
+      
+      // Add title
+      doc.setFontSize(18);
+      doc.text('Case Summary Report', pageWidth / 2, 20, { align: 'center' });
+      
+      // Add generation date
+      doc.setFontSize(12);
+      doc.text(`Generated on: ${formatDate(new Date().toISOString())}`, pageWidth / 2, 30, { align: 'center' });
+      
+      // Add summary statistics
+      doc.setFontSize(14);
+      doc.text('Summary Statistics', 20, 50);
+      
+      const summaryData = [
+        ['Total Cases', cases.length.toString()],
+        ['Active Cases', (stats?.activeCases || 0).toString()],
+        ['Closed Cases', (stats?.resolvedCases || 0).toString()],
+        ['Total Original Amount', formatCurrency(getTotalOriginalAmount())],
+        ['Total Payments Received', formatCurrency(getTotalPaymentsReceived())],
+        ['Total Outstanding', formatCurrency(getTotalOutstandingAmount())]
+      ];
+      
+      (doc as any).autoTable({
+        startY: 60,
+        head: [['Metric', 'Value']],
+        body: summaryData,
+        theme: 'grid',
+        styles: { fontSize: 10 },
+        columnStyles: {
+          0: { fontStyle: 'bold' },
+          1: { halign: 'right' }
+        }
+      });
+      
+      // Add case details table
+      doc.setFontSize(14);
+      doc.text('Detailed Case Information', 20, (doc as any).lastAutoTable.finalY + 20);
+      
+      const tableData = cases.map((caseItem: any) => [
+        caseItem.accountNumber,
+        caseItem.debtorName,
+        caseItem.status === 'resolved' ? 'Closed' : caseItem.status.charAt(0).toUpperCase() + caseItem.status.slice(1),
+        formatCurrency(caseItem.originalAmount),
+        formatCurrency(caseItem.costsAdded || 0),
+        formatCurrency(caseItem.interestAdded || 0),
+        formatCurrency(caseItem.feesAdded || 0),
+        formatCurrency(
+          parseFloat(caseItem.originalAmount) + 
+          parseFloat(caseItem.costsAdded || 0) + 
+          parseFloat(caseItem.interestAdded || 0) + 
+          parseFloat(caseItem.feesAdded || 0)
+        ),
+        formatCurrency(getTotalPayments(caseItem)),
+        formatCurrency(
+          parseFloat(caseItem.originalAmount) + 
+          parseFloat(caseItem.costsAdded || 0) + 
+          parseFloat(caseItem.interestAdded || 0) + 
+          parseFloat(caseItem.feesAdded || 0) - 
+          getTotalPayments(caseItem)
+        )
+      ]);
+      
+      (doc as any).autoTable({
+        startY: (doc as any).lastAutoTable.finalY + 30,
+        head: [['Account', 'Debtor', 'Status', 'Original', 'Costs', 'Interest', 'Fees', 'Total Debt', 'Payments', 'Outstanding']],
+        body: tableData,
+        theme: 'grid',
+        styles: { fontSize: 8 },
+        columnStyles: {
+          0: { cellWidth: 20 },
+          1: { cellWidth: 30 },
+          2: { cellWidth: 15 },
+          3: { cellWidth: 18, halign: 'right' },
+          4: { cellWidth: 15, halign: 'right' },
+          5: { cellWidth: 15, halign: 'right' },
+          6: { cellWidth: 15, halign: 'right' },
+          7: { cellWidth: 18, halign: 'right' },
+          8: { cellWidth: 18, halign: 'right' },
+          9: { cellWidth: 18, halign: 'right' }
+        }
+      });
+      
+      // Generate filename with current date
+      const now = new Date();
+      const filename = `case-summary-report-${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}.pdf`;
+      
+      doc.save(filename);
+      
+      toast({
+        title: "PDF Generated",
+        description: "Case summary report has been downloaded as PDF.",
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "PDF Generation Failed",
+        description: "Failed to generate PDF report.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleExportExcel = () => {
@@ -279,8 +396,12 @@ export default function CaseSummaryReport() {
             <FileSpreadsheet className="h-4 w-4 mr-2" />
             Export to Excel
           </Button>
-          <Button onClick={handlePrint} variant="outline">
+          <Button onClick={handleDownloadPDF} variant="outline">
             <Download className="h-4 w-4 mr-2" />
+            Download PDF
+          </Button>
+          <Button onClick={handlePrint} variant="outline">
+            <FileText className="h-4 w-4 mr-2" />
             Print Report
           </Button>
         </div>
@@ -292,7 +413,7 @@ export default function CaseSummaryReport() {
           <CardTitle>Summary Statistics</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <div className="p-4 bg-blue-50 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
@@ -329,15 +450,7 @@ export default function CaseSummaryReport() {
                 <Banknote className="h-8 w-8 text-purple-600" />
               </div>
             </div>
-            <div className="p-4 bg-indigo-50 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Total Debt (inc. costs & interest)</p>
-                  <p className="text-2xl font-bold text-indigo-600">{formatCurrency(getTotalOriginalAmount() + (cases?.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0), 0) || 0))}</p>
-                </div>
-                <Banknote className="h-8 w-8 text-indigo-600" />
-              </div>
-            </div>
+
             <div className="p-4 bg-emerald-50 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
@@ -467,97 +580,6 @@ export default function CaseSummaryReport() {
                   </tr>
                 ))}
               </tbody>
-            </table>
-          </div>
-          
-          {(!cases || cases.length === 0) && (
-            <div className="text-center py-8">
-              <p className="text-gray-500">No cases found</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Additional Charges Breakdown Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Additional Charges Breakdown</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-200">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                    Account Number
-                  </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                    Debtor Name
-                  </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                    Costs Added
-                  </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                    Interest Added
-                  </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                    Other Fees
-                  </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                    Total Additional Charges
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {cases?.map((caseItem: any) => {
-                  const costsAdded = parseFloat(caseItem.costsAdded || 0);
-                  const interestAdded = parseFloat(caseItem.interestAdded || 0);
-                  const feesAdded = parseFloat(caseItem.feesAdded || 0);
-                  const totalAdditional = costsAdded + interestAdded + feesAdded;
-                  
-                  return (
-                    <tr key={caseItem.id} className="hover:bg-gray-50">
-                      <td className="border border-gray-200 px-4 py-3 text-sm text-gray-900">
-                        {caseItem.accountNumber}
-                      </td>
-                      <td className="border border-gray-200 px-4 py-3 text-sm text-gray-900">
-                        {caseItem.debtorName}
-                      </td>
-                      <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-gray-900">
-                        {formatCurrency(costsAdded)}
-                      </td>
-                      <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-gray-900">
-                        {formatCurrency(interestAdded)}
-                      </td>
-                      <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-gray-900">
-                        {formatCurrency(feesAdded)}
-                      </td>
-                      <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-orange-600">
-                        {formatCurrency(totalAdditional)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-              <tfoot>
-                <tr className="bg-gray-100 font-medium">
-                  <td className="border border-gray-200 px-4 py-3 text-sm text-gray-900" colSpan={2}>
-                    TOTALS
-                  </td>
-                  <td className="border border-gray-200 px-4 py-3 text-sm font-bold text-gray-900">
-                    {formatCurrency(cases?.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.costsAdded || 0), 0) || 0)}
-                  </td>
-                  <td className="border border-gray-200 px-4 py-3 text-sm font-bold text-gray-900">
-                    {formatCurrency(cases?.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.interestAdded || 0), 0) || 0)}
-                  </td>
-                  <td className="border border-gray-200 px-4 py-3 text-sm font-bold text-gray-900">
-                    {formatCurrency(cases?.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.feesAdded || 0), 0) || 0)}
-                  </td>
-                  <td className="border border-gray-200 px-4 py-3 text-sm font-bold text-orange-600">
-                    {formatCurrency(cases?.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0), 0) || 0)}
-                  </td>
-                </tr>
-              </tfoot>
             </table>
           </div>
           
