@@ -333,6 +333,7 @@ export class DatabaseStorage implements IStorage {
         createdAt: messages.createdAt,
         senderName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
         senderEmail: users.email,
+        senderIsAdmin: users.isAdmin,
       })
       .from(messages)
       .leftJoin(users, eq(messages.senderId, users.id))
@@ -358,6 +359,7 @@ export class DatabaseStorage implements IStorage {
         createdAt: messages.createdAt,
         senderName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
         senderEmail: users.email,
+        senderIsAdmin: users.isAdmin,
       })
       .from(messages)
       .leftJoin(users, eq(messages.senderId, users.id))

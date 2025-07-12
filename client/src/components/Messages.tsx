@@ -207,10 +207,21 @@ export default function Messages() {
     });
   };
 
-  // Calculate unread messages count (only messages FROM other users TO current user)
-  const unreadCount = messages?.filter((message: any) => 
-    !message.isRead && message.senderId !== user?.id
-  ).length || 0;
+  // Calculate unread messages count based on user type
+  const unreadCount = messages?.filter((message: any) => {
+    // Only count unread messages that were sent TO this user (not sent BY this user)
+    if (message.isRead || message.senderId === user?.id) {
+      return false;
+    }
+    
+    if (user?.isAdmin) {
+      // Admin: count messages FROM non-admin users
+      return !message.senderIsAdmin;
+    } else {
+      // Regular user: count messages FROM admin users
+      return message.senderIsAdmin;
+    }
+  }).length || 0;
 
   const totalMessages = messages?.length || 0;
 
@@ -416,7 +427,8 @@ export default function Messages() {
                 <div
                   key={message.id}
                   className={`p-4 rounded-lg border transition-colors cursor-pointer hover:shadow-md ${
-                    message.isRead || message.senderId === user?.id
+                    message.isRead || message.senderId === user?.id || 
+                    !((user?.isAdmin && !message.senderIsAdmin) || (!user?.isAdmin && message.senderIsAdmin))
                       ? "bg-gray-50 border-gray-200 hover:bg-gray-100" 
                       : "bg-white border-acclaim-teal shadow-sm hover:shadow-lg"
                   }`}
@@ -431,6 +443,9 @@ export default function Messages() {
                         <div className="flex items-center space-x-2 mb-1">
                           <p className="font-medium text-gray-900">{message.subject}</p>
                           {!message.isRead && message.senderId !== user?.id && (
+                            (user?.isAdmin && !message.senderIsAdmin) || 
+                            (!user?.isAdmin && message.senderIsAdmin)
+                          ) && (
                             <Badge variant="secondary" className="bg-red-100 text-red-800">
                               New
                             </Badge>
