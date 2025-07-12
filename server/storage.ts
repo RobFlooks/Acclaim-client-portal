@@ -452,9 +452,9 @@ export class DatabaseStorage implements IStorage {
   }> {
     const [stats] = await db
       .select({
-        activeCases: sql<number>`COUNT(CASE WHEN status != 'closed' THEN 1 END)`,
-        closedCases: sql<number>`COUNT(CASE WHEN status = 'closed' THEN 1 END)`,
-        totalOutstanding: sql<string>`COALESCE(SUM(CASE WHEN status != 'closed' THEN outstanding_amount ELSE 0 END), 0)`,
+        activeCases: sql<number>`COUNT(CASE WHEN LOWER(status) != 'closed' THEN 1 END)`,
+        closedCases: sql<number>`COUNT(CASE WHEN LOWER(status) = 'closed' THEN 1 END)`,
+        totalOutstanding: sql<string>`COALESCE(SUM(CASE WHEN LOWER(status) != 'closed' THEN outstanding_amount ELSE 0 END), 0)`,
       })
       .from(cases)
       .where(eq(cases.organisationId, organisationId));
@@ -485,9 +485,9 @@ export class DatabaseStorage implements IStorage {
     // Admin only - get stats across all organizations
     const [stats] = await db
       .select({
-        activeCases: sql<number>`COUNT(CASE WHEN status != 'closed' THEN 1 END)`,
-        closedCases: sql<number>`COUNT(CASE WHEN status = 'closed' THEN 1 END)`,
-        totalOutstanding: sql<string>`COALESCE(SUM(CASE WHEN status != 'closed' THEN outstanding_amount ELSE 0 END), 0)`,
+        activeCases: sql<number>`COUNT(CASE WHEN LOWER(status) != 'closed' THEN 1 END)`,
+        closedCases: sql<number>`COUNT(CASE WHEN LOWER(status) = 'closed' THEN 1 END)`,
+        totalOutstanding: sql<string>`COALESCE(SUM(CASE WHEN LOWER(status) != 'closed' THEN outstanding_amount ELSE 0 END), 0)`,
       })
       .from(cases);
 
