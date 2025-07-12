@@ -49,8 +49,8 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   };
 
   const getOutstandingAmount = () => {
-    const totalPayments = getTotalPayments();
-    return parseFloat(caseData.originalAmount) - totalPayments;
+    // Use the static outstanding amount from the database
+    return parseFloat(caseData.outstandingAmount || 0);
   };
 
   const handlePaymentsClick = () => {
