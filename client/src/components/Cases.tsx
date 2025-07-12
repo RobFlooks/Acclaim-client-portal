@@ -141,6 +141,7 @@ export default function Cases() {
               {filteredCases.map((case_: any) => (
                 <div
                   key={case_.id}
+                  id={`case-${case_.id}`}
                   className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border"
                 >
                   <div className="flex items-center space-x-4">

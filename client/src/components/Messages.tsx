@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 
 export default function Messages() {
   const [newMessage, setNewMessage] = useState("");
@@ -24,6 +25,7 @@ export default function Messages() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
 
   const { data: messages, isLoading } = useQuery({
     queryKey: ["/api/messages"],
@@ -44,6 +46,23 @@ export default function Messages() {
         description: "Failed to load messages",
         variant: "destructive",
       });
+    },
+  });
+
+  const { data: cases } = useQuery({
+    queryKey: ["/api/cases"],
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
     },
   });
 
@@ -205,6 +224,23 @@ export default function Messages() {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  const getCaseAccountNumber = (caseId: number) => {
+    const caseData = cases?.find((c: any) => c.id === caseId);
+    return caseData?.accountNumber || `Case #${caseId}`;
+  };
+
+  const handleCaseClick = (caseId: number) => {
+    handleCloseMessageView();
+    setLocation("/cases");
+    // Small delay to ensure navigation happens then scroll to case
+    setTimeout(() => {
+      const caseElement = document.getElementById(`case-${caseId}`);
+      if (caseElement) {
+        caseElement.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 100);
   };
 
   // Calculate unread messages count based on user type
@@ -391,7 +427,13 @@ export default function Messages() {
               {viewingMessage.caseId && (
                 <div className="bg-gray-50 p-3 rounded-lg">
                   <p className="text-sm text-gray-600">
-                    <span className="font-medium">Related to case:</span> Case #{viewingMessage.caseId}
+                    <span className="font-medium">Related to case:</span>{" "}
+                    <button
+                      onClick={() => handleCaseClick(viewingMessage.caseId)}
+                      className="text-acclaim-teal hover:text-acclaim-teal/80 font-medium underline cursor-pointer"
+                    >
+                      {getCaseAccountNumber(viewingMessage.caseId)}
+                    </button>
                   </p>
                 </div>
               )}
