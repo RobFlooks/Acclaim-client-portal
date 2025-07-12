@@ -201,11 +201,11 @@ export default function Dashboard() {
                 <PoundSterling className="text-blue-600 h-6 w-6" />
               </div>
               <div className="ml-4">
-                <p className="text-gray-600 text-sm">Total Outstanding</p>
+                <p className="text-gray-600 text-sm">Outstanding (Active Cases)</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {statsLoading ? "..." : formatCurrency(stats?.totalOutstanding || 0)}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">*May include interest and costs</p>
+                <p className="text-xs text-gray-500 mt-1">*Excludes closed cases</p>
               </div>
             </div>
           </CardContent>
