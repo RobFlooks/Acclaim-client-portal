@@ -197,7 +197,8 @@ export class DatabaseStorage implements IStorage {
           ...case_,
           outstandingAmount: calculatedOutstanding.toFixed(2),
           totalPayments: totalPayments.toFixed(2),
-          lastActivityTime: new Date(lastActivityTime).toISOString()
+          lastActivityTime: new Date(lastActivityTime).toISOString(),
+          payments: casePayments
         };
       })
     );
@@ -260,7 +261,8 @@ export class DatabaseStorage implements IStorage {
           ...case_,
           outstandingAmount: calculatedOutstanding.toFixed(2),
           totalPayments: totalPayments.toFixed(2),
-          lastActivityTime: new Date(lastActivityTime).toISOString()
+          lastActivityTime: new Date(lastActivityTime).toISOString(),
+          payments: casePayments
         };
       })
     );

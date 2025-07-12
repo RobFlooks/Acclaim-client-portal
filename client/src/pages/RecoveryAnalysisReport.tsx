@@ -82,10 +82,11 @@ export default function RecoveryAnalysisReport() {
       const feesAdded = parseFloat(caseItem.feesAdded || 0);
       const totalDebt = originalAmount + costsAdded + interestAdded + feesAdded;
       
-      // Calculate payments received
-      const payments = caseItem.payments?.reduce((sum: number, payment: any) => {
-        return sum + parseFloat(payment.amount || 0);
-      }, 0) || 0;
+      // Use backend-calculated payments or fallback to calculating from payments array
+      const payments = parseFloat(caseItem.totalPayments || '0') || 
+                      (caseItem.payments?.reduce((sum: number, payment: any) => {
+                        return sum + parseFloat(payment.amount || 0);
+                      }, 0) || 0);
 
       const outstanding = totalDebt - payments;
       const recovered = payments;
@@ -152,10 +153,11 @@ export default function RecoveryAnalysisReport() {
   };
 
   const getTotalPayments = (caseItem: any) => {
-    if (!caseItem.payments || !Array.isArray(caseItem.payments)) return 0;
-    return caseItem.payments.reduce((sum: number, payment: any) => {
-      return sum + parseFloat(payment.amount || 0);
-    }, 0);
+    // Use backend-calculated payments or fallback to calculating from payments array
+    return parseFloat(caseItem.totalPayments || '0') || 
+           (caseItem.payments?.reduce((sum: number, payment: any) => {
+             return sum + parseFloat(payment.amount || 0);
+           }, 0) || 0);
   };
 
   const getStatusBadge = (status: string) => {
@@ -594,9 +596,6 @@ export default function RecoveryAnalysisReport() {
                   </th>
                   <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
                     Outstanding
-                  </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                    Recovery Rate
                   </th>
                 </tr>
               </thead>
