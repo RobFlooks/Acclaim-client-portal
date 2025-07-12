@@ -147,7 +147,7 @@ export default function Reports() {
             <div className="p-4 bg-blue-50 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Recovered</p>
+                  <p className="text-sm text-gray-600">Total Recovery</p>
                   <p className="text-2xl font-bold text-blue-600">
                     {casesLoading ? "..." : formatCurrency(recoveryAnalysis.totalRecovered)}
                   </p>
