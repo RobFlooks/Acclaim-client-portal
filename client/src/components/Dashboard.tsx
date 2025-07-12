@@ -1,15 +1,20 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { FolderOpen, CheckCircle, PoundSterling, TrendingUp, User, Building, Clock, FileText, Check, AlertTriangle, Store, UserCheck, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation } from "wouter";
+import CaseDetail from "./CaseDetail";
 
 export default function Dashboard() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const [selectedCase, setSelectedCase] = useState<any>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/dashboard/stats"],
@@ -144,6 +149,11 @@ export default function Dashboard() {
   const recentCases = cases?.slice(0, 3) || [];
   const recentMessages = messages?.slice(0, 3) || [];
 
+  const handleCaseClick = (caseData: any) => {
+    setSelectedCase(caseData);
+    setDialogOpen(true);
+  };
+
   return (
     <div className="space-y-8">
       {/* Dashboard Header */}
@@ -267,6 +277,7 @@ export default function Dashboard() {
                     <div
                       key={case_.id}
                       className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                      onClick={() => handleCaseClick(case_)}
                     >
                       <div className="flex items-center">
                         <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#ffffff]">
@@ -347,6 +358,18 @@ export default function Dashboard() {
           </Card>
         </div>
       </div>
+
+      {/* Case Detail Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-7xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Case Details</DialogTitle>
+          </DialogHeader>
+          {selectedCase && (
+            <CaseDetail case={selectedCase} />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
