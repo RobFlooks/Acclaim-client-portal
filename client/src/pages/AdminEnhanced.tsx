@@ -49,7 +49,7 @@ export default function AdminEnhanced() {
   const [newOrgName, setNewOrgName] = useState("");
   const [showCreateOrg, setShowCreateOrg] = useState(false);
   const [showAssignUser, setShowAssignUser] = useState(false);
-  const [selectedOrgId, setSelectedOrgId] = useState<string>("");
+  const [selectedOrgId, setSelectedOrgId] = useState<string>("none");
 
   // State for user management
   const [showCreateUser, setShowCreateUser] = useState(false);
@@ -437,17 +437,17 @@ export default function AdminEnhanced() {
                       <div className="space-y-2">
                         <Label htmlFor="organisation">Organisation</Label>
                         <Select 
-                          value={userFormData.organisationId?.toString() || ""}
+                          value={userFormData.organisationId?.toString() || "none"}
                           onValueChange={(value) => setUserFormData({ 
                             ...userFormData, 
-                            organisationId: value ? parseInt(value) : undefined 
+                            organisationId: value === "none" ? undefined : parseInt(value) 
                           })}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select organisation (optional)" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">No organisation</SelectItem>
+                            <SelectItem value="none">No organisation</SelectItem>
                             {organisations?.map((org: Organisation) => (
                               <SelectItem key={org.id} value={org.id.toString()}>
                                 {org.name}
@@ -687,6 +687,7 @@ export default function AdminEnhanced() {
                   <SelectValue placeholder="Select organisation" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">Select organisation</SelectItem>
                   {organisations?.map((org: Organisation) => (
                     <SelectItem key={org.id} value={org.id.toString()}>
                       {org.name}
@@ -702,7 +703,7 @@ export default function AdminEnhanced() {
             </Button>
             <Button
               onClick={() => {
-                if (selectedUser && selectedOrgId) {
+                if (selectedUser && selectedOrgId && selectedOrgId !== "none") {
                   assignUserMutation.mutate({
                     userId: selectedUser.id,
                     organisationId: parseInt(selectedOrgId)
