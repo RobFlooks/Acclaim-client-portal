@@ -268,9 +268,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
 
   const deleteMessageMutation = useMutation({
     mutationFn: async (messageId: number) => {
-      await apiRequest(`/api/admin/messages/${messageId}`, {
-        method: "DELETE",
-      });
+      await apiRequest("DELETE", `/api/admin/messages/${messageId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cases", caseData.id, "messages"] });
@@ -302,9 +300,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
 
   const deleteDocumentMutation = useMutation({
     mutationFn: async (documentId: number) => {
-      await apiRequest(`/api/admin/documents/${documentId}`, {
-        method: "DELETE",
-      });
+      await apiRequest("DELETE", `/api/admin/documents/${documentId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cases", caseData.id, "documents"] });

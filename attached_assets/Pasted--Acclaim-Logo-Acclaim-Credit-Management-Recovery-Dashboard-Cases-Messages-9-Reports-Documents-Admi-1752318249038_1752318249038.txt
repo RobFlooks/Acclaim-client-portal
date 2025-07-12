@@ -1,0 +1,254 @@
+
+Acclaim Logo
+Acclaim
+Credit Management & Recovery
+Dashboard
+Cases
+Messages
+9
+Reports
+Documents
+Admin Panel
+Dan Hirst
+danhirst@chadlaw.co.uk
+Profile
+Logout
+Cases
+View and manage all your active cases
+
+Search cases...
+9
+Search Cases
+Search by debtor name, account number, or email...
+All Cases - Global View (7)
+Digital Marketing Hub
+
+Account: ACC-2024-003
+
+Acme Corporation
+
+Created: 11 Jul 2025
+
+Outstanding Amount
+
+£8,500.00
+
+*May include interest and costs
+
+In Progress
+Assigned to: Ella McMaster
+
+View Details
+TechNova Solutions Ltd
+
+Account: ACC-2024-001
+
+Acme Corporation
+
+Created: 11 Jul 2025
+
+Outstanding Amount
+
+£15,000.00
+
+*May include interest and costs
+
+In Progress
+Assigned to: Matt Perry
+
+View Details
+Healthcare Solutions Inc
+
+Account: ACC-2024-005
+
+Acme Corporation
+
+Created: 11 Jul 2025
+
+Outstanding Amount
+
+£19,074.50
+
+*May include interest and costs
+
+In Progress
+Assigned to: Matt Perry
+
+View Details
+Green Manufacturing Co
+
+Account: ACC-2024-002
+
+Acme Corporation
+
+Created: 11 Jul 2025
+
+Outstanding Amount
+
+£6,000.00
+
+*May include interest and costs
+
+In Progress
+Assigned to: Jordan Crowther
+
+View Details
+Coastal Retail Group
+
+Account: ACC-2024-004
+
+Acme Corporation
+
+Created: 11 Jul 2025
+
+Outstanding Amount
+
+£41,500.00
+
+*May include interest and costs
+
+Legal Action
+Assigned to: Sean Thornhill-Adey
+
+View Details
+Fashion Forward Boutique
+
+Account: ACC-2024-007
+
+Dodo Happy
+
+Created: 11 Jul 2025
+
+Outstanding Amount
+
+£6,600.00
+
+*May include interest and costs
+
+Payment Plan
+Assigned to: Jordan Crowther
+
+View Details
+Construction Plus Ltd
+
+Account: ACC-2024-006
+
+Acme Corporation
+
+Created: 11 Jul 2025
+
+Outstanding Amount
+
+£33,000.00
+
+*May include interest and costs
+
+In Progress
+Assigned to: Katy Mullarkey
+
+View Details
+Case Details - Digital Marketing Hub
+Digital Marketing Hub
+Print Case PDF
+In Progress
+Account Number
+
+ACC-2024-003
+
+Outstanding Amount
+
+£8,500.00
+
+*May include interest and recovery costs
+
+Total Payments
+
+£0.00
+Click to view details
+
+Original Amount
+
+£8,500.00
+
+Case Handler
+
+Ella McMaster
+
+Last Message
+
+
+This is a very recent message for case 3
+
+12 Jul 2025, 00:44 - Click to view
+
+Additional Charges
+Costs Added
+
+£275.00
+
+Legal costs
+
+Interest Added
+
+£125.75
+
+Accrued interest charges
+
+Other Fees
+
+£50.00
+
+Compensation, administrative and other fees
+
+Total Additional Charges:
+£450.75
+Debtor Information
+Name:
+Digital Marketing Hub
+Email:
+billing@digitalmarketing.com
+Phone:
++44 20 7890 1234
+Address:
+12 Creative Quarter, London, E1 6QR
+Timeline
+Documents
+Messages
+Payments
+Messages
+Very Recent
+
+12 Jul 2025, 00:44
+
+
+From: Dan Hirst
+
+This is a very recent message for case 3
+
+Message regarding case ACC-2024-003
+
+11 Jul 2025, 22:45
+
+
+From: Dan Hirst
+
+Can we have an update please?
+
+Send Message
+Type your message here...
+Attach File (Optional)No file chosen
+Send Message
+Close
+[plugin:runtime-error-plugin] Failed to execute 'fetch' on 'Window': '/api/admin/messages/20' is not a valid HTTP method.
+/home/runner/workspace/client/src/lib/queryClient.ts:15:21
+13 |    data?: unknown | undefined,
+14 |  ): Promise<Response> {
+15 |    const res = await fetch(url, {
+   |                      ^
+16 |      method,
+17 |      headers: data ? { "Content-Type": "application/json" } : {},
+
+    at apiRequest /home/runner/workspace/client/src/lib/queryClient.ts:15:21
+    at Object.mutationFn /home/runner/workspace/client/src/components/CaseDetail.tsx:271:13
+Click outside, press Esc key, or fix the code to dismiss.
+You can also disable this overlay by setting server.hmr.overlay to false in vite.config.js.

@@ -103,9 +103,7 @@ export default function Messages() {
 
   const deleteMessageMutation = useMutation({
     mutationFn: async (messageId: number) => {
-      await apiRequest(`/api/admin/messages/${messageId}`, {
-        method: "DELETE",
-      });
+      await apiRequest("DELETE", `/api/admin/messages/${messageId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
