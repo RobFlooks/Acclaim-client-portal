@@ -2,18 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FolderOpen, CheckCircle, PoundSterling, TrendingUp, User, Building, Factory, Clock, FileText, Check, AlertTriangle, Plus, Download, UserCog, Users, Store, UserCheck } from "lucide-react";
+import { FolderOpen, CheckCircle, PoundSterling, TrendingUp, User, Building, Clock, FileText, Check, AlertTriangle, Store, UserCheck, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation } from "wouter";
-import { useState } from "react";
 
 export default function Dashboard() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const [showReportDialog, setShowReportDialog] = useState(false);
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/dashboard/stats"],
@@ -351,129 +347,6 @@ export default function Dashboard() {
           </Card>
         </div>
       </div>
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Button
-              variant="outline"
-              className="flex items-center justify-center p-4 h-auto hover:bg-acclaim-teal hover:text-white border-acclaim-teal bg-[#008a8a59] text-[#0f766e]"
-            >
-              <FolderOpen className="mr-2 h-4 w-4" />
-              View All Cases
-            </Button>
-            <Button
-              variant="outline"
-              className="flex items-center justify-center p-4 h-auto bg-blue-50 hover:bg-blue-500 hover:text-white border-blue-500 text-blue-600"
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              Upload Document
-            </Button>
-            <Dialog open={showReportDialog} onOpenChange={setShowReportDialog}>
-              <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="flex items-center justify-center p-4 h-auto bg-green-50 hover:bg-green-500 hover:text-white border-green-500 text-green-600"
-                >
-                  <TrendingUp className="mr-2 h-4 w-4" />
-                  Download Report
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-7xl max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center">
-                    <FileText className="mr-2 h-5 w-5" />
-                    Comprehensive Case Report
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-gray-600">
-                      Total Cases: {cases?.length || 0}
-                    </p>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        // In a real app, this would generate and download a CSV/PDF
-                        toast({
-                          title: "Download Started",
-                          description: "Report is being generated...",
-                        });
-                      }}
-                    >
-                      <Download className="mr-2 h-4 w-4" />
-                      Export CSV
-                    </Button>
-                  </div>
-                  {casesLoading ? (
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-acclaim-teal mx-auto"></div>
-                      <p className="text-gray-500 mt-2">Loading report...</p>
-                    </div>
-                  ) : cases && cases.length > 0 ? (
-                    <div className="border rounded-lg">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Account Number</TableHead>
-                            <TableHead>Debtor Name</TableHead>
-                            <TableHead>Outstanding Amount <span className="text-xs text-gray-500">*</span></TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Stage</TableHead>
-                            <TableHead>Assigned To</TableHead>
-                            <TableHead>Created Date</TableHead>
-                            <TableHead>Last Updated</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {cases.map((case_: any) => (
-                            <TableRow key={case_.id}>
-                              <TableCell className="font-medium">{case_.accountNumber}</TableCell>
-                              <TableCell>{case_.debtorName}</TableCell>
-                              <TableCell>{formatCurrency(case_.outstandingAmount)}</TableCell>
-                              <TableCell>
-                                <Badge variant={getStatusVariant(case_.status)}>
-                                  {case_.status}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                <Badge variant="outline">
-                                  {case_.stage}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>{case_.assignedTo || "Unassigned"}</TableCell>
-                              <TableCell>{formatDate(case_.createdAt)}</TableCell>
-                              <TableCell>{formatDate(case_.updatedAt)}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                      <div className="p-3 bg-gray-50 text-xs text-gray-500">
-                        * Outstanding amounts may include interest and recovery costs
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <FolderOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">No cases found to report</p>
-                    </div>
-                  )}
-                </div>
-              </DialogContent>
-            </Dialog>
-            <Button
-              variant="outline"
-              className="flex items-center justify-center p-4 h-auto bg-purple-50 hover:bg-purple-500 hover:text-white border-purple-500 text-purple-600"
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              Send Message
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
