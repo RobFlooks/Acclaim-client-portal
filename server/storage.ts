@@ -155,7 +155,7 @@ export class DatabaseStorage implements IStorage {
       .from(cases)
       .where(eq(cases.organisationId, organisationId));
 
-    // For each case, calculate the accurate outstanding amount and last activity time
+    // For each case, get payments and last activity time
     const casesWithCalculatedBalance = await Promise.all(
       allCases.map(async (case_) => {
         // Get total payments for this case
@@ -166,9 +166,6 @@ export class DatabaseStorage implements IStorage {
         
         const totalPayments = casePayments.reduce((sum, payment) => 
           sum + parseFloat(payment.amount), 0);
-        
-        // Calculate outstanding amount: original amount minus total payments
-        const calculatedOutstanding = parseFloat(case_.originalAmount) - totalPayments;
         
         // Get the most recent message for this case
         const latestMessage = await db
@@ -195,7 +192,7 @@ export class DatabaseStorage implements IStorage {
         
         return {
           ...case_,
-          outstandingAmount: calculatedOutstanding.toFixed(2),
+          outstandingAmount: case_.outstandingAmount,
           totalPayments: totalPayments.toFixed(2),
           lastActivityTime: new Date(lastActivityTime).toISOString(),
           payments: casePayments
@@ -231,9 +228,6 @@ export class DatabaseStorage implements IStorage {
         const totalPayments = casePayments.reduce((sum, payment) => 
           sum + parseFloat(payment.amount), 0);
         
-        // Calculate outstanding amount: original amount minus total payments
-        const calculatedOutstanding = parseFloat(case_.originalAmount) - totalPayments;
-        
         // Get the most recent message for this case
         const latestMessage = await db
           .select()
@@ -259,7 +253,7 @@ export class DatabaseStorage implements IStorage {
         
         return {
           ...case_,
-          outstandingAmount: calculatedOutstanding.toFixed(2),
+          outstandingAmount: case_.outstandingAmount,
           totalPayments: totalPayments.toFixed(2),
           lastActivityTime: new Date(lastActivityTime).toISOString(),
           payments: casePayments
