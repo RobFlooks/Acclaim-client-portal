@@ -37,7 +37,9 @@ export interface IStorage {
   
   // Case operations
   getCasesForOrganisation(organisationId: number): Promise<Case[]>;
+  getAllCases(): Promise<Case[]>; // Admin only - get all cases across all organizations
   getCase(id: number, organisationId: number): Promise<Case | undefined>;
+  getCaseById(id: number): Promise<Case | undefined>; // Admin only - get case by ID without org restriction
   createCase(caseData: InsertCase): Promise<Case>;
   updateCase(id: number, caseData: Partial<InsertCase>): Promise<Case>;
   
@@ -70,6 +72,13 @@ export interface IStorage {
     totalOutstanding: string;
     recoveryRate: number;
   }>;
+  
+  getGlobalCaseStats(): Promise<{
+    activeCases: number;
+    resolvedCases: number;
+    totalOutstanding: string;
+    recoveryRate: number;
+  }>; // Admin only - get stats across all organizations
 
   // Admin operations
   getAllUsers(): Promise<User[]>;
@@ -197,11 +206,83 @@ export class DatabaseStorage implements IStorage {
     );
   }
 
+  async getAllCases(): Promise<Case[]> {
+    // Admin only - get all cases across all organizations
+    const allCases = await db
+      .select({
+        ...cases,
+        organisationName: organisations.name,
+      })
+      .from(cases)
+      .leftJoin(organisations, eq(cases.organisationId, organisations.id));
+
+    // For each case, calculate the accurate outstanding amount and last activity time
+    const casesWithCalculatedBalance = await Promise.all(
+      allCases.map(async (case_) => {
+        // Get total payments for this case
+        const casePayments = await db
+          .select()
+          .from(payments)
+          .where(eq(payments.caseId, case_.id));
+        
+        const totalPayments = casePayments.reduce((sum, payment) => 
+          sum + parseFloat(payment.amount), 0);
+        
+        // Calculate outstanding amount: original amount minus total payments
+        const calculatedOutstanding = parseFloat(case_.originalAmount) - totalPayments;
+        
+        // Get the most recent message for this case
+        const latestMessage = await db
+          .select()
+          .from(messages)
+          .where(eq(messages.caseId, case_.id))
+          .orderBy(desc(messages.createdAt))
+          .limit(1);
+        
+        // Get the most recent activity for this case
+        const latestActivity = await db
+          .select()
+          .from(caseActivities)
+          .where(eq(caseActivities.caseId, case_.id))
+          .orderBy(desc(caseActivities.createdAt))
+          .limit(1);
+        
+        // Determine the most recent update time
+        const caseUpdateTime = case_.updatedAt ? new Date(case_.updatedAt).getTime() : 0;
+        const messageUpdateTime = latestMessage.length > 0 ? new Date(latestMessage[0].createdAt).getTime() : 0;
+        const activityUpdateTime = latestActivity.length > 0 ? new Date(latestActivity[0].createdAt).getTime() : 0;
+        
+        const lastActivityTime = Math.max(caseUpdateTime, messageUpdateTime, activityUpdateTime);
+        
+        return {
+          ...case_,
+          outstandingAmount: calculatedOutstanding.toFixed(2),
+          totalPayments: totalPayments.toFixed(2),
+          lastActivityTime: new Date(lastActivityTime).toISOString()
+        };
+      })
+    );
+
+    // Sort by last activity time (most recent first)
+    return casesWithCalculatedBalance.sort((a, b) => 
+      new Date(b.lastActivityTime).getTime() - new Date(a.lastActivityTime).getTime()
+    );
+  }
+
   async getCase(id: number, organisationId: number): Promise<Case | undefined> {
     const [case_] = await db
       .select()
       .from(cases)
       .where(and(eq(cases.id, id), eq(cases.organisationId, organisationId)));
+    return case_;
+  }
+
+  async getCaseById(id: number): Promise<Case | undefined> {
+    // Admin only - get case by ID without org restriction
+    const [case_] = await db
+      .select()
+      .from(cases)
+      .where(eq(cases.id, id));
     return case_;
   }
 
@@ -364,6 +445,32 @@ export class DatabaseStorage implements IStorage {
       })
       .from(cases)
       .where(eq(cases.organisationId, organisationId));
+
+    const recoveryRate = stats.totalCases > 0 ? (stats.resolvedCases / stats.totalCases) * 100 : 0;
+
+    return {
+      activeCases: stats.activeCases,
+      resolvedCases: stats.resolvedCases,
+      totalOutstanding: stats.totalOutstanding.toString(),
+      recoveryRate: Math.round(recoveryRate),
+    };
+  }
+
+  async getGlobalCaseStats(): Promise<{
+    activeCases: number;
+    resolvedCases: number;
+    totalOutstanding: string;
+    recoveryRate: number;
+  }> {
+    // Admin only - get stats across all organizations
+    const [stats] = await db
+      .select({
+        activeCases: sql<number>`COUNT(CASE WHEN status = 'active' THEN 1 END)`,
+        resolvedCases: sql<number>`COUNT(CASE WHEN status = 'resolved' THEN 1 END)`,
+        totalOutstanding: sql<string>`COALESCE(SUM(CASE WHEN status = 'active' THEN outstanding_amount ELSE 0 END), 0)`,
+        totalCases: sql<number>`COUNT(*)`,
+      })
+      .from(cases);
 
     const recoveryRate = stats.totalCases > 0 ? (stats.resolvedCases / stats.totalCases) * 100 : 0;
 

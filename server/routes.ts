@@ -66,11 +66,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.organisationId) {
-        return res.status(404).json({ message: "User organisation not found" });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
       }
 
-      const stats = await storage.getCaseStats(user.organisationId);
+      let stats;
+      if (user.isAdmin) {
+        // Admin sees global stats across all organizations
+        stats = await storage.getGlobalCaseStats();
+      } else {
+        // Regular users see only their organization's stats
+        if (!user.organisationId) {
+          return res.status(404).json({ message: "User organisation not found" });
+        }
+        stats = await storage.getCaseStats(user.organisationId);
+      }
+
       res.json(stats);
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
@@ -84,11 +95,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.organisationId) {
-        return res.status(404).json({ message: "User organisation not found" });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
       }
 
-      const cases = await storage.getCasesForOrganisation(user.organisationId);
+      let cases;
+      if (user.isAdmin) {
+        // Admin sees all cases across all organizations
+        cases = await storage.getAllCases();
+      } else {
+        // Regular users see only their organization's cases
+        if (!user.organisationId) {
+          return res.status(404).json({ message: "User organisation not found" });
+        }
+        cases = await storage.getCasesForOrganisation(user.organisationId);
+      }
+
       res.json(cases);
     } catch (error) {
       console.error("Error fetching cases:", error);
@@ -101,12 +123,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.organisationId) {
-        return res.status(404).json({ message: "User organisation not found" });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
       }
 
       const caseId = parseInt(req.params.id);
-      const case_ = await storage.getCase(caseId, user.organisationId);
+      let case_;
+      
+      if (user.isAdmin) {
+        // Admin can access any case across all organizations
+        case_ = await storage.getCaseById(caseId);
+      } else {
+        // Regular users can only access cases from their organization
+        if (!user.organisationId) {
+          return res.status(404).json({ message: "User organisation not found" });
+        }
+        case_ = await storage.getCase(caseId, user.organisationId);
+      }
       
       if (!case_) {
         return res.status(404).json({ message: "Case not found" });

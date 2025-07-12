@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Search, User, Building, Factory, Clock, Check, AlertTriangle, Eye, UserCog, Users, Store, UserCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { useAuth } from "@/hooks/useAuth";
 import CaseDetail from "./CaseDetail";
 
 export default function Cases() {
@@ -15,6 +16,7 @@ export default function Cases() {
   const [selectedCase, setSelectedCase] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const { data: cases, isLoading } = useQuery({
     queryKey: ["/api/cases"],
@@ -116,7 +118,9 @@ export default function Cases() {
       {/* Cases List */}
       <Card>
         <CardHeader>
-          <CardTitle>All Cases ({filteredCases.length})</CardTitle>
+          <CardTitle>
+            {user?.isAdmin ? `All Cases - Global View (${filteredCases.length})` : `All Cases (${filteredCases.length})`}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -141,6 +145,12 @@ export default function Cases() {
                     <div>
                       <p className="font-medium text-gray-900">{case_.debtorName}</p>
                       <p className="text-sm text-gray-600">Account: {case_.accountNumber}</p>
+                      {user?.isAdmin && case_.organisationName && (
+                        <p className="text-sm text-blue-600 font-medium">
+                          <Building className="inline w-3 h-3 mr-1" />
+                          {case_.organisationName}
+                        </p>
+                      )}
                       <p className="text-xs text-gray-500">
                         Created: {formatDate(case_.createdAt)}
                       </p>
