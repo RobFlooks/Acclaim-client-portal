@@ -27,7 +27,6 @@ export default function Landing() {
           </div>
         </div>
       </header>
-
       {/* Hero Section */}
       <section className="bg-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -47,7 +46,6 @@ export default function Landing() {
           </Button>
         </div>
       </section>
-
       {/* Features Section */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -55,9 +53,7 @@ export default function Landing() {
             <h3 className="text-3xl font-bold text-gray-900 mb-4">
               Professional Debt Recovery Services
             </h3>
-            <p className="text-lg text-gray-600">
-              Fast, efficient, and transparent debt recovery solutions for your business
-            </p>
+            <p className="text-lg text-gray-600">Fast, efficient, and flexible debt recovery solutions for your business</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -111,7 +107,6 @@ export default function Landing() {
           </div>
         </div>
       </section>
-
       {/* Footer */}
       <footer className="bg-white border-t">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
