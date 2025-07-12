@@ -187,7 +187,7 @@ export default function Dashboard() {
               <div className="ml-4">
                 <p className="text-gray-600 text-sm">Closed Cases</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {statsLoading ? "..." : stats?.resolvedCases || 0}
+                  {statsLoading ? "..." : stats?.closedCases || 0}
                 </p>
               </div>
             </div>

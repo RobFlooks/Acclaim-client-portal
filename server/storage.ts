@@ -70,14 +70,14 @@ export interface IStorage {
   // Statistics
   getCaseStats(organisationId: number): Promise<{
     activeCases: number;
-    resolvedCases: number;
+    closedCases: number;
     totalOutstanding: string;
     totalRecovery: string;
   }>;
   
   getGlobalCaseStats(): Promise<{
     activeCases: number;
-    resolvedCases: number;
+    closedCases: number;
     totalOutstanding: string;
     totalRecovery: string;
   }>; // Admin only - get stats across all organizations
@@ -446,15 +446,15 @@ export class DatabaseStorage implements IStorage {
 
   async getCaseStats(organisationId: number): Promise<{
     activeCases: number;
-    resolvedCases: number;
+    closedCases: number;
     totalOutstanding: string;
     totalRecovery: string;
   }> {
     const [stats] = await db
       .select({
-        activeCases: sql<number>`COUNT(CASE WHEN status = 'active' THEN 1 END)`,
-        resolvedCases: sql<number>`COUNT(CASE WHEN status = 'resolved' THEN 1 END)`,
-        totalOutstanding: sql<string>`COALESCE(SUM(CASE WHEN status = 'active' THEN outstanding_amount ELSE 0 END), 0)`,
+        activeCases: sql<number>`COUNT(CASE WHEN stage != 'closed' THEN 1 END)`,
+        closedCases: sql<number>`COUNT(CASE WHEN stage = 'closed' THEN 1 END)`,
+        totalOutstanding: sql<string>`COALESCE(SUM(CASE WHEN stage != 'closed' THEN outstanding_amount ELSE 0 END), 0)`,
       })
       .from(cases)
       .where(eq(cases.organisationId, organisationId));
@@ -470,7 +470,7 @@ export class DatabaseStorage implements IStorage {
 
     return {
       activeCases: stats.activeCases,
-      resolvedCases: stats.resolvedCases,
+      closedCases: stats.closedCases,
       totalOutstanding: stats.totalOutstanding.toString(),
       totalRecovery: recoveryStats.totalRecovery.toString(),
     };
@@ -478,16 +478,16 @@ export class DatabaseStorage implements IStorage {
 
   async getGlobalCaseStats(): Promise<{
     activeCases: number;
-    resolvedCases: number;
+    closedCases: number;
     totalOutstanding: string;
     totalRecovery: string;
   }> {
     // Admin only - get stats across all organizations
     const [stats] = await db
       .select({
-        activeCases: sql<number>`COUNT(CASE WHEN status = 'active' THEN 1 END)`,
-        resolvedCases: sql<number>`COUNT(CASE WHEN status = 'resolved' THEN 1 END)`,
-        totalOutstanding: sql<string>`COALESCE(SUM(CASE WHEN status = 'active' THEN outstanding_amount ELSE 0 END), 0)`,
+        activeCases: sql<number>`COUNT(CASE WHEN stage != 'closed' THEN 1 END)`,
+        closedCases: sql<number>`COUNT(CASE WHEN stage = 'closed' THEN 1 END)`,
+        totalOutstanding: sql<string>`COALESCE(SUM(CASE WHEN stage != 'closed' THEN outstanding_amount ELSE 0 END), 0)`,
       })
       .from(cases);
 
@@ -500,7 +500,7 @@ export class DatabaseStorage implements IStorage {
 
     return {
       activeCases: stats.activeCases,
-      resolvedCases: stats.resolvedCases,
+      closedCases: stats.closedCases,
       totalOutstanding: stats.totalOutstanding.toString(),
       totalRecovery: recoveryStats.totalRecovery.toString(),
     };
