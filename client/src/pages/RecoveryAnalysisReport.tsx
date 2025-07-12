@@ -101,15 +101,16 @@ export default function RecoveryAnalysisReport() {
       acc.totalCases += 1;
 
       // Track by status
-      if (caseItem.status === 'resolved') {
-        acc.resolvedCases += 1;
-        acc.resolvedAmount += recovered;
-      } else if (caseItem.status === 'in_progress') {
-        acc.inProgressCases += 1;
-        acc.inProgressAmount += recovered;
+      const status = caseItem.status?.toLowerCase();
+      if (status === 'closed') {
+        acc.closedCases += 1;
+        acc.closedAmount += recovered;
+      } else if (status === 'new matter') {
+        acc.newMatterCases += 1;
+        acc.newMatterAmount += recovered;
       } else {
-        acc.newCases += 1;
-        acc.newAmount += recovered;
+        acc.activeCases += 1;
+        acc.activeAmount += recovered;
       }
 
       // Track by recovery rate ranges
@@ -133,25 +134,19 @@ export default function RecoveryAnalysisReport() {
       totalRecovered: 0,
       totalOutstanding: 0,
       totalCases: 0,
-      resolvedCases: 0,
-      inProgressCases: 0,
-      newCases: 0,
-      resolvedAmount: 0,
-      inProgressAmount: 0,
-      newAmount: 0,
+      closedCases: 0,
+      activeCases: 0,
+      newMatterCases: 0,
+      closedAmount: 0,
+      activeAmount: 0,
+      newMatterAmount: 0,
       highRecovery: 0,
       mediumRecovery: 0,
       lowRecovery: 0,
       noRecovery: 0,
     });
 
-    metrics.overallRecoveryRate = metrics.totalOriginalAmount > 0 
-      ? (metrics.totalRecovered / metrics.totalOriginalAmount) * 100 
-      : 0;
-    
-    metrics.debtRecoveryRate = metrics.totalDebt > 0 
-      ? (metrics.totalRecovered / metrics.totalDebt) * 100 
-      : 0;
+    // Remove recovery rate calculations
 
     return metrics;
   };
@@ -164,13 +159,14 @@ export default function RecoveryAnalysisReport() {
   };
 
   const getStatusBadge = (status: string) => {
+    const statusLower = status?.toLowerCase();
     const statusConfig = {
-      'new': { label: 'New', className: 'bg-blue-100 text-blue-800' },
-      'in_progress': { label: 'In Progress', className: 'bg-yellow-100 text-yellow-800' },
-      'resolved': { label: 'Resolved', className: 'bg-green-100 text-green-800' },
+      'closed': { label: 'Closed', className: 'bg-green-100 text-green-800' },
+      'new matter': { label: 'New Matter', className: 'bg-blue-100 text-blue-800' },
     };
     
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.new;
+    const config = statusConfig[statusLower as keyof typeof statusConfig] || 
+                   { label: status?.charAt(0).toUpperCase() + status?.slice(1), className: 'bg-yellow-100 text-yellow-800' };
     return (
       <Badge className={config.className}>
         {config.label}
@@ -205,7 +201,7 @@ export default function RecoveryAnalysisReport() {
         return {
           'Account Number': caseItem.accountNumber,
           'Debtor Name': caseItem.debtorName,
-          'Status': caseItem.status === 'resolved' ? 'Resolved' : caseItem.status.charAt(0).toUpperCase() + caseItem.status.slice(1),
+          'Status': caseItem.status?.toLowerCase() === 'closed' ? 'Closed' : caseItem.status?.charAt(0).toUpperCase() + caseItem.status?.slice(1),
           'Original Amount': originalAmount,
           'Costs Added': costsAdded,
           'Interest Added': interestAdded,
@@ -213,7 +209,7 @@ export default function RecoveryAnalysisReport() {
           'Total Debt': totalDebt,
           'Amount Recovered': payments,
           'Outstanding Amount': outstanding,
-          'Recovery Rate (%)': Math.round(recoveryRate),
+
           'Created Date': formatDate(caseItem.createdAt),
           'Last Updated': formatDate(caseItem.updatedAt),
         };
@@ -226,8 +222,7 @@ export default function RecoveryAnalysisReport() {
         { 'Metric': 'Total Debt (with costs)', 'Value': metrics?.totalDebt || 0 },
         { 'Metric': 'Total Recovered', 'Value': metrics?.totalRecovered || 0 },
         { 'Metric': 'Total Outstanding', 'Value': metrics?.totalOutstanding || 0 },
-        { 'Metric': 'Overall Recovery Rate (%)', 'Value': Math.round(metrics?.overallRecoveryRate || 0) },
-        { 'Metric': 'Debt Recovery Rate (%)', 'Value': Math.round(metrics?.debtRecoveryRate || 0) },
+
       ];
 
       // Create workbook with multiple sheets
@@ -244,7 +239,7 @@ export default function RecoveryAnalysisReport() {
       // Auto-size columns
       const caseColWidths = [
         { wch: 15 }, { wch: 25 }, { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 12 }, 
-        { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 18 }, { wch: 15 }, { wch: 12 }, { wch: 12 }
+        { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 18 }, { wch: 12 }, { wch: 12 }
       ];
       caseSheet['!cols'] = caseColWidths;
       
@@ -382,7 +377,7 @@ export default function RecoveryAnalysisReport() {
                   <th>Total Debt</th>
                   <th>Amount Recovered</th>
                   <th>Outstanding</th>
-                  <th>Recovery Rate</th>
+
                 </tr>
               </thead>
               <tbody>
@@ -394,22 +389,17 @@ export default function RecoveryAnalysisReport() {
                   const totalDebt = originalAmount + costsAdded + interestAdded + feesAdded;
                   const payments = getTotalPayments(caseItem);
                   const outstanding = totalDebt - payments;
-                  const recoveryRate = originalAmount > 0 ? (payments / originalAmount) * 100 : 0;
-                  
-                  let rateClass = 'low-recovery';
-                  if (recoveryRate >= 90) rateClass = 'high-recovery';
-                  else if (recoveryRate >= 50) rateClass = 'medium-recovery';
+
                   
                   return `
                     <tr>
                       <td>${caseItem.accountNumber || ''}</td>
                       <td>${caseItem.debtorName || ''}</td>
-                      <td>${caseItem.status === 'resolved' ? 'Resolved' : (caseItem.status || '').charAt(0).toUpperCase() + (caseItem.status || '').slice(1)}</td>
+                      <td>${caseItem.status?.toLowerCase() === 'closed' ? 'Closed' : (caseItem.status || '').charAt(0).toUpperCase() + (caseItem.status || '').slice(1)}</td>
                       <td class="currency">${formatCurrency(originalAmount)}</td>
                       <td class="currency">${formatCurrency(totalDebt)}</td>
                       <td class="currency">${formatCurrency(payments)}</td>
                       <td class="currency">${formatCurrency(outstanding)}</td>
-                      <td class="percentage ${rateClass}">${formatPercentage(recoveryRate)}</td>
                     </tr>
                   `;
                 }).join('')}
@@ -420,7 +410,7 @@ export default function RecoveryAnalysisReport() {
           <div class="section">
             <p style="text-align: center; color: #666; font-size: 12px; margin-top: 40px;">
               This report was generated by Acclaim Credit Management System<br>
-              All amounts are in GBP. Recovery rates are calculated based on original debt amount.
+              All amounts are in GBP.
             </p>
           </div>
         </body>
@@ -493,21 +483,7 @@ export default function RecoveryAnalysisReport() {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-gray-600">Overall Recovery Rate</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center space-x-2">
-              <TrendingUp className="h-8 w-8 text-green-600" />
-              <span className="text-3xl font-bold text-green-600">
-                {formatPercentage(metrics?.overallRecoveryRate || 0)}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm text-gray-600">Total Amount Recovered</CardTitle>
@@ -538,67 +514,21 @@ export default function RecoveryAnalysisReport() {
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-gray-600">Debt Recovery Rate</CardTitle>
+            <CardTitle className="text-sm text-gray-600">Total Cases</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-2">
               <Calendar className="h-8 w-8 text-purple-600" />
               <span className="text-3xl font-bold text-purple-600">
-                {formatPercentage(metrics?.debtRecoveryRate || 0)}
+                {metrics?.totalCases || 0}
               </span>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Recovery Performance Breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recovery Performance Breakdown</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600">High Recovery (90%+)</span>
-                </div>
-                <Badge className="bg-green-100 text-green-800">
-                  {metrics?.highRecovery || 0}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600">Medium Recovery (50-89%)</span>
-                </div>
-                <Badge className="bg-yellow-100 text-yellow-800">
-                  {metrics?.mediumRecovery || 0}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600">Low Recovery (1-49%)</span>
-                </div>
-                <Badge className="bg-red-100 text-red-800">
-                  {metrics?.lowRecovery || 0}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600">No Recovery (0%)</span>
-                </div>
-                <Badge className="bg-gray-100 text-gray-800">
-                  {metrics?.noRecovery || 0}
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
+      {/* Status-Based Recovery */}
+      <div className="grid grid-cols-1 gap-6 mb-8">
         <Card>
           <CardHeader>
             <CardTitle>Status-Based Recovery</CardTitle>
@@ -606,24 +536,24 @@ export default function RecoveryAnalysisReport() {
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Resolved Cases</span>
+                <span className="text-sm text-gray-600">Closed Cases</span>
                 <div className="text-right">
-                  <div className="font-medium">{metrics?.resolvedCases || 0} cases</div>
-                  <div className="text-sm text-green-600">{formatCurrency(metrics?.resolvedAmount || 0)}</div>
+                  <div className="font-medium">{metrics?.closedCases || 0} cases</div>
+                  <div className="text-sm text-green-600">{formatCurrency(metrics?.closedAmount || 0)}</div>
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">In Progress Cases</span>
+                <span className="text-sm text-gray-600">Active Cases</span>
                 <div className="text-right">
-                  <div className="font-medium">{metrics?.inProgressCases || 0} cases</div>
-                  <div className="text-sm text-yellow-600">{formatCurrency(metrics?.inProgressAmount || 0)}</div>
+                  <div className="font-medium">{metrics?.activeCases || 0} cases</div>
+                  <div className="text-sm text-yellow-600">{formatCurrency(metrics?.activeAmount || 0)}</div>
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">New Cases</span>
+                <span className="text-sm text-gray-600">New Matter</span>
                 <div className="text-right">
-                  <div className="font-medium">{metrics?.newCases || 0} cases</div>
-                  <div className="text-sm text-blue-600">{formatCurrency(metrics?.newAmount || 0)}</div>
+                  <div className="font-medium">{metrics?.newMatterCases || 0} cases</div>
+                  <div className="text-sm text-blue-600">{formatCurrency(metrics?.newMatterAmount || 0)}</div>
                 </div>
               </div>
             </div>
@@ -679,11 +609,7 @@ export default function RecoveryAnalysisReport() {
                   const totalDebt = originalAmount + costsAdded + interestAdded + feesAdded;
                   const payments = getTotalPayments(caseItem);
                   const outstanding = totalDebt - payments;
-                  const recoveryRate = originalAmount > 0 ? (payments / originalAmount) * 100 : 0;
-                  
-                  let rateColorClass = 'text-red-600';
-                  if (recoveryRate >= 90) rateColorClass = 'text-green-600';
-                  else if (recoveryRate >= 50) rateColorClass = 'text-yellow-600';
+
                   
                   return (
                     <tr key={caseItem.id} className="hover:bg-gray-50">
@@ -708,9 +634,7 @@ export default function RecoveryAnalysisReport() {
                       <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-orange-600">
                         {formatCurrency(outstanding)}
                       </td>
-                      <td className={`border border-gray-200 px-4 py-3 text-sm font-bold ${rateColorClass}`}>
-                        {formatPercentage(recoveryRate)}
-                      </td>
+
                     </tr>
                   );
                 })}

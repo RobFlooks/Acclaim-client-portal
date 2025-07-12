@@ -86,18 +86,19 @@ export default function Reports() {
 
 
   const getStatusBreakdown = () => {
-    if (!cases) return { active: 0, resolved: 0, inProgress: 0 };
+    if (!cases) return { active: 0, closed: 0, newMatter: 0 };
     
     return cases.reduce((acc: any, case_: any) => {
-      if (case_.status?.toLowerCase() === 'closed') {
-        acc.resolved++;
-      } else if (case_.stage === 'payment_plan') {
-        acc.inProgress++;
+      const status = case_.status?.toLowerCase();
+      if (status === 'closed') {
+        acc.closed++;
+      } else if (status === 'new matter') {
+        acc.newMatter++;
       } else {
         acc.active++;
       }
       return acc;
-    }, { active: 0, resolved: 0, inProgress: 0 });
+    }, { active: 0, closed: 0, newMatter: 0 });
   };
 
   const getRecoveryAnalysis = () => {
@@ -130,7 +131,7 @@ export default function Reports() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="p-4 rounded-lg bg-[#008a8a57]">
               <div className="flex items-center justify-between">
                 <div>
@@ -140,18 +141,6 @@ export default function Reports() {
                   </p>
                 </div>
                 <FileText className="h-8 w-8 text-acclaim-teal" />
-              </div>
-            </div>
-
-            <div className="p-4 bg-green-50 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Success Rate</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {statsLoading ? "..." : `${stats?.recoveryRate || 0}%`}
-                  </p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-green-600" />
               </div>
             </div>
 
@@ -200,20 +189,20 @@ export default function Reports() {
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600">Payment Plans</span>
+                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  <span className="text-sm text-gray-600">New Matter</span>
                 </div>
-                <Badge variant="secondary" className="bg-green-100 text-green-800">
-                  {statusBreakdown.inProgress}
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                  {statusBreakdown.newMatter}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                   <span className="text-sm text-gray-600">Closed Cases</span>
                 </div>
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  {statusBreakdown.resolved}
+                <Badge variant="secondary" className="bg-green-100 text-green-800">
+                  {statusBreakdown.closed}
                 </Badge>
               </div>
             </div>
