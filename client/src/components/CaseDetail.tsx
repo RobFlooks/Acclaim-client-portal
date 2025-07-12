@@ -19,7 +19,8 @@ import {
   Phone,
   Mail,
   MapPin,
-  PoundSterling
+  PoundSterling,
+  Printer
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
@@ -323,6 +324,265 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
     window.open(`/api/documents/${documentId}/download`, '_blank');
   };
 
+  const handlePrintCase = () => {
+    if (!caseData) {
+      toast({
+        title: "No Data",
+        description: "No case data available to print.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        throw new Error('Could not open print window');
+      }
+
+      const currentDate = formatDate(new Date().toISOString());
+      const totalPayments = getTotalPayments();
+      const outstandingAmount = getOutstandingAmount();
+      
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Case Details - ${caseData.accountNumber}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #0f766e; padding-bottom: 20px; }
+            .header h1 { margin: 0; font-size: 24px; color: #0f766e; }
+            .header p { margin: 5px 0; color: #666; }
+            .section { margin-bottom: 30px; }
+            .section h2 { font-size: 18px; margin-bottom: 15px; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+            .section h3 { font-size: 16px; margin-bottom: 10px; color: #555; }
+            .case-info { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px; }
+            .info-card { padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+            .info-label { font-size: 12px; color: #666; margin-bottom: 5px; text-transform: uppercase; }
+            .info-value { font-size: 16px; font-weight: bold; color: #333; }
+            .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+            .status-resolved { background-color: #dcfce7; color: #166534; }
+            .status-progress { background-color: #fef3c7; color: #92400e; }
+            .status-legal { background-color: #fee2e2; color: #991b1b; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { padding: 8px; text-align: left; border: 1px solid #ddd; font-size: 12px; }
+            th { background-color: #f5f5f5; font-weight: bold; }
+            .currency { text-align: right; font-weight: bold; }
+            .date { font-size: 11px; color: #666; }
+            .message-content { background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin: 5px 0; }
+            .message-meta { font-size: 10px; color: #666; margin-bottom: 5px; }
+            .no-data { text-align: center; color: #666; font-style: italic; padding: 20px; }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none; }
+              .section { page-break-inside: avoid; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Case Details Report</h1>
+            <p><strong>Account Number:</strong> ${caseData.accountNumber}</p>
+            <p><strong>Debtor:</strong> ${caseData.debtorName}</p>
+            <p>Generated on: ${currentDate}</p>
+          </div>
+          
+          <div class="section">
+            <h2>Case Information</h2>
+            <div class="case-info">
+              <div class="info-card">
+                <div class="info-label">Status</div>
+                <div class="info-value">
+                  <span class="status-badge ${caseData.status === 'resolved' ? 'status-resolved' : 
+                    caseData.stage === 'legal_action' ? 'status-legal' : 'status-progress'}">
+                    ${caseData.status === 'resolved' ? 'Resolved' : 
+                      caseData.stage === 'payment_plan' ? 'Payment Plan' : 
+                      caseData.stage === 'legal_action' ? 'Legal Action' : 'In Progress'}
+                  </span>
+                </div>
+              </div>
+              <div class="info-card">
+                <div class="info-label">Original Amount</div>
+                <div class="info-value">${formatCurrency(caseData.originalAmount)}</div>
+              </div>
+              <div class="info-card">
+                <div class="info-label">Outstanding Amount</div>
+                <div class="info-value">${formatCurrency(outstandingAmount)}</div>
+              </div>
+              <div class="info-card">
+                <div class="info-label">Total Payments</div>
+                <div class="info-value">${formatCurrency(totalPayments)}</div>
+              </div>
+            </div>
+            
+            <div class="case-info">
+              <div class="info-card">
+                <div class="info-label">Debtor Type</div>
+                <div class="info-value">${caseData.debtorType || 'Not specified'}</div>
+              </div>
+              <div class="info-card">
+                <div class="info-label">Created Date</div>
+                <div class="info-value">${formatDate(caseData.createdAt)}</div>
+              </div>
+              <div class="info-card">
+                <div class="info-label">Last Updated</div>
+                <div class="info-value">${formatDate(caseData.updatedAt)}</div>
+              </div>
+              <div class="info-card">
+                <div class="info-label">Stage</div>
+                <div class="info-value">${caseData.stage || 'Initial'}</div>
+              </div>
+            </div>
+            
+            ${caseData.debtorAddress ? `
+              <div class="info-card" style="grid-column: 1 / -1;">
+                <div class="info-label">Debtor Address</div>
+                <div class="info-value">${caseData.debtorAddress}</div>
+              </div>
+            ` : ''}
+            
+            ${caseData.notes ? `
+              <div class="info-card" style="grid-column: 1 / -1;">
+                <div class="info-label">Notes</div>
+                <div class="info-value">${caseData.notes}</div>
+              </div>
+            ` : ''}
+          </div>
+
+          <div class="section">
+            <h2>Case Timeline</h2>
+            ${activities && activities.length > 0 ? `
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Activity Type</th>
+                    <th>Description</th>
+                    <th>Outcome</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${activities.map((activity: any) => `
+                    <tr>
+                      <td class="date">${formatDate(activity.createdAt)}</td>
+                      <td>${activity.activityType || 'N/A'}</td>
+                      <td>${activity.description || 'N/A'}</td>
+                      <td>${activity.outcome || 'N/A'}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            ` : '<div class="no-data">No timeline activities recorded</div>'}
+          </div>
+
+          <div class="section">
+            <h2>Messages</h2>
+            ${messages && messages.length > 0 ? `
+              <div>
+                ${messages.map((message: any) => `
+                  <div class="message-content">
+                    <div class="message-meta">
+                      <strong>From:</strong> ${message.senderName || 'Unknown'} | 
+                      <strong>Date:</strong> ${formatDate(message.createdAt)} | 
+                      <strong>Subject:</strong> ${message.subject || 'No subject'}
+                    </div>
+                    <div>${message.content || 'No content'}</div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : '<div class="no-data">No messages recorded</div>'}
+          </div>
+
+          <div class="section">
+            <h2>Documents</h2>
+            ${documents && documents.length > 0 ? `
+              <table>
+                <thead>
+                  <tr>
+                    <th>File Name</th>
+                    <th>Upload Date</th>
+                    <th>File Size</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${documents.map((doc: any) => `
+                    <tr>
+                      <td>${doc.fileName || 'N/A'}</td>
+                      <td class="date">${formatDate(doc.createdAt)}</td>
+                      <td>${doc.fileSize ? `${Math.round(doc.fileSize / 1024)} KB` : 'N/A'}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            ` : '<div class="no-data">No documents uploaded</div>'}
+          </div>
+
+          <div class="section">
+            <h2>Payment History</h2>
+            ${payments && payments.length > 0 ? `
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Method</th>
+                    <th>Reference</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${payments.map((payment: any) => `
+                    <tr>
+                      <td class="date">${formatDate(payment.createdAt)}</td>
+                      <td class="currency">${formatCurrency(payment.amount)}</td>
+                      <td>${payment.method || 'N/A'}</td>
+                      <td>${payment.reference || 'N/A'}</td>
+                      <td>${payment.status || 'N/A'}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+              <div style="margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
+                <strong>Total Payments: ${formatCurrency(totalPayments)}</strong>
+              </div>
+            ` : '<div class="no-data">No payments recorded</div>'}
+          </div>
+          
+          <div class="section">
+            <p style="text-align: center; color: #666; font-size: 12px; margin-top: 40px;">
+              This report was generated by Acclaim Credit Management System<br>
+              All amounts are in GBP. Report generated on ${currentDate}
+            </p>
+          </div>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+          printWindow.close();
+        }, 250);
+      };
+      
+      toast({
+        title: "PDF Print Dialog Opened",
+        description: "Use your browser's print dialog to save as PDF.",
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "PDF Generation Failed",
+        description: "Failed to generate PDF report. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Case Header */}
@@ -330,7 +590,18 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl">{caseData.debtorName}</CardTitle>
-            {getStatusBadge(caseData.status, caseData.stage)}
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={handlePrintCase}
+                variant="outline"
+                size="sm"
+                className="border-acclaim-teal text-acclaim-teal hover:bg-acclaim-teal hover:text-white"
+              >
+                <Printer className="h-4 w-4 mr-2" />
+                Print Case PDF
+              </Button>
+              {getStatusBadge(caseData.status, caseData.stage)}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
