@@ -160,72 +160,83 @@ export default function Dashboard() {
         </Button>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-3 rounded-lg bg-[#f5e7006e]">
-                <FolderOpen className="text-acclaim-teal h-6 w-6" />
+      {/* Live Cases Statistics */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <div className="p-2 bg-green-100 rounded-lg">
+            <TrendingUp className="text-green-600 h-5 w-5" />
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900">Live Cases Stats</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 rounded-lg bg-[#f5e7006e]">
+                  <FolderOpen className="text-acclaim-teal h-6 w-6" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-gray-600 text-sm">Active Cases</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {statsLoading ? "..." : stats?.activeCases || 0}
+                  </p>
+                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-gray-600 text-sm">Active Cases</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {statsLoading ? "..." : stats?.activeCases || 0}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <CheckCircle className="text-green-600 h-6 w-6" />
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <PoundSterling className="text-blue-600 h-6 w-6" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-gray-600 text-sm">Total Outstanding</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {statsLoading ? "..." : formatCurrency(stats?.totalOutstanding || 0)}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">*Active cases only</p>
+                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-gray-600 text-sm">Closed Cases</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {statsLoading ? "..." : stats?.closedCases || 0}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <PoundSterling className="text-blue-600 h-6 w-6" />
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-purple-100 rounded-lg">
+                  <PoundSterling className="text-purple-600 h-6 w-6" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-gray-600 text-sm">Total Recovery</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {statsLoading ? "..." : `£${parseFloat(stats?.totalRecovery || '0').toLocaleString()}`}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">*Active cases only</p>
+                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-gray-600 text-sm">Outstanding (Active Cases)</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {statsLoading ? "..." : formatCurrency(stats?.totalOutstanding || 0)}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">*Excludes closed cases</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <PoundSterling className="text-purple-600 h-6 w-6" />
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <CheckCircle className="text-green-600 h-6 w-6" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-gray-600 text-sm">Closed Cases</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {statsLoading ? "..." : stats?.closedCases || 0}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">*For reference</p>
+                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-gray-600 text-sm">Total Recovery</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {statsLoading ? "..." : `£${parseFloat(stats?.totalRecovery || '0').toLocaleString()}`}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
       {/* Recent Cases and Messages */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

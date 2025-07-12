@@ -461,14 +461,17 @@ export class DatabaseStorage implements IStorage {
       .from(cases)
       .where(eq(cases.organisationId, organisationId));
 
-    // Calculate total recovery from payments
+    // Calculate total recovery from payments for active cases only
     const [recoveryStats] = await db
       .select({
         totalRecovery: sql<string>`COALESCE(SUM(${payments.amount}), 0)`,
       })
       .from(payments)
       .leftJoin(cases, eq(payments.caseId, cases.id))
-      .where(eq(cases.organisationId, organisationId));
+      .where(and(
+        eq(cases.organisationId, organisationId),
+        sql`LOWER(${cases.status}) != 'closed'`
+      ));
 
     return {
       activeCases: stats.activeCases,
@@ -493,12 +496,14 @@ export class DatabaseStorage implements IStorage {
       })
       .from(cases);
 
-    // Calculate total recovery from payments across all organizations
+    // Calculate total recovery from payments for active cases across all organizations
     const [recoveryStats] = await db
       .select({
         totalRecovery: sql<string>`COALESCE(SUM(${payments.amount}), 0)`,
       })
-      .from(payments);
+      .from(payments)
+      .leftJoin(cases, eq(payments.caseId, cases.id))
+      .where(sql`LOWER(${cases.status}) != 'closed'`);
 
     return {
       activeCases: stats.activeCases,
