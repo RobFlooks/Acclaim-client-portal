@@ -82,15 +82,20 @@ export default function Dashboard() {
   });
 
   const getStatusBadge = (status: string, stage: string) => {
-    if (status === "resolved") {
+    if (status === "resolved" || status?.toLowerCase() === "closed") {
       return <Badge variant="secondary" className="bg-green-100 text-green-800"><Check className="w-3 h-3 mr-1" />Closed</Badge>;
     }
     
-    switch (stage) {
-      case "payment_plan":
+    // Normalize stage for comparison
+    const normalizedStage = stage?.toLowerCase().replace(/[_-]/g, '');
+    
+    switch (normalizedStage) {
+      case "paymentplan":
         return <Badge variant="secondary" className="bg-green-100 text-green-800"><Check className="w-3 h-3 mr-1" />Payment Plan</Badge>;
-      case "legal_action":
+      case "legalaction":
         return <Badge variant="destructive"><AlertTriangle className="w-3 h-3 mr-1" />Legal Action</Badge>;
+      case "prelegal":
+        return <Badge variant="secondary" className="bg-blue-100 text-blue-800"><Clock className="w-3 h-3 mr-1" />Pre-Legal</Badge>;
       default:
         return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800"><Clock className="w-3 h-3 mr-1" />In Progress</Badge>;
     }
