@@ -56,10 +56,14 @@ export interface IStorage {
   // Case operations
   getCasesForOrganisation(organisationId: number): Promise<Case[]>;
   getAllCases(): Promise<Case[]>; // Admin only - get all cases across all organizations
+  getAllCasesIncludingArchived(): Promise<Case[]>; // Admin only - get all cases including archived ones
   getCase(id: number, organisationId: number): Promise<Case | undefined>;
   getCaseById(id: number): Promise<Case | undefined>; // Admin only - get case by ID without org restriction
   createCase(caseData: InsertCase): Promise<Case>;
   updateCase(id: number, caseData: Partial<InsertCase>): Promise<Case>;
+  archiveCase(id: number, userId: string): Promise<Case>; // Admin only - archive case
+  unarchiveCase(id: number, userId: string): Promise<Case>; // Admin only - unarchive case
+  deleteCase(id: number): Promise<void>; // Admin only - permanently delete case and all related data
   
   // Case activity operations
   getCaseActivities(caseId: number): Promise<CaseActivity[]>;
@@ -290,11 +294,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCasesForOrganisation(organisationId: number): Promise<Case[]> {
-    // Get all cases for the organisation
+    // Get all non-archived cases for the organisation
     const allCases = await db
       .select()
       .from(cases)
-      .where(eq(cases.organisationId, organisationId));
+      .where(and(eq(cases.organisationId, organisationId), eq(cases.isArchived, false)));
 
     // For each case, get payments and last activity time
     const casesWithCalculatedBalance = await Promise.all(
@@ -348,7 +352,69 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllCases(): Promise<Case[]> {
-    // Admin only - get all cases across all organizations
+    // Admin only - get all non-archived cases across all organizations
+    const allCases = await db
+      .select({
+        ...cases,
+        organisationName: organisations.name,
+      })
+      .from(cases)
+      .leftJoin(organisations, eq(cases.organisationId, organisations.id))
+      .where(eq(cases.isArchived, false));
+
+    // For each case, calculate the accurate outstanding amount and last activity time
+    const casesWithCalculatedBalance = await Promise.all(
+      allCases.map(async (case_) => {
+        // Get total payments for this case
+        const casePayments = await db
+          .select()
+          .from(payments)
+          .where(eq(payments.caseId, case_.id));
+        
+        const totalPayments = casePayments.reduce((sum, payment) => 
+          sum + parseFloat(payment.amount), 0);
+        
+        // Get the most recent message for this case
+        const latestMessage = await db
+          .select()
+          .from(messages)
+          .where(eq(messages.caseId, case_.id))
+          .orderBy(desc(messages.createdAt))
+          .limit(1);
+        
+        // Get the most recent activity for this case
+        const latestActivity = await db
+          .select()
+          .from(caseActivities)
+          .where(eq(caseActivities.caseId, case_.id))
+          .orderBy(desc(caseActivities.createdAt))
+          .limit(1);
+        
+        // Determine the most recent update time
+        const caseUpdateTime = case_.updatedAt ? new Date(case_.updatedAt).getTime() : 0;
+        const messageUpdateTime = latestMessage.length > 0 ? new Date(latestMessage[0].createdAt).getTime() : 0;
+        const activityUpdateTime = latestActivity.length > 0 ? new Date(latestActivity[0].createdAt).getTime() : 0;
+        
+        const lastActivityTime = Math.max(caseUpdateTime, messageUpdateTime, activityUpdateTime);
+        
+        return {
+          ...case_,
+          outstandingAmount: case_.outstandingAmount,
+          totalPayments: totalPayments.toFixed(2),
+          lastActivityTime: new Date(lastActivityTime).toISOString(),
+          payments: casePayments
+        };
+      })
+    );
+
+    // Sort by last activity time (most recent first)
+    return casesWithCalculatedBalance.sort((a, b) => 
+      new Date(b.lastActivityTime).getTime() - new Date(a.lastActivityTime).getTime()
+    );
+  }
+
+  async getAllCasesIncludingArchived(): Promise<Case[]> {
+    // Admin only - get all cases including archived ones across all organizations
     const allCases = await db
       .select({
         ...cases,
@@ -437,6 +503,70 @@ export class DatabaseStorage implements IStorage {
       .where(eq(cases.id, id))
       .returning();
     return updatedCase;
+  }
+
+  async archiveCase(id: number, userId: string): Promise<Case> {
+    const [archivedCase] = await db
+      .update(cases)
+      .set({
+        isArchived: true,
+        archivedAt: new Date(),
+        archivedBy: userId,
+        updatedAt: new Date(),
+      })
+      .where(eq(cases.id, id))
+      .returning();
+    
+    // Log the archiving activity
+    await this.addCaseActivity({
+      caseId: id,
+      activityType: 'case_archived',
+      description: 'Case archived by admin',
+      performedBy: userId,
+    });
+    
+    return archivedCase;
+  }
+
+  async unarchiveCase(id: number, userId: string): Promise<Case> {
+    const [unarchivedCase] = await db
+      .update(cases)
+      .set({
+        isArchived: false,
+        archivedAt: null,
+        archivedBy: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(cases.id, id))
+      .returning();
+    
+    // Log the unarchiving activity
+    await this.addCaseActivity({
+      caseId: id,
+      activityType: 'case_unarchived',
+      description: 'Case unarchived by admin',
+      performedBy: userId,
+    });
+    
+    return unarchivedCase;
+  }
+
+  async deleteCase(id: number): Promise<void> {
+    // Delete in order to respect foreign key constraints
+    // 1. Delete case activities
+    await db.delete(caseActivities).where(eq(caseActivities.caseId, id));
+    
+    // 2. Delete case messages
+    await db.delete(messages).where(eq(messages.caseId, id));
+    
+    // 3. Delete case documents
+    await db.delete(documents).where(eq(documents.caseId, id));
+    
+    // 4. Delete case payments
+    await db.delete(payments).where(eq(payments.caseId, id));
+    
+    // 5. Finally delete the case
+    await db.delete(cases).where(eq(cases.id, id));
   }
 
   async getCaseActivities(caseId: number): Promise<CaseActivity[]> {

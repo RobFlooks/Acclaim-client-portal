@@ -72,6 +72,9 @@ export const cases = pgTable("cases", {
   stage: varchar("stage", { length: 100 }).notNull().default("initial_contact"),
   organisationId: integer("organisation_id").references(() => organisations.id).notNull(),
   assignedTo: varchar("assigned_to"),
+  isArchived: boolean("is_archived").default(false),
+  archivedAt: timestamp("archived_at"),
+  archivedBy: varchar("archived_by"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

@@ -1203,6 +1203,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin case management routes
+  app.get("/api/admin/cases/all", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const cases = await storage.getAllCasesIncludingArchived();
+      res.json(cases);
+    } catch (error) {
+      console.error("Error fetching all cases:", error);
+      res.status(500).json({ message: "Failed to fetch cases" });
+    }
+  });
+
+  app.put("/api/admin/cases/:id/archive", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const caseId = parseInt(req.params.id);
+      const userId = req.user.claims.sub;
+      
+      const archivedCase = await storage.archiveCase(caseId, userId);
+      
+      res.json({
+        message: "Case archived successfully",
+        case: archivedCase,
+      });
+    } catch (error) {
+      console.error("Error archiving case:", error);
+      res.status(500).json({ message: "Failed to archive case" });
+    }
+  });
+
+  app.put("/api/admin/cases/:id/unarchive", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const caseId = parseInt(req.params.id);
+      const userId = req.user.claims.sub;
+      
+      const unarchivedCase = await storage.unarchiveCase(caseId, userId);
+      
+      res.json({
+        message: "Case unarchived successfully",
+        case: unarchivedCase,
+      });
+    } catch (error) {
+      console.error("Error unarchiving case:", error);
+      res.status(500).json({ message: "Failed to unarchive case" });
+    }
+  });
+
+  app.delete("/api/admin/cases/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const caseId = parseInt(req.params.id);
+      
+      // Get case details before deletion for logging
+      const caseDetails = await storage.getCaseById(caseId);
+      if (!caseDetails) {
+        return res.status(404).json({ message: "Case not found" });
+      }
+      
+      await storage.deleteCase(caseId);
+      
+      res.json({
+        message: "Case and all associated data permanently deleted",
+        deletedCase: {
+          id: caseDetails.id,
+          accountNumber: caseDetails.accountNumber,
+          caseName: caseDetails.caseName,
+        },
+      });
+    } catch (error) {
+      console.error("Error deleting case:", error);
+      res.status(500).json({ message: "Failed to delete case" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

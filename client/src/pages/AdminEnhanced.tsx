@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard } from "lucide-react";
+import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrganisationSchema } from "@shared/schema";
@@ -41,6 +41,241 @@ type CreateUserForm = z.infer<typeof createUserSchema>;
 type UpdateUserForm = z.infer<typeof updateUserSchema>;
 type CreateOrganisationForm = z.infer<typeof createOrganisationSchema>;
 type UpdateOrganisationForm = z.infer<typeof updateOrganisationSchema>;
+
+interface Case {
+  id: number;
+  accountNumber: string;
+  caseName: string;
+  debtorEmail: string;
+  debtorPhone: string;
+  originalAmount: string;
+  outstandingAmount: string;
+  status: string;
+  stage: string;
+  organisationId: number;
+  organisationName?: string;
+  createdAt: string;
+  updatedAt: string;
+  isArchived: boolean;
+  archivedAt?: string;
+  archivedBy?: string;
+}
+
+function CaseManagementTab() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // Fetch all cases (including archived ones for admin)
+  const { data: cases = [], isLoading } = useQuery({
+    queryKey: ['/api/admin/cases/all'],
+    queryFn: async () => {
+      const response = await apiRequest('/api/admin/cases/all');
+      return response;
+    },
+    retry: false,
+  });
+
+  // Archive case mutation
+  const archiveCaseMutation = useMutation({
+    mutationFn: async (caseId: number) => {
+      return await apiRequest(`/api/admin/cases/${caseId}/archive`, {
+        method: 'PUT',
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Case Archived",
+        description: "Case has been successfully archived.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/cases/all'] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to archive case. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Unarchive case mutation
+  const unarchiveCaseMutation = useMutation({
+    mutationFn: async (caseId: number) => {
+      return await apiRequest(`/api/admin/cases/${caseId}/unarchive`, {
+        method: 'PUT',
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Case Unarchived",
+        description: "Case has been successfully unarchived.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/cases/all'] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to unarchive case. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete case mutation
+  const deleteCaseMutation = useMutation({
+    mutationFn: async (caseId: number) => {
+      return await apiRequest(`/api/admin/cases/${caseId}`, {
+        method: 'DELETE',
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Case Deleted",
+        description: "Case and all associated data have been permanently deleted.",
+        variant: "destructive",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/cases/all'] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to delete case. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  if (isLoading) {
+    return <div>Loading cases...</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="text-sm text-gray-600">
+        Total Cases: {cases.length} | Archived: {cases.filter((c: Case) => c.isArchived).length} | Active: {cases.filter((c: Case) => !c.isArchived).length}
+      </div>
+      
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Account Number</TableHead>
+            <TableHead>Case Name</TableHead>
+            <TableHead>Organisation</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Stage</TableHead>
+            <TableHead>Outstanding</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {cases.map((case_: Case) => (
+            <TableRow key={case_.id} className={case_.isArchived ? 'bg-gray-50' : ''}>
+              <TableCell className="font-medium">{case_.accountNumber}</TableCell>
+              <TableCell>{case_.caseName}</TableCell>
+              <TableCell>{case_.organisationName || 'N/A'}</TableCell>
+              <TableCell>
+                <Badge variant={case_.status === 'active' ? 'default' : 'secondary'}>
+                  {case_.status}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <Badge variant="outline">{case_.stage}</Badge>
+              </TableCell>
+              <TableCell>£{case_.outstandingAmount}</TableCell>
+              <TableCell>
+                {case_.isArchived ? (
+                  <Badge variant="secondary">
+                    <Archive className="h-3 w-3 mr-1" />
+                    Archived
+                  </Badge>
+                ) : (
+                  <Badge variant="default">Active</Badge>
+                )}
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center space-x-2">
+                  {case_.isArchived ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => unarchiveCaseMutation.mutate(case_.id)}
+                      disabled={unarchiveCaseMutation.isPending}
+                      title="Unarchive case"
+                    >
+                      <ArchiveRestore className="h-3 w-3" />
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (confirm(`Are you sure you want to archive case "${case_.caseName}"? This will hide it from normal operations.`)) {
+                          archiveCaseMutation.mutate(case_.id);
+                        }
+                      }}
+                      disabled={archiveCaseMutation.isPending}
+                      title="Archive case"
+                    >
+                      <Archive className="h-3 w-3" />
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (confirm(`Are you sure you want to permanently delete case "${case_.caseName}"? This action cannot be undone and will remove all associated data including messages, documents, and payments.`)) {
+                        deleteCaseMutation.mutate(case_.id);
+                      }
+                    }}
+                    disabled={deleteCaseMutation.isPending}
+                    className="text-red-600 hover:text-red-700"
+                    title="Permanently delete case"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
 
 export default function AdminEnhanced() {
   const { toast } = useToast();
@@ -472,6 +707,7 @@ export default function AdminEnhanced() {
         <TabsList>
           <TabsTrigger value="users">User Management</TabsTrigger>
           <TabsTrigger value="organisations">Organisations</TabsTrigger>
+          <TabsTrigger value="cases">Case Management</TabsTrigger>
         </TabsList>
 
         {/* User Management Tab */}
@@ -802,6 +1038,23 @@ export default function AdminEnhanced() {
                   ))}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Cases Tab */}
+        <TabsContent value="cases">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Case Management</CardTitle>
+                  <CardDescription>Archive or permanently delete cases across all organizations</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <CaseManagementTab />
             </CardContent>
           </Card>
         </TabsContent>
