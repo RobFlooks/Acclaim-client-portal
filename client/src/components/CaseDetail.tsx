@@ -15,9 +15,6 @@ import {
   Send, 
   FileText, 
   Calendar,
-  User,
-  Phone,
-  Mail,
   PoundSterling,
   Printer,
   Trash2
@@ -775,40 +772,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
           </div>
         </CardContent>
       </Card>
-      {/* Debtor Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Debtor Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <User className="h-4 w-4 text-gray-400" />
-                <span className="font-medium">Name:</span>
-                <span>{caseData.debtorName}</span>
-              </div>
-              {caseData.debtorEmail && (
-                <div className="flex items-center space-x-2">
-                  <Mail className="h-4 w-4 text-gray-400" />
-                  <span className="font-medium">Email:</span>
-                  <span>{caseData.debtorEmail}</span>
-                </div>
-              )}
-            </div>
-            <div className="space-y-3">
-              {caseData.debtorPhone && (
-                <div className="flex items-center space-x-2">
-                  <Phone className="h-4 w-4 text-gray-400" />
-                  <span className="font-medium">Phone:</span>
-                  <span>{caseData.debtorPhone}</span>
-                </div>
-              )}
 
-            </div>
-          </div>
-        </CardContent>
-      </Card>
       {/* Tabbed Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
