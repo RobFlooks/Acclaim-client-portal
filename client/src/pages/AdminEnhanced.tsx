@@ -64,6 +64,8 @@ interface Case {
 function CaseManagementTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [deleteConfirmCase, setDeleteConfirmCase] = useState<Case | null>(null);
+  const [archiveConfirmCase, setArchiveConfirmCase] = useState<Case | null>(null);
   
   // Fetch all cases (including archived ones for admin)
   const { data: cases = [], isLoading, error } = useQuery({
@@ -260,11 +262,7 @@ function CaseManagementTab() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        if (confirm(`Are you sure you want to archive case "${case_.caseName}"? This will hide it from normal operations.`)) {
-                          archiveCaseMutation.mutate(case_.id);
-                        }
-                      }}
+                      onClick={() => setArchiveConfirmCase(case_)}
                       disabled={archiveCaseMutation.isPending}
                       title="Archive case"
                     >
@@ -274,11 +272,7 @@ function CaseManagementTab() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      if (confirm(`Are you sure you want to permanently delete case "${case_.caseName}"? This action cannot be undone and will remove all associated data including messages, documents, and payments.`)) {
-                        deleteCaseMutation.mutate(case_.id);
-                      }
-                    }}
+                    onClick={() => setDeleteConfirmCase(case_)}
                     disabled={deleteCaseMutation.isPending}
                     className="text-red-600 hover:text-red-700"
                     title="Permanently delete case"
@@ -291,6 +285,111 @@ function CaseManagementTab() {
           ))}
         </TableBody>
       </Table>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deleteConfirmCase} onOpenChange={() => setDeleteConfirmCase(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              Permanent Deletion Warning
+            </DialogTitle>
+            <DialogDescription className="space-y-2">
+              <p className="font-medium">
+                Are you sure you want to permanently delete case "{deleteConfirmCase?.caseName}"?
+              </p>
+              <div className="bg-red-50 p-3 rounded-md border border-red-200">
+                <p className="text-sm text-red-800 font-medium">⚠️ This action cannot be undone!</p>
+                <p className="text-sm text-red-700 mt-1">
+                  This will permanently remove:
+                </p>
+                <ul className="text-sm text-red-700 mt-1 list-disc list-inside space-y-1">
+                  <li>The case and all its details</li>
+                  <li>All messages related to this case</li>
+                  <li>All documents attached to this case</li>
+                  <li>All payment records for this case</li>
+                  <li>All activity history for this case</li>
+                </ul>
+              </div>
+              <p className="text-sm text-gray-600 mt-2">
+                Consider archiving the case instead if you want to hide it while preserving the data.
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-6">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteConfirmCase(null)}
+              disabled={deleteCaseMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (deleteConfirmCase) {
+                  deleteCaseMutation.mutate(deleteConfirmCase.id);
+                  setDeleteConfirmCase(null);
+                }
+              }}
+              disabled={deleteCaseMutation.isPending}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleteCaseMutation.isPending ? "Deleting..." : "Permanently Delete"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Archive Confirmation Dialog */}
+      <Dialog open={!!archiveConfirmCase} onOpenChange={() => setArchiveConfirmCase(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-orange-600">
+              <Archive className="h-5 w-5" />
+              Archive Case
+            </DialogTitle>
+            <DialogDescription className="space-y-2">
+              <p className="font-medium">
+                Are you sure you want to archive case "{archiveConfirmCase?.caseName}"?
+              </p>
+              <div className="bg-orange-50 p-3 rounded-md border border-orange-200">
+                <p className="text-sm text-orange-800 font-medium">📦 Archiving will:</p>
+                <ul className="text-sm text-orange-700 mt-1 list-disc list-inside space-y-1">
+                  <li>Hide the case from normal operations</li>
+                  <li>Preserve all data (messages, documents, payments)</li>
+                  <li>Allow you to restore it later if needed</li>
+                </ul>
+              </div>
+              <p className="text-sm text-gray-600 mt-2">
+                This is a safe operation that can be reversed by unarchiving the case.
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-6">
+            <Button
+              variant="outline"
+              onClick={() => setArchiveConfirmCase(null)}
+              disabled={archiveCaseMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              onClick={() => {
+                if (archiveConfirmCase) {
+                  archiveCaseMutation.mutate(archiveConfirmCase.id);
+                  setArchiveConfirmCase(null);
+                }
+              }}
+              disabled={archiveCaseMutation.isPending}
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+            >
+              {archiveCaseMutation.isPending ? "Archiving..." : "Archive Case"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
