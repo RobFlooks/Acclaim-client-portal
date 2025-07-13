@@ -355,24 +355,6 @@ export default function RecoveryAnalysisReport() {
               </div>
             </div>
           </div>
-
-          <div class="section">
-            <h2>Recovery Performance Breakdown</h2>
-            <div class="breakdown-grid">
-              <div class="breakdown-card">
-                <div class="breakdown-label">High Recovery (90%+)</div>
-                <div class="breakdown-value high-recovery">${metrics?.highRecovery || 0}</div>
-              </div>
-              <div class="breakdown-card">
-                <div class="breakdown-label">Medium Recovery (50-89%)</div>
-                <div class="breakdown-value medium-recovery">${metrics?.mediumRecovery || 0}</div>
-              </div>
-              <div class="breakdown-card">
-                <div class="breakdown-label">Low Recovery (1-49%)</div>
-                <div class="breakdown-value low-recovery">${metrics?.lowRecovery || 0}</div>
-              </div>
-            </div>
-          </div>
           
           <div class="section">
             <h2>Case Recovery Details</h2>
@@ -552,86 +534,7 @@ export default function RecoveryAnalysisReport() {
           </CardContent>
         </Card>
       </div>
-      {/* Recovery Performance Breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recovery Performance Breakdown</CardTitle>
-            <p className="text-sm text-gray-600">Based on original amount (max 100%)</p>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600">High Recovery (90-100%)</span>
-                </div>
-                <Badge className="bg-green-100 text-green-800">
-                  {metrics?.highRecovery || 0}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600">Medium Recovery (50-89%)</span>
-                </div>
-                <Badge className="bg-yellow-100 text-yellow-800">
-                  {metrics?.mediumRecovery || 0}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600">Low Recovery (1-49%)</span>
-                </div>
-                <Badge className="bg-red-100 text-red-800">
-                  {metrics?.lowRecovery || 0}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600">No Recovery (0%)</span>
-                </div>
-                <Badge className="bg-gray-100 text-gray-800">
-                  {metrics?.noRecovery || 0}
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Status-Based Recovery</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Closed Cases</span>
-                <div className="text-right">
-                  <div className="font-medium">{metrics?.closedCases || 0} cases</div>
-                  <div className="text-sm text-green-600">{formatCurrency(metrics?.closedAmount || 0)}</div>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Active Cases</span>
-                <div className="text-right">
-                  <div className="font-medium">{metrics?.activeCases || 0} cases</div>
-                  <div className="text-sm text-yellow-600">{formatCurrency(metrics?.activeAmount || 0)}</div>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">New Matter</span>
-                <div className="text-right">
-                  <div className="font-medium">{metrics?.newMatterCases || 0} cases</div>
-                  <div className="text-sm text-blue-600">{formatCurrency(metrics?.newMatterAmount || 0)}</div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
       {/* Detailed Case Recovery Table */}
       <Card>
         <CardHeader>
