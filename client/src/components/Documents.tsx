@@ -64,6 +64,10 @@ export default function Documents() {
     },
   });
 
+  const getCaseDetails = (caseId: number) => {
+    return cases?.find((c: any) => c.id === caseId);
+  };
+
   const filteredDocuments = documents?.filter((doc: any) => {
     const searchLower = searchTerm.toLowerCase();
     const caseDetails = doc.caseId ? getCaseDetails(doc.caseId) : null;
@@ -191,10 +195,6 @@ export default function Documents() {
       setSelectedCase(caseData);
       setCaseDetailsOpen(true);
     }
-  };
-
-  const getCaseDetails = (caseId: number) => {
-    return cases?.find((c: any) => c.id === caseId);
   };
 
   const formatDate = (dateString: string) => {
