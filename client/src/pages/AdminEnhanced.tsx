@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { createUserSchema, updateUserSchema } from "@shared/schema";
+import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrganisationSchema } from "@shared/schema";
 import { z } from "zod";
 import { Link } from "wouter";
 
@@ -39,6 +39,8 @@ interface Organisation {
 
 type CreateUserForm = z.infer<typeof createUserSchema>;
 type UpdateUserForm = z.infer<typeof updateUserSchema>;
+type CreateOrganisationForm = z.infer<typeof createOrganisationSchema>;
+type UpdateOrganisationForm = z.infer<typeof updateOrganisationSchema>;
 
 export default function AdminEnhanced() {
   const { toast } = useToast();
@@ -48,8 +50,13 @@ export default function AdminEnhanced() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [newOrgName, setNewOrgName] = useState("");
   const [showCreateOrg, setShowCreateOrg] = useState(false);
+  const [showEditOrg, setShowEditOrg] = useState(false);
   const [showAssignUser, setShowAssignUser] = useState(false);
   const [selectedOrgId, setSelectedOrgId] = useState<string>("none");
+  const [editingOrg, setEditingOrg] = useState<Organisation | null>(null);
+  const [orgFormData, setOrgFormData] = useState<CreateOrganisationForm>({
+    name: "",
+  });
 
   // State for user management
   const [showCreateUser, setShowCreateUser] = useState(false);
@@ -80,8 +87,8 @@ export default function AdminEnhanced() {
 
   // Create organisation mutation
   const createOrganisationMutation = useMutation({
-    mutationFn: async (name: string) => {
-      const response = await apiRequest("POST", `/api/admin/organisations`, { name });
+    mutationFn: async (data: CreateOrganisationForm) => {
+      const response = await apiRequest("POST", `/api/admin/organisations`, data);
       return await response.json();
     },
     onSuccess: () => {
@@ -90,7 +97,7 @@ export default function AdminEnhanced() {
         description: "Organisation created successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/organisations"] });
-      setNewOrgName("");
+      setOrgFormData({ name: "" });
       setShowCreateOrg(false);
     },
     onError: (error) => {
@@ -108,6 +115,75 @@ export default function AdminEnhanced() {
       toast({
         title: "Error",
         description: "Failed to create organisation",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update organisation mutation
+  const updateOrganisationMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: UpdateOrganisationForm }) => {
+      const response = await apiRequest("PUT", `/api/admin/organisations/${id}`, data);
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Organisation updated successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/organisations"] });
+      setOrgFormData({ name: "" });
+      setEditingOrg(null);
+      setShowEditOrg(false);
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to update organisation",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete organisation mutation
+  const deleteOrganisationMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest("DELETE", `/api/admin/organisations/${id}`);
+      return response;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Organisation deleted successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/organisations"] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete organisation",
         variant: "destructive",
       });
     },
@@ -640,7 +716,7 @@ export default function AdminEnhanced() {
                         Cancel
                       </Button>
                       <Button
-                        onClick={() => createOrganisationMutation.mutate(newOrgName)}
+                        onClick={() => createOrganisationMutation.mutate({ name: newOrgName })}
                         disabled={createOrganisationMutation.isPending}
                         className="bg-acclaim-teal hover:bg-acclaim-teal/90"
                       >
@@ -675,9 +751,32 @@ export default function AdminEnhanced() {
                         {new Date(org.createdAt).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
-                        <Button variant="outline" size="sm">
-                          <Edit className="h-3 w-3" />
-                        </Button>
+                        <div className="flex items-center space-x-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setEditingOrg(org);
+                              setOrgFormData({ name: org.name });
+                              setShowEditOrg(true);
+                            }}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              if (confirm(`Are you sure you want to delete "${org.name}"? This action cannot be undone.`)) {
+                                deleteOrganisationMutation.mutate(org.id);
+                              }
+                            }}
+                            disabled={deleteOrganisationMutation.isPending}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -687,6 +786,48 @@ export default function AdminEnhanced() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Edit Organization Dialog */}
+      <Dialog open={showEditOrg} onOpenChange={setShowEditOrg}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Organisation</DialogTitle>
+            <DialogDescription>
+              Update the organisation details
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="editOrgName">Organisation Name</Label>
+              <Input
+                id="editOrgName"
+                value={orgFormData.name}
+                onChange={(e) => setOrgFormData({ ...orgFormData, name: e.target.value })}
+                placeholder="Enter organisation name"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => setShowEditOrg(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (editingOrg) {
+                  updateOrganisationMutation.mutate({ 
+                    id: editingOrg.id, 
+                    data: orgFormData 
+                  });
+                }
+              }}
+              disabled={updateOrganisationMutation.isPending}
+              className="bg-acclaim-teal hover:bg-acclaim-teal/90"
+            >
+              {updateOrganisationMutation.isPending ? "Updating..." : "Update"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* User Assignment Dialog */}
       <Dialog open={showAssignUser} onOpenChange={setShowAssignUser}>

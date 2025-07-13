@@ -9,7 +9,9 @@ import {
   createUserSchema,
   updateUserSchema,
   changePasswordSchema,
-  resetPasswordSchema
+  resetPasswordSchema,
+  createOrganisationSchema,
+  updateOrganisationSchema
 } from "@shared/schema";
 import multer from "multer";
 import path from "path";
@@ -904,6 +906,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error resetting password:", error);
       res.status(500).json({ message: "Failed to reset password" });
+    }
+  });
+
+  // Organization Management Routes (Admin only)
+  
+  // Create organization
+  app.post('/api/admin/organisations', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const orgData = createOrganisationSchema.parse(req.body);
+      const organisation = await storage.createOrganisation(orgData);
+      res.status(201).json(organisation);
+    } catch (error) {
+      console.error("Error creating organisation:", error);
+      res.status(500).json({ message: "Failed to create organisation" });
+    }
+  });
+
+  // Update organization
+  app.put('/api/admin/organisations/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const orgId = parseInt(req.params.id);
+      const orgData = updateOrganisationSchema.parse(req.body);
+      const organisation = await storage.updateOrganisation(orgId, orgData);
+      res.json(organisation);
+    } catch (error) {
+      console.error("Error updating organisation:", error);
+      res.status(500).json({ message: "Failed to update organisation" });
+    }
+  });
+
+  // Delete organization
+  app.delete('/api/admin/organisations/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const orgId = parseInt(req.params.id);
+      await storage.deleteOrganisation(orgId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting organisation:", error);
+      if (error.message === "Cannot delete organisation with associated users or cases") {
+        res.status(400).json({ message: error.message });
+      } else {
+        res.status(500).json({ message: "Failed to delete organisation" });
+      }
+    }
+  });
+
+  // Get organization stats
+  app.get('/api/admin/organisations/:id/stats', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const orgId = parseInt(req.params.id);
+      const stats = await storage.getOrganisationStats(orgId);
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching organisation stats:", error);
+      res.status(500).json({ message: "Failed to fetch organisation stats" });
     }
   });
 

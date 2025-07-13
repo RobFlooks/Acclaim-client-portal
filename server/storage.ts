@@ -34,6 +34,15 @@ export interface IStorage {
   // Organisation operations
   getOrganisation(id: number): Promise<Organization | undefined>;
   createOrganisation(org: InsertOrganization): Promise<Organization>;
+  updateOrganisation(id: number, org: Partial<InsertOrganization>): Promise<Organization>;
+  deleteOrganisation(id: number): Promise<void>;
+  getOrganisationStats(id: number): Promise<{
+    userCount: number;
+    caseCount: number;
+    activeCaseCount: number;
+    totalOutstanding: string;
+    totalRecovered: string;
+  }>;
   
   // Case operations
   getCasesForOrganisation(organisationId: number): Promise<Case[]>;
@@ -146,6 +155,64 @@ export class DatabaseStorage implements IStorage {
   async createOrganisation(org: InsertOrganization): Promise<Organization> {
     const [newOrg] = await db.insert(organisations).values(org).returning();
     return newOrg;
+  }
+
+  async updateOrganisation(id: number, org: Partial<InsertOrganization>): Promise<Organization> {
+    const [updatedOrg] = await db
+      .update(organisations)
+      .set({ ...org, updatedAt: new Date() })
+      .where(eq(organisations.id, id))
+      .returning();
+    return updatedOrg;
+  }
+
+  async deleteOrganisation(id: number): Promise<void> {
+    // First, check if there are any users or cases associated with this organisation
+    const [userCount, caseCount] = await Promise.all([
+      db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.organisationId, id.toString())),
+      db.select({ count: sql<number>`count(*)` }).from(cases).where(eq(cases.organisationId, id))
+    ]);
+
+    if (userCount[0].count > 0 || caseCount[0].count > 0) {
+      throw new Error("Cannot delete organisation with associated users or cases");
+    }
+
+    await db.delete(organisations).where(eq(organisations.id, id));
+  }
+
+  async getOrganisationStats(id: number): Promise<{
+    userCount: number;
+    caseCount: number;
+    activeCaseCount: number;
+    totalOutstanding: string;
+    totalRecovered: string;
+  }> {
+    const [userCount, caseCount, activeCaseCount] = await Promise.all([
+      db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.organisationId, id.toString())),
+      db.select({ count: sql<number>`count(*)` }).from(cases).where(eq(cases.organisationId, id)),
+      db.select({ count: sql<number>`count(*)` }).from(cases).where(and(eq(cases.organisationId, id), or(eq(cases.status, "new"), eq(cases.status, "in_progress"))))
+    ]);
+
+    // Calculate financial stats
+    const orgCases = await db.select().from(cases).where(eq(cases.organisationId, id));
+    let totalOutstanding = 0;
+    let totalRecovered = 0;
+
+    for (const case_ of orgCases) {
+      const casePayments = await db.select().from(payments).where(eq(payments.caseId, case_.id));
+      const totalPayments = casePayments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
+      
+      totalRecovered += totalPayments;
+      totalOutstanding += parseFloat(case_.outstandingAmount || "0");
+    }
+
+    return {
+      userCount: userCount[0].count,
+      caseCount: caseCount[0].count,
+      activeCaseCount: activeCaseCount[0].count,
+      totalOutstanding: totalOutstanding.toFixed(2),
+      totalRecovered: totalRecovered.toFixed(2),
+    };
   }
 
   async getCasesForOrganisation(organisationId: number): Promise<Case[]> {

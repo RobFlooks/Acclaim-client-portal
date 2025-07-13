@@ -269,3 +269,12 @@ export const resetPasswordSchema = z.object({
   message: "Passwords don't match",
   path: ["confirmPassword"],
 });
+
+// Organization management schemas
+export const createOrganisationSchema = z.object({
+  name: z.string().min(1, "Organization name is required"),
+});
+
+export const updateOrganisationSchema = z.object({
+  name: z.string().min(1, "Organization name is required"),
+});
