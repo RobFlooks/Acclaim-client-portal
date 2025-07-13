@@ -161,7 +161,7 @@ export default function MonthlyStatementReport() {
     ];
 
     // Add payment headers
-    summaryData.push(['Account Number', 'Debtor Name', 'Amount', 'Date', 'Method', 'Reference']);
+    summaryData.push(['Account Number', 'Case Name', 'Amount', 'Date', 'Method', 'Reference']);
     
     // Add payment data
     monthlyData.paymentsInMonth.forEach((payment: any) => {
@@ -264,7 +264,7 @@ export default function MonthlyStatementReport() {
                 <thead>
                   <tr>
                     <th>Account Number</th>
-                    <th>Debtor Name</th>
+                    <th>Case Name</th>
                     <th>Amount</th>
                     <th>Date</th>
                     <th>Method</th>
@@ -423,7 +423,7 @@ export default function MonthlyStatementReport() {
                 <thead>
                   <tr className="bg-gray-50">
                     <th className="border border-gray-200 px-4 py-2 text-left">Account Number</th>
-                    <th className="border border-gray-200 px-4 py-2 text-left">Debtor Name</th>
+                    <th className="border border-gray-200 px-4 py-2 text-left">Case Name</th>
                     <th className="border border-gray-200 px-4 py-2 text-left">Amount</th>
                     <th className="border border-gray-200 px-4 py-2 text-left">Date</th>
                     <th className="border border-gray-200 px-4 py-2 text-left">Method</th>
