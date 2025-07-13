@@ -410,7 +410,7 @@ export default function RecoveryAnalysisReport() {
               <thead>
                 <tr>
                   <th>Account Number</th>
-                  <th>Debtor Name</th>
+                  <th>Case Name</th>
                   <th>Status</th>
                   <th>Original Amount</th>
                   <th>Total Debt</th>
@@ -640,7 +640,7 @@ export default function RecoveryAnalysisReport() {
                     Account Number
                   </th>
                   <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                    Debtor Name
+                    Case Name
                   </th>
                   <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
                     Status
