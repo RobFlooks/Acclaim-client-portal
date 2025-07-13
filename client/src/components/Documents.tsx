@@ -72,16 +72,17 @@ export default function Documents() {
   const uploadDocumentMutation = useMutation({
     mutationFn: async ({ file, caseId }: { file: File; caseId: string }) => {
       const formData = new FormData();
-      formData.append("document", file);
+      formData.append("file", file);
       formData.append("caseId", caseId);
 
-      const response = await fetch("/api/documents", {
+      const response = await fetch("/api/documents/upload", {
         method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error(`${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        throw new Error(`${response.status}: ${errorText}`);
       }
 
       return await response.json();
