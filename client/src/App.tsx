@@ -13,6 +13,7 @@ import UserProfile from "@/pages/UserProfile";
 import SystemMonitoring from "@/pages/SystemMonitoring";
 import CaseSummaryReport from "@/pages/CaseSummaryReport";
 import RecoveryAnalysisReport from "@/pages/RecoveryAnalysisReport";
+import MonthlyStatementReport from "@/pages/MonthlyStatementReport";
 import AdvancedReports from "@/pages/AdvancedReports";
 
 function Router() {
@@ -33,6 +34,7 @@ function Router() {
           <Route path="/advanced-reports" component={AdvancedReports} />
           <Route path="/case-summary-report" component={CaseSummaryReport} />
           <Route path="/recovery-analysis-report" component={RecoveryAnalysisReport} />
+          <Route path="/monthly-statement-report" component={MonthlyStatementReport} />
         </>
       )}
       <Route component={NotFound} />

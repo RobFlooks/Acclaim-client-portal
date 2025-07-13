@@ -68,6 +68,9 @@ export default function Reports() {
     } else if (reportType === "Recovery Analysis") {
       // Navigate to recovery analysis report page
       window.location.href = '/recovery-analysis-report';
+    } else if (reportType === "Monthly Statement") {
+      // Navigate to monthly statement report page
+      window.location.href = '/monthly-statement-report';
     } else {
       toast({
         title: "Report View",
@@ -310,12 +313,12 @@ export default function Reports() {
                 <TrendingUp className="h-8 w-8 text-purple-600" />
               </div>
               <Button 
-                onClick={() => handleDownloadReport("Monthly Statement")}
+                onClick={() => handleViewReport("Monthly Statement")}
                 variant="outline"
                 className="w-full border-purple-500 text-purple-600 hover:bg-purple-50"
               >
-                <Download className="h-4 w-4 mr-2" />
-                Download PDF
+                <FileText className="h-4 w-4 mr-2" />
+                View Report
               </Button>
             </div>
           </div>
