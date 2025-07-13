@@ -210,8 +210,8 @@ export default function Messages() {
     setViewingMessage(message);
     setMessageViewOpen(true);
     
-    // Mark as read if it's unread and not sent by the current user
-    if (!message.isRead && message.senderId !== user?.id) {
+    // Mark as read if it's unread, not sent by the current user, and sent by an admin
+    if (!message.isRead && message.senderId !== user?.id && message.senderIsAdmin) {
       markAsReadMutation.mutate(message.id);
     }
   };
@@ -246,9 +246,9 @@ export default function Messages() {
     }
   };
 
-  // Calculate unread messages count - only count messages received by the user that are unread
+  // Calculate unread messages count - only count messages from admin users that are unread
   const unreadCount = messages?.filter((message: any) => {
-    return !message.isRead && message.senderId !== user?.id;
+    return !message.isRead && message.senderId !== user?.id && message.senderIsAdmin;
   }).length || 0;
 
   const totalMessages = messages?.length || 0;
@@ -259,8 +259,8 @@ export default function Messages() {
     
     if (messageFilter === "unread") {
       return messages.filter((message: any) => {
-        // Only show messages as unread if they were sent by someone else
-        return !message.isRead && message.senderId !== user?.id;
+        // Only show messages as unread if they were sent by an admin user
+        return !message.isRead && message.senderId !== user?.id && message.senderIsAdmin;
       });
     }
     
@@ -497,7 +497,7 @@ export default function Messages() {
                 <div
                   key={message.id}
                   className={`p-4 rounded-lg border transition-colors cursor-pointer hover:shadow-md ${
-                    !message.isRead && message.senderId !== user?.id
+                    !message.isRead && message.senderId !== user?.id && message.senderIsAdmin
                       ? "bg-white border-acclaim-teal shadow-sm hover:shadow-lg border-l-4 border-l-acclaim-teal" 
                       : "bg-gray-50 border-gray-200 hover:bg-gray-100"
                   }`}
@@ -509,14 +509,14 @@ export default function Messages() {
                         <div className="w-10 h-10 bg-acclaim-teal bg-opacity-10 rounded-full flex items-center justify-center">
                           <User className="h-5 w-5 text-acclaim-teal" />
                         </div>
-                        {!message.isRead && message.senderId !== user?.id && (
+                        {!message.isRead && message.senderId !== user?.id && message.senderIsAdmin && (
                           <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></div>
                         )}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-1">
                           <p className="font-medium text-gray-900">{message.subject}</p>
-                          {!message.isRead && message.senderId !== user?.id && (
+                          {!message.isRead && message.senderId !== user?.id && message.senderIsAdmin && (
                             <Badge variant="secondary" className="bg-red-100 text-red-800 text-xs">
                               New
                             </Badge>
