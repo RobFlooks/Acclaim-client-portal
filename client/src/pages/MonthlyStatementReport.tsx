@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Download, FileText, TrendingUp, Calendar, PoundSterling, User } from "lucide-react";
+import { ArrowLeft, Download, FileText, TrendingUp, Calendar, PoundSterling, User, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Link } from "wouter";
@@ -132,18 +132,11 @@ export default function MonthlyStatementReport() {
     const totalPayments = paymentsInMonth.reduce((sum: number, payment: any) => 
       sum + parseFloat(payment.amount), 0);
 
-    const newCasesCount = filteredCases.length;
-    const closedCasesCount = cases.filter((case_: any) => {
-      const updatedDate = new Date(case_.updatedAt);
-      return case_.status === 'closed' && updatedDate >= startDate && updatedDate <= endDate;
-    }).length;
-
     return {
       filteredCases,
       paymentsInMonth,
       totalPayments,
-      newCasesCount,
-      closedCasesCount,
+      paymentsCount: paymentsInMonth.length,
       startDate,
       endDate
     };
@@ -161,44 +154,26 @@ export default function MonthlyStatementReport() {
       ['Generated:', new Date().toLocaleDateString('en-GB')],
       [''],
       ['Summary'],
-      ['New Cases', monthlyData.newCasesCount],
-      ['Closed Cases', monthlyData.closedCasesCount],
       ['Total Payments', formatCurrency(monthlyData.totalPayments)],
+      ['Number of Payments', monthlyData.paymentsCount],
       [''],
-      ['Cases Created This Month']
+      ['Payments Received This Month']
     ];
 
-    // Add case headers
-    summaryData.push(['Account Number', 'Debtor Name', 'Original Amount', 'Outstanding Amount', 'Status', 'Created Date']);
+    // Add payment headers
+    summaryData.push(['Account Number', 'Debtor Name', 'Amount', 'Date', 'Method', 'Reference']);
     
-    // Add case data
-    monthlyData.filteredCases.forEach((case_: any) => {
+    // Add payment data
+    monthlyData.paymentsInMonth.forEach((payment: any) => {
       summaryData.push([
-        case_.accountNumber,
-        case_.debtorName,
-        formatCurrency(case_.originalAmount),
-        formatCurrency(case_.outstandingAmount),
-        case_.status,
-        formatDate(case_.createdAt)
+        payment.accountNumber,
+        payment.debtorName,
+        formatCurrency(payment.amount),
+        formatDate(payment.createdAt),
+        payment.method || 'N/A',
+        payment.reference || 'N/A'
       ]);
     });
-
-    // Add payments section
-    if (monthlyData.paymentsInMonth.length > 0) {
-      summaryData.push([''], ['Payments Received This Month']);
-      summaryData.push(['Account Number', 'Debtor Name', 'Amount', 'Date', 'Method', 'Reference']);
-      
-      monthlyData.paymentsInMonth.forEach((payment: any) => {
-        summaryData.push([
-          payment.accountNumber,
-          payment.debtorName,
-          formatCurrency(payment.amount),
-          formatDate(payment.createdAt),
-          payment.paymentMethod || 'N/A',
-          payment.reference || 'N/A'
-        ]);
-      });
-    }
 
     const worksheet = XLSX.utils.aoa_to_sheet(summaryData);
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Monthly Statement');
@@ -235,38 +210,10 @@ export default function MonthlyStatementReport() {
       
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.text(`New Cases: ${monthlyData.newCasesCount}`, 20, 80);
-      doc.text(`Closed Cases: ${monthlyData.closedCasesCount}`, 20, 90);
-      doc.text(`Total Payments: ${formatCurrency(monthlyData.totalPayments)}`, 20, 100);
+      doc.text(`Total Payments: ${formatCurrency(monthlyData.totalPayments)}`, 20, 80);
+      doc.text(`Number of Payments: ${monthlyData.paymentsCount}`, 20, 90);
       
-      let yPosition = 120;
-      
-      // New Cases Table
-      if (monthlyData.filteredCases.length > 0) {
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.text('New Cases This Month', 20, yPosition);
-        yPosition += 10;
-        
-        const caseTableData = monthlyData.filteredCases.map((case_: any) => [
-          case_.accountNumber,
-          case_.debtorName,
-          formatCurrency(case_.originalAmount),
-          formatCurrency(case_.outstandingAmount),
-          case_.status,
-          formatDate(case_.createdAt)
-        ]);
-        
-        (doc as any).autoTable({
-          head: [['Account Number', 'Debtor Name', 'Original Amount', 'Outstanding', 'Status', 'Created Date']],
-          body: caseTableData,
-          startY: yPosition,
-          styles: { fontSize: 8 },
-          headStyles: { fillColor: [15, 118, 110] },
-        });
-        
-        yPosition = (doc as any).lastAutoTable.finalY + 20;
-      }
+      let yPosition = 110;
       
       // Payments Table
       if (monthlyData.paymentsInMonth.length > 0) {
@@ -387,31 +334,7 @@ export default function MonthlyStatementReport() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">New Cases</p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {monthlyData?.newCasesCount || 0}
-                  </p>
-                </div>
-                <User className="h-8 w-8 text-blue-600" />
-              </div>
-            </div>
-            
-            <div className="bg-green-50 p-4 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Closed Cases</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {monthlyData?.closedCasesCount || 0}
-                  </p>
-                </div>
-                <FileText className="h-8 w-8 text-green-600" />
-              </div>
-            </div>
-            
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-purple-50 p-4 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
@@ -423,62 +346,19 @@ export default function MonthlyStatementReport() {
                 <PoundSterling className="h-8 w-8 text-purple-600" />
               </div>
             </div>
+            
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Number of Payments</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {monthlyData?.paymentsCount || 0}
+                  </p>
+                </div>
+                <CreditCard className="h-8 w-8 text-blue-600" />
+              </div>
+            </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* New Cases This Month */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>New Cases - {getMonthName(selectedMonth)}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {monthlyData?.filteredCases.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse border border-gray-200">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="border border-gray-200 px-4 py-2 text-left">Account Number</th>
-                    <th className="border border-gray-200 px-4 py-2 text-left">Debtor Name</th>
-                    <th className="border border-gray-200 px-4 py-2 text-left">Original Amount</th>
-                    <th className="border border-gray-200 px-4 py-2 text-left">Outstanding Amount</th>
-                    <th className="border border-gray-200 px-4 py-2 text-left">Status</th>
-                    <th className="border border-gray-200 px-4 py-2 text-left">Created Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {monthlyData.filteredCases.map((case_: any) => (
-                    <tr key={case_.id} className="hover:bg-gray-50">
-                      <td className="border border-gray-200 px-4 py-2 font-medium">
-                        {case_.accountNumber}
-                      </td>
-                      <td className="border border-gray-200 px-4 py-2">
-                        {case_.debtorName}
-                      </td>
-                      <td className="border border-gray-200 px-4 py-2">
-                        {formatCurrency(case_.originalAmount)}
-                      </td>
-                      <td className="border border-gray-200 px-4 py-2">
-                        {formatCurrency(case_.outstandingAmount)}
-                      </td>
-                      <td className="border border-gray-200 px-4 py-2">
-                        <Badge variant={case_.status === 'closed' ? 'secondary' : 'default'}>
-                          {case_.status}
-                        </Badge>
-                      </td>
-                      <td className="border border-gray-200 px-4 py-2">
-                        {formatDate(case_.createdAt)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              No new cases created in {getMonthName(selectedMonth)}
-            </div>
-          )}
         </CardContent>
       </Card>
 
