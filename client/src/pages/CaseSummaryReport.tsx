@@ -2,16 +2,19 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Download, User, Calendar, Banknote, TrendingUp, FileSpreadsheet, FileText } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Download, User, Calendar, Banknote, TrendingUp, FileSpreadsheet, FileText, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Link } from "wouter";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { useState, useMemo } from "react";
 
 export default function CaseSummaryReport() {
   const { toast } = useToast();
+  const [statusFilter, setStatusFilter] = useState<string>("all"); // "all", "live", "closed"
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/dashboard/stats"],
@@ -57,6 +60,28 @@ export default function CaseSummaryReport() {
     },
   });
 
+  // Filter cases based on status filter
+  const filteredCases = useMemo(() => {
+    if (!cases) return [];
+    
+    if (statusFilter === "live") {
+      return cases.filter((caseItem: any) => caseItem.status !== "resolved");
+    } else if (statusFilter === "closed") {
+      return cases.filter((caseItem: any) => caseItem.status === "resolved");
+    }
+    return cases; // "all" - show both live and closed
+  }, [cases, statusFilter]);
+
+  // Calculate filtered statistics
+  const filteredStats = useMemo(() => {
+    if (!filteredCases) return { activeCases: 0, closedCases: 0 };
+    
+    const activeCases = filteredCases.filter((caseItem: any) => caseItem.status !== "resolved").length;
+    const closedCases = filteredCases.filter((caseItem: any) => caseItem.status === "resolved").length;
+    
+    return { activeCases, closedCases };
+  }, [filteredCases]);
+
   // We'll calculate total payments from outstanding amount for now
   // since we can't use dynamic hooks. In a real scenario, we'd need to restructure this.
   const getTotalPayments = (caseItem: any) => {
@@ -66,18 +91,18 @@ export default function CaseSummaryReport() {
   };
 
   const getTotalOriginalAmount = () => {
-    if (!cases) return 0;
-    return cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.originalAmount), 0);
+    if (!filteredCases) return 0;
+    return filteredCases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.originalAmount), 0);
   };
 
   const getTotalPaymentsReceived = () => {
-    if (!cases) return 0;
-    return cases.reduce((sum: number, caseItem: any) => sum + getTotalPayments(caseItem), 0);
+    if (!filteredCases) return 0;
+    return filteredCases.reduce((sum: number, caseItem: any) => sum + getTotalPayments(caseItem), 0);
   };
 
   const getTotalOutstandingAmount = () => {
-    if (!cases) return 0;
-    return cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.outstandingAmount || 0), 0);
+    if (!filteredCases) return 0;
+    return filteredCases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.outstandingAmount || 0), 0);
   };
 
   const formatCurrency = (amount: string | number) => {
@@ -136,7 +161,7 @@ export default function CaseSummaryReport() {
 
 
   const handleDownloadPDF = () => {
-    if (!cases || cases.length === 0) {
+    if (!filteredCases || filteredCases.length === 0) {
       toast({
         title: "No Data",
         description: "No cases available to generate PDF.",
@@ -195,7 +220,7 @@ export default function CaseSummaryReport() {
             <div class="stats-grid">
               <div class="stat-card">
                 <div class="stat-label">Total Cases</div>
-                <div class="stat-value">${cases.length}</div>
+                <div class="stat-value">${filteredCases.length}</div>
               </div>
               <div class="stat-card">
                 <div class="stat-label">Active Cases</div>
@@ -238,7 +263,7 @@ export default function CaseSummaryReport() {
                 </tr>
               </thead>
               <tbody>
-                ${cases.map((caseItem: any) => {
+                ${filteredCases.map((caseItem: any) => {
                   const totalDebt = parseFloat(caseItem.originalAmount || 0) + 
                                    parseFloat(caseItem.costsAdded || 0) + 
                                    parseFloat(caseItem.interestAdded || 0) + 
@@ -301,7 +326,7 @@ export default function CaseSummaryReport() {
   };
 
   const handleExportExcel = () => {
-    if (!cases || cases.length === 0) {
+    if (!filteredCases || filteredCases.length === 0) {
       toast({
         title: "No Data",
         description: "No cases available to export.",
@@ -312,7 +337,7 @@ export default function CaseSummaryReport() {
 
     try {
       // Prepare data for Excel export
-      const excelData = cases.map((caseItem: any) => ({
+      const excelData = filteredCases.map((caseItem: any) => ({
         'Account Number': caseItem.accountNumber,
         'Debtor Name': caseItem.debtorName,
         'Status': caseItem.status === 'resolved' ? 'Closed' : caseItem.status.charAt(0).toUpperCase() + caseItem.status.slice(1),
@@ -436,6 +461,34 @@ export default function CaseSummaryReport() {
         </div>
       </div>
 
+      {/* Filter Control */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Filter Cases
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4">
+            <label className="text-sm font-medium text-gray-700">Show:</label>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Select filter" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Cases (Live & Closed)</SelectItem>
+                <SelectItem value="live">Live Cases Only</SelectItem>
+                <SelectItem value="closed">Closed Cases Only</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="text-sm text-gray-600">
+              Showing {filteredCases?.length || 0} of {cases?.length || 0} cases
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Summary Statistics */}
       <Card className="mb-8">
         <CardHeader>
@@ -447,7 +500,7 @@ export default function CaseSummaryReport() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Total Cases</p>
-                  <p className="text-2xl font-bold text-blue-600">{cases?.length || 0}</p>
+                  <p className="text-2xl font-bold text-blue-600">{filteredCases?.length || 0}</p>
                 </div>
                 <FileText className="h-8 w-8 text-blue-600" />
               </div>
@@ -456,7 +509,7 @@ export default function CaseSummaryReport() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Active Cases</p>
-                  <p className="text-2xl font-bold text-yellow-600">{stats?.activeCases || 0}</p>
+                  <p className="text-2xl font-bold text-yellow-600">{filteredStats?.activeCases || 0}</p>
                 </div>
                 <User className="h-8 w-8 text-yellow-600" />
               </div>
@@ -465,7 +518,7 @@ export default function CaseSummaryReport() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Closed Cases</p>
-                  <p className="text-2xl font-bold text-green-600">{stats?.closedCases || 0}</p>
+                  <p className="text-2xl font-bold text-green-600">{filteredStats?.closedCases || 0}</p>
                 </div>
                 <Calendar className="h-8 w-8 text-green-600" />
               </div>
@@ -551,7 +604,7 @@ export default function CaseSummaryReport() {
                 </tr>
               </thead>
               <tbody>
-                {cases?.map((caseItem: any) => (
+                {filteredCases?.map((caseItem: any) => (
                   <tr key={caseItem.id} className="hover:bg-gray-50">
                     <td className="border border-gray-200 px-4 py-3 text-sm text-gray-900">
                       {caseItem.accountNumber}
