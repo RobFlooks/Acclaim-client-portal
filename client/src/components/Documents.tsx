@@ -4,7 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Download, Search, Upload, Calendar, User, Trash2 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FileText, Download, Search, Upload, Calendar, User, Trash2, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,6 +15,9 @@ import { apiRequest } from "@/lib/queryClient";
 
 export default function Documents() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedCaseId, setSelectedCaseId] = useState<string>("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -38,6 +44,23 @@ export default function Documents() {
     },
   });
 
+  const { data: cases } = useQuery({
+    queryKey: ["/api/cases"],
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+    },
+  });
+
   const filteredDocuments = documents?.filter((doc: any) => {
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -45,6 +68,53 @@ export default function Documents() {
       doc.fileType?.toLowerCase().includes(searchLower)
     );
   }) || [];
+
+  const uploadDocumentMutation = useMutation({
+    mutationFn: async ({ file, caseId }: { file: File; caseId: string }) => {
+      const formData = new FormData();
+      formData.append("document", file);
+      formData.append("caseId", caseId);
+
+      const response = await fetch("/api/documents", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`${response.status}: ${response.statusText}`);
+      }
+
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      setSelectedFile(null);
+      setSelectedCaseId("");
+      setUploadDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Document uploaded successfully",
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to upload document",
+        variant: "destructive",
+      });
+    },
+  });
 
   const deleteDocumentMutation = useMutation({
     mutationFn: async (documentId: number) => {
@@ -79,6 +149,32 @@ export default function Documents() {
 
   const handleDownload = (documentId: number) => {
     window.open(`/api/documents/${documentId}/download`, '_blank');
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const handleUpload = () => {
+    if (!selectedFile || !selectedCaseId) {
+      toast({
+        title: "Error",
+        description: "Please select a file and case before uploading",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    uploadDocumentMutation.mutate({ file: selectedFile, caseId: selectedCaseId });
+  };
+
+  const handleCloseUploadDialog = () => {
+    setUploadDialogOpen(false);
+    setSelectedFile(null);
+    setSelectedCaseId("");
   };
 
   const formatDate = (dateString: string) => {
@@ -133,10 +229,72 @@ export default function Documents() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Document Library</CardTitle>
-            <Button className="bg-acclaim-teal hover:bg-acclaim-teal/90">
-              <Upload className="h-4 w-4 mr-2" />
-              Upload Document
-            </Button>
+            <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-acclaim-teal hover:bg-acclaim-teal/90">
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Document
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Upload Document</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="case-select">Select Case</Label>
+                    <Select value={selectedCaseId} onValueChange={setSelectedCaseId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a case..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cases?.map((caseItem: any) => (
+                          <SelectItem key={caseItem.id} value={caseItem.id.toString()}>
+                            {caseItem.accountNumber} - {caseItem.debtorName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="file-input">Select Document</Label>
+                    <Input
+                      id="file-input"
+                      type="file"
+                      onChange={handleFileSelect}
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.txt,.csv,.xlsx,.xls"
+                      className="mt-2"
+                    />
+                    {selectedFile && (
+                      <div className="mt-2 p-2 bg-gray-50 rounded flex items-center justify-between">
+                        <span className="text-sm text-gray-600">
+                          {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedFile(null)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      onClick={handleUpload}
+                      disabled={uploadDocumentMutation.isPending || !selectedFile || !selectedCaseId}
+                      className="bg-acclaim-teal hover:bg-acclaim-teal/90"
+                    >
+                      {uploadDocumentMutation.isPending ? "Uploading..." : "Upload Document"}
+                    </Button>
+                    <Button variant="outline" onClick={handleCloseUploadDialog}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardHeader>
         <CardContent>
