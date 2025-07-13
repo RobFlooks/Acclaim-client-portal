@@ -1108,6 +1108,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Advanced reporting endpoints
+  app.get("/api/admin/reports/cross-organization", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const performance = await storage.getCrossOrganizationPerformance();
+      res.json(performance);
+    } catch (error) {
+      console.error("Error fetching cross-organization performance:", error);
+      res.status(500).json({ message: "Failed to fetch cross-organization performance" });
+    }
+  });
+
+  app.get("/api/admin/reports/user-activity", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+      const report = await storage.getUserActivityReport(
+        startDate ? new Date(startDate as string) : undefined,
+        endDate ? new Date(endDate as string) : undefined
+      );
+      res.json(report);
+    } catch (error) {
+      console.error("Error fetching user activity report:", error);
+      res.status(500).json({ message: "Failed to fetch user activity report" });
+    }
+  });
+
+  app.get("/api/admin/reports/system-health", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const metrics = await storage.getSystemHealthMetrics();
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching system health metrics:", error);
+      res.status(500).json({ message: "Failed to fetch system health metrics" });
+    }
+  });
+
+  app.post("/api/admin/reports/custom", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const reportConfig = req.body;
+      const data = await storage.getCustomReportData(reportConfig);
+      res.json(data);
+    } catch (error) {
+      console.error("Error generating custom report:", error);
+      res.status(500).json({ message: "Failed to generate custom report" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
