@@ -573,24 +573,6 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
           </div>
 
           <div class="section">
-            <h2>Messages</h2>
-            ${messages && messages.length > 0 ? `
-              <div>
-                ${messages.map((message: any) => `
-                  <div class="message-content">
-                    <div class="message-meta">
-                      <strong>From:</strong> ${message.senderName || 'Unknown'} | 
-                      <strong>Date:</strong> ${formatDate(message.createdAt)} | 
-                      <strong>Subject:</strong> ${message.subject || 'No subject'}
-                    </div>
-                    <div>${message.content || 'No content'}</div>
-                  </div>
-                `).join('')}
-              </div>
-            ` : '<div class="no-data">No messages recorded</div>'}
-          </div>
-
-          <div class="section">
             <h2>Case Timeline</h2>
             ${activities && activities.length > 0 ? `
               <table>
@@ -638,6 +620,24 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                 </tbody>
               </table>
             ` : '<div class="no-data">No documents uploaded</div>'}
+          </div>
+
+          <div class="section">
+            <h2>Messages</h2>
+            ${messages && messages.length > 0 ? `
+              <div>
+                ${messages.map((message: any) => `
+                  <div class="message-content">
+                    <div class="message-meta">
+                      <strong>From:</strong> ${message.senderName || 'Unknown'} | 
+                      <strong>Date:</strong> ${formatDate(message.createdAt)} | 
+                      <strong>Subject:</strong> ${message.subject || 'No subject'}
+                    </div>
+                    <div>${message.content || 'No content'}</div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : '<div class="no-data">No messages recorded</div>'}
           </div>
           
           <div class="section">
