@@ -303,17 +303,15 @@ export default function CaseSummaryReport() {
       printWindow.document.write(htmlContent);
       printWindow.document.close();
       
-      // Wait for content to load then print
+      // Don't auto-print, just open for viewing
       printWindow.onload = () => {
-        setTimeout(() => {
-          printWindow.print();
-          printWindow.close();
-        }, 250);
+        // Focus the new window
+        printWindow.focus();
       };
       
       toast({
-        title: "PDF Print Dialog Opened",
-        description: "Use your browser's print dialog to save as PDF.",
+        title: "Report Opened",
+        description: "The report has been opened in a new tab for viewing. You can print it from there if needed.",
       });
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -454,8 +452,8 @@ export default function CaseSummaryReport() {
             Export to Excel
           </Button>
           <Button onClick={handleDownloadPDF} variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Download PDF
+            <FileText className="h-4 w-4 mr-2" />
+            View PDF Report
           </Button>
 
         </div>
