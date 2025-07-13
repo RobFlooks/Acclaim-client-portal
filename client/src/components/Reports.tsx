@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, Download, FileText, TrendingUp, PieChart, Calendar } from "lucide-react";
+import { BarChart3, Download, FileText, TrendingUp, PieChart, CreditCard, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 
@@ -71,6 +71,9 @@ export default function Reports() {
     } else if (reportType === "Monthly Statement") {
       // Navigate to monthly statement report page
       window.location.href = '/monthly-statement-report';
+    } else if (reportType === "Payment Performance") {
+      // Navigate to payment performance report page
+      window.location.href = '/payment-performance-report';
     } else {
       toast({
         title: "Report View",
@@ -289,18 +292,18 @@ export default function Reports() {
             <div className="p-4 border rounded-lg">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <h4 className="font-medium">Case Activity Report</h4>
-                  <p className="text-sm text-gray-600">Timeline of all case activities</p>
+                  <h4 className="font-medium">Payment Performance Report</h4>
+                  <p className="text-sm text-gray-600">Analysis of payment patterns and trends</p>
                 </div>
-                <Calendar className="h-8 w-8 text-green-600" />
+                <CreditCard className="h-8 w-8 text-green-600" />
               </div>
               <Button 
-                onClick={() => handleDownloadReport("Case Activity")}
+                onClick={() => handleViewReport("Payment Performance")}
                 variant="outline"
                 className="w-full border-green-500 text-green-600 hover:bg-green-50"
               >
-                <Download className="h-4 w-4 mr-2" />
-                Download PDF
+                <FileText className="h-4 w-4 mr-2" />
+                View Report
               </Button>
             </div>
 

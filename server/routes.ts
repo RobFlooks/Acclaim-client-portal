@@ -596,6 +596,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Payment routes
+  app.get('/api/payments', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      let payments: any[] = [];
+      
+      if (user.isAdmin) {
+        // Admin can access all payments across all organizations
+        const allCases = await storage.getAllCases();
+        for (const case_ of allCases) {
+          const casePayments = await storage.getPaymentsForCase(case_.id);
+          payments.push(...casePayments);
+        }
+      } else {
+        // Regular users can only access payments from their organization's cases
+        if (!user.organisationId) {
+          return res.status(404).json({ message: "User organisation not found" });
+        }
+        
+        const cases = await storage.getCasesForOrganisation(user.organisationId);
+        for (const case_ of cases) {
+          const casePayments = await storage.getPaymentsForCase(case_.id);
+          payments.push(...casePayments);
+        }
+      }
+
+      res.json(payments);
+    } catch (error) {
+      console.error("Error fetching payments:", error);
+      res.status(500).json({ message: "Failed to fetch payments" });
+    }
+  });
+
   app.get('/api/cases/:id/payments', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
