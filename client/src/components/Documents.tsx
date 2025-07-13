@@ -76,7 +76,7 @@ export default function Documents() {
       doc.fileName.toLowerCase().includes(searchLower) ||
       doc.fileType?.toLowerCase().includes(searchLower) ||
       (caseDetails && caseDetails.accountNumber.toLowerCase().includes(searchLower)) ||
-      (caseDetails && caseDetails.debtorName.toLowerCase().includes(searchLower))
+      (caseDetails && caseDetails.caseName.toLowerCase().includes(searchLower))
     );
   }) || [];
 
@@ -270,7 +270,7 @@ export default function Documents() {
                       <SelectContent>
                         {cases?.map((caseItem: any) => (
                           <SelectItem key={caseItem.id} value={caseItem.id.toString()}>
-                            {caseItem.accountNumber} - {caseItem.debtorName}
+                            {caseItem.accountNumber} - {caseItem.caseName}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -412,7 +412,7 @@ export default function Documents() {
                     <Badge variant="outline" className="text-acclaim-teal border-acclaim-teal">
                       {caseId === 'general' ? 'General Documents' : (() => {
                         const caseDetails = getCaseDetails(parseInt(caseId));
-                        return caseDetails ? `${caseDetails.accountNumber} - ${caseDetails.debtorName}` : 'Case Documents';
+                        return caseDetails ? `${caseDetails.accountNumber} - ${caseDetails.caseName}` : 'Case Documents';
                       })()}
                     </Badge>
                     <span className="text-sm text-gray-500">({caseDocuments.length} files)</span>
@@ -454,7 +454,7 @@ export default function Documents() {
                                       {caseDetails.accountNumber}
                                     </button>
                                     <span className="text-xs text-gray-400">•</span>
-                                    <span className="text-xs text-gray-500">{caseDetails.debtorName}</span>
+                                    <span className="text-xs text-gray-500">{caseDetails.caseName}</span>
                                   </div>
                                 );
                               }

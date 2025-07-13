@@ -178,7 +178,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const caseData = {
         accountNumber,
-        debtorName: parsedCaseData.debtorName,
+        caseName: parsedCaseData.caseName,
         debtorEmail: parsedCaseData.debtorEmail,
         debtorPhone: parsedCaseData.debtorPhone,
         debtorAddress: parsedCaseData.debtorAddress,

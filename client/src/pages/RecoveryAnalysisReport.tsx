@@ -209,7 +209,7 @@ export default function RecoveryAnalysisReport() {
 
         return {
           'Account Number': caseItem.accountNumber,
-          'Debtor Name': caseItem.debtorName,
+          'Case Name': caseItem.caseName,
           'Status': caseItem.status?.toLowerCase() === 'closed' ? 'Closed' : caseItem.status?.charAt(0).toUpperCase() + caseItem.status?.slice(1),
           'Original Amount': originalAmount,
           'Costs Added': costsAdded,
@@ -431,7 +431,7 @@ export default function RecoveryAnalysisReport() {
                   return `
                     <tr>
                       <td>${caseItem.accountNumber || ''}</td>
-                      <td>${caseItem.debtorName || ''}</td>
+                      <td>${caseItem.caseName || ''}</td>
                       <td>${caseItem.status?.toLowerCase() === 'closed' ? 'Closed' : (caseItem.status || '').charAt(0).toUpperCase() + (caseItem.status || '').slice(1)}</td>
                       <td class="currency">${formatCurrency(originalAmount)}</td>
                       <td class="currency">${formatCurrency(totalDebt)}</td>
@@ -678,7 +678,7 @@ export default function RecoveryAnalysisReport() {
                         {caseItem.accountNumber}
                       </td>
                       <td className="border border-gray-200 px-4 py-3 text-sm text-gray-900">
-                        {caseItem.debtorName}
+                        {caseItem.caseName}
                       </td>
                       <td className="border border-gray-200 px-4 py-3 text-sm">
                         {getStatusBadge(caseItem.status)}

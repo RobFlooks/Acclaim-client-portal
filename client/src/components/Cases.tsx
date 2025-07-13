@@ -69,7 +69,7 @@ export default function Cases() {
   const filteredCases = cases?.filter((case_: any) => {
     const searchLower = searchTerm.toLowerCase();
     return (
-      case_.debtorName.toLowerCase().includes(searchLower) ||
+      case_.caseName.toLowerCase().includes(searchLower) ||
       case_.accountNumber.toLowerCase().includes(searchLower) ||
       case_.debtorEmail?.toLowerCase().includes(searchLower)
     );
@@ -175,7 +175,7 @@ export default function Cases() {
                       {getDebtorIcon(case_.debtorType)}
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">{case_.debtorName}</p>
+                      <p className="font-medium text-gray-900">{case_.caseName}</p>
                       <p className="text-sm text-gray-600">Account: {case_.accountNumber}</p>
                       {user?.isAdmin && case_.organisationName && (
                         <p className="text-sm text-blue-600 font-medium">
@@ -218,7 +218,7 @@ export default function Cases() {
                     </DialogTrigger>
                     <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto w-[95vw]">
                       <DialogHeader>
-                        <DialogTitle>Case Details - {case_.debtorName}</DialogTitle>
+                        <DialogTitle>Case Details - {case_.caseName}</DialogTitle>
                       </DialogHeader>
                       <CaseDetail case={case_} />
                     </DialogContent>

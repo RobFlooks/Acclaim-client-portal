@@ -286,7 +286,7 @@ export default function Dashboard() {
                           {getDebtorIcon(case_.debtorType)}
                         </div>
                         <div className="ml-4">
-                          <p className="font-medium text-gray-900">{case_.debtorName}</p>
+                          <p className="font-medium text-gray-900">{case_.caseName}</p>
                           <p className="text-sm text-gray-600">Account: {case_.accountNumber}</p>
                         </div>
                       </div>

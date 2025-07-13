@@ -31,7 +31,7 @@ const submitCaseSchema = z.object({
   debtorType: z.enum(["individual", "organisation"], {
     required_error: "Please select debtor type",
   }),
-  debtorName: z.string().min(1, "Debtor name is required"),
+  caseName: z.string().min(1, "Case name is required"),
   
   // Individual/Sole Trader specific fields
   individualType: z.enum(["individual", "business"]).optional(),
@@ -127,7 +127,7 @@ export default function SubmitCase() {
       clientPhone: user?.phone || "",
 
       debtorType: "",
-      debtorName: "",
+      caseName: "",
       individualType: "",
       tradingName: "",
       organisationName: "",
@@ -171,22 +171,22 @@ export default function SubmitCase() {
         paymentTerms = data.paymentTermsOther || "";
       }
 
-      // Build debtor name based on type
-      let debtorName = "";
+      // Build case name based on type
+      let caseName = "";
       if (data.debtorType === "organisation") {
-        debtorName = data.organisationName;
+        caseName = data.organisationName;
       } else {
         // Individual/Sole Trader
         if (data.individualType === "business") {
-          debtorName = data.tradingName || "";
+          caseName = data.tradingName || "";
         } else {
           // Individual - use principal name
-          debtorName = `${data.principalSalutation || ""} ${data.principalFirstName || ""} ${data.principalLastName || ""}`.trim();
+          caseName = `${data.principalSalutation || ""} ${data.principalFirstName || ""} ${data.principalLastName || ""}`.trim();
         }
       }
 
       const caseData = {
-        debtorName,
+        caseName,
         debtorEmail: data.mainEmail,
         debtorPhone: data.mainPhone,
         debtorAddress,

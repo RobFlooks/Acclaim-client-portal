@@ -474,7 +474,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
           <div class="header">
             <h1>Case Details Report</h1>
             <p><strong>Account Number:</strong> ${caseData.accountNumber}</p>
-            <p><strong>Debtor:</strong> ${caseData.debtorName}</p>
+            <p><strong>Case:</strong> ${caseData.caseName}</p>
             <p>Generated on: ${currentDate}</p>
           </div>
           
@@ -671,7 +671,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-xl">{caseData.debtorName}</CardTitle>
+            <CardTitle className="text-xl">{caseData.caseName}</CardTitle>
             <div className="flex items-center gap-2">
               <Button 
                 onClick={handlePrintCase}

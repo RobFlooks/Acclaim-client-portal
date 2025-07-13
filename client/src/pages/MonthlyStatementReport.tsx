@@ -123,7 +123,7 @@ export default function MonthlyStatementReport() {
         acc.push(...monthlyPayments.map((payment: any) => ({
           ...payment,
           accountNumber: case_.accountNumber,
-          debtorName: case_.debtorName
+          caseName: case_.caseName
         })));
       }
       return acc;
@@ -167,7 +167,7 @@ export default function MonthlyStatementReport() {
     monthlyData.paymentsInMonth.forEach((payment: any) => {
       summaryData.push([
         payment.accountNumber,
-        payment.debtorName,
+        payment.caseName,
         formatCurrency(payment.amount),
         formatDate(payment.createdAt),
         payment.method || 'N/A',
@@ -202,7 +202,7 @@ export default function MonthlyStatementReport() {
       const paymentsTableRows = monthlyData.paymentsInMonth.map((payment: any) => `
         <tr>
           <td>${payment.accountNumber}</td>
-          <td>${payment.debtorName}</td>
+          <td>${payment.caseName}</td>
           <td class="currency">${formatCurrency(payment.amount)}</td>
           <td>${formatDate(payment.createdAt)}</td>
           <td>${payment.method || 'N/A'}</td>
@@ -437,7 +437,7 @@ export default function MonthlyStatementReport() {
                         {payment.accountNumber}
                       </td>
                       <td className="border border-gray-200 px-4 py-2">
-                        {payment.debtorName}
+                        {payment.caseName}
                       </td>
                       <td className="border border-gray-200 px-4 py-2 font-medium text-green-600">
                         {formatCurrency(payment.amount)}

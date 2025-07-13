@@ -274,7 +274,7 @@ export default function CaseSummaryReport() {
                   return `
                     <tr>
                       <td>${caseItem.accountNumber || ''}</td>
-                      <td>${caseItem.debtorName || ''}</td>
+                      <td>${caseItem.caseName || ''}</td>
                       <td><span class="status-${caseItem.status}">${caseItem.status === 'Closed' ? 'Closed' : (caseItem.status || '').charAt(0).toUpperCase() + (caseItem.status || '').slice(1)}</span></td>
                       <td class="currency">${formatCurrency(caseItem.originalAmount || 0)}</td>
                       <td class="currency">${formatCurrency(caseItem.costsAdded || 0)}</td>
@@ -337,7 +337,7 @@ export default function CaseSummaryReport() {
       // Prepare data for Excel export
       const excelData = filteredCases.map((caseItem: any) => ({
         'Account Number': caseItem.accountNumber,
-        'Debtor Name': caseItem.debtorName,
+        'Case Name': caseItem.caseName,
         'Status': caseItem.status === 'Closed' ? 'Closed' : caseItem.status.charAt(0).toUpperCase() + caseItem.status.slice(1),
         'Stage': caseItem.stage.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
         'Original Amount': parseFloat(caseItem.originalAmount),
@@ -608,7 +608,7 @@ export default function CaseSummaryReport() {
                       {caseItem.accountNumber}
                     </td>
                     <td className="border border-gray-200 px-4 py-3 text-sm text-gray-900">
-                      {caseItem.debtorName}
+                      {caseItem.caseName}
                     </td>
                     <td className="border border-gray-200 px-4 py-3 text-sm">
                       {getStatusBadge(caseItem.status, caseItem.stage)}

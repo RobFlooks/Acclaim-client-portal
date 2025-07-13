@@ -442,9 +442,9 @@ export default function Messages() {
                     </button>
                     {(() => {
                       const caseData = cases?.find((c: any) => c.id === viewingMessage.caseId);
-                      return caseData?.debtorName ? (
+                      return caseData?.caseName ? (
                         <span className="text-gray-500 ml-2">
-                          - {caseData.debtorName}
+                          - {caseData.caseName}
                         </span>
                       ) : null;
                     })()}
@@ -584,7 +584,7 @@ export default function Messages() {
       <Dialog open={caseDialogOpen} onOpenChange={setCaseDialogOpen}>
         <DialogContent className="max-w-7xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Case Details - {selectedCase?.debtorName}</DialogTitle>
+            <DialogTitle>Case Details - {selectedCase?.caseName}</DialogTitle>
           </DialogHeader>
           {selectedCase && (
             <CaseDetail case={selectedCase} />

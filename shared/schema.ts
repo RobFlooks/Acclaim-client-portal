@@ -58,7 +58,7 @@ export const organisations = pgTable("organisations", {
 export const cases = pgTable("cases", {
   id: serial("id").primaryKey(),
   accountNumber: varchar("account_number", { length: 50 }).notNull().unique(),
-  debtorName: varchar("debtor_name", { length: 255 }).notNull(),
+  caseName: varchar("case_name", { length: 255 }).notNull(),
   debtorEmail: varchar("debtor_email"),
   debtorPhone: varchar("debtor_phone"),
   debtorAddress: text("debtor_address"),

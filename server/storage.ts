@@ -1138,7 +1138,7 @@ export class DatabaseStorage implements IStorage {
         query = db.select({
           caseId: cases.id,
           accountNumber: cases.accountNumber,
-          debtorName: cases.debtorName,
+          caseName: cases.caseName,
           originalAmount: cases.originalAmount,
           outstandingAmount: cases.outstandingAmount,
           status: cases.status,
