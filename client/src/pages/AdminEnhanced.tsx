@@ -66,14 +66,35 @@ function CaseManagementTab() {
   const queryClient = useQueryClient();
   
   // Fetch all cases (including archived ones for admin)
-  const { data: cases = [], isLoading } = useQuery({
+  const { data: cases = [], isLoading, error } = useQuery({
     queryKey: ['/api/admin/cases/all'],
     queryFn: async () => {
-      const response = await apiRequest('/api/admin/cases/all');
-      return response;
+      console.log('Fetching admin cases...');
+      try {
+        const response = await apiRequest('/api/admin/cases/all');
+        console.log('Admin cases response:', response);
+        return response;
+      } catch (error) {
+        console.error('Error fetching admin cases:', error);
+        throw error;
+      }
     },
     retry: false,
   });
+
+  // Handle unauthorized errors
+  useEffect(() => {
+    if (error && isUnauthorizedError(error)) {
+      toast({
+        title: "Unauthorized",
+        description: "You are logged out. Logging in again...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+    }
+  }, [error, toast]);
 
   // Archive case mutation
   const archiveCaseMutation = useMutation({
@@ -178,8 +199,20 @@ function CaseManagementTab() {
     },
   });
 
+  console.log('CaseManagementTab render - isLoading:', isLoading, 'error:', error, 'cases:', cases);
+
   if (isLoading) {
     return <div>Loading cases...</div>;
+  }
+
+  if (error) {
+    console.error('Error in CaseManagementTab:', error);
+    return (
+      <div className="text-center py-8 text-red-600">
+        <p>Error loading cases: {error.message}</p>
+        <p>Please try refreshing the page or contact support.</p>
+      </div>
+    );
   }
 
   return (

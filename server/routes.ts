@@ -30,12 +30,16 @@ const upload = multer({
 const isAdmin: RequestHandler = async (req, res, next) => {
   try {
     const userId = (req as any).user?.claims?.sub;
+    console.log("Admin middleware - userId:", userId);
     if (!userId) {
+      console.log("Admin middleware - no userId, returning 401");
       return res.status(401).json({ message: "Unauthorized" });
     }
 
     const user = await storage.getUser(userId);
+    console.log("Admin middleware - user found:", !!user, "isAdmin:", user?.isAdmin);
     if (!user || !user.isAdmin) {
+      console.log("Admin middleware - user not admin, returning 403");
       return res.status(403).json({ message: "Admin access required" });
     }
 
@@ -1206,7 +1210,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin case management routes
   app.get("/api/admin/cases/all", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
+      console.log("Admin cases endpoint reached, fetching cases...");
       const cases = await storage.getAllCasesIncludingArchived();
+      console.log("Cases fetched successfully, count:", cases.length);
       res.json(cases);
     } catch (error) {
       console.error("Error fetching all cases:", error);
