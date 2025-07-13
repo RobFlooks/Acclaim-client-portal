@@ -31,7 +31,7 @@ import {
   type InsertSystemMetric,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, sql, or } from "drizzle-orm";
+import { eq, and, desc, sql, or, isNull } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
 
@@ -267,12 +267,12 @@ export class DatabaseStorage implements IStorage {
   }> {
     const [userCount, caseCount, activeCaseCount] = await Promise.all([
       db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.organisationId, id.toString())),
-      db.select({ count: sql<number>`count(*)` }).from(cases).where(eq(cases.organisationId, id)),
-      db.select({ count: sql<number>`count(*)` }).from(cases).where(and(eq(cases.organisationId, id), or(eq(cases.status, "new"), eq(cases.status, "in_progress"))))
+      db.select({ count: sql<number>`count(*)` }).from(cases).where(and(eq(cases.organisationId, id), eq(cases.isArchived, false))),
+      db.select({ count: sql<number>`count(*)` }).from(cases).where(and(eq(cases.organisationId, id), eq(cases.isArchived, false), or(eq(cases.status, "new"), eq(cases.status, "in_progress"))))
     ]);
 
-    // Calculate financial stats
-    const orgCases = await db.select().from(cases).where(eq(cases.organisationId, id));
+    // Calculate financial stats - exclude archived cases
+    const orgCases = await db.select().from(cases).where(and(eq(cases.organisationId, id), eq(cases.isArchived, false)));
     let totalOutstanding = 0;
     let totalRecovered = 0;
 
@@ -604,7 +604,14 @@ export class DatabaseStorage implements IStorage {
       })
       .from(messages)
       .leftJoin(users, eq(messages.senderId, users.id))
-      .where(or(eq(messages.senderId, userId), eq(messages.recipientId, userId)))
+      .leftJoin(cases, eq(messages.caseId, cases.id))
+      .where(and(
+        or(eq(messages.senderId, userId), eq(messages.recipientId, userId)),
+        or(
+          isNull(messages.caseId), // General messages not tied to a case
+          eq(cases.isArchived, false) // Messages for non-archived cases only
+        )
+      ))
       .orderBy(desc(messages.createdAt));
   }
 
@@ -652,18 +659,31 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getDocumentsForCase(caseId: number): Promise<Document[]> {
+    // Only return documents for non-archived cases
     return await db
       .select()
       .from(documents)
-      .where(eq(documents.caseId, caseId))
+      .leftJoin(cases, eq(documents.caseId, cases.id))
+      .where(and(
+        eq(documents.caseId, caseId),
+        eq(cases.isArchived, false)
+      ))
       .orderBy(desc(documents.createdAt));
   }
 
   async getDocumentsForOrganisation(organisationId: number): Promise<Document[]> {
+    // Only return documents for non-archived cases
     return await db
       .select()
       .from(documents)
-      .where(eq(documents.organisationId, organisationId))
+      .leftJoin(cases, eq(documents.caseId, cases.id))
+      .where(and(
+        eq(documents.organisationId, organisationId),
+        or(
+          isNull(documents.caseId), // General org documents not tied to a case
+          eq(cases.isArchived, false) // Documents for non-archived cases only
+        )
+      ))
       .orderBy(desc(documents.createdAt));
   }
 
@@ -685,8 +705,13 @@ export class DatabaseStorage implements IStorage {
 
   // Payment operations
   async getPaymentsForCase(caseId: number): Promise<Payment[]> {
+    // Only return payments for non-archived cases
     return await db.select().from(payments)
-      .where(eq(payments.caseId, caseId))
+      .leftJoin(cases, eq(payments.caseId, cases.id))
+      .where(and(
+        eq(payments.caseId, caseId),
+        eq(cases.isArchived, false)
+      ))
       .orderBy(desc(payments.paymentDate));
   }
 
@@ -724,9 +749,9 @@ export class DatabaseStorage implements IStorage {
         totalOutstanding: sql<string>`COALESCE(SUM(CASE WHEN LOWER(status) != 'closed' THEN outstanding_amount ELSE 0 END), 0)`,
       })
       .from(cases)
-      .where(eq(cases.organisationId, organisationId));
+      .where(and(eq(cases.organisationId, organisationId), eq(cases.isArchived, false)));
 
-    // Calculate total recovery from payments for active cases only
+    // Calculate total recovery from payments for active cases only (excluding archived cases)
     const [recoveryStats] = await db
       .select({
         totalRecovery: sql<string>`COALESCE(SUM(${payments.amount}), 0)`,
@@ -735,6 +760,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(cases, eq(payments.caseId, cases.id))
       .where(and(
         eq(cases.organisationId, organisationId),
+        eq(cases.isArchived, false),
         sql`LOWER(${cases.status}) != 'closed'`
       ));
 
@@ -752,23 +778,27 @@ export class DatabaseStorage implements IStorage {
     totalOutstanding: string;
     totalRecovery: string;
   }> {
-    // Admin only - get stats across all organizations
+    // Admin only - get stats across all organizations (excluding archived cases)
     const [stats] = await db
       .select({
         activeCases: sql<number>`COUNT(CASE WHEN LOWER(status) != 'closed' THEN 1 END)`,
         closedCases: sql<number>`COUNT(CASE WHEN LOWER(status) = 'closed' THEN 1 END)`,
         totalOutstanding: sql<string>`COALESCE(SUM(CASE WHEN LOWER(status) != 'closed' THEN outstanding_amount ELSE 0 END), 0)`,
       })
-      .from(cases);
+      .from(cases)
+      .where(eq(cases.isArchived, false));
 
-    // Calculate total recovery from payments for active cases across all organizations
+    // Calculate total recovery from payments for active cases across all organizations (excluding archived cases)
     const [recoveryStats] = await db
       .select({
         totalRecovery: sql<string>`COALESCE(SUM(${payments.amount}), 0)`,
       })
       .from(payments)
       .leftJoin(cases, eq(payments.caseId, cases.id))
-      .where(sql`LOWER(${cases.status}) != 'closed'`);
+      .where(and(
+        eq(cases.isArchived, false),
+        sql`LOWER(${cases.status}) != 'closed'`
+      ));
 
     return {
       activeCases: stats.activeCases,
@@ -1040,13 +1070,13 @@ export class DatabaseStorage implements IStorage {
   }> {
     const [totalUsers, totalCases, totalOrganizations] = await Promise.all([
       db.select({ count: sql<number>`count(*)` }).from(users),
-      db.select({ count: sql<number>`count(*)` }).from(cases),
+      db.select({ count: sql<number>`count(*)` }).from(cases).where(eq(cases.isArchived, false)),
       db.select({ count: sql<number>`count(*)` }).from(organisations),
     ]);
 
     const [activeCases, recentActivity, failedLogins] = await Promise.all([
       db.select({ count: sql<number>`count(*)` }).from(cases)
-        .where(or(eq(cases.status, "new"), eq(cases.status, "in_progress"))),
+        .where(and(eq(cases.isArchived, false), or(eq(cases.status, "new"), eq(cases.status, "in_progress")))),
       db.select({ count: sql<number>`count(*)` }).from(userActivityLogs)
         .where(sql`timestamp > NOW() - INTERVAL '24 hours'`),
       db.select({ count: sql<number>`count(*)` }).from(loginAttempts)
@@ -1105,7 +1135,7 @@ export class DatabaseStorage implements IStorage {
         userCount: sql<number>`COUNT(DISTINCT ${users.id})`,
       })
       .from(organisations)
-      .leftJoin(cases, eq(cases.organisationId, organisations.id))
+      .leftJoin(cases, and(eq(cases.organisationId, organisations.id), eq(cases.isArchived, false)))
       .leftJoin(payments, eq(payments.caseId, cases.id))
       .leftJoin(users, eq(users.organisationId, organisations.id))
       .groupBy(organisations.id, organisations.name)
@@ -1153,37 +1183,49 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(organisations, eq(users.organisationId, organisations.id))
       .orderBy(users.email);
 
-    // Get case counts for each user
+    // Get case counts for each user (excluding archived cases)
     const caseCounts = await db
       .select({
         userId: cases.createdBy,
         casesCreated: sql<number>`COUNT(*)`,
       })
       .from(cases)
-      .where(cases.createdBy !== null)
+      .where(and(cases.createdBy !== null, eq(cases.isArchived, false)))
       .groupBy(cases.createdBy);
 
     const caseMap = new Map(caseCounts.map(c => [c.userId, c.casesCreated]));
 
-    // Get message counts for each user
+    // Get message counts for each user (excluding messages from archived cases)
     const messageCounts = await db
       .select({
         userId: messages.senderId,
         messageseSent: sql<number>`COUNT(*)`,
       })
       .from(messages)
+      .leftJoin(cases, eq(messages.caseId, cases.id))
+      .where(or(
+        isNull(messages.caseId), // General messages not tied to a case
+        eq(cases.isArchived, false) // Messages for non-archived cases only
+      ))
       .groupBy(messages.senderId);
 
     const messageMap = new Map(messageCounts.map(m => [m.userId, m.messageseSent]));
 
-    // Get document counts for each user
+    // Get document counts for each user (excluding documents from archived cases)
     const documentCounts = await db
       .select({
         userId: documents.uploadedBy,
         documentsUploaded: sql<number>`COUNT(*)`,
       })
       .from(documents)
-      .where(documents.uploadedBy !== null)
+      .leftJoin(cases, eq(documents.caseId, cases.id))
+      .where(and(
+        documents.uploadedBy !== null,
+        or(
+          isNull(documents.caseId), // General documents not tied to a case
+          eq(cases.isArchived, false) // Documents for non-archived cases only
+        )
+      ))
       .groupBy(documents.uploadedBy);
 
     const documentMap = new Map(documentCounts.map(d => [d.userId, d.documentsUploaded]));
@@ -1233,7 +1275,10 @@ export class DatabaseStorage implements IStorage {
         metric: 'Cases Created (24h)',
         value: (await db.select({ count: sql<number>`COUNT(*)` })
           .from(cases)
-          .where(sql`${cases.createdAt} > NOW() - INTERVAL '24 hours'`))[0].count,
+          .where(and(
+            eq(cases.isArchived, false),
+            sql`${cases.createdAt} > NOW() - INTERVAL '24 hours'`
+          )))[0].count,
         status: 'healthy',
         timestamp: new Date(),
       },
