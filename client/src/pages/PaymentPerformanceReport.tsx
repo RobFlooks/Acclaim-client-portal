@@ -85,7 +85,7 @@ export default function PaymentPerformanceReport() {
 
     // Payment method breakdown
     const methodBreakdown = payments.reduce((acc: any, payment: any) => {
-      const method = payment.method || 'Unknown';
+      const method = payment.paymentMethod || 'Not Specified';
       acc[method] = (acc[method] || 0) + parseFloat(payment.amount);
       return acc;
     }, {});
@@ -101,18 +101,7 @@ export default function PaymentPerformanceReport() {
       return acc;
     }, {});
 
-    // Average days to payment (from case creation to first payment)
-    const avgDaysToPayment = cases.reduce((acc: any, case_: any) => {
-      const casePayments = payments.filter((p: any) => p.caseId === case_.id);
-      if (casePayments.length > 0) {
-        const caseCreated = new Date(case_.createdAt);
-        const firstPayment = new Date(Math.min(...casePayments.map((p: any) => new Date(p.createdAt).getTime())));
-        const daysDiff = Math.ceil((firstPayment.getTime() - caseCreated.getTime()) / (1000 * 60 * 60 * 24));
-        acc.totalDays += daysDiff;
-        acc.count += 1;
-      }
-      return acc;
-    }, { totalDays: 0, count: 0 });
+
 
     return {
       totalPayments,
@@ -124,7 +113,7 @@ export default function PaymentPerformanceReport() {
       last90DaysTotal: last90Days.reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0),
       methodBreakdown,
       monthlyTrends,
-      avgDaysToPayment: avgDaysToPayment.count > 0 ? Math.round(avgDaysToPayment.totalDays / avgDaysToPayment.count) : 0,
+
     };
   };
 
@@ -149,7 +138,7 @@ export default function PaymentPerformanceReport() {
           'Debtor Name': case_?.debtorName || 'N/A',
           'Payment Amount': parseFloat(payment.amount),
           'Payment Date': formatDate(payment.createdAt),
-          'Payment Method': payment.method || 'N/A',
+          'Payment Method': payment.paymentMethod || 'Not Specified',
           'Reference': payment.reference || 'N/A',
           'Case Status': case_?.status || 'N/A',
           'Original Amount': case_ ? parseFloat(case_.originalAmount) : 0,
@@ -167,7 +156,7 @@ export default function PaymentPerformanceReport() {
         ['Last 30 Days Count', metrics?.last30DaysCount || 0],
         ['Last 60 Days Total', formatCurrency(metrics?.last60DaysTotal || 0)],
         ['Last 90 Days Total', formatCurrency(metrics?.last90DaysTotal || 0)],
-        ['Average Days to Payment', metrics?.avgDaysToPayment || 0],
+
       ];
 
       // Method breakdown sheet
@@ -449,7 +438,7 @@ export default function PaymentPerformanceReport() {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm text-gray-600">Total Payments</CardTitle>
@@ -492,19 +481,7 @@ export default function PaymentPerformanceReport() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-gray-600">Avg Days to Payment</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center space-x-2">
-              <Clock className="h-8 w-8 text-orange-600" />
-              <span className="text-3xl font-bold text-orange-600">
-                {metrics?.avgDaysToPayment || 0} days
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+
       </div>
 
       {/* Recent Trends */}

@@ -122,27 +122,12 @@ export default function AdminPaymentPerformanceReport() {
     const totalAmount = filteredPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
     const averageAmount = filteredPayments.length > 0 ? totalAmount / filteredPayments.length : 0;
 
-    // Calculate average days to payment
-    const paymentsWithDays = filteredPayments.map(payment => {
-      const case_ = cases.find(c => c.id === payment.caseId);
-      if (!case_) return null;
-      
-      const caseCreated = new Date(case_.createdAt);
-      const paymentDate = new Date(payment.paymentDate);
-      const daysToPayment = Math.ceil((paymentDate.getTime() - caseCreated.getTime()) / (1000 * 60 * 60 * 24));
-      
-      return daysToPayment;
-    }).filter(d => d !== null);
 
-    const averageDaysToPayment = paymentsWithDays.length > 0 
-      ? paymentsWithDays.reduce((sum, days) => sum + days, 0) / paymentsWithDays.length 
-      : 0;
 
     return {
       totalPayments: filteredPayments.length,
       totalAmount,
       averageAmount,
-      averageDaysToPayment: Math.round(averageDaysToPayment),
       payments30Days: payments30Days.length,
       payments60Days: payments60Days.length,
       payments90Days: payments90Days.length,
@@ -184,7 +169,7 @@ export default function AdminPaymentPerformanceReport() {
     const breakdown = {};
     
     filteredPayments.forEach(payment => {
-      const method = payment.paymentMethod || 'Unknown';
+      const method = payment.paymentMethod || 'Not Specified';
       if (!breakdown[method]) {
         breakdown[method] = {
           count: 0,
@@ -259,7 +244,7 @@ export default function AdminPaymentPerformanceReport() {
       payment.caseId,
       parseFloat(payment.amount),
       formatDate(payment.paymentDate),
-      payment.paymentMethod || 'Unknown',
+      payment.paymentMethod || 'Not Specified',
       payment.reference || ''
     ]);
     const detailData = [detailHeaders, ...detailRows];
@@ -336,25 +321,21 @@ export default function AdminPaymentPerformanceReport() {
                 <th>Period</th>
                 <th>Payment Count</th>
                 <th>Total Amount</th>
-                <th>Average Days to Payment</th>
               </tr>
               <tr>
                 <td>Last 30 Days</td>
                 <td>${metrics?.payments30Days || 0}</td>
                 <td class="text-right">${formatCurrency(metrics?.amount30Days || 0)}</td>
-                <td class="text-right">${metrics?.averageDaysToPayment || 0} days</td>
               </tr>
               <tr>
                 <td>Last 60 Days</td>
                 <td>${metrics?.payments60Days || 0}</td>
                 <td class="text-right">${formatCurrency(metrics?.amount60Days || 0)}</td>
-                <td class="text-right">-</td>
               </tr>
               <tr>
                 <td>Last 90 Days</td>
                 <td>${metrics?.payments90Days || 0}</td>
                 <td class="text-right">${formatCurrency(metrics?.amount90Days || 0)}</td>
-                <td class="text-right">-</td>
               </tr>
             </table>
           </div>
@@ -489,7 +470,7 @@ export default function AdminPaymentPerformanceReport() {
       </Card>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Payments</CardTitle>
@@ -523,16 +504,7 @@ export default function AdminPaymentPerformanceReport() {
           </CardContent>
         </Card>
         
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Days to Payment</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics?.averageDaysToPayment || 0}</div>
-            <p className="text-xs text-muted-foreground">Days</p>
-          </CardContent>
-        </Card>
+
       </div>
 
       {/* Recent Activity */}
