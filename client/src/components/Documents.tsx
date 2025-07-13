@@ -12,12 +12,15 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
+import CaseDetail from "./CaseDetail";
 
 export default function Documents() {
   const [searchTerm, setSearchTerm] = useState("");
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedCaseId, setSelectedCaseId] = useState<string>("");
+  const [selectedCase, setSelectedCase] = useState<any>(null);
+  const [caseDetailsOpen, setCaseDetailsOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -176,6 +179,18 @@ export default function Documents() {
     setUploadDialogOpen(false);
     setSelectedFile(null);
     setSelectedCaseId("");
+  };
+
+  const handleCaseClick = (caseId: number) => {
+    const caseData = cases?.find((c: any) => c.id === caseId);
+    if (caseData) {
+      setSelectedCase(caseData);
+      setCaseDetailsOpen(true);
+    }
+  };
+
+  const getCaseDetails = (caseId: number) => {
+    return cases?.find((c: any) => c.id === caseId);
   };
 
   const formatDate = (dateString: string) => {
@@ -391,7 +406,10 @@ export default function Documents() {
                 <div key={caseId} className="space-y-3">
                   <div className="flex items-center space-x-2">
                     <Badge variant="outline" className="text-acclaim-teal border-acclaim-teal">
-                      {caseId === 'general' ? 'General Documents' : `Case Documents`}
+                      {caseId === 'general' ? 'General Documents' : (() => {
+                        const caseDetails = getCaseDetails(parseInt(caseId));
+                        return caseDetails ? `${caseDetails.accountNumber} - ${caseDetails.debtorName}` : 'Case Documents';
+                      })()}
                     </Badge>
                     <span className="text-sm text-gray-500">({caseDocuments.length} files)</span>
                   </div>
@@ -418,6 +436,26 @@ export default function Documents() {
                                 </>
                               )}
                             </div>
+                            {doc.caseId && (() => {
+                              const caseDetails = getCaseDetails(doc.caseId);
+                              if (caseDetails) {
+                                return (
+                                  <div className="flex items-center space-x-2 mt-1">
+                                    <User className="h-3 w-3 text-gray-400" />
+                                    <span className="text-xs text-gray-500">Case:</span>
+                                    <button
+                                      onClick={() => handleCaseClick(doc.caseId)}
+                                      className="text-xs text-acclaim-teal hover:text-acclaim-teal/80 hover:underline font-medium"
+                                    >
+                                      {caseDetails.accountNumber}
+                                    </button>
+                                    <span className="text-xs text-gray-400">•</span>
+                                    <span className="text-xs text-gray-500">{caseDetails.debtorName}</span>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })()}
                           </div>
                         </div>
                         
@@ -476,6 +514,18 @@ export default function Documents() {
           )}
         </CardContent>
       </Card>
+
+      {/* Case Details Popup */}
+      {selectedCase && (
+        <Dialog open={caseDetailsOpen} onOpenChange={setCaseDetailsOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Case Details</DialogTitle>
+            </DialogHeader>
+            <CaseDetail case={selectedCase} />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
