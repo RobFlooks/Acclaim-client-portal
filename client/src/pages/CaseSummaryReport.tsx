@@ -64,6 +64,9 @@ export default function CaseSummaryReport() {
   const filteredCases = useMemo(() => {
     if (!cases) return [];
     
+    // Debug: Let's see what statuses we have
+    console.log("All case statuses:", cases.map((c: any) => ({ id: c.id, status: c.status })));
+    
     if (statusFilter === "live") {
       return cases.filter((caseItem: any) => caseItem.status !== "closed");
     } else if (statusFilter === "closed") {
