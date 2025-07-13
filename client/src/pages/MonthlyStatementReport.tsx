@@ -87,8 +87,10 @@ export default function MonthlyStatementReport() {
     const months = [];
     const currentDate = new Date();
     for (let i = 0; i < 12; i++) {
-      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
-      const monthStr = date.toISOString().slice(0, 7);
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() - i;
+      const date = new Date(year, month, 1);
+      const monthStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       months.push({
         value: monthStr,
         label: date.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
@@ -101,8 +103,10 @@ export default function MonthlyStatementReport() {
   const monthlyData = useMemo(() => {
     if (!cases || !selectedMonth) return null;
 
-    const startDate = new Date(selectedMonth + '-01');
-    const endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0);
+    // Parse selected month and create date range using UTC to avoid timezone issues
+    const [year, month] = selectedMonth.split('-').map(Number);
+    const startDate = new Date(Date.UTC(year, month - 1, 1)); // month - 1 because JS months are 0-indexed
+    const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59)); // Last day of the month
 
     const filteredCases = cases.filter((case_: any) => {
       const caseDate = new Date(case_.createdAt);
@@ -112,7 +116,8 @@ export default function MonthlyStatementReport() {
     const paymentsInMonth = cases.reduce((acc: any[], case_: any) => {
       if (case_.payments) {
         const monthlyPayments = case_.payments.filter((payment: any) => {
-          const paymentDate = new Date(payment.createdAt);
+          // Try different date fields for payments
+          const paymentDate = new Date(payment.paymentDate || payment.createdAt);
           return paymentDate >= startDate && paymentDate <= endDate;
         });
         acc.push(...monthlyPayments.map((payment: any) => ({
@@ -358,8 +363,8 @@ export default function MonthlyStatementReport() {
                   <SelectValue placeholder="Select month" />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableMonths.map((month) => (
-                    <SelectItem key={month.value} value={month.value}>
+                  {availableMonths.map((month, index) => (
+                    <SelectItem key={`${month.value}-${index}`} value={month.value}>
                       {month.label}
                     </SelectItem>
                   ))}
