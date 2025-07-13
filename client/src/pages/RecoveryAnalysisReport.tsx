@@ -535,6 +535,64 @@ export default function RecoveryAnalysisReport() {
         </Card>
       </div>
 
+      {/* Financial Summary */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>Financial Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <h4 className="font-medium text-gray-900 mb-4">Debt Composition</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Total Original Amount</span>
+                  <span className="font-medium">{formatCurrency(metrics?.totalOriginalAmount || 0)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Costs Added</span>
+                  <span className="font-medium">{formatCurrency(metrics?.totalCostsAdded || 0)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Interest Added</span>
+                  <span className="font-medium">{formatCurrency(metrics?.totalInterestAdded || 0)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Fees Added</span>
+                  <span className="font-medium">{formatCurrency(metrics?.totalFeesAdded || 0)}</span>
+                </div>
+                <div className="flex justify-between border-t pt-2">
+                  <span className="text-sm font-medium text-gray-900">Total Debt</span>
+                  <span className="font-bold text-purple-600">{formatCurrency(metrics?.totalDebt || 0)}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-medium text-gray-900 mb-4">Recovery Performance</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Amount Recovered</span>
+                  <span className="font-medium text-blue-600">{formatCurrency(metrics?.totalRecovered || 0)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Amount Outstanding</span>
+                  <span className="font-medium text-orange-600">{formatCurrency(metrics?.totalOutstanding || 0)}</span>
+                </div>
+                <div className="flex justify-between border-t pt-2">
+                  <span className="text-sm font-medium text-gray-900">Recovery Rate (vs Original)</span>
+                  <span className="font-bold text-green-600">{formatPercentage(metrics?.overallRecoveryRate || 0)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm font-medium text-gray-900">Recovery Rate (vs Total Debt)</span>
+                  <span className="font-bold text-green-600">{formatPercentage(metrics?.debtRecoveryRate || 0)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Detailed Case Recovery Table */}
       <Card>
         <CardHeader>
@@ -633,63 +691,7 @@ export default function RecoveryAnalysisReport() {
           )}
         </CardContent>
       </Card>
-      {/* Summary Financial Breakdown */}
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle>Financial Summary</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <h4 className="font-medium text-gray-900 mb-4">Debt Composition</h4>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Total Original Amount</span>
-                  <span className="font-medium">{formatCurrency(metrics?.totalOriginalAmount || 0)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Costs Added</span>
-                  <span className="font-medium">{formatCurrency(metrics?.totalCostsAdded || 0)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Interest Added</span>
-                  <span className="font-medium">{formatCurrency(metrics?.totalInterestAdded || 0)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Fees Added</span>
-                  <span className="font-medium">{formatCurrency(metrics?.totalFeesAdded || 0)}</span>
-                </div>
-                <div className="flex justify-between border-t pt-2">
-                  <span className="text-sm font-medium text-gray-900">Total Debt</span>
-                  <span className="font-bold text-purple-600">{formatCurrency(metrics?.totalDebt || 0)}</span>
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="font-medium text-gray-900 mb-4">Recovery Performance</h4>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Amount Recovered</span>
-                  <span className="font-medium text-blue-600">{formatCurrency(metrics?.totalRecovered || 0)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Amount Outstanding</span>
-                  <span className="font-medium text-orange-600">{formatCurrency(metrics?.totalOutstanding || 0)}</span>
-                </div>
-                <div className="flex justify-between border-t pt-2">
-                  <span className="text-sm font-medium text-gray-900">Recovery Rate (vs Original)</span>
-                  <span className="font-bold text-green-600">{formatPercentage(metrics?.overallRecoveryRate || 0)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium text-gray-900">Recovery Rate (vs Total Debt)</span>
-                  <span className="font-bold text-green-600">{formatPercentage(metrics?.debtRecoveryRate || 0)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+
       {/* Footer */}
       <div className="mt-8 text-center text-sm text-gray-500">
         <p>This report was generated on {formatDate(new Date().toISOString())} by Acclaim Credit Management System</p>
