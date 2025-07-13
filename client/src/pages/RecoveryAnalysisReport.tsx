@@ -494,12 +494,11 @@ export default function RecoveryAnalysisReport() {
           </Button>
         </div>
       </div>
-
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-gray-600">Overall Recovery Rate</CardTitle>
+            <CardTitle className="text-sm text-gray-600">Overall Recovery</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-2">
@@ -553,7 +552,6 @@ export default function RecoveryAnalysisReport() {
           </CardContent>
         </Card>
       </div>
-
       {/* Recovery Performance Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <Card>
@@ -634,7 +632,6 @@ export default function RecoveryAnalysisReport() {
           </CardContent>
         </Card>
       </div>
-
       {/* Detailed Case Recovery Table */}
       <Card>
         <CardHeader>
@@ -733,7 +730,6 @@ export default function RecoveryAnalysisReport() {
           )}
         </CardContent>
       </Card>
-
       {/* Summary Financial Breakdown */}
       <Card className="mt-8">
         <CardHeader>
@@ -791,7 +787,6 @@ export default function RecoveryAnalysisReport() {
           </div>
         </CardContent>
       </Card>
-
       {/* Footer */}
       <div className="mt-8 text-center text-sm text-gray-500">
         <p>This report was generated on {formatDate(new Date().toISOString())} by Acclaim Credit Management System</p>
