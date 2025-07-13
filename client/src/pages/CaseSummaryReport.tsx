@@ -65,9 +65,9 @@ export default function CaseSummaryReport() {
     if (!cases) return [];
     
     if (statusFilter === "live") {
-      return cases.filter((caseItem: any) => caseItem.status !== "resolved");
+      return cases.filter((caseItem: any) => caseItem.status !== "closed");
     } else if (statusFilter === "closed") {
-      return cases.filter((caseItem: any) => caseItem.status === "resolved");
+      return cases.filter((caseItem: any) => caseItem.status === "closed");
     }
     return cases; // "all" - show both live and closed
   }, [cases, statusFilter]);
@@ -76,8 +76,8 @@ export default function CaseSummaryReport() {
   const filteredStats = useMemo(() => {
     if (!filteredCases) return { activeCases: 0, closedCases: 0 };
     
-    const activeCases = filteredCases.filter((caseItem: any) => caseItem.status !== "resolved").length;
-    const closedCases = filteredCases.filter((caseItem: any) => caseItem.status === "resolved").length;
+    const activeCases = filteredCases.filter((caseItem: any) => caseItem.status !== "closed").length;
+    const closedCases = filteredCases.filter((caseItem: any) => caseItem.status === "closed").length;
     
     return { activeCases, closedCases };
   }, [filteredCases]);
@@ -124,7 +124,7 @@ export default function CaseSummaryReport() {
           return 'bg-blue-100 text-blue-800';
         case 'active':
           return 'bg-yellow-100 text-yellow-800';
-        case 'resolved':
+        case 'closed':
           return 'bg-green-100 text-green-800';
         default:
           return 'bg-gray-100 text-gray-800';
@@ -149,7 +149,7 @@ export default function CaseSummaryReport() {
     return (
       <div className="flex gap-2">
         <Badge className={getStatusColor(status)}>
-          {status === 'resolved' ? 'Closed' : status.charAt(0).toUpperCase() + status.slice(1)}
+          {status === 'closed' ? 'Closed' : status.charAt(0).toUpperCase() + status.slice(1)}
         </Badge>
         <Badge className={getStageColor(stage)}>
           {stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
@@ -201,7 +201,7 @@ export default function CaseSummaryReport() {
             th { background-color: #f5f5f5; font-weight: bold; }
             .currency { text-align: right; }
             .status-active { background-color: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 3px; }
-            .status-resolved { background-color: #d1fae5; color: #065f46; padding: 2px 6px; border-radius: 3px; }
+            .status-closed { background-color: #d1fae5; color: #065f46; padding: 2px 6px; border-radius: 3px; }
             .status-new { background-color: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 3px; }
             @media print {
               body { margin: 0; }
@@ -275,7 +275,7 @@ export default function CaseSummaryReport() {
                     <tr>
                       <td>${caseItem.accountNumber || ''}</td>
                       <td>${caseItem.debtorName || ''}</td>
-                      <td><span class="status-${caseItem.status}">${caseItem.status === 'resolved' ? 'Closed' : (caseItem.status || '').charAt(0).toUpperCase() + (caseItem.status || '').slice(1)}</span></td>
+                      <td><span class="status-${caseItem.status}">${caseItem.status === 'closed' ? 'Closed' : (caseItem.status || '').charAt(0).toUpperCase() + (caseItem.status || '').slice(1)}</span></td>
                       <td class="currency">${formatCurrency(caseItem.originalAmount || 0)}</td>
                       <td class="currency">${formatCurrency(caseItem.costsAdded || 0)}</td>
                       <td class="currency">${formatCurrency(caseItem.interestAdded || 0)}</td>
@@ -340,7 +340,7 @@ export default function CaseSummaryReport() {
       const excelData = filteredCases.map((caseItem: any) => ({
         'Account Number': caseItem.accountNumber,
         'Debtor Name': caseItem.debtorName,
-        'Status': caseItem.status === 'resolved' ? 'Closed' : caseItem.status.charAt(0).toUpperCase() + caseItem.status.slice(1),
+        'Status': caseItem.status === 'closed' ? 'Closed' : caseItem.status.charAt(0).toUpperCase() + caseItem.status.slice(1),
         'Stage': caseItem.stage.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
         'Original Amount': parseFloat(caseItem.originalAmount),
         'Costs Added': parseFloat(caseItem.costsAdded || 0),
