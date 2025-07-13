@@ -18,7 +18,6 @@ import {
   User,
   Phone,
   Mail,
-  MapPin,
   PoundSterling,
   Printer,
   Trash2
@@ -526,12 +525,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               </div>
             </div>
             
-            ${caseData.debtorAddress ? `
-              <div class="info-card" style="grid-column: 1 / -1;">
-                <div class="info-label">Debtor Address</div>
-                <div class="info-value">${caseData.debtorAddress}</div>
-              </div>
-            ` : ''}
+
             
             ${caseData.notes ? `
               <div class="info-card" style="grid-column: 1 / -1;">
@@ -810,13 +804,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                   <span>{caseData.debtorPhone}</span>
                 </div>
               )}
-              {caseData.debtorAddress && (
-                <div className="flex items-center space-x-2">
-                  <MapPin className="h-4 w-4 text-gray-400" />
-                  <span className="font-medium">Address:</span>
-                  <span>{caseData.debtorAddress}</span>
-                </div>
-              )}
+
             </div>
           </div>
         </CardContent>
