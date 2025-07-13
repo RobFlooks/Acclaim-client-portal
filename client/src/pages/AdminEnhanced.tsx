@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft } from "lucide-react";
+import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrganisationSchema } from "@shared/schema";
@@ -393,6 +393,14 @@ export default function AdminEnhanced() {
             <h1 className="text-2xl font-bold">Enhanced Admin Panel</h1>
             <p className="text-gray-600">Comprehensive user and organisation management</p>
           </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Link href="/system-monitoring">
+            <Button variant="outline" size="sm">
+              <Activity className="h-4 w-4 mr-2" />
+              System Monitoring
+            </Button>
+          </Link>
         </div>
       </div>
 

@@ -10,6 +10,7 @@ import Home from "@/pages/Home";
 import SubmitCase from "@/pages/SubmitCase";
 import AdminEnhanced from "@/pages/AdminEnhanced";
 import UserProfile from "@/pages/UserProfile";
+import SystemMonitoring from "@/pages/SystemMonitoring";
 import CaseSummaryReport from "@/pages/CaseSummaryReport";
 import RecoveryAnalysisReport from "@/pages/RecoveryAnalysisReport";
 
@@ -26,6 +27,7 @@ function Router() {
           <Route path="/submit-case" component={SubmitCase} />
           <Route path="/admin" component={AdminEnhanced} />
           <Route path="/profile" component={UserProfile} />
+          <Route path="/system-monitoring" component={SystemMonitoring} />
           <Route path="/case-summary-report" component={CaseSummaryReport} />
           <Route path="/recovery-analysis-report" component={RecoveryAnalysisReport} />
         </>

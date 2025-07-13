@@ -1043,6 +1043,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // System monitoring endpoints
+  app.get("/api/admin/system/analytics", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const analytics = await storage.getSystemAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching system analytics:", error);
+      res.status(500).json({ message: "Failed to fetch system analytics" });
+    }
+  });
+
+  app.get("/api/admin/system/activity-logs", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { userId, limit } = req.query;
+      const logs = await storage.getUserActivityLogs(
+        userId as string,
+        limit ? parseInt(limit as string) : undefined
+      );
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching activity logs:", error);
+      res.status(500).json({ message: "Failed to fetch activity logs" });
+    }
+  });
+
+  app.get("/api/admin/system/login-attempts", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { limit } = req.query;
+      const attempts = await storage.getLoginAttempts(
+        limit ? parseInt(limit as string) : undefined
+      );
+      res.json(attempts);
+    } catch (error) {
+      console.error("Error fetching login attempts:", error);
+      res.status(500).json({ message: "Failed to fetch login attempts" });
+    }
+  });
+
+  app.get("/api/admin/system/failed-logins", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { limit } = req.query;
+      const attempts = await storage.getFailedLoginAttempts(
+        limit ? parseInt(limit as string) : undefined
+      );
+      res.json(attempts);
+    } catch (error) {
+      console.error("Error fetching failed login attempts:", error);
+      res.status(500).json({ message: "Failed to fetch failed login attempts" });
+    }
+  });
+
+  app.get("/api/admin/system/metrics", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { metricName, limit } = req.query;
+      const metrics = await storage.getSystemMetrics(
+        metricName as string,
+        limit ? parseInt(limit as string) : undefined
+      );
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching system metrics:", error);
+      res.status(500).json({ message: "Failed to fetch system metrics" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

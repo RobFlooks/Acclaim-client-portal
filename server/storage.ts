@@ -6,6 +6,9 @@ import {
   messages,
   documents,
   payments,
+  userActivityLogs,
+  loginAttempts,
+  systemMetrics,
   type User,
   type UpsertUser,
   type Organization,
@@ -20,6 +23,12 @@ import {
   type InsertDocument,
   type Payment,
   type InsertPayment,
+  type UserActivityLog,
+  type InsertUserActivityLog,
+  type LoginAttempt,
+  type InsertLoginAttempt,
+  type SystemMetric,
+  type InsertSystemMetric,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, sql, or } from "drizzle-orm";
@@ -124,6 +133,28 @@ export interface IStorage {
   verifyUserPassword(userId: string, password: string): Promise<boolean>;
   
   checkMustChangePassword(userId: string): Promise<boolean>;
+
+  // System monitoring operations
+  logUserActivity(activity: InsertUserActivityLog): Promise<UserActivityLog>;
+  getUserActivityLogs(userId?: string, limit?: number): Promise<UserActivityLog[]>;
+  
+  logLoginAttempt(attempt: InsertLoginAttempt): Promise<LoginAttempt>;
+  getLoginAttempts(limit?: number): Promise<LoginAttempt[]>;
+  getFailedLoginAttempts(limit?: number): Promise<LoginAttempt[]>;
+  
+  recordSystemMetric(metric: InsertSystemMetric): Promise<SystemMetric>;
+  getSystemMetrics(metricName?: string, limit?: number): Promise<SystemMetric[]>;
+  
+  getSystemAnalytics(): Promise<{
+    totalUsers: number;
+    activeUsers: number;
+    totalCases: number;
+    activeCases: number;
+    totalOrganizations: number;
+    recentActivity: number;
+    failedLogins: number;
+    systemHealth: string;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -756,6 +787,123 @@ export class DatabaseStorage implements IStorage {
   async checkMustChangePassword(userId: string): Promise<boolean> {
     const [user] = await db.select({ mustChangePassword: users.mustChangePassword }).from(users).where(eq(users.id, userId));
     return user?.mustChangePassword || false;
+  }
+
+  // System monitoring operations
+  async logUserActivity(activity: InsertUserActivityLog): Promise<UserActivityLog> {
+    const [log] = await db.insert(userActivityLogs).values(activity).returning();
+    return log;
+  }
+
+  async getUserActivityLogs(userId?: string, limit = 100): Promise<UserActivityLog[]> {
+    const query = db.select({
+      id: userActivityLogs.id,
+      userId: userActivityLogs.userId,
+      action: userActivityLogs.action,
+      details: userActivityLogs.details,
+      ipAddress: userActivityLogs.ipAddress,
+      userAgent: userActivityLogs.userAgent,
+      timestamp: userActivityLogs.timestamp,
+      userEmail: users.email,
+      userFirstName: users.firstName,
+      userLastName: users.lastName,
+    })
+    .from(userActivityLogs)
+    .leftJoin(users, eq(userActivityLogs.userId, users.id))
+    .orderBy(desc(userActivityLogs.timestamp))
+    .limit(limit);
+
+    if (userId) {
+      query.where(eq(userActivityLogs.userId, userId));
+    }
+
+    return await query;
+  }
+
+  async logLoginAttempt(attempt: InsertLoginAttempt): Promise<LoginAttempt> {
+    const [log] = await db.insert(loginAttempts).values(attempt).returning();
+    return log;
+  }
+
+  async getLoginAttempts(limit = 100): Promise<LoginAttempt[]> {
+    return await db.select().from(loginAttempts)
+      .orderBy(desc(loginAttempts.timestamp))
+      .limit(limit);
+  }
+
+  async getFailedLoginAttempts(limit = 100): Promise<LoginAttempt[]> {
+    return await db.select().from(loginAttempts)
+      .where(eq(loginAttempts.success, false))
+      .orderBy(desc(loginAttempts.timestamp))
+      .limit(limit);
+  }
+
+  async recordSystemMetric(metric: InsertSystemMetric): Promise<SystemMetric> {
+    const [record] = await db.insert(systemMetrics).values(metric).returning();
+    return record;
+  }
+
+  async getSystemMetrics(metricName?: string, limit = 100): Promise<SystemMetric[]> {
+    const query = db.select().from(systemMetrics)
+      .orderBy(desc(systemMetrics.recordedAt))
+      .limit(limit);
+
+    if (metricName) {
+      query.where(eq(systemMetrics.metricName, metricName));
+    }
+
+    return await query;
+  }
+
+  async getSystemAnalytics(): Promise<{
+    totalUsers: number;
+    activeUsers: number;
+    totalCases: number;
+    activeCases: number;
+    totalOrganizations: number;
+    recentActivity: number;
+    failedLogins: number;
+    systemHealth: string;
+  }> {
+    const [totalUsers, totalCases, totalOrganizations] = await Promise.all([
+      db.select({ count: sql<number>`count(*)` }).from(users),
+      db.select({ count: sql<number>`count(*)` }).from(cases),
+      db.select({ count: sql<number>`count(*)` }).from(organisations),
+    ]);
+
+    const [activeCases, recentActivity, failedLogins] = await Promise.all([
+      db.select({ count: sql<number>`count(*)` }).from(cases)
+        .where(or(eq(cases.status, "new"), eq(cases.status, "in_progress"))),
+      db.select({ count: sql<number>`count(*)` }).from(userActivityLogs)
+        .where(sql`timestamp > NOW() - INTERVAL '24 hours'`),
+      db.select({ count: sql<number>`count(*)` }).from(loginAttempts)
+        .where(and(eq(loginAttempts.success, false), sql`timestamp > NOW() - INTERVAL '24 hours'`)),
+    ]);
+
+    // Calculate active users (users who have activity in the last 30 days)
+    const [activeUsers] = await db.select({ count: sql<number>`count(DISTINCT user_id)` })
+      .from(userActivityLogs)
+      .where(sql`timestamp > NOW() - INTERVAL '30 days'`);
+
+    // Determine system health based on failed logins and activity
+    let systemHealth = "healthy";
+    if (failedLogins[0].count > 10) {
+      systemHealth = "warning";
+    }
+    if (failedLogins[0].count > 50) {
+      systemHealth = "critical";
+    }
+
+    return {
+      totalUsers: totalUsers[0].count,
+      activeUsers: activeUsers[0].count,
+      totalCases: totalCases[0].count,
+      activeCases: activeCases[0].count,
+      totalOrganizations: totalOrganizations[0].count,
+      recentActivity: recentActivity[0].count,
+      failedLogins: failedLogins[0].count,
+      systemHealth,
+    };
   }
 }
 
