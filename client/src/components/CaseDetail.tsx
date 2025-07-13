@@ -392,6 +392,364 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
     window.open(`/api/documents/${documentId}/download`, '_blank');
   };
 
+  const handleVisualTimeline = () => {
+    if (!caseData) {
+      toast({
+        title: "No Data",
+        description: "No case data available to display timeline.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        throw new Error('Could not open timeline window');
+      }
+
+      const currentDate = formatDate(new Date().toISOString());
+      const totalPayments = getTotalPayments();
+      const outstandingAmount = getOutstandingAmount();
+      
+      // Create a comprehensive timeline combining all events
+      const timelineEvents = [];
+      
+      // Add case creation event
+      timelineEvents.push({
+        date: caseData.createdAt,
+        type: 'case_created',
+        title: 'Case Created',
+        description: `Case ${caseData.accountNumber} was created`,
+        icon: '🏗️',
+        color: '#3B82F6'
+      });
+      
+      // Add activities
+      if (activities && activities.length > 0) {
+        activities.forEach((activity: any) => {
+          timelineEvents.push({
+            date: activity.createdAt,
+            type: 'activity',
+            title: activity.activityType || 'Activity',
+            description: activity.description || 'No description',
+            icon: '⚡',
+            color: '#10B981'
+          });
+        });
+      }
+      
+      // Add messages
+      if (messages && messages.length > 0) {
+        messages.forEach((message: any) => {
+          timelineEvents.push({
+            date: message.createdAt,
+            type: 'message',
+            title: message.subject || 'Message',
+            description: `Message from ${message.senderName || 'Unknown'}`,
+            icon: '💬',
+            color: '#6366F1'
+          });
+        });
+      }
+      
+      // Add documents
+      if (documents && documents.length > 0) {
+        documents.forEach((document: any) => {
+          timelineEvents.push({
+            date: document.createdAt,
+            type: 'document',
+            title: 'Document Uploaded',
+            description: document.fileName || 'Unknown file',
+            icon: '📄',
+            color: '#F59E0B'
+          });
+        });
+      }
+      
+      // Add payments
+      if (payments && payments.length > 0) {
+        payments.forEach((payment: any) => {
+          timelineEvents.push({
+            date: payment.paymentDate,
+            type: 'payment',
+            title: 'Payment Received',
+            description: `Payment of ${formatCurrency(payment.amount)} received`,
+            icon: '💰',
+            color: '#059669'
+          });
+        });
+      }
+      
+      // Sort events chronologically
+      timelineEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Visual Timeline - Case ${caseData.accountNumber}</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              margin: 0;
+              padding: 20px;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              min-height: 100vh;
+            }
+            .container {
+              max-width: 1200px;
+              margin: 0 auto;
+              background: white;
+              border-radius: 16px;
+              box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+              overflow: hidden;
+            }
+            .header {
+              background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+              color: white;
+              padding: 30px;
+              text-align: center;
+            }
+            .header h1 {
+              margin: 0;
+              font-size: 2.5em;
+              font-weight: 700;
+            }
+            .header p {
+              margin: 10px 0 0 0;
+              font-size: 1.1em;
+              opacity: 0.9;
+            }
+            .case-summary {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+              gap: 20px;
+              padding: 30px;
+              background: #f8fafc;
+              border-bottom: 1px solid #e2e8f0;
+            }
+            .summary-card {
+              background: white;
+              padding: 20px;
+              border-radius: 12px;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+              border-left: 4px solid #3b82f6;
+            }
+            .summary-card h3 {
+              margin: 0 0 5px 0;
+              color: #1e40af;
+              font-size: 0.9em;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            .summary-card p {
+              margin: 0;
+              font-size: 1.2em;
+              font-weight: 600;
+              color: #1f2937;
+            }
+            .timeline-container {
+              padding: 40px;
+              position: relative;
+            }
+            .timeline-title {
+              text-align: center;
+              margin-bottom: 40px;
+            }
+            .timeline-title h2 {
+              font-size: 2em;
+              color: #1f2937;
+              margin: 0;
+            }
+            .timeline {
+              position: relative;
+              padding-left: 40px;
+            }
+            .timeline::before {
+              content: '';
+              position: absolute;
+              left: 20px;
+              top: 0;
+              bottom: 0;
+              width: 4px;
+              background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
+              border-radius: 2px;
+            }
+            .timeline-item {
+              position: relative;
+              margin-bottom: 30px;
+              padding-left: 40px;
+            }
+            .timeline-item::before {
+              content: '';
+              position: absolute;
+              left: -8px;
+              top: 8px;
+              width: 16px;
+              height: 16px;
+              background: var(--item-color, #3b82f6);
+              border-radius: 50%;
+              border: 3px solid white;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            .timeline-card {
+              background: white;
+              border-radius: 12px;
+              padding: 20px;
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+              border: 1px solid #e2e8f0;
+              transition: all 0.3s ease;
+            }
+            .timeline-card:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            }
+            .timeline-header {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              margin-bottom: 12px;
+            }
+            .timeline-icon {
+              font-size: 1.5em;
+              width: 40px;
+              height: 40px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: var(--item-color, #3b82f6);
+              color: white;
+              border-radius: 50%;
+            }
+            .timeline-title-text {
+              font-size: 1.1em;
+              font-weight: 600;
+              color: #1f2937;
+              margin: 0;
+            }
+            .timeline-date {
+              font-size: 0.9em;
+              color: #6b7280;
+              margin-left: auto;
+            }
+            .timeline-description {
+              color: #4b5563;
+              line-height: 1.5;
+              margin: 0;
+            }
+            .footer {
+              text-align: center;
+              padding: 30px;
+              background: #f1f5f9;
+              color: #64748b;
+              border-top: 1px solid #e2e8f0;
+            }
+            .no-events {
+              text-align: center;
+              padding: 60px 20px;
+              color: #6b7280;
+            }
+            .no-events-icon {
+              font-size: 4em;
+              margin-bottom: 20px;
+            }
+            @media print {
+              body {
+                background: white;
+              }
+              .container {
+                box-shadow: none;
+              }
+              .timeline-card:hover {
+                transform: none;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>📊 Visual Timeline Report</h1>
+              <p>Case: ${caseData.caseName} (${caseData.accountNumber})</p>
+            </div>
+            
+            <div class="case-summary">
+              <div class="summary-card">
+                <h3>Case Status</h3>
+                <p>${caseData.status || 'Active'}</p>
+              </div>
+              <div class="summary-card">
+                <h3>Outstanding Amount</h3>
+                <p>${formatCurrency(outstandingAmount)}</p>
+              </div>
+              <div class="summary-card">
+                <h3>Total Payments</h3>
+                <p>${formatCurrency(totalPayments)}</p>
+              </div>
+              <div class="summary-card">
+                <h3>Total Events</h3>
+                <p>${timelineEvents.length}</p>
+              </div>
+            </div>
+            
+            <div class="timeline-container">
+              <div class="timeline-title">
+                <h2>🕐 Case Timeline</h2>
+              </div>
+              
+              ${timelineEvents.length > 0 ? `
+                <div class="timeline">
+                  ${timelineEvents.map(event => `
+                    <div class="timeline-item" style="--item-color: ${event.color}">
+                      <div class="timeline-card">
+                        <div class="timeline-header">
+                          <div class="timeline-icon" style="background: ${event.color}">
+                            ${event.icon}
+                          </div>
+                          <h3 class="timeline-title-text">${event.title}</h3>
+                          <span class="timeline-date">${formatDate(event.date)}</span>
+                        </div>
+                        <p class="timeline-description">${event.description}</p>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : `
+                <div class="no-events">
+                  <div class="no-events-icon">📅</div>
+                  <h3>No Timeline Events</h3>
+                  <p>No events have been recorded for this case yet.</p>
+                </div>
+              `}
+            </div>
+            
+            <div class="footer">
+              <p>Generated by Acclaim Credit Management System on ${currentDate}</p>
+              <p>This report contains ${timelineEvents.length} timeline events</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      
+      toast({
+        title: "Visual Timeline Opened",
+        description: "The visual timeline report has been opened in a new window.",
+      });
+    } catch (error) {
+      console.error('Error generating visual timeline:', error);
+      toast({
+        title: "Timeline Generation Failed",
+        description: "Failed to generate visual timeline. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handlePrintCase = () => {
     if (!caseData) {
       toast({
@@ -785,7 +1143,18 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
         <TabsContent value="timeline" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Case Timeline</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Case Timeline</CardTitle>
+                <Button 
+                  onClick={handleVisualTimeline}
+                  variant="outline"
+                  size="sm"
+                  className="border-acclaim-teal text-acclaim-teal hover:bg-acclaim-teal hover:text-white"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  View Visual Timeline
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {activitiesLoading ? (
