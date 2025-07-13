@@ -26,6 +26,7 @@ function Router() {
         <>
           <Route path="/" component={Home} />
           <Route path="/submit-case" component={SubmitCase} />
+          <Route path="/admin" component={AdminEnhanced} />
           <Route path="/admin-enhanced" component={AdminEnhanced} />
           <Route path="/profile" component={UserProfile} />
           <Route path="/system-monitoring" component={SystemMonitoring} />
