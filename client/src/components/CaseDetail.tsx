@@ -542,74 +542,6 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
           </div>
 
           <div class="section">
-            <h2>Case Timeline</h2>
-            ${activities && activities.length > 0 ? `
-              <table>
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Activity Type</th>
-                    <th>Description</th>
-                    <th>Outcome</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${activities.map((activity: any) => `
-                    <tr>
-                      <td class="date">${formatDate(activity.createdAt)}</td>
-                      <td>${activity.activityType || 'N/A'}</td>
-                      <td>${activity.description || 'N/A'}</td>
-                      <td>${activity.outcome || 'N/A'}</td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            ` : '<div class="no-data">No timeline activities recorded</div>'}
-          </div>
-
-          <div class="section">
-            <h2>Messages</h2>
-            ${messages && messages.length > 0 ? `
-              <div>
-                ${messages.map((message: any) => `
-                  <div class="message-content">
-                    <div class="message-meta">
-                      <strong>From:</strong> ${message.senderName || 'Unknown'} | 
-                      <strong>Date:</strong> ${formatDate(message.createdAt)} | 
-                      <strong>Subject:</strong> ${message.subject || 'No subject'}
-                    </div>
-                    <div>${message.content || 'No content'}</div>
-                  </div>
-                `).join('')}
-              </div>
-            ` : '<div class="no-data">No messages recorded</div>'}
-          </div>
-
-          <div class="section">
-            <h2>Documents</h2>
-            ${documents && documents.length > 0 ? `
-              <table>
-                <thead>
-                  <tr>
-                    <th>File Name</th>
-                    <th>Upload Date</th>
-                    <th>File Size</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${documents.map((doc: any) => `
-                    <tr>
-                      <td>${doc.fileName || 'N/A'}</td>
-                      <td class="date">${formatDate(doc.createdAt)}</td>
-                      <td>${doc.fileSize ? `${Math.round(doc.fileSize / 1024)} KB` : 'N/A'}</td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            ` : '<div class="no-data">No documents uploaded</div>'}
-          </div>
-
-          <div class="section">
             <h2>Payment History</h2>
             ${payments && payments.length > 0 ? `
               <table>
@@ -638,6 +570,74 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                 <strong>Total Payments: ${formatCurrency(totalPayments)}</strong>
               </div>
             ` : '<div class="no-data">No payments recorded</div>'}
+          </div>
+
+          <div class="section">
+            <h2>Messages</h2>
+            ${messages && messages.length > 0 ? `
+              <div>
+                ${messages.map((message: any) => `
+                  <div class="message-content">
+                    <div class="message-meta">
+                      <strong>From:</strong> ${message.senderName || 'Unknown'} | 
+                      <strong>Date:</strong> ${formatDate(message.createdAt)} | 
+                      <strong>Subject:</strong> ${message.subject || 'No subject'}
+                    </div>
+                    <div>${message.content || 'No content'}</div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : '<div class="no-data">No messages recorded</div>'}
+          </div>
+
+          <div class="section">
+            <h2>Case Timeline</h2>
+            ${activities && activities.length > 0 ? `
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Activity Type</th>
+                    <th>Description</th>
+                    <th>Outcome</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${activities.map((activity: any) => `
+                    <tr>
+                      <td class="date">${formatDate(activity.createdAt)}</td>
+                      <td>${activity.activityType || 'N/A'}</td>
+                      <td>${activity.description || 'N/A'}</td>
+                      <td>${activity.outcome || 'N/A'}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            ` : '<div class="no-data">No timeline activities recorded</div>'}
+          </div>
+
+          <div class="section">
+            <h2>Documents</h2>
+            ${documents && documents.length > 0 ? `
+              <table>
+                <thead>
+                  <tr>
+                    <th>File Name</th>
+                    <th>Upload Date</th>
+                    <th>File Size</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${documents.map((doc: any) => `
+                    <tr>
+                      <td>${doc.fileName || 'N/A'}</td>
+                      <td class="date">${formatDate(doc.createdAt)}</td>
+                      <td>${doc.fileSize ? `${Math.round(doc.fileSize / 1024)} KB` : 'N/A'}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            ` : '<div class="no-data">No documents uploaded</div>'}
           </div>
           
           <div class="section">
