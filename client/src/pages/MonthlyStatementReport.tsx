@@ -82,11 +82,11 @@ export default function MonthlyStatementReport() {
     return date.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
   };
 
-  // Generate available months (last 12 months)
+  // Generate available months (last 24 months)
   const availableMonths = useMemo(() => {
     const months = [];
     const currentDate = new Date();
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 24; i++) {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() - i;
       const date = new Date(year, month, 1);
