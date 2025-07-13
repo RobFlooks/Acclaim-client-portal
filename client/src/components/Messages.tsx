@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Send, MessageSquare, Plus, User, Paperclip, Download, Trash2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Send, MessageSquare, Plus, User, Paperclip, Download, Trash2, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/useAuth";
@@ -25,6 +26,7 @@ export default function Messages() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedCase, setSelectedCase] = useState<any>(null);
   const [caseDialogOpen, setCaseDialogOpen] = useState(false);
+  const [messageFilter, setMessageFilter] = useState<"all" | "unread">("all");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -262,6 +264,30 @@ export default function Messages() {
 
   const totalMessages = messages?.length || 0;
 
+  // Filter messages based on the selected filter
+  const filteredMessages = useMemo(() => {
+    if (!messages) return [];
+    
+    if (messageFilter === "unread") {
+      return messages.filter((message: any) => {
+        // Only show unread messages that were sent TO this user (not sent BY this user)
+        if (message.isRead || message.senderId === user?.id) {
+          return false;
+        }
+        
+        if (user?.isAdmin) {
+          // Admin: show messages FROM non-admin users
+          return !message.senderIsAdmin;
+        } else {
+          // Regular user: show messages FROM admin users
+          return message.senderIsAdmin;
+        }
+      });
+    }
+    
+    return messages;
+  }, [messages, messageFilter, user?.id, user?.isAdmin]);
+
   return (
     <div className="space-y-6">
       {/* Header with New Message Button */}
@@ -454,14 +480,28 @@ export default function Messages() {
       {/* Messages List */}
       <Card>
         <CardHeader>
-          <CardTitle>
-            All Messages ({totalMessages})
-            {unreadCount > 0 && (
-              <Badge variant="secondary" className="ml-2 bg-red-100 text-red-800">
-                {unreadCount} new
-              </Badge>
-            )}
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>
+              {messageFilter === "all" ? "All Messages" : "Unread Messages"} ({filteredMessages.length})
+              {unreadCount > 0 && (
+                <Badge variant="secondary" className="ml-2 bg-red-100 text-red-800">
+                  {unreadCount} new
+                </Badge>
+              )}
+            </CardTitle>
+            <div className="flex items-center space-x-2">
+              <Filter className="h-4 w-4 text-gray-500" />
+              <Select value={messageFilter} onValueChange={(value: "all" | "unread") => setMessageFilter(value)}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="unread">Unread</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -472,9 +512,9 @@ export default function Messages() {
                 </div>
               ))}
             </div>
-          ) : messages && messages.length > 0 ? (
+          ) : filteredMessages && filteredMessages.length > 0 ? (
             <div className="space-y-4">
-              {messages.map((message: any) => (
+              {filteredMessages.map((message: any) => (
                 <div
                   key={message.id}
                   className={`p-4 rounded-lg border transition-colors cursor-pointer hover:shadow-md ${
@@ -546,9 +586,14 @@ export default function Messages() {
           ) : (
             <div className="text-center py-12">
               <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No messages found</p>
+              <p className="text-gray-500">
+                {messageFilter === "unread" ? "No unread messages" : "No messages found"}
+              </p>
               <p className="text-sm text-gray-400 mt-2">
-                Start a conversation with our team using the "New Message" button above.
+                {messageFilter === "unread" 
+                  ? "All messages have been read. Check 'All' to see all messages."
+                  : "Start a conversation with our team using the \"New Message\" button above."
+                }
               </p>
             </div>
           )}
