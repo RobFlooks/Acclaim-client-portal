@@ -227,7 +227,7 @@ export default function MonthlyStatementReport() {
           payment.debtorName,
           formatCurrency(payment.amount),
           formatDate(payment.createdAt),
-          payment.paymentMethod || 'N/A',
+          payment.method || 'N/A',
           payment.reference || 'N/A'
         ]);
         
@@ -240,11 +240,14 @@ export default function MonthlyStatementReport() {
         });
       }
       
-      doc.save(`monthly-statement-${selectedMonth}.pdf`);
+      // Open PDF in new tab instead of downloading
+      const pdfBlob = doc.output('blob');
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      window.open(pdfUrl, '_blank');
       
       toast({
-        title: "PDF Downloaded",
-        description: `Monthly statement PDF for ${getMonthName(selectedMonth)} downloaded successfully`,
+        title: "PDF Report Opened",
+        description: `Monthly statement report for ${getMonthName(selectedMonth)} opened in new tab`,
       });
     } catch (error) {
       toast({
@@ -289,7 +292,7 @@ export default function MonthlyStatementReport() {
           </Button>
           <Button onClick={handleDownloadPDF} variant="outline">
             <FileText className="h-4 w-4 mr-2" />
-            Download PDF
+            View Report
           </Button>
         </div>
       </div>
