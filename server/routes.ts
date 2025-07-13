@@ -1002,6 +1002,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin cases endpoint  
+  app.get('/api/admin/cases', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const cases = await storage.getAllCases();
+      res.json(cases);
+    } catch (error) {
+      console.error("Error fetching admin cases:", error);
+      res.status(500).json({ message: "Failed to fetch cases" });
+    }
+  });
+
   // User self-management routes
   
   // Update own profile

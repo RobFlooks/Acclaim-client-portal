@@ -15,6 +15,7 @@ import CaseSummaryReport from "@/pages/CaseSummaryReport";
 import RecoveryAnalysisReport from "@/pages/RecoveryAnalysisReport";
 import MonthlyStatementReport from "@/pages/MonthlyStatementReport";
 import PaymentPerformanceReport from "@/pages/PaymentPerformanceReport";
+import AdminPaymentPerformanceReport from "@/pages/AdminPaymentPerformanceReport";
 import AdvancedReports from "@/pages/AdvancedReports";
 
 function Router() {
@@ -37,6 +38,7 @@ function Router() {
           <Route path="/recovery-analysis-report" component={RecoveryAnalysisReport} />
           <Route path="/monthly-statement-report" component={MonthlyStatementReport} />
           <Route path="/payment-performance-report" component={PaymentPerformanceReport} />
+          <Route path="/admin-payment-performance-report" component={AdminPaymentPerformanceReport} />
         </>
       )}
       <Route component={NotFound} />
