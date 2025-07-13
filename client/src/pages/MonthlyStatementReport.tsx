@@ -191,68 +191,114 @@ export default function MonthlyStatementReport() {
     if (!monthlyData) return;
 
     try {
-      const doc = new jsPDF();
-      
-      // Header
-      doc.setFontSize(20);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Monthly Statement Report', 20, 20);
-      
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Month: ${getMonthName(selectedMonth)}`, 20, 35);
-      doc.text(`Generated: ${new Date().toLocaleDateString('en-GB')}`, 20, 45);
-      
-      // Summary section
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Monthly Summary', 20, 65);
-      
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Total Payments: ${formatCurrency(monthlyData.totalPayments)}`, 20, 80);
-      doc.text(`Number of Payments: ${monthlyData.paymentsCount}`, 20, 90);
-      
-      let yPosition = 110;
-      
-      // Payments Table
-      if (monthlyData.paymentsInMonth.length > 0) {
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Payments Received This Month', 20, yPosition);
-        yPosition += 10;
-        
-        const paymentsTableData = monthlyData.paymentsInMonth.map((payment: any) => [
-          payment.accountNumber,
-          payment.debtorName,
-          formatCurrency(payment.amount),
-          formatDate(payment.createdAt),
-          payment.method || 'N/A',
-          payment.reference || 'N/A'
-        ]);
-        
-        (doc as any).autoTable({
-          head: [['Account Number', 'Debtor Name', 'Amount', 'Date', 'Method', 'Reference']],
-          body: paymentsTableData,
-          startY: yPosition,
-          styles: { fontSize: 8 },
-          headStyles: { fillColor: [15, 118, 110] },
-        });
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        throw new Error('Could not open print window');
       }
+
+      const currentDate = new Date().toLocaleDateString('en-GB');
       
-      // Open PDF in new tab instead of downloading
-      const pdfBlob = doc.output('blob');
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      window.open(pdfUrl, '_blank');
+      // Generate payments table rows
+      const paymentsTableRows = monthlyData.paymentsInMonth.map((payment: any) => `
+        <tr>
+          <td>${payment.accountNumber}</td>
+          <td>${payment.debtorName}</td>
+          <td class="currency">${formatCurrency(payment.amount)}</td>
+          <td>${formatDate(payment.createdAt)}</td>
+          <td>${payment.method || 'N/A'}</td>
+          <td>${payment.reference || 'N/A'}</td>
+        </tr>
+      `).join('');
+      
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Monthly Statement Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .header h1 { margin: 0; font-size: 24px; color: #0f766e; }
+            .header p { margin: 5px 0; color: #666; }
+            .section { margin-bottom: 30px; }
+            .section h2 { font-size: 18px; margin-bottom: 15px; color: #333; }
+            .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px; }
+            .metric-card { padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+            .metric-label { font-size: 14px; color: #666; margin-bottom: 5px; }
+            .metric-value { font-size: 24px; font-weight: bold; color: #0f766e; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { padding: 8px; text-align: left; border: 1px solid #ddd; font-size: 12px; }
+            th { background-color: #f5f5f5; font-weight: bold; }
+            .currency { text-align: right; }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Monthly Statement Report</h1>
+            <p>Month: ${getMonthName(selectedMonth)}</p>
+            <p>Generated on: ${currentDate}</p>
+          </div>
+          
+          <div class="section">
+            <h2>Monthly Summary</h2>
+            <div class="metrics-grid">
+              <div class="metric-card">
+                <div class="metric-label">Total Payments</div>
+                <div class="metric-value">${formatCurrency(monthlyData.totalPayments)}</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-label">Number of Payments</div>
+                <div class="metric-value">${monthlyData.paymentsCount}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="section">
+            <h2>Payments Received This Month</h2>
+            ${monthlyData.paymentsInMonth.length > 0 ? `
+              <table>
+                <thead>
+                  <tr>
+                    <th>Account Number</th>
+                    <th>Debtor Name</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Method</th>
+                    <th>Reference</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${paymentsTableRows}
+                </tbody>
+              </table>
+            ` : `
+              <p>No payments received in ${getMonthName(selectedMonth)}</p>
+            `}
+          </div>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      
+      // Focus the new window
+      printWindow.onload = () => {
+        printWindow.focus();
+      };
       
       toast({
-        title: "PDF Report Opened",
-        description: `Monthly statement report for ${getMonthName(selectedMonth)} opened in new tab`,
+        title: "Report Opened",
+        description: `Monthly statement report for ${getMonthName(selectedMonth)} opened in new tab for viewing`,
       });
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to generate PDF",
+        description: "Failed to generate PDF report",
         variant: "destructive",
       });
     }
@@ -292,7 +338,7 @@ export default function MonthlyStatementReport() {
           </Button>
           <Button onClick={handleDownloadPDF} variant="outline">
             <FileText className="h-4 w-4 mr-2" />
-            View Report
+            View PDF Report
           </Button>
         </div>
       </div>
