@@ -66,9 +66,13 @@ export default function Documents() {
 
   const filteredDocuments = documents?.filter((doc: any) => {
     const searchLower = searchTerm.toLowerCase();
+    const caseDetails = doc.caseId ? getCaseDetails(doc.caseId) : null;
+    
     return (
       doc.fileName.toLowerCase().includes(searchLower) ||
-      doc.fileType?.toLowerCase().includes(searchLower)
+      doc.fileType?.toLowerCase().includes(searchLower) ||
+      (caseDetails && caseDetails.accountNumber.toLowerCase().includes(searchLower)) ||
+      (caseDetails && caseDetails.debtorName.toLowerCase().includes(searchLower))
     );
   }) || [];
 
@@ -318,7 +322,7 @@ export default function Documents() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               type="text"
-              placeholder="Search documents by name or type..."
+              placeholder="Search documents by name, type, account number, or debtor name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
