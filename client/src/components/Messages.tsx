@@ -246,20 +246,9 @@ export default function Messages() {
     }
   };
 
-  // Calculate unread messages count based on user type
+  // Calculate unread messages count - simply count all unread messages
   const unreadCount = messages?.filter((message: any) => {
-    // Only count unread messages that were sent TO this user (not sent BY this user)
-    if (message.isRead || message.senderId === user?.id) {
-      return false;
-    }
-    
-    if (user?.isAdmin) {
-      // Admin: count messages FROM non-admin users
-      return !message.senderIsAdmin;
-    } else {
-      // Regular user: count messages FROM admin users
-      return message.senderIsAdmin;
-    }
+    return !message.isRead;
   }).length || 0;
 
   const totalMessages = messages?.length || 0;
@@ -270,23 +259,12 @@ export default function Messages() {
     
     if (messageFilter === "unread") {
       return messages.filter((message: any) => {
-        // Only show unread messages that were sent TO this user (not sent BY this user)
-        if (message.isRead || message.senderId === user?.id) {
-          return false;
-        }
-        
-        if (user?.isAdmin) {
-          // Admin: show messages FROM non-admin users
-          return !message.senderIsAdmin;
-        } else {
-          // Regular user: show messages FROM admin users
-          return message.senderIsAdmin;
-        }
+        return !message.isRead;
       });
     }
     
     return messages;
-  }, [messages, messageFilter, user?.id, user?.isAdmin]);
+  }, [messages, messageFilter]);
 
   return (
     <div className="space-y-6">
