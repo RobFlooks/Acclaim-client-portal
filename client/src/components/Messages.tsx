@@ -496,26 +496,27 @@ export default function Messages() {
                 <div
                   key={message.id}
                   className={`p-4 rounded-lg border transition-colors cursor-pointer hover:shadow-md ${
-                    message.isRead || message.senderId === user?.id || 
-                    !((user?.isAdmin && !message.senderIsAdmin) || (!user?.isAdmin && message.senderIsAdmin))
-                      ? "bg-gray-50 border-gray-200 hover:bg-gray-100" 
-                      : "bg-white border-acclaim-teal shadow-sm hover:shadow-lg"
+                    !message.isRead
+                      ? "bg-white border-acclaim-teal shadow-sm hover:shadow-lg border-l-4 border-l-acclaim-teal" 
+                      : "bg-gray-50 border-gray-200 hover:bg-gray-100"
                   }`}
                   onClick={() => handleMessageClick(message)}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-3">
-                      <div className="w-10 h-10 bg-acclaim-teal bg-opacity-10 rounded-full flex items-center justify-center">
-                        <User className="h-5 w-5 text-acclaim-teal" />
+                      <div className="relative">
+                        <div className="w-10 h-10 bg-acclaim-teal bg-opacity-10 rounded-full flex items-center justify-center">
+                          <User className="h-5 w-5 text-acclaim-teal" />
+                        </div>
+                        {!message.isRead && (
+                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></div>
+                        )}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-1">
                           <p className="font-medium text-gray-900">{message.subject}</p>
-                          {!message.isRead && message.senderId !== user?.id && (
-                            (user?.isAdmin && !message.senderIsAdmin) || 
-                            (!user?.isAdmin && message.senderIsAdmin)
-                          ) && (
-                            <Badge variant="secondary" className="bg-red-100 text-red-800">
+                          {!message.isRead && (
+                            <Badge variant="secondary" className="bg-red-100 text-red-800 text-xs">
                               New
                             </Badge>
                           )}
