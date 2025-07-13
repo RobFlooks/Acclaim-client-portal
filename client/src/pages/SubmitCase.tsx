@@ -124,7 +124,7 @@ export default function SubmitCase() {
     defaultValues: {
       clientName: user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() : "",
       clientEmail: user?.email || "",
-      clientPhone: "",
+      clientPhone: user?.phone || "",
 
       debtorType: "",
       debtorName: "",
