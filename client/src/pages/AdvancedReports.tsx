@@ -527,17 +527,17 @@ export default function AdvancedReports() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Status Filter</label>
                   <Select
-                    value={customConfig.filters.status || ''}
+                    value={customConfig.filters.status || 'all'}
                     onValueChange={(value) => setCustomConfig({
                       ...customConfig,
-                      filters: { ...customConfig.filters, status: value || undefined }
+                      filters: { ...customConfig.filters, status: value === 'all' ? undefined : value }
                     })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="All statuses" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All</SelectItem>
+                      <SelectItem value="all">All</SelectItem>
                       <SelectItem value="new">New</SelectItem>
                       <SelectItem value="in_progress">In Progress</SelectItem>
                       <SelectItem value="resolved">Resolved</SelectItem>
