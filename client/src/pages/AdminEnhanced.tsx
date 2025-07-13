@@ -69,15 +69,9 @@ function CaseManagementTab() {
   const { data: cases = [], isLoading, error } = useQuery({
     queryKey: ['/api/admin/cases/all'],
     queryFn: async () => {
-      console.log('Fetching admin cases...');
-      try {
-        const response = await apiRequest('/api/admin/cases/all');
-        console.log('Admin cases response:', response);
-        return response;
-      } catch (error) {
-        console.error('Error fetching admin cases:', error);
-        throw error;
-      }
+      const response = await apiRequest('GET', '/api/admin/cases/all');
+      const data = await response.json();
+      return data;
     },
     retry: false,
   });
@@ -99,9 +93,7 @@ function CaseManagementTab() {
   // Archive case mutation
   const archiveCaseMutation = useMutation({
     mutationFn: async (caseId: number) => {
-      return await apiRequest(`/api/admin/cases/${caseId}/archive`, {
-        method: 'PUT',
-      });
+      return await apiRequest('PUT', `/api/admin/cases/${caseId}/archive`);
     },
     onSuccess: () => {
       toast({
@@ -133,9 +125,7 @@ function CaseManagementTab() {
   // Unarchive case mutation
   const unarchiveCaseMutation = useMutation({
     mutationFn: async (caseId: number) => {
-      return await apiRequest(`/api/admin/cases/${caseId}/unarchive`, {
-        method: 'PUT',
-      });
+      return await apiRequest('PUT', `/api/admin/cases/${caseId}/unarchive`);
     },
     onSuccess: () => {
       toast({
@@ -167,9 +157,7 @@ function CaseManagementTab() {
   // Delete case mutation
   const deleteCaseMutation = useMutation({
     mutationFn: async (caseId: number) => {
-      return await apiRequest(`/api/admin/cases/${caseId}`, {
-        method: 'DELETE',
-      });
+      return await apiRequest('DELETE', `/api/admin/cases/${caseId}`);
     },
     onSuccess: () => {
       toast({
@@ -199,14 +187,11 @@ function CaseManagementTab() {
     },
   });
 
-  console.log('CaseManagementTab render - isLoading:', isLoading, 'error:', error, 'cases:', cases);
-
   if (isLoading) {
     return <div>Loading cases...</div>;
   }
 
   if (error) {
-    console.error('Error in CaseManagementTab:', error);
     return (
       <div className="text-center py-8 text-red-600">
         <p>Error loading cases: {error.message}</p>
