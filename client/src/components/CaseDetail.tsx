@@ -42,9 +42,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   const getTotalPayments = () => {
     if (!payments || payments.length === 0) return 0;
     return payments.reduce((sum: number, payment: any) => {
-      // Handle both direct payment objects and nested structure
-      const amount = payment.amount || payment.payments?.amount || 0;
-      const numericAmount = parseFloat(amount);
+      const numericAmount = parseFloat(payment.amount || 0);
       return sum + (isNaN(numericAmount) ? 0 : numericAmount);
     }, 0);
   };
@@ -475,14 +473,11 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
       // Add payments
       if (payments && payments.length > 0) {
         payments.forEach((payment: any) => {
-          // Handle both direct payment objects and nested structure
-          const amount = payment.amount || payment.payments?.amount || 0;
-          const paymentDate = payment.paymentDate || payment.payments?.paymentDate;
-          const numericAmount = parseFloat(amount);
+          const numericAmount = parseFloat(payment.amount || 0);
           
-          if (!isNaN(numericAmount) && paymentDate) {
+          if (!isNaN(numericAmount) && payment.paymentDate) {
             timelineEvents.push({
-              date: paymentDate,
+              date: payment.paymentDate,
               type: 'payment',
               title: 'Payment Received',
               description: `Payment of ${formatCurrency(numericAmount)} received`,
@@ -917,18 +912,15 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                 </thead>
                 <tbody>
                   ${payments.map((payment: any) => {
-                    // Handle both direct payment objects and nested structure
-                    const paymentData = payment.payments || payment;
-                    const amount = paymentData.amount || 0;
-                    const numericAmount = parseFloat(amount);
+                    const numericAmount = parseFloat(payment.amount || 0);
                     
                     return `
                       <tr>
-                        <td class="date">${formatDate(paymentData.paymentDate || paymentData.createdAt)}</td>
+                        <td class="date">${formatDate(payment.paymentDate || payment.createdAt)}</td>
                         <td class="currency">${formatCurrency(isNaN(numericAmount) ? 0 : numericAmount)}</td>
-                        <td>${paymentData.paymentMethod || paymentData.method || 'N/A'}</td>
-                        <td>${paymentData.reference || 'N/A'}</td>
-                        <td>${paymentData.status || 'Completed'}</td>
+                        <td>${payment.paymentMethod || 'N/A'}</td>
+                        <td>${payment.reference || 'N/A'}</td>
+                        <td>Completed</td>
                       </tr>
                     `;
                   }).join('')}
@@ -1468,15 +1460,12 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                       </TableHeader>
                       <TableBody>
                         {payments.map((payment: any) => {
-                          // Handle both direct payment objects and nested structure
-                          const paymentData = payment.payments || payment;
-                          const amount = paymentData.amount || 0;
-                          const numericAmount = parseFloat(amount);
+                          const numericAmount = parseFloat(payment.amount || 0);
                           
                           return (
-                            <TableRow key={paymentData.id || payment.id}>
+                            <TableRow key={payment.id}>
                               <TableCell className="font-medium">
-                                {formatDate(paymentData.paymentDate)}
+                                {formatDate(payment.paymentDate)}
                               </TableCell>
                               <TableCell>
                                 <span className="text-green-600 font-semibold">
@@ -1485,14 +1474,14 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                               </TableCell>
                               <TableCell>
                                 <Badge variant="outline">
-                                  {paymentData.paymentMethod || "N/A"}
+                                  {payment.paymentMethod || "N/A"}
                                 </Badge>
                               </TableCell>
                               <TableCell className="text-gray-600">
-                                {paymentData.reference || "N/A"}
+                                {payment.reference || "N/A"}
                               </TableCell>
                               <TableCell className="text-gray-600">
-                                {paymentData.notes || "N/A"}
+                                {payment.notes || "N/A"}
                               </TableCell>
                             </TableRow>
                           );

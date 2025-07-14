@@ -705,28 +705,21 @@ export class DatabaseStorage implements IStorage {
 
   // Payment operations
   async getPaymentsForCase(caseId: number): Promise<Payment[]> {
-    // Only return payments for non-archived cases
-    const results = await db.select({
-      id: payments.id,
-      caseId: payments.caseId,
-      amount: payments.amount,
-      paymentDate: payments.paymentDate,
-      paymentMethod: payments.paymentMethod,
-      reference: payments.reference,
-      notes: payments.notes,
-      createdAt: payments.createdAt,
-      updatedAt: payments.updatedAt,
-      organisationId: payments.organisationId,
-    })
-    .from(payments)
-    .leftJoin(cases, eq(payments.caseId, cases.id))
-    .where(and(
-      eq(payments.caseId, caseId),
-      eq(cases.isArchived, false)
-    ))
-    .orderBy(desc(payments.paymentDate));
+    // First check if the case is archived
+    const caseRecord = await db.select()
+      .from(cases)
+      .where(eq(cases.id, caseId))
+      .limit(1);
     
-    return results;
+    if (caseRecord.length === 0 || caseRecord[0].isArchived) {
+      return []; // Return empty array if case doesn't exist or is archived
+    }
+    
+    // Get payments for non-archived case
+    return await db.select()
+      .from(payments)
+      .where(eq(payments.caseId, caseId))
+      .orderBy(desc(payments.paymentDate));
   }
 
   async createPayment(payment: InsertPayment): Promise<Payment> {
