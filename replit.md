@@ -126,6 +126,8 @@ Preferred communication style: Simple, everyday language.
 - **Advanced Reporting**: Cross-organization performance, user activity reports, system health dashboards, custom report builders
 - **Enhanced Security**: Password management, admin domain restrictions, temporary passwords
 - **Multi-Route Support**: Admin panel accessible at both `/admin` and `/admin-enhanced`
+- **Report Focus Updates**: Case Summary Report now defaults to active cases only, Recovery Analysis Report includes comprehensive analysis of all active and closed cases
+- **Payment Display Fix**: Resolved £NaN display issue in payment amounts across all components
 
 ### Scaling Considerations
 - Database uses connection pooling for efficiency

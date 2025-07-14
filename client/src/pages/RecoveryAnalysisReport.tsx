@@ -504,6 +504,7 @@ export default function RecoveryAnalysisReport() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Recovery Analysis Report</h1>
             <p className="text-gray-600">Generated on {formatDate(new Date().toISOString())}</p>
+            <p className="text-sm text-acclaim-teal font-medium">Comprehensive analysis of all active and closed cases</p>
           </div>
         </div>
         <div className="flex gap-2">
