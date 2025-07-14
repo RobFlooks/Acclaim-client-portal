@@ -70,13 +70,16 @@ export default function Documents() {
 
   const filteredDocuments = documents?.filter((doc: any) => {
     const searchLower = searchTerm.toLowerCase();
-    const caseDetails = doc.caseId ? getCaseDetails(doc.caseId) : null;
+    
+    // Handle nested document structure
+    const docData = doc.documents || doc;
+    const caseDetails = docData.caseId ? getCaseDetails(docData.caseId) : null;
     
     return (
-      doc.fileName.toLowerCase().includes(searchLower) ||
-      doc.fileType?.toLowerCase().includes(searchLower) ||
-      (caseDetails && caseDetails.accountNumber.toLowerCase().includes(searchLower)) ||
-      (caseDetails && caseDetails.caseName.toLowerCase().includes(searchLower))
+      (docData.fileName && docData.fileName.toLowerCase().includes(searchLower)) ||
+      (docData.fileType && docData.fileType.toLowerCase().includes(searchLower)) ||
+      (caseDetails && caseDetails.accountNumber && caseDetails.accountNumber.toLowerCase().includes(searchLower)) ||
+      (caseDetails && caseDetails.caseName && caseDetails.caseName.toLowerCase().includes(searchLower))
     );
   }) || [];
 
@@ -230,11 +233,12 @@ export default function Documents() {
 
   const groupDocumentsByCase = (docs: any[]) => {
     const grouped = docs.reduce((acc: any, doc: any) => {
-      const caseId = doc.caseId || 'general';
+      const docData = doc.documents || doc;
+      const caseId = docData.caseId || 'general';
       if (!acc[caseId]) {
         acc[caseId] = [];
       }
-      acc[caseId].push(doc);
+      acc[caseId].push(docData);
       return acc;
     }, {});
     return grouped;
@@ -353,7 +357,10 @@ export default function Documents() {
               <div>
                 <p className="text-sm text-gray-600">PDF Files</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {isLoading ? "..." : documents?.filter((d: any) => d.fileType?.includes('pdf')).length || 0}
+                  {isLoading ? "..." : documents?.filter((d: any) => {
+                    const docData = d.documents || d;
+                    return docData.fileType?.includes('pdf');
+                  }).length || 0}
                 </p>
               </div>
               <FileText className="h-8 w-8 text-red-500" />
@@ -367,7 +374,10 @@ export default function Documents() {
               <div>
                 <p className="text-sm text-gray-600">Word Documents</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {isLoading ? "..." : documents?.filter((d: any) => d.fileType?.includes('word') || d.fileType?.includes('document')).length || 0}
+                  {isLoading ? "..." : documents?.filter((d: any) => {
+                    const docData = d.documents || d;
+                    return docData.fileType?.includes('word') || docData.fileType?.includes('document');
+                  }).length || 0}
                 </p>
               </div>
               <FileText className="h-8 w-8 text-blue-500" />
@@ -381,7 +391,10 @@ export default function Documents() {
               <div>
                 <p className="text-sm text-gray-600">Other Files</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {isLoading ? "..." : documents?.filter((d: any) => !d.fileType?.includes('pdf') && !d.fileType?.includes('word') && !d.fileType?.includes('document')).length || 0}
+                  {isLoading ? "..." : documents?.filter((d: any) => {
+                    const docData = d.documents || d;
+                    return !docData.fileType?.includes('pdf') && !docData.fileType?.includes('word') && !docData.fileType?.includes('document');
+                  }).length || 0}
                 </p>
               </div>
               <FileText className="h-8 w-8 text-green-500" />
