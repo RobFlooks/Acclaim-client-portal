@@ -123,8 +123,27 @@ export default function Reports() {
     }, { totalOriginal: 0, totalRecovered: 0, totalOutstanding: 0 });
   };
 
+  // Get active cases only for Report Summary
+  const getActiveCasesAnalysis = () => {
+    if (!cases) return { totalCases: 0, totalRecovered: 0, totalOutstanding: 0 };
+    
+    const activeCases = cases.filter((case_: any) => case_.status?.toLowerCase() !== 'closed');
+    
+    return activeCases.reduce((acc: any, case_: any) => {
+      const original = parseFloat(case_.originalAmount);
+      const outstanding = parseFloat(case_.outstandingAmount);
+      const recovered = original - outstanding;
+      
+      acc.totalRecovered += recovered;
+      acc.totalOutstanding += outstanding;
+      
+      return acc;
+    }, { totalCases: activeCases.length, totalRecovered: 0, totalOutstanding: 0 });
+  };
+
   const statusBreakdown = getStatusBreakdown();
   const recoveryAnalysis = getRecoveryAnalysis();
+  const activeCasesAnalysis = getActiveCasesAnalysis();
 
   return (
     <div className="space-y-6">
@@ -135,15 +154,16 @@ export default function Reports() {
             <BarChart3 className="h-5 w-5 mr-2" />
             Report Summary
           </CardTitle>
+          <p className="text-sm text-gray-600 mt-1">Active cases only</p>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="p-4 rounded-lg bg-[#008a8a57]">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-[#313333]">Total Cases</p>
+                  <p className="text-sm text-[#313333]">Active Cases</p>
                   <p className="text-2xl font-bold text-[#0f766e]">
-                    {casesLoading ? "..." : cases?.length || 0}
+                    {casesLoading ? "..." : activeCasesAnalysis.totalCases}
                   </p>
                 </div>
                 <FileText className="h-8 w-8 text-acclaim-teal" />
@@ -155,7 +175,7 @@ export default function Reports() {
                 <div>
                   <p className="text-sm text-gray-600">Total Recovery</p>
                   <p className="text-2xl font-bold text-blue-600">
-                    {casesLoading ? "..." : formatCurrency(recoveryAnalysis.totalRecovered)}
+                    {casesLoading ? "..." : formatCurrency(activeCasesAnalysis.totalRecovered)}
                   </p>
                 </div>
                 <PieChart className="h-8 w-8 text-blue-600" />
@@ -167,7 +187,7 @@ export default function Reports() {
                 <div>
                   <p className="text-sm text-gray-600">Outstanding</p>
                   <p className="text-2xl font-bold text-orange-600">
-                    {casesLoading ? "..." : formatCurrency(recoveryAnalysis.totalOutstanding)}
+                    {casesLoading ? "..." : formatCurrency(activeCasesAnalysis.totalOutstanding)}
                   </p>
                 </div>
                 <Calendar className="h-8 w-8 text-orange-600" />
@@ -218,6 +238,7 @@ export default function Reports() {
         <Card>
           <CardHeader>
             <CardTitle>Recovery Analysis</CardTitle>
+            <p className="text-sm text-gray-600 mt-1">Comprehensive data for all active and closed cases</p>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
