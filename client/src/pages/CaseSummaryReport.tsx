@@ -14,7 +14,7 @@ import { useState, useMemo } from "react";
 
 export default function CaseSummaryReport() {
   const { toast } = useToast();
-  const [statusFilter, setStatusFilter] = useState<string>("live"); // "all", "live", "closed" - Default to active cases only
+  const [statusFilter, setStatusFilter] = useState<string>("all"); // "all", "live", "closed"
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/dashboard/stats"],
@@ -444,7 +444,6 @@ export default function CaseSummaryReport() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Case Summary Report</h1>
             <p className="text-gray-600">Generated on {formatDate(new Date().toISOString())}</p>
-            <p className="text-sm text-acclaim-teal font-medium">Focuses on active cases by default - use filter to view all cases</p>
           </div>
         </div>
         <div className="flex gap-2">
