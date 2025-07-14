@@ -41,7 +41,12 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   // Calculate accurate outstanding amount
   const getTotalPayments = () => {
     if (!payments || payments.length === 0) return 0;
-    return payments.reduce((sum: number, payment: any) => sum + parseFloat(payment.amount), 0);
+    return payments.reduce((sum: number, payment: any) => {
+      // Handle both direct payment objects and nested structure
+      const amount = payment.amount || payment.payments?.amount || 0;
+      const numericAmount = parseFloat(amount);
+      return sum + (isNaN(numericAmount) ? 0 : numericAmount);
+    }, 0);
   };
 
   const getOutstandingAmount = () => {
@@ -470,14 +475,21 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
       // Add payments
       if (payments && payments.length > 0) {
         payments.forEach((payment: any) => {
-          timelineEvents.push({
-            date: payment.paymentDate,
-            type: 'payment',
-            title: 'Payment Received',
-            description: `Payment of ${formatCurrency(payment.amount)} received`,
-            icon: '💰',
-            color: '#059669'
-          });
+          // Handle both direct payment objects and nested structure
+          const amount = payment.amount || payment.payments?.amount || 0;
+          const paymentDate = payment.paymentDate || payment.payments?.paymentDate;
+          const numericAmount = parseFloat(amount);
+          
+          if (!isNaN(numericAmount) && paymentDate) {
+            timelineEvents.push({
+              date: paymentDate,
+              type: 'payment',
+              title: 'Payment Received',
+              description: `Payment of ${formatCurrency(numericAmount)} received`,
+              icon: '💰',
+              color: '#059669'
+            });
+          }
         });
       }
       
@@ -904,15 +916,22 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  ${payments.map((payment: any) => `
-                    <tr>
-                      <td class="date">${formatDate(payment.createdAt)}</td>
-                      <td class="currency">${formatCurrency(payment.amount)}</td>
-                      <td>${payment.method || 'N/A'}</td>
-                      <td>${payment.reference || 'N/A'}</td>
-                      <td>${payment.status || 'N/A'}</td>
-                    </tr>
-                  `).join('')}
+                  ${payments.map((payment: any) => {
+                    // Handle both direct payment objects and nested structure
+                    const paymentData = payment.payments || payment;
+                    const amount = paymentData.amount || 0;
+                    const numericAmount = parseFloat(amount);
+                    
+                    return `
+                      <tr>
+                        <td class="date">${formatDate(paymentData.paymentDate || paymentData.createdAt)}</td>
+                        <td class="currency">${formatCurrency(isNaN(numericAmount) ? 0 : numericAmount)}</td>
+                        <td>${paymentData.paymentMethod || paymentData.method || 'N/A'}</td>
+                        <td>${paymentData.reference || 'N/A'}</td>
+                        <td>${paymentData.status || 'Completed'}</td>
+                      </tr>
+                    `;
+                  }).join('')}
                 </tbody>
               </table>
               <div style="margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
@@ -1448,29 +1467,36 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {payments.map((payment: any) => (
-                          <TableRow key={payment.id}>
-                            <TableCell className="font-medium">
-                              {formatDate(payment.paymentDate)}
-                            </TableCell>
-                            <TableCell>
-                              <span className="text-green-600 font-semibold">
-                                {formatCurrency(payment.amount)}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline">
-                                {payment.paymentMethod || "N/A"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-gray-600">
-                              {payment.reference || "N/A"}
-                            </TableCell>
-                            <TableCell className="text-gray-600">
-                              {payment.notes || "N/A"}
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {payments.map((payment: any) => {
+                          // Handle both direct payment objects and nested structure
+                          const paymentData = payment.payments || payment;
+                          const amount = paymentData.amount || 0;
+                          const numericAmount = parseFloat(amount);
+                          
+                          return (
+                            <TableRow key={paymentData.id || payment.id}>
+                              <TableCell className="font-medium">
+                                {formatDate(paymentData.paymentDate)}
+                              </TableCell>
+                              <TableCell>
+                                <span className="text-green-600 font-semibold">
+                                  {formatCurrency(isNaN(numericAmount) ? 0 : numericAmount)}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline">
+                                  {paymentData.paymentMethod || "N/A"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-gray-600">
+                                {paymentData.reference || "N/A"}
+                              </TableCell>
+                              <TableCell className="text-gray-600">
+                                {paymentData.notes || "N/A"}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
