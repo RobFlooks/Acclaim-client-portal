@@ -31,7 +31,6 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
     { id: "dashboard", label: "Dashboard", icon: Home },
     { id: "cases", label: "Cases", icon: FolderOpen },
     { id: "messages", label: "Messages", icon: MessageSquare, badge: unreadCount > 0 ? unreadCount : undefined },
-    { id: "reports", label: "Reports", icon: BarChart3 },
     { id: "documents", label: "Documents", icon: FileText },
     // Only show admin link to admin users
     ...(user?.isAdmin ? [
