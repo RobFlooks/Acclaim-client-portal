@@ -32,6 +32,7 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
     { id: "cases", label: "Cases", icon: FolderOpen },
     { id: "messages", label: "Messages", icon: MessageSquare, badge: unreadCount > 0 ? unreadCount : undefined },
     { id: "documents", label: "Documents", icon: FileText },
+    { id: "reports", label: "Reports", icon: BarChart3 },
     // Only show admin link to admin users
     ...(user?.isAdmin ? [
       { id: "admin", label: "Admin Panel", icon: Shield, isRoute: true, route: "/admin" }
