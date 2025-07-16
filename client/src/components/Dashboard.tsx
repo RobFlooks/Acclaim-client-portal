@@ -10,7 +10,11 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation } from "wouter";
 import CaseDetail from "./CaseDetail";
 
-export default function Dashboard() {
+interface DashboardProps {
+  setActiveSection?: (section: string) => void;
+}
+
+export default function Dashboard({ setActiveSection }: DashboardProps) {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [selectedCase, setSelectedCase] = useState<any>(null);
@@ -328,7 +332,11 @@ export default function Dashboard() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setLocation("/?section=messages")}
+                  onClick={() => {
+                    if (setActiveSection) {
+                      setActiveSection("messages");
+                    }
+                  }}
                   className="text-acclaim-teal border-acclaim-teal hover:bg-acclaim-teal hover:text-white"
                 >
                   View All Messages

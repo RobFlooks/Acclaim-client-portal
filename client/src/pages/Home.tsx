@@ -45,7 +45,7 @@ export default function Home() {
   const renderContent = () => {
     switch (activeSection) {
       case "dashboard":
-        return <Dashboard />;
+        return <Dashboard setActiveSection={setActiveSection} />;
       case "cases":
         return <Cases />;
       case "messages":
@@ -55,7 +55,7 @@ export default function Home() {
       case "documents":
         return <Documents />;
       default:
-        return <Dashboard />;
+        return <Dashboard setActiveSection={setActiveSection} />;
     }
   };
 
