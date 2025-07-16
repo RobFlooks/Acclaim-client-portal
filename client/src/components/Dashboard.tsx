@@ -391,7 +391,7 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
                             From: {message.senderName || message.senderEmail || 'Unknown'}
                           </p>
                           <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
-                            {message.senderIsAdmin ? "Acclaim" : "User"}
+                            {message.senderIsAdmin ? "Acclaim" : (message.senderOrganisationName || "User")}
                           </Badge>
                         </div>
                         <p className="text-sm text-gray-700 line-clamp-2 leading-relaxed">
