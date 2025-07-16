@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
-import { Send, MessageSquare, Plus, User, Paperclip, Download, Trash2 } from "lucide-react";
+import { Send, MessageSquare, Plus, User, Paperclip, Download, Trash2, Search, Filter, Calendar, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,6 +26,14 @@ export default function Messages() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedCase, setSelectedCase] = useState<any>(null);
   const [caseDialogOpen, setCaseDialogOpen] = useState(false);
+  
+  // Search state
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchDateFrom, setSearchDateFrom] = useState("");
+  const [searchDateTo, setSearchDateTo] = useState("");
+  const [searchSender, setSearchSender] = useState("");
+  const [searchCaseId, setSearchCaseId] = useState("");
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -241,26 +249,95 @@ export default function Messages() {
 
   const totalMessages = messages?.length || 0;
 
-  // Filter messages based on the selected filter
+  // Filter messages based on search criteria
   const filteredMessages = useMemo(() => {
     if (!messages) return [];
-    return messages;
-  }, [messages]);
+    
+    return messages.filter((message: any) => {
+      // Text search in subject and content
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const matchesText = 
+          message.subject?.toLowerCase().includes(searchLower) ||
+          message.content?.toLowerCase().includes(searchLower);
+        if (!matchesText) return false;
+      }
+      
+      // Date range filter
+      if (searchDateFrom) {
+        const messageDate = new Date(message.createdAt);
+        const fromDate = new Date(searchDateFrom);
+        if (messageDate < fromDate) return false;
+      }
+      
+      if (searchDateTo) {
+        const messageDate = new Date(message.createdAt);
+        const toDate = new Date(searchDateTo);
+        toDate.setHours(23, 59, 59, 999); // End of day
+        if (messageDate > toDate) return false;
+      }
+      
+      // Sender filter
+      if (searchSender) {
+        const senderLower = searchSender.toLowerCase();
+        const matchesSender = 
+          message.senderName?.toLowerCase().includes(senderLower) ||
+          message.senderEmail?.toLowerCase().includes(senderLower);
+        if (!matchesSender) return false;
+      }
+      
+      // Case ID filter
+      if (searchCaseId) {
+        const caseSearchTerm = searchCaseId.toLowerCase();
+        if (message.caseId) {
+          const caseData = cases?.find((c: any) => c.id === message.caseId);
+          const matchesCase = 
+            caseData?.accountNumber?.toLowerCase().includes(caseSearchTerm) ||
+            caseData?.caseName?.toLowerCase().includes(caseSearchTerm) ||
+            message.caseId.toString().includes(caseSearchTerm);
+          if (!matchesCase) return false;
+        } else {
+          return false; // No case associated with this message
+        }
+      }
+      
+      return true;
+    });
+  }, [messages, searchTerm, searchDateFrom, searchDateTo, searchSender, searchCaseId, cases]);
+
+  // Clear all search filters
+  const clearAllFilters = () => {
+    setSearchTerm("");
+    setSearchDateFrom("");
+    setSearchDateTo("");
+    setSearchSender("");
+    setSearchCaseId("");
+  };
 
   return (
     <div className="space-y-6">
-      {/* Header with New Message Button */}
+      {/* Header with Search and New Message Button */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Messages</CardTitle>
-            <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
-              <DialogTrigger asChild>
-                <Button className="bg-acclaim-teal hover:bg-acclaim-teal/90">
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Message
-                </Button>
-              </DialogTrigger>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+                className="border-acclaim-teal text-acclaim-teal hover:bg-acclaim-teal hover:text-white"
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                {showAdvancedSearch ? "Hide Filters" : "Show Filters"}
+              </Button>
+              <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
+                <DialogTrigger asChild>
+                  <Button className="bg-acclaim-teal hover:bg-acclaim-teal/90">
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Message
+                  </Button>
+                </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>
@@ -318,8 +395,98 @@ export default function Messages() {
                 </div>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
         </CardHeader>
+      </Card>
+
+      {/* Search Panel */}
+      <Card>
+        <CardContent className="pt-6">
+          {/* Basic Search */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search messages by subject or content..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              {(searchTerm || searchDateFrom || searchDateTo || searchSender || searchCaseId) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearAllFilters}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Clear
+                </Button>
+              )}
+            </div>
+
+            {/* Advanced Search */}
+            {showAdvancedSearch && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <Label htmlFor="dateFrom">Date From</Label>
+                  <Input
+                    id="dateFrom"
+                    type="date"
+                    value={searchDateFrom}
+                    onChange={(e) => setSearchDateFrom(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="dateTo">Date To</Label>
+                  <Input
+                    id="dateTo"
+                    type="date"
+                    value={searchDateTo}
+                    onChange={(e) => setSearchDateTo(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="sender">Sender</Label>
+                  <Input
+                    id="sender"
+                    placeholder="Search by sender name/email..."
+                    value={searchSender}
+                    onChange={(e) => setSearchSender(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="caseSearch">Case</Label>
+                  <Input
+                    id="caseSearch"
+                    placeholder="Search by case number/name..."
+                    value={searchCaseId}
+                    onChange={(e) => setSearchCaseId(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Search Results Summary */}
+            <div className="flex items-center justify-between text-sm text-gray-600">
+              <span>
+                Showing {filteredMessages.length} of {totalMessages} messages
+              </span>
+              {filteredMessages.length !== totalMessages && (
+                <span className="text-accent-foreground">
+                  (filtered)
+                </span>
+              )}
+            </div>
+          </div>
+        </CardContent>
       </Card>
 
       {/* Message View Dialog */}
