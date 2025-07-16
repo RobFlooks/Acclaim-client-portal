@@ -601,9 +601,11 @@ export class DatabaseStorage implements IStorage {
         senderName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
         senderEmail: users.email,
         senderIsAdmin: users.isAdmin,
+        senderOrganisationName: organisations.name,
       })
       .from(messages)
       .leftJoin(users, eq(messages.senderId, users.id))
+      .leftJoin(organisations, eq(users.organisationId, organisations.id))
       .leftJoin(cases, eq(messages.caseId, cases.id))
       .where(and(
         or(eq(messages.senderId, userId), eq(messages.recipientId, userId)),
@@ -634,9 +636,11 @@ export class DatabaseStorage implements IStorage {
         senderName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
         senderEmail: users.email,
         senderIsAdmin: users.isAdmin,
+        senderOrganisationName: organisations.name,
       })
       .from(messages)
       .leftJoin(users, eq(messages.senderId, users.id))
+      .leftJoin(organisations, eq(users.organisationId, organisations.id))
       .where(eq(messages.caseId, caseId))
       .orderBy(desc(messages.createdAt));
   }

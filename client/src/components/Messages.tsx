@@ -363,11 +363,9 @@ export default function Messages() {
                         <p className="font-medium text-gray-900">
                           {viewingMessage.senderName || viewingMessage.senderEmail || 'Unknown'}
                         </p>
-                        {viewingMessage.senderIsAdmin && (
-                          <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
-                            Admin
-                          </Badge>
-                        )}
+                        <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                          {viewingMessage.senderIsAdmin ? "Acclaim" : (viewingMessage.senderOrganisationName || "User")}
+                        </Badge>
                       </div>
                       <p className="text-sm text-gray-500">
                         {formatDate(viewingMessage.createdAt)}
@@ -535,11 +533,9 @@ export default function Messages() {
                               <p className="text-xs text-gray-500">
                                 From: <span className="font-medium">{message.senderName || message.senderEmail || 'Unknown'}</span>
                               </p>
-                              {message.senderIsAdmin && (
-                                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
-                                  Admin
-                                </Badge>
-                              )}
+                              <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                                {message.senderIsAdmin ? "Acclaim" : (message.senderOrganisationName || "User")}
+                              </Badge>
                             </div>
                             {message.attachmentFileName && (
                               <div className="flex items-center text-xs text-gray-500">
