@@ -1023,7 +1023,7 @@ export default function SubmitCase() {
                   <input
                     type="file"
                     multiple
-                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif"
+                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.xls,.xlsx,.csv"
                     onChange={(e) => {
                       const files = Array.from(e.target.files || []);
                       setUploadedFiles(prev => [...prev, ...files]);
@@ -1031,7 +1031,7 @@ export default function SubmitCase() {
                     className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#008a8a59] file:text-[#0f766e] hover:file:bg-[#008a8a80]"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Supported formats: PDF, DOC, DOCX, TXT, JPG, JPEG, PNG, GIF
+                    Supported formats: PDF, DOC, DOCX, TXT, JPG, JPEG, PNG, GIF, XLS, XLSX, CSV
                   </p>
                 </div>
 
