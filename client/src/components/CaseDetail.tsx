@@ -562,7 +562,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
             .logo-icon {
               width: 40px;
               height: 40px;
-              background-image: url('/attached_assets/Acclaim rose.Cur_1752277774829.png');
+              background-image: url('/attached_assets/IMG_6008_1752697693736.jpeg');
               background-size: contain;
               background-repeat: no-repeat;
               background-position: center;
@@ -714,7 +714,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               display: inline-block;
               margin-right: 8px;
               vertical-align: middle;
-              background-image: url('/attached_assets/Acclaim rose.Cur_1752277774829.png');
+              background-image: url('/attached_assets/IMG_6008_1752697693736.jpeg');
               background-size: contain;
               background-repeat: no-repeat;
               background-position: center;
