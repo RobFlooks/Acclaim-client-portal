@@ -147,7 +147,7 @@ export default function SubmitCase() {
       altEmail: "",
       debtDetails: "",
       totalDebtAmount: 0,
-      currency: "",
+      currency: "GBP",
       paymentTermsType: "",
       paymentTermsDays: 30,
       paymentTermsOther: "",
