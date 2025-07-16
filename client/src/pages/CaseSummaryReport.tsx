@@ -253,6 +253,7 @@ export default function CaseSummaryReport() {
                   <th>Account Number</th>
                   <th>Case Name</th>
                   <th>Status</th>
+                  <th>Stage</th>
                   <th>Original Amount</th>
                   <th>Costs Added</th>
                   <th>Interest Added</th>
@@ -276,6 +277,7 @@ export default function CaseSummaryReport() {
                       <td>${caseItem.accountNumber || ''}</td>
                       <td>${caseItem.caseName || ''}</td>
                       <td><span class="status-${caseItem.status}">${caseItem.status === 'Closed' ? 'Closed' : (caseItem.status || '').charAt(0).toUpperCase() + (caseItem.status || '').slice(1)}</span></td>
+                      <td>${caseItem.stage ? caseItem.stage.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 'Not specified'}</td>
                       <td class="currency">${formatCurrency(caseItem.originalAmount || 0)}</td>
                       <td class="currency">${formatCurrency(caseItem.costsAdded || 0)}</td>
                       <td class="currency">${formatCurrency(caseItem.interestAdded || 0)}</td>
@@ -573,6 +575,9 @@ export default function CaseSummaryReport() {
                     Status
                   </th>
                   <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                    Stage
+                  </th>
+                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
                     Original Amount
                   </th>
                   <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
@@ -612,6 +617,9 @@ export default function CaseSummaryReport() {
                     </td>
                     <td className="border border-gray-200 px-4 py-3 text-sm">
                       {getStatusBadge(caseItem.status, caseItem.stage)}
+                    </td>
+                    <td className="border border-gray-200 px-4 py-3 text-sm text-gray-900">
+                      {caseItem.stage ? caseItem.stage.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 'Not specified'}
                     </td>
                     <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-gray-900">
                       {formatCurrency(caseItem.originalAmount)}
