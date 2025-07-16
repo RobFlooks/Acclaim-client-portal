@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -31,6 +32,7 @@ interface CaseDetailProps {
 
 export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   const [newMessage, setNewMessage] = useState("");
+  const [messageSubject, setMessageSubject] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [messageAttachment, setMessageAttachment] = useState<File | null>(null);
   const [activeTab, setActiveTab] = useState("timeline");
@@ -186,6 +188,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/cases", caseData.id, "messages"] });
       queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
       setNewMessage("");
+      setMessageSubject("");
       setMessageAttachment(null);
       // Reset message attachment file input
       const messageFileInput = document.getElementById("message-attachment") as HTMLInputElement;
@@ -332,11 +335,13 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   const handleSendMessage = () => {
     if (!newMessage.trim()) return;
 
+    const subject = messageSubject.trim() || `Message regarding case ${caseData.accountNumber}`;
+
     sendMessageMutation.mutate({
       caseId: caseData.id,
       recipientType: "organization",
       recipientId: "support",
-      subject: `Message regarding case ${caseData.accountNumber}`,
+      subject: subject,
       content: newMessage,
     });
   };
@@ -1385,14 +1390,34 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                 <Label htmlFor="message" className="text-sm font-medium">
                   Send Message
                 </Label>
-                <Textarea
-                  id="message"
-                  placeholder="Type your message here..."
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  className="mt-2"
-                  rows={3}
-                />
+                <div className="mt-2 space-y-3">
+                  <div>
+                    <Label htmlFor="message-subject" className="text-sm font-medium text-gray-700">
+                      Subject (Optional)
+                    </Label>
+                    <Input
+                      id="message-subject"
+                      type="text"
+                      placeholder="Enter subject (if blank, will default to case reference)"
+                      value={messageSubject}
+                      onChange={(e) => setMessageSubject(e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="message" className="text-sm font-medium text-gray-700">
+                      Message
+                    </Label>
+                    <Textarea
+                      id="message"
+                      placeholder="Type your message here..."
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      className="mt-1"
+                      rows={3}
+                    />
+                  </div>
+                </div>
                 
                 {/* Message Attachment Section */}
                 <div className="mt-4">
