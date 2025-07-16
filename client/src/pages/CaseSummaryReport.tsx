@@ -409,121 +409,22 @@ export default function CaseSummaryReport() {
       });
       ws['!autofilter'] = { ref: headerRange };
 
-      // Style the header row with background color
-      const headerRow = 0;
-      for (let col = 0; col < 12; col++) {
-        const cellRef = XLSX.utils.encode_cell({ c: col, r: headerRow });
-        if (!ws[cellRef]) continue;
-        ws[cellRef].s = {
-          fill: { fgColor: { rgb: "4A90E2" } },
-          font: { bold: true, color: { rgb: "FFFFFF" } },
-          alignment: { horizontal: "center" }
-        };
-      }
-
-      // Style the summary row with different background
-      const summaryRowIndex = excelData.length - 1;
-      for (let col = 0; col < 12; col++) {
-        const cellRef = XLSX.utils.encode_cell({ c: col, r: summaryRowIndex });
-        if (!ws[cellRef]) continue;
-        ws[cellRef].s = {
-          fill: { fgColor: { rgb: "F0F0F0" } },
-          font: { bold: true },
-          border: {
-            top: { style: "thick", color: { rgb: "000000" } }
-          }
-        };
-      }
-
-      // Color code status cells
-      for (let row = 1; row < excelData.length - 1; row++) {
-        const statusCellRef = XLSX.utils.encode_cell({ c: 2, r: row });
-        const stageCellRef = XLSX.utils.encode_cell({ c: 3, r: row });
-        
-        if (ws[statusCellRef]) {
-          const status = excelData[row]['Status'];
-          let statusColor = "FFFFFF";
-          if (status === 'Closed') statusColor = "C8E6C9";
-          else if (status === 'Active') statusColor = "FFF9C4";
-          else if (status === 'New') statusColor = "BBDEFB";
-          
-          ws[statusCellRef].s = {
-            fill: { fgColor: { rgb: statusColor } },
-            alignment: { horizontal: "center" }
-          };
-        }
-        
-        if (ws[stageCellRef]) {
-          const stage = excelData[row]['Stage'];
-          let stageColor = "FFFFFF";
-          if (stage?.includes('Pre-Legal')) stageColor = "BBDEFB";
-          else if (stage?.includes('Payment') || stage?.includes('Paid')) stageColor = "C8E6C9";
-          else if (stage?.includes('Claim')) stageColor = "FFF9C4";
-          else if (stage?.includes('Judgment')) stageColor = "FFCC80";
-          else if (stage?.includes('Enforcement')) stageColor = "FFCDD2";
-          
-          ws[stageCellRef].s = {
-            fill: { fgColor: { rgb: stageColor } },
-            alignment: { horizontal: "center" }
-          };
-        }
-      }
-
       XLSX.utils.book_append_sheet(wb, ws, 'Case Summary Report');
 
-      // Add Legend Sheet
+      // Add a simple legend as a text note
       const legendData = [
-        { 'Category': 'Status Colors', 'Item': 'Closed', 'Color': 'Light Green' },
-        { 'Category': '', 'Item': 'Active', 'Color': 'Light Yellow' },
-        { 'Category': '', 'Item': 'New', 'Color': 'Light Blue' },
-        { 'Category': '', 'Item': '', 'Color': '' },
-        { 'Category': 'Stage Colors', 'Item': 'Pre-Legal', 'Color': 'Light Blue' },
-        { 'Category': '', 'Item': 'Payment Plan/Paid', 'Color': 'Light Green' },
-        { 'Category': '', 'Item': 'Claim', 'Color': 'Light Yellow' },
-        { 'Category': '', 'Item': 'Judgment', 'Color': 'Light Orange' },
-        { 'Category': '', 'Item': 'Enforcement', 'Color': 'Light Red' },
+        { 'Color Guide': 'Status Colors in web interface:' },
+        { 'Color Guide': 'Green = Closed, Yellow = Active, Blue = New' },
+        { 'Color Guide': '' },
+        { 'Color Guide': 'Stage Colors in web interface:' },
+        { 'Color Guide': 'Blue = Pre-Legal, Green = Payment Plan/Paid' },
+        { 'Color Guide': 'Yellow = Claim, Orange = Judgment, Red = Enforcement' },
       ];
       
       const legendSheet = XLSX.utils.json_to_sheet(legendData);
-      legendSheet['!cols'] = [{ wch: 15 }, { wch: 20 }, { wch: 15 }];
+      legendSheet['!cols'] = [{ wch: 50 }];
       
-      // Style legend header
-      for (let col = 0; col < 3; col++) {
-        const cellRef = XLSX.utils.encode_cell({ c: col, r: 0 });
-        if (!legendSheet[cellRef]) continue;
-        legendSheet[cellRef].s = {
-          fill: { fgColor: { rgb: "6A1B9A" } },
-          font: { bold: true, color: { rgb: "FFFFFF" } },
-          alignment: { horizontal: "center" }
-        };
-      }
-      
-      // Apply colors to legend items
-      const colorMap: { [key: string]: string } = {
-        'Closed': 'C8E6C9',
-        'Active': 'FFF9C4',
-        'New': 'BBDEFB',
-        'Pre-Legal': 'BBDEFB',
-        'Payment Plan/Paid': 'C8E6C9',
-        'Claim': 'FFF9C4',
-        'Judgment': 'FFCC80',
-        'Enforcement': 'FFCDD2'
-      };
-      
-      for (let row = 1; row < legendData.length; row++) {
-        const item = legendData[row]['Item'];
-        if (item && colorMap[item]) {
-          const cellRef = XLSX.utils.encode_cell({ c: 1, r: row });
-          if (legendSheet[cellRef]) {
-            legendSheet[cellRef].s = {
-              fill: { fgColor: { rgb: colorMap[item] } },
-              alignment: { horizontal: "center" }
-            };
-          }
-        }
-      }
-      
-      XLSX.utils.book_append_sheet(wb, legendSheet, 'Color Legend');
+      XLSX.utils.book_append_sheet(wb, legendSheet, 'Color Guide');
 
       // Generate filename with current date
       const now = new Date();
