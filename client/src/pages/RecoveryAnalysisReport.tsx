@@ -172,6 +172,8 @@ export default function RecoveryAnalysisReport() {
     const statusConfig = {
       'closed': { label: 'Closed', className: 'bg-green-100 text-green-800' },
       'new matter': { label: 'New Matter', className: 'bg-blue-100 text-blue-800' },
+      'new': { label: 'New', className: 'bg-blue-100 text-blue-800' },
+      'active': { label: 'Active', className: 'bg-yellow-100 text-yellow-800' },
     };
     
     const config = statusConfig[statusLower as keyof typeof statusConfig] || 
@@ -179,6 +181,37 @@ export default function RecoveryAnalysisReport() {
     return (
       <Badge className={config.className}>
         {config.label}
+      </Badge>
+    );
+  };
+
+  const getStageBadge = (stage: string) => {
+    const getStageColor = (stage: string) => {
+      const normalizedStage = stage?.toLowerCase().replace(/[_-]/g, '');
+      
+      switch (normalizedStage) {
+        case 'prelegal':
+          return 'bg-blue-100 text-blue-800';
+        case 'paymentplan':
+        case 'paid':
+          return 'bg-green-100 text-green-800';
+        case 'claim':
+          return 'bg-yellow-100 text-yellow-800';
+        case 'judgment':
+          return 'bg-orange-100 text-orange-800';
+        case 'enforcement':
+        case 'legalaction':
+          return 'bg-red-100 text-red-800';
+        default:
+          return 'bg-gray-100 text-gray-800';
+      }
+    };
+
+    const displayText = stage ? stage.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 'Not specified';
+    
+    return (
+      <Badge className={getStageColor(stage)}>
+        {displayText}
       </Badge>
     );
   };
@@ -211,6 +244,7 @@ export default function RecoveryAnalysisReport() {
           'Account Number': caseItem.accountNumber,
           'Case Name': caseItem.caseName,
           'Status': caseItem.status?.toLowerCase() === 'closed' ? 'Closed' : caseItem.status?.charAt(0).toUpperCase() + caseItem.status?.slice(1),
+          'Stage': caseItem.stage ? caseItem.stage.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 'Not specified',
           'Original Amount': originalAmount,
           'Costs Added': costsAdded,
           'Interest Added': interestAdded,
@@ -412,6 +446,7 @@ export default function RecoveryAnalysisReport() {
                   <th>Account Number</th>
                   <th>Case Name</th>
                   <th>Status</th>
+                  <th>Stage</th>
                   <th>Original Amount</th>
                   <th>Total Debt</th>
                   <th>Amount Recovered</th>
@@ -433,6 +468,7 @@ export default function RecoveryAnalysisReport() {
                       <td>${caseItem.accountNumber || ''}</td>
                       <td>${caseItem.caseName || ''}</td>
                       <td>${caseItem.status?.toLowerCase() === 'closed' ? 'Closed' : (caseItem.status || '').charAt(0).toUpperCase() + (caseItem.status || '').slice(1)}</td>
+                      <td>${caseItem.stage ? caseItem.stage.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 'Not specified'}</td>
                       <td class="currency">${formatCurrency(originalAmount)}</td>
                       <td class="currency">${formatCurrency(totalDebt)}</td>
                       <td class="currency">${formatCurrency(payments)}</td>
@@ -647,6 +683,9 @@ export default function RecoveryAnalysisReport() {
                     Status
                   </th>
                   <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                    Stage
+                  </th>
+                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
                     Original Amount
                   </th>
                   <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
@@ -683,6 +722,9 @@ export default function RecoveryAnalysisReport() {
                       </td>
                       <td className="border border-gray-200 px-4 py-3 text-sm">
                         {getStatusBadge(caseItem.status)}
+                      </td>
+                      <td className="border border-gray-200 px-4 py-3 text-sm">
+                        {getStageBadge(caseItem.stage)}
                       </td>
                       <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-gray-900">
                         {formatCurrency(originalAmount)}
