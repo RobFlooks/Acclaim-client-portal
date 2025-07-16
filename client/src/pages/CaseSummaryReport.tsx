@@ -138,6 +138,37 @@ export default function CaseSummaryReport() {
     );
   };
 
+  const getStageBadge = (stage: string) => {
+    const getStageColor = (stage: string) => {
+      const normalizedStage = stage.toLowerCase().replace(/[_-]/g, '');
+      
+      switch (normalizedStage) {
+        case 'prelegal':
+          return 'bg-blue-100 text-blue-800';
+        case 'paymentplan':
+        case 'paid':
+          return 'bg-green-100 text-green-800';
+        case 'claim':
+          return 'bg-yellow-100 text-yellow-800';
+        case 'judgment':
+          return 'bg-orange-100 text-orange-800';
+        case 'enforcement':
+        case 'legalaction':
+          return 'bg-red-100 text-red-800';
+        default:
+          return 'bg-gray-100 text-gray-800';
+      }
+    };
+
+    const displayText = stage ? stage.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 'Not specified';
+    
+    return (
+      <Badge className={getStageColor(stage)}>
+        {displayText}
+      </Badge>
+    );
+  };
+
 
 
   const handleDownloadPDF = () => {
@@ -598,8 +629,8 @@ export default function CaseSummaryReport() {
                     <td className="border border-gray-200 px-4 py-3 text-sm">
                       {getStatusBadge(caseItem.status)}
                     </td>
-                    <td className="border border-gray-200 px-4 py-3 text-sm text-gray-900">
-                      {caseItem.stage ? caseItem.stage.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 'Not specified'}
+                    <td className="border border-gray-200 px-4 py-3 text-sm">
+                      {getStageBadge(caseItem.stage)}
                     </td>
                     <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-gray-900">
                       {formatCurrency(caseItem.originalAmount)}
