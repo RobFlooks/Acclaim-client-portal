@@ -435,7 +435,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
           title: 'Case Created',
           description: `Case ${caseData.accountNumber} was created`,
           icon: '🏗️',
-          color: '#3B82F6'
+          color: '#0d9488'
         });
       }
       
@@ -450,7 +450,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               title: activity.activityType || 'Activity',
               description: activity.description || 'No description',
               icon: '⚡',
-              color: '#10B981'
+              color: '#14b8a6'
             });
           }
         });
@@ -467,7 +467,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               title: message.subject || 'Message',
               description: `Message from ${message.senderName || 'Unknown'}`,
               icon: '💬',
-              color: '#6366F1'
+              color: '#0891b2'
             });
           }
         });
@@ -484,7 +484,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               title: 'Document Uploaded',
               description: document.fileName || 'Unknown file',
               icon: '📄',
-              color: '#F59E0B'
+              color: '#0d9488'
             });
           }
         });
@@ -504,7 +504,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                 title: 'Payment Received',
                 description: `Payment of ${formatCurrency(numericAmount)} received`,
                 icon: '💰',
-                color: '#059669'
+                color: '#10b981'
               });
             }
           }
@@ -530,7 +530,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
               margin: 0;
               padding: 20px;
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
               min-height: 100vh;
             }
             .container {
@@ -542,10 +542,28 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               overflow: hidden;
             }
             .header {
-              background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+              background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
               color: white;
-              padding: 30px;
+              padding: 40px 30px;
               text-align: center;
+              position: relative;
+            }
+            .logo {
+              width: 60px;
+              height: 60px;
+              margin: 0 auto 20px auto;
+              background: white;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            }
+            .logo-icon {
+              width: 35px;
+              height: 35px;
+              background: #0d9488;
+              clip-path: polygon(50% 0%, 83% 12%, 100% 43%, 94% 78%, 68% 100%, 32% 100%, 6% 78%, 0% 43%, 17% 12%);
             }
             .header h1 {
               margin: 0;
@@ -557,24 +575,30 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               font-size: 1.1em;
               opacity: 0.9;
             }
+            .company-name {
+              font-size: 1.2em;
+              font-weight: 600;
+              margin-bottom: 10px;
+              color: rgba(255, 255, 255, 0.95);
+            }
             .case-summary {
               display: grid;
               grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
               gap: 20px;
               padding: 30px;
-              background: #f8fafc;
-              border-bottom: 1px solid #e2e8f0;
+              background: #f0fdfa;
+              border-bottom: 1px solid #14b8a6;
             }
             .summary-card {
               background: white;
               padding: 20px;
               border-radius: 12px;
               box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-              border-left: 4px solid #3b82f6;
+              border-left: 4px solid #0d9488;
             }
             .summary-card h3 {
               margin: 0 0 5px 0;
-              color: #1e40af;
+              color: #0d9488;
               font-size: 0.9em;
               text-transform: uppercase;
               letter-spacing: 0.5px;
@@ -609,7 +633,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               top: 0;
               bottom: 0;
               width: 4px;
-              background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
+              background: linear-gradient(to bottom, #0d9488, #14b8a6);
               border-radius: 2px;
             }
             .timeline-item {
@@ -624,7 +648,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               top: 8px;
               width: 16px;
               height: 16px;
-              background: var(--item-color, #3b82f6);
+              background: var(--item-color, #0d9488);
               border-radius: 50%;
               border: 3px solid white;
               box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -654,9 +678,10 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               display: flex;
               align-items: center;
               justify-content: center;
-              background: var(--item-color, #3b82f6);
+              background: var(--item-color, #0d9488);
               color: white;
               border-radius: 50%;
+              box-shadow: 0 2px 6px rgba(13, 148, 136, 0.3);
             }
             .timeline-title-text {
               font-size: 1.1em;
@@ -677,9 +702,18 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
             .footer {
               text-align: center;
               padding: 30px;
-              background: #f1f5f9;
-              color: #64748b;
-              border-top: 1px solid #e2e8f0;
+              background: #f0fdfa;
+              color: #0d9488;
+              border-top: 1px solid #14b8a6;
+            }
+            .footer-logo {
+              width: 24px;
+              height: 24px;
+              background: #0d9488;
+              display: inline-block;
+              margin-right: 8px;
+              clip-path: polygon(50% 0%, 83% 12%, 100% 43%, 94% 78%, 68% 100%, 32% 100%, 6% 78%, 0% 43%, 17% 12%);
+              vertical-align: middle;
             }
             .no-events {
               text-align: center;
@@ -706,6 +740,10 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
         <body>
           <div class="container">
             <div class="header">
+              <div class="logo">
+                <div class="logo-icon"></div>
+              </div>
+              <div class="company-name">Acclaim Credit Management & Recovery</div>
               <h1>📊 Visual Timeline Report</h1>
               <p>Case: ${caseData.caseName} (${caseData.accountNumber})</p>
             </div>
@@ -761,8 +799,10 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
             </div>
             
             <div class="footer">
-              <p>Generated by Acclaim Credit Management System on ${currentDate}</p>
+              <p><span class="footer-logo"></span><strong>Acclaim Credit Management & Recovery</strong></p>
+              <p>Generated on ${currentDate}</p>
               <p>This report contains ${timelineEvents.length} timeline events</p>
+              <p style="margin-top: 15px; font-size: 0.9em; opacity: 0.8;">Professional debt recovery and credit management services</p>
             </div>
           </div>
         </body>
