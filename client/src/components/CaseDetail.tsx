@@ -144,10 +144,8 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
 
   // Mark messages as read when they're viewed in the messages tab
   useEffect(() => {
-    if (activeTab === "messages" && messages && user?.id) {
-      const unreadMessages = messages.filter((message: any) => 
-        !message.isRead && message.senderId !== user.id
-      );
+    if (activeTab === "messages" && messages) {
+      const unreadMessages = messages.filter((message: any) => !message.isRead);
       
       unreadMessages.forEach(async (message: any) => {
         try {
@@ -161,7 +159,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
         }
       });
     }
-  }, [activeTab, messages, user?.id, queryClient, caseData.id]);
+  }, [activeTab, messages, queryClient, caseData.id]);
 
   const { data: payments, isLoading: paymentsLoading } = useQuery({
     queryKey: ["/api/cases", caseData.id, "payments"],

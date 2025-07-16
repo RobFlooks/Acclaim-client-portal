@@ -24,8 +24,8 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
     retry: false,
   });
 
-  // Calculate unread message count - only count messages from other users that are unread
-  const unreadCount = messages?.filter((msg: any) => !msg.isRead && msg.senderId !== user?.id).length || 0;
+  // Calculate unread message count - count all unread messages
+  const unreadCount = messages?.filter((msg: any) => !msg.isRead).length || 0;
 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: Home },
