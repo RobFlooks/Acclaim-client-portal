@@ -583,6 +583,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getMessagesForUser(userId: string): Promise<any[]> {
+    // Get the user to check their organization
+    const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    if (user.length === 0) {
+      return [];
+    }
+
+    const userRecord = user[0];
+    const userOrgId = userRecord.organisationId;
+
     return await db
       .select({
         id: messages.id,
@@ -608,7 +617,14 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(organisations, eq(users.organisationId, organisations.id))
       .leftJoin(cases, eq(messages.caseId, cases.id))
       .where(and(
-        or(eq(messages.senderId, userId), eq(messages.recipientId, userId)),
+        or(
+          eq(messages.senderId, userId), // Messages sent by this user
+          eq(messages.recipientId, userId), // Messages sent directly to this user
+          and(
+            eq(messages.recipientType, 'organization'),
+            eq(messages.recipientId, userOrgId?.toString() || '')
+          ) // Messages sent to user's organization
+        ),
         or(
           isNull(messages.caseId), // General messages not tied to a case
           eq(cases.isArchived, false) // Messages for non-archived cases only

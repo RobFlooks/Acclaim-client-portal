@@ -315,15 +315,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/messages', isAuthenticated, upload.single('attachment'), async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      let recipientType = req.body.recipientType || 'user';
+      let recipientId = req.body.recipientId;
       
       // Check if this is a case-specific message
       if (req.body.caseId) {
-        const user = await storage.getUser(userId);
-        
-        if (!user) {
-          return res.status(404).json({ message: "User not found" });
-        }
-
         const caseId = parseInt(req.body.caseId);
         let case_;
         
@@ -341,12 +343,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!case_) {
           return res.status(404).json({ message: "Case not found" });
         }
+
+        // For case messages, determine the recipient based on sender
+        if (user.isAdmin) {
+          // Admin sending to organization (case client)
+          recipientType = 'organization';
+          recipientId = case_.organisationId.toString();
+        } else {
+          // User sending to admin - find an admin user
+          const adminUsers = await storage.getAllUsers();
+          const adminUser = adminUsers.find(u => u.isAdmin);
+          if (adminUser) {
+            recipientType = 'user';
+            recipientId = adminUser.id;
+          } else {
+            // Fallback - send to organization if no admin found
+            recipientType = 'organization';
+            recipientId = case_.organisationId.toString();
+          }
+        }
       }
       
       const messageData = insertMessageSchema.parse({
         ...req.body,
         caseId: req.body.caseId ? parseInt(req.body.caseId) : undefined,
         senderId: userId,
+        recipientType,
+        recipientId,
         attachmentFileName: req.file?.originalname,
         attachmentFilePath: req.file?.path,
         attachmentFileSize: req.file?.size,
