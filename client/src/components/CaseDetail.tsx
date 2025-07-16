@@ -562,7 +562,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
             .logo-icon {
               width: 40px;
               height: 40px;
-              background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik01MCA1QzYwIDI1IDc1IDQwIDk1IDUwQzc1IDYwIDYwIDc1IDUwIDk1QzQwIDc1IDI1IDYwIDUgNTBDMjUgNDAgNDAgMjUgNTAgNVoiIGZpbGw9IiMwZDk0ODgiLz4KPHBhdGggZD0iTTUwIDIwQzU4IDM1IDY1IDQyIDgwIDUwQzY1IDU4IDU4IDY1IDUwIDgwQzQyIDY1IDM1IDU4IDIwIDUwQzM1IDQyIDQyIDM1IDUwIDIwWiIgZmlsbD0iIzE0YjhhNiIvPgo8L3N2Zz4K');
+              background-image: url('/attached_assets/Acclaim rose.Cur_1752277774829.png');
               background-size: contain;
               background-repeat: no-repeat;
               background-position: center;
@@ -714,7 +714,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               display: inline-block;
               margin-right: 8px;
               vertical-align: middle;
-              background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik01MCA1QzYwIDI1IDc1IDQwIDk1IDUwQzc1IDYwIDYwIDc1IDUwIDk1QzQwIDc1IDI1IDYwIDUgNTBDMjUgNDAgNDAgMjUgNTAgNVoiIGZpbGw9IiMwZDk0ODgiLz4KPHBhdGggZD0iTTUwIDIwQzU4IDM1IDY1IDQyIDgwIDUwQzY1IDU4IDU4IDY1IDUwIDgwQzQyIDY1IDM1IDU4IDIwIDUwQzM1IDQyIDQyIDM1IDUwIDIwWiIgZmlsbD0iIzE0YjhhNiIvPgo8L3N2Zz4K');
+              background-image: url('/attached_assets/Acclaim rose.Cur_1752277774829.png');
               background-size: contain;
               background-repeat: no-repeat;
               background-position: center;
