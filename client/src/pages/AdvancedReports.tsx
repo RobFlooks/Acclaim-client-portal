@@ -226,10 +226,10 @@ export default function AdvancedReports() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Link href="/admin-enhanced">
+          <Link href="/?section=reports">
             <Button variant="outline" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Admin
+              Back to Reports
             </Button>
           </Link>
           <div>
