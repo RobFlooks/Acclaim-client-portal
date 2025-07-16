@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Link } from "wouter";
 import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { useState, useMemo } from "react";
@@ -336,7 +337,7 @@ export default function CaseSummaryReport() {
     }
   };
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (!filteredCases || filteredCases.length === 0) {
       toast({
         title: "No Data",
@@ -347,95 +348,156 @@ export default function CaseSummaryReport() {
     }
 
     try {
-      // Prepare data for Excel export
-      const excelData = filteredCases.map((caseItem: any) => ({
-        'Account Number': caseItem.accountNumber,
-        'Case Name': caseItem.caseName,
-        'Status': caseItem.status === 'Closed' ? 'Closed' : caseItem.status.charAt(0).toUpperCase() + caseItem.status.slice(1),
-        'Stage': caseItem.stage.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
-        'Original Amount': parseFloat(caseItem.originalAmount),
-        'Costs Added': parseFloat(caseItem.costsAdded || 0),
-        'Interest Added': parseFloat(caseItem.interestAdded || 0),
-        'Fees Added': parseFloat(caseItem.feesAdded || 0),
-        'Total Additional Charges': parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0),
-        'Total Debt': parseFloat(caseItem.originalAmount) + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0),
-        'Total Payments': getTotalPayments(caseItem),
-        'Outstanding Amount': parseFloat(caseItem.originalAmount) + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0) - getTotalPayments(caseItem)
-      }));
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Case Summary Report');
+
+      // Define columns with proper widths
+      worksheet.columns = [
+        { header: 'Account Number', key: 'accountNumber', width: 15 },
+        { header: 'Case Name', key: 'caseName', width: 25 },
+        { header: 'Status', key: 'status', width: 12 },
+        { header: 'Stage', key: 'stage', width: 15 },
+        { header: 'Original Amount', key: 'originalAmount', width: 15 },
+        { header: 'Costs Added', key: 'costsAdded', width: 12 },
+        { header: 'Interest Added', key: 'interestAdded', width: 12 },
+        { header: 'Fees Added', key: 'feesAdded', width: 12 },
+        { header: 'Total Additional Charges', key: 'totalAdditionalCharges', width: 18 },
+        { header: 'Total Debt', key: 'totalDebt', width: 15 },
+        { header: 'Total Payments', key: 'totalPayments', width: 15 },
+        { header: 'Outstanding Amount', key: 'outstandingAmount', width: 18 }
+      ];
+
+      // Style header row
+      const headerRow = worksheet.getRow(1);
+      headerRow.eachCell((cell) => {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF4A90E2' }
+        };
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.alignment = { horizontal: 'center' };
+      });
+
+      // Add data rows
+      filteredCases.forEach((caseItem: any) => {
+        const row = worksheet.addRow({
+          accountNumber: caseItem.accountNumber,
+          caseName: caseItem.caseName,
+          status: caseItem.status === 'Closed' ? 'Closed' : caseItem.status.charAt(0).toUpperCase() + caseItem.status.slice(1),
+          stage: caseItem.stage.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+          originalAmount: parseFloat(caseItem.originalAmount),
+          costsAdded: parseFloat(caseItem.costsAdded || 0),
+          interestAdded: parseFloat(caseItem.interestAdded || 0),
+          feesAdded: parseFloat(caseItem.feesAdded || 0),
+          totalAdditionalCharges: parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0),
+          totalDebt: parseFloat(caseItem.originalAmount) + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0),
+          totalPayments: getTotalPayments(caseItem),
+          outstandingAmount: parseFloat(caseItem.originalAmount) + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0) - getTotalPayments(caseItem)
+        });
+
+        // Color code status column (column 3)
+        const statusCell = row.getCell(3);
+        let statusColor = 'FFFFFFFF'; // Default white
+        if (caseItem.status === 'Closed') statusColor = 'FFC8E6C9'; // Light green
+        else if (caseItem.status === 'Active') statusColor = 'FFFFF9C4'; // Light yellow
+        else if (caseItem.status === 'New') statusColor = 'FFBBDEFB'; // Light blue
+        
+        statusCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: statusColor }
+        };
+        statusCell.alignment = { horizontal: 'center' };
+
+        // Color code stage column (column 4)
+        const stageCell = row.getCell(4);
+        let stageColor = 'FFFFFFFF'; // Default white
+        if (caseItem.stage?.includes('Pre-Legal')) stageColor = 'FFBBDEFB'; // Light blue
+        else if (caseItem.stage?.includes('Payment') || caseItem.stage?.includes('Paid')) stageColor = 'FFC8E6C9'; // Light green
+        else if (caseItem.stage?.includes('Claim')) stageColor = 'FFFFF9C4'; // Light yellow
+        else if (caseItem.stage?.includes('Judgment')) stageColor = 'FFFFCC80'; // Light orange
+        else if (caseItem.stage?.includes('Enforcement')) stageColor = 'FFFFCDD2'; // Light red
+        
+        stageCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: stageColor }
+        };
+        stageCell.alignment = { horizontal: 'center' };
+      });
 
       // Add summary row
-      const summaryRow = {
-        'Account Number': 'TOTALS',
-        'Debtor Name': '',
-        'Status': '',
-        'Stage': '',
-        'Original Amount': getTotalOriginalAmount(),
-        'Costs Added': cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.costsAdded || 0), 0),
-        'Interest Added': cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.interestAdded || 0), 0),
-        'Fees Added': cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.feesAdded || 0), 0),
-        'Total Additional Charges': cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0), 0),
-        'Total Debt': getTotalOriginalAmount() + cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0), 0),
-        'Total Payments': getTotalPaymentsReceived(),
-        'Outstanding Amount': getTotalOutstandingAmount()
+      const summaryRow = worksheet.addRow({
+        accountNumber: 'TOTALS',
+        caseName: '',
+        status: '',
+        stage: '',
+        originalAmount: getTotalOriginalAmount(),
+        costsAdded: cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.costsAdded || 0), 0),
+        interestAdded: cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.interestAdded || 0), 0),
+        feesAdded: cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.feesAdded || 0), 0),
+        totalAdditionalCharges: cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0), 0),
+        totalDebt: getTotalOriginalAmount() + cases.reduce((sum: number, caseItem: any) => sum + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0), 0),
+        totalPayments: getTotalPaymentsReceived(),
+        outstandingAmount: getTotalOutstandingAmount()
+      });
+
+      // Style summary row
+      summaryRow.eachCell((cell) => {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFF0F0F0' }
+        };
+        cell.font = { bold: true };
+        cell.border = {
+          top: { style: 'thick', color: { argb: 'FF000000' } }
+        };
+      });
+
+      // Add autofilter to header row
+      worksheet.autoFilter = {
+        from: 'A1',
+        to: 'L1'
       };
 
-      excelData.push(summaryRow);
-
-      // Create workbook and worksheet
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(excelData);
-
-      // Auto-size columns
-      const colWidths = [
-        { wch: 15 }, // Account Number
-        { wch: 25 }, // Case Name
-        { wch: 12 }, // Status
-        { wch: 15 }, // Stage
-        { wch: 15 }, // Original Amount
-        { wch: 12 }, // Costs Added
-        { wch: 12 }, // Interest Added
-        { wch: 12 }, // Fees Added
-        { wch: 18 }, // Total Additional Charges
-        { wch: 15 }, // Total Debt
-        { wch: 15 }, // Total Payments
-        { wch: 18 }  // Outstanding Amount
+      // Add Color Guide sheet
+      const colorGuideSheet = workbook.addWorksheet('Color Guide');
+      colorGuideSheet.columns = [
+        { header: 'Color Guide', key: 'guide', width: 50 }
       ];
-      ws['!cols'] = colWidths;
 
-      // Add filters to the header row
-      const headerRange = XLSX.utils.encode_range({
-        s: { c: 0, r: 0 },
-        e: { c: 11, r: 0 }
+      const guideData = [
+        'Status Colors in web interface:',
+        'Green = Closed, Yellow = Active, Blue = New',
+        '',
+        'Stage Colors in web interface:',
+        'Blue = Pre-Legal, Green = Payment Plan/Paid',
+        'Yellow = Claim, Orange = Judgment, Red = Enforcement'
+      ];
+
+      guideData.forEach((text) => {
+        colorGuideSheet.addRow({ guide: text });
       });
-      ws['!autofilter'] = { ref: headerRange };
-
-      XLSX.utils.book_append_sheet(wb, ws, 'Case Summary Report');
-
-      // Add a simple legend as a text note
-      const legendData = [
-        { 'Color Guide': 'Status Colors in web interface:' },
-        { 'Color Guide': 'Green = Closed, Yellow = Active, Blue = New' },
-        { 'Color Guide': '' },
-        { 'Color Guide': 'Stage Colors in web interface:' },
-        { 'Color Guide': 'Blue = Pre-Legal, Green = Payment Plan/Paid' },
-        { 'Color Guide': 'Yellow = Claim, Orange = Judgment, Red = Enforcement' },
-      ];
-      
-      const legendSheet = XLSX.utils.json_to_sheet(legendData);
-      legendSheet['!cols'] = [{ wch: 50 }];
-      
-      XLSX.utils.book_append_sheet(wb, legendSheet, 'Color Guide');
 
       // Generate filename with current date
       const now = new Date();
       const filename = `case-summary-report-${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}.xlsx`;
 
-      // Save file
-      XLSX.writeFile(wb, filename);
+      // Save the file
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      window.URL.revokeObjectURL(url);
 
       toast({
         title: "Export Successful",
-        description: "Case summary report has been exported to Excel.",
+        description: "Case summary report has been exported to Excel with colored cells!",
       });
     } catch (error) {
       console.error('Error exporting to Excel:', error);

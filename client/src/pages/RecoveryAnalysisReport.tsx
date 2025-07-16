@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Link } from "wouter";
 import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
 export default function RecoveryAnalysisReport() {
   const { toast } = useToast();
@@ -216,7 +217,7 @@ export default function RecoveryAnalysisReport() {
     );
   };
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (!cases || cases.length === 0) {
       toast({
         title: "No Data",
@@ -228,9 +229,43 @@ export default function RecoveryAnalysisReport() {
 
     try {
       const metrics = getRecoveryMetrics();
+      const workbook = new ExcelJS.Workbook();
       
-      // Create detailed case data
-      const caseData = cases.map((caseItem: any) => {
+      // Case Details Sheet
+      const caseSheet = workbook.addWorksheet('Case Details');
+      
+      // Define columns
+      caseSheet.columns = [
+        { header: 'Account Number', key: 'accountNumber', width: 15 },
+        { header: 'Case Name', key: 'caseName', width: 25 },
+        { header: 'Status', key: 'status', width: 12 },
+        { header: 'Stage', key: 'stage', width: 15 },
+        { header: 'Original Amount', key: 'originalAmount', width: 12 },
+        { header: 'Costs Added', key: 'costsAdded', width: 12 },
+        { header: 'Interest Added', key: 'interestAdded', width: 12 },
+        { header: 'Fees Added', key: 'feesAdded', width: 15 },
+        { header: 'Total Debt', key: 'totalDebt', width: 15 },
+        { header: 'Amount Recovered', key: 'amountRecovered', width: 18 },
+        { header: 'Outstanding Amount', key: 'outstandingAmount', width: 15 },
+        { header: 'Recovery Rate (%)', key: 'recoveryRate', width: 12 },
+        { header: 'Created Date', key: 'createdDate', width: 12 },
+        { header: 'Last Updated', key: 'lastUpdated', width: 12 }
+      ];
+
+      // Style header row
+      const headerRow = caseSheet.getRow(1);
+      headerRow.eachCell((cell) => {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF4A90E2' }
+        };
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.alignment = { horizontal: 'center' };
+      });
+
+      // Add case data
+      cases.forEach((caseItem: any) => {
         const originalAmount = parseFloat(caseItem.originalAmount || 0);
         const costsAdded = parseFloat(caseItem.costsAdded || 0);
         const interestAdded = parseFloat(caseItem.interestAdded || 0);
@@ -240,90 +275,140 @@ export default function RecoveryAnalysisReport() {
         const outstanding = totalDebt - payments;
         const recoveryRate = originalAmount > 0 ? Math.min((payments / originalAmount) * 100, 100) : 0;
 
-        return {
-          'Account Number': caseItem.accountNumber,
-          'Case Name': caseItem.caseName,
-          'Status': caseItem.status?.toLowerCase() === 'closed' ? 'Closed' : caseItem.status?.charAt(0).toUpperCase() + caseItem.status?.slice(1),
-          'Stage': caseItem.stage ? caseItem.stage.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 'Not specified',
-          'Original Amount': originalAmount,
-          'Costs Added': costsAdded,
-          'Interest Added': interestAdded,
-          'Fees Added': feesAdded,
-          'Total Debt': totalDebt,
-          'Amount Recovered': payments,
-          'Outstanding Amount': outstanding,
-          'Recovery Rate (%)': Math.round(recoveryRate),
-          'Created Date': formatDate(caseItem.createdAt),
-          'Last Updated': formatDate(caseItem.updatedAt),
+        const row = caseSheet.addRow({
+          accountNumber: caseItem.accountNumber,
+          caseName: caseItem.caseName,
+          status: caseItem.status?.toLowerCase() === 'closed' ? 'Closed' : caseItem.status?.charAt(0).toUpperCase() + caseItem.status?.slice(1),
+          stage: caseItem.stage ? caseItem.stage.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 'Not specified',
+          originalAmount,
+          costsAdded,
+          interestAdded,
+          feesAdded,
+          totalDebt,
+          amountRecovered: payments,
+          outstandingAmount: outstanding,
+          recoveryRate: Math.round(recoveryRate),
+          createdDate: formatDate(caseItem.createdAt),
+          lastUpdated: formatDate(caseItem.updatedAt)
+        });
+
+        // Color code status column (column 3)
+        const statusCell = row.getCell(3);
+        let statusColor = 'FFFFFFFF';
+        if (caseItem.status?.toLowerCase() === 'closed') statusColor = 'FFC8E6C9';
+        else if (caseItem.status?.toLowerCase() === 'active') statusColor = 'FFFFF9C4';
+        else if (caseItem.status?.toLowerCase() === 'new') statusColor = 'FFBBDEFB';
+        
+        statusCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: statusColor }
         };
+        statusCell.alignment = { horizontal: 'center' };
+
+        // Color code stage column (column 4)
+        const stageCell = row.getCell(4);
+        let stageColor = 'FFFFFFFF';
+        if (caseItem.stage?.toLowerCase().includes('pre-legal')) stageColor = 'FFBBDEFB';
+        else if (caseItem.stage?.toLowerCase().includes('payment') || caseItem.stage?.toLowerCase().includes('paid')) stageColor = 'FFC8E6C9';
+        else if (caseItem.stage?.toLowerCase().includes('claim')) stageColor = 'FFFFF9C4';
+        else if (caseItem.stage?.toLowerCase().includes('judgment')) stageColor = 'FFFFCC80';
+        else if (caseItem.stage?.toLowerCase().includes('enforcement')) stageColor = 'FFFFCDD2';
+        
+        stageCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: stageColor }
+        };
+        stageCell.alignment = { horizontal: 'center' };
+      });
+
+      // Add autofilter
+      caseSheet.autoFilter = {
+        from: 'A1',
+        to: 'N1'
+      };
+
+      // Summary Sheet
+      const summarySheet = workbook.addWorksheet('Summary');
+      summarySheet.columns = [
+        { header: 'Metric', key: 'metric', width: 30 },
+        { header: 'Value', key: 'value', width: 20 }
+      ];
+
+      // Style summary header
+      const summaryHeaderRow = summarySheet.getRow(1);
+      summaryHeaderRow.eachCell((cell) => {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF2E7D32' }
+        };
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.alignment = { horizontal: 'center' };
       });
 
       // Add summary data
       const summaryData = [
-        { 'Metric': 'Total Cases', 'Value': metrics?.totalCases || 0 },
-        { 'Metric': 'Total Original Amount', 'Value': metrics?.totalOriginalAmount || 0 },
-        { 'Metric': 'Total Debt (with costs)', 'Value': metrics?.totalDebt || 0 },
-        { 'Metric': 'Total Recovered', 'Value': metrics?.totalRecovered || 0 },
-        { 'Metric': 'Total Outstanding', 'Value': metrics?.totalOutstanding || 0 },
-        { 'Metric': 'Overall Recovery Rate (%)', 'Value': Math.round(metrics?.totalRecoveryRate || 0) },
+        { metric: 'Total Cases', value: metrics?.totalCases || 0 },
+        { metric: 'Total Original Amount', value: metrics?.totalOriginalAmount || 0 },
+        { metric: 'Total Debt (with costs)', value: metrics?.totalDebt || 0 },
+        { metric: 'Total Recovered', value: metrics?.totalRecovered || 0 },
+        { metric: 'Total Outstanding', value: metrics?.totalOutstanding || 0 },
+        { metric: 'Overall Recovery Rate (%)', value: Math.round(metrics?.totalRecoveryRate || 0) },
       ];
 
-      // Create workbook with multiple sheets
-      const wb = XLSX.utils.book_new();
-      
-      // Case Details Sheet
-      const caseSheet = XLSX.utils.json_to_sheet(caseData);
-      
-      // Auto-size columns for case sheet
-      const caseColWidths = [
-        { wch: 15 }, { wch: 25 }, { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 12 }, 
-        { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 18 }, { wch: 15 }, { wch: 12 }, { wch: 12 }
-      ];
-      caseSheet['!cols'] = caseColWidths;
-      
-      // Add filters to the case details header
-      const caseHeaderRange = XLSX.utils.encode_range({
-        s: { c: 0, r: 0 },
-        e: { c: 12, r: 0 }
+      summaryData.forEach((item, index) => {
+        const row = summarySheet.addRow(item);
+        // Alternate row colors
+        if (index % 2 === 0) {
+          row.eachCell((cell) => {
+            cell.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FFF5F5F5' }
+            };
+          });
+        }
+        row.getCell(1).font = { bold: true };
       });
-      caseSheet['!autofilter'] = { ref: caseHeaderRange };
-      
-      XLSX.utils.book_append_sheet(wb, caseSheet, 'Case Details');
-      
-      // Summary Sheet
-      const summarySheet = XLSX.utils.json_to_sheet(summaryData);
-      
-      const summaryColWidths = [{ wch: 30 }, { wch: 20 }];
-      summarySheet['!cols'] = summaryColWidths;
-      
-      // Summary sheet is ready as-is
-      
-      XLSX.utils.book_append_sheet(wb, summarySheet, 'Summary');
 
-      // Add a simple color guide
-      const colorGuideData = [
-        { 'Color Guide': 'Status Colors in web interface:' },
-        { 'Color Guide': 'Green = Closed, Yellow = Active, Blue = New' },
-        { 'Color Guide': '' },
-        { 'Color Guide': 'Stage Colors in web interface:' },
-        { 'Color Guide': 'Blue = Pre-Legal, Green = Payment Plan/Paid' },
-        { 'Color Guide': 'Yellow = Claim, Orange = Judgment, Red = Enforcement' },
+      // Color Guide Sheet
+      const colorGuideSheet = workbook.addWorksheet('Color Guide');
+      colorGuideSheet.columns = [
+        { header: 'Color Guide', key: 'guide', width: 50 }
       ];
-      
-      const colorGuideSheet = XLSX.utils.json_to_sheet(colorGuideData);
-      colorGuideSheet['!cols'] = [{ wch: 50 }];
-      
-      XLSX.utils.book_append_sheet(wb, colorGuideSheet, 'Color Guide');
+
+      const guideData = [
+        'Status Colors in web interface:',
+        'Green = Closed, Yellow = Active, Blue = New',
+        '',
+        'Stage Colors in web interface:',
+        'Blue = Pre-Legal, Green = Payment Plan/Paid',
+        'Yellow = Claim, Orange = Judgment, Red = Enforcement'
+      ];
+
+      guideData.forEach((text) => {
+        colorGuideSheet.addRow({ guide: text });
+      });
 
       // Generate filename
       const now = new Date();
       const filename = `recovery-analysis-report-${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}.xlsx`;
 
-      XLSX.writeFile(wb, filename);
+      // Save the file
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      window.URL.revokeObjectURL(url);
 
       toast({
         title: "Export Successful",
-        description: "Recovery analysis report has been exported to Excel.",
+        description: "Recovery analysis report has been exported to Excel with colored cells!",
       });
     } catch (error) {
       console.error('Error exporting to Excel:', error);
