@@ -117,7 +117,7 @@ export default function CaseSummaryReport() {
     return new Date(dateString).toLocaleDateString('en-GB');
   };
 
-  const getStatusBadge = (status: string, stage: string) => {
+  const getStatusBadge = (status: string) => {
     const getStatusColor = (status: string) => {
       switch (status) {
         case 'new':
@@ -131,30 +131,10 @@ export default function CaseSummaryReport() {
       }
     };
 
-    const getStageColor = (stage: string) => {
-      switch (stage) {
-        case 'initial_contact':
-          return 'bg-purple-100 text-purple-800';
-        case 'negotiation':
-          return 'bg-orange-100 text-orange-800';
-        case 'payment_plan':
-          return 'bg-green-100 text-green-800';
-        case 'legal_action':
-          return 'bg-red-100 text-red-800';
-        default:
-          return 'bg-gray-100 text-gray-800';
-      }
-    };
-
     return (
-      <div className="flex gap-2">
-        <Badge className={getStatusColor(status)}>
-          {status === 'Closed' ? 'Closed' : status.charAt(0).toUpperCase() + status.slice(1)}
-        </Badge>
-        <Badge className={getStageColor(stage)}>
-          {stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-        </Badge>
-      </div>
+      <Badge className={getStatusColor(status)}>
+        {status === 'Closed' ? 'Closed' : status.charAt(0).toUpperCase() + status.slice(1)}
+      </Badge>
     );
   };
 
@@ -616,7 +596,7 @@ export default function CaseSummaryReport() {
                       {caseItem.caseName}
                     </td>
                     <td className="border border-gray-200 px-4 py-3 text-sm">
-                      {getStatusBadge(caseItem.status, caseItem.stage)}
+                      {getStatusBadge(caseItem.status)}
                     </td>
                     <td className="border border-gray-200 px-4 py-3 text-sm text-gray-900">
                       {caseItem.stage ? caseItem.stage.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 'Not specified'}
