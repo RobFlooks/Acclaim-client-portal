@@ -197,6 +197,13 @@ export default function Messages() {
     setSelectedFile(null);
   };
 
+  const handleDialogOpenChange = (open: boolean) => {
+    setDialogOpen(open);
+    if (!open) {
+      handleCloseDialog();
+    }
+  };
+
   const markAsReadMutation = useMutation({
     mutationFn: async (messageId: number) => {
       await apiRequest("PUT", `/api/messages/${messageId}/read`);
@@ -274,7 +281,7 @@ export default function Messages() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Messages</CardTitle>
-            <Dialog open={dialogOpen} onOpenChange={handleCloseDialog}>
+            <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
               <DialogTrigger asChild>
                 <Button className="bg-acclaim-teal hover:bg-acclaim-teal/90">
                   <Plus className="h-4 w-4 mr-2" />
