@@ -444,27 +444,6 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
                 <p className="text-sm text-gray-500 mt-1">
                   {formatDate(selectedMessage.createdAt)}
                 </p>
-                {selectedMessage.caseId && (
-                  <div className="bg-gray-50 p-3 rounded-lg mt-3">
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Related to case:</span>{" "}
-                      <button
-                        onClick={() => handleCaseClickFromMessage(selectedMessage.caseId)}
-                        className="text-acclaim-teal hover:text-acclaim-teal/80 font-medium underline cursor-pointer"
-                      >
-                        {getCaseAccountNumber(selectedMessage.caseId)}
-                      </button>
-                      {(() => {
-                        const caseData = cases?.find((c: any) => c.id === selectedMessage.caseId);
-                        return caseData?.caseName ? (
-                          <span className="text-gray-500 ml-2">
-                            - {caseData.caseName}
-                          </span>
-                        ) : null;
-                      })()}
-                    </p>
-                  </div>
-                )}
               </div>
               
               <div className="bg-gray-50 p-4 rounded-lg">
@@ -488,6 +467,28 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
                   </div>
                 </div>
               </div>
+              
+              {selectedMessage.caseId && (
+                <div className="bg-gray-50 p-3 rounded-lg mt-4">
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium">Related to case:</span>{" "}
+                    <button
+                      onClick={() => handleCaseClickFromMessage(selectedMessage.caseId)}
+                      className="text-acclaim-teal hover:text-acclaim-teal/80 font-medium underline cursor-pointer"
+                    >
+                      {getCaseAccountNumber(selectedMessage.caseId)}
+                    </button>
+                    {(() => {
+                      const caseData = cases?.find((c: any) => c.id === selectedMessage.caseId);
+                      return caseData?.caseName ? (
+                        <span className="text-gray-500 ml-2">
+                          - {caseData.caseName}
+                        </span>
+                      ) : null;
+                    })()}
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>
