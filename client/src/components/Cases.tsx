@@ -168,17 +168,17 @@ export default function Cases() {
                 <div
                   key={case_.id}
                   id={`case-${case_.id}`}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border space-y-4 sm:space-y-0"
                 >
                   <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#f9fafb]">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#f9fafb] flex-shrink-0">
                       {getDebtorIcon(case_.debtorType)}
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-900">{case_.caseName}</p>
-                      <p className="text-sm text-gray-600">Account: {case_.accountNumber}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-gray-900 truncate">{case_.caseName}</p>
+                      <p className="text-sm text-gray-600 truncate">Account: {case_.accountNumber}</p>
                       {user?.isAdmin && case_.organisationName && (
-                        <p className="text-sm text-blue-600 font-medium">
+                        <p className="text-sm text-blue-600 font-medium truncate">
                           <Building className="inline w-3 h-3 mr-1" />
                           {case_.organisationName}
                         </p>
@@ -189,16 +189,18 @@ export default function Cases() {
                     </div>
                   </div>
                   
-                  <div className="text-center">
-                    <p className="text-sm text-gray-600">Outstanding Amount</p>
-                    <p className="font-semibold text-gray-900">
-                      {formatCurrency(case_.outstandingAmount)}
-                    </p>
-                    <p className="text-xs text-gray-500">*May include interest and costs</p>
-                  </div>
-                  
-                  <div className="text-center">
-                    {getStatusBadge(case_.status, case_.stage)}
+                  <div className="flex justify-between items-center sm:flex-col sm:justify-center sm:items-end space-x-4 sm:space-x-0">
+                    <div className="text-center sm:text-right">
+                      <p className="text-sm text-gray-600">Outstanding Amount</p>
+                      <p className="font-semibold text-gray-900">
+                        {formatCurrency(case_.outstandingAmount)}
+                      </p>
+                      <p className="text-xs text-gray-500 hidden sm:block">*May include interest and costs</p>
+                    </div>
+                    
+                    <div className="text-center sm:mt-2">
+                      {getStatusBadge(case_.status, case_.stage)}
+                    </div>
                   </div>
                   
                   <Dialog open={dialogOpen && selectedCase?.id === case_.id} onOpenChange={setDialogOpen}>
@@ -210,7 +212,7 @@ export default function Cases() {
                           setSelectedCase(case_);
                           setDialogOpen(true);
                         }}
-                        className="ml-4"
+                        className="w-full sm:w-auto sm:ml-4"
                       >
                         <Eye className="w-4 h-4 mr-2" />
                         View Details

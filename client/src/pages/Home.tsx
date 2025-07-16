@@ -5,16 +5,19 @@ import Cases from "@/components/Cases";
 import Messages from "@/components/Messages";
 import Reports from "@/components/Reports";
 import Documents from "@/components/Documents";
-import { Bell } from "lucide-react";
+import { Bell, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Home() {
   const [activeSection, setActiveSection] = useState("dashboard");
   const { user } = useAuth();
   const [location] = useLocation();
+  const isMobile = useIsMobile();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
 
 
@@ -40,6 +43,17 @@ export default function Home() {
   // Handle notification bell click
   const handleNotificationClick = () => {
     setActiveSection("messages");
+  };
+
+  // Handle mobile menu toggle
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  // Handle section change and close mobile menu
+  const handleSectionChange = (section: string) => {
+    setActiveSection(section);
+    setMobileMenuOpen(false);
   };
 
   const renderContent = () => {
@@ -95,26 +109,56 @@ export default function Home() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar activeSection={activeSection} setActiveSection={setActiveSection} />
+      {/* Desktop Sidebar */}
+      <div className={`${isMobile ? 'hidden' : 'block'}`}>
+        <Sidebar activeSection={activeSection} setActiveSection={handleSectionChange} />
+      </div>
+      
+      {/* Mobile Sidebar Overlay */}
+      {isMobile && mobileMenuOpen && (
+        <>
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={toggleMobileMenu} />
+          <div className="fixed inset-y-0 left-0 z-50 w-64">
+            <Sidebar activeSection={activeSection} setActiveSection={handleSectionChange} />
+          </div>
+        </>
+      )}
       
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+        <header className="bg-white shadow-sm border-b border-gray-200 px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{getSectionTitle()}</h1>
-              <p className="text-gray-600">{getSectionDescription()}</p>
+            <div className="flex items-center">
+              {/* Mobile Menu Button */}
+              {isMobile && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="mr-3"
+                  onClick={toggleMobileMenu}
+                >
+                  {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                </Button>
+              )}
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{getSectionTitle()}</h1>
+                <p className="text-sm sm:text-base text-gray-600 hidden sm:block">{getSectionDescription()}</p>
+              </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <Button variant="ghost" size="icon" className="relative" onClick={handleNotificationClick}>
                 <Bell className="h-5 w-5" />
               </Button>
             </div>
           </div>
+          {/* Mobile description */}
+          {isMobile && (
+            <p className="text-sm text-gray-600 mt-2">{getSectionDescription()}</p>
+          )}
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           {renderContent()}
         </main>
       </div>

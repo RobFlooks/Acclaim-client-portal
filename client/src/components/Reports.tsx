@@ -157,7 +157,7 @@ export default function Reports() {
           <p className="text-sm text-gray-600 mt-1">Active cases only</p>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="p-4 rounded-lg bg-[#008a8a57]">
               <div className="flex items-center justify-between">
                 <div>
@@ -197,7 +197,7 @@ export default function Reports() {
         </CardContent>
       </Card>
       {/* Case Status Breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Case Status Breakdown</CardTitle>
@@ -275,7 +275,7 @@ export default function Reports() {
           <CardTitle>View Reports</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 border rounded-lg">
               <div className="flex items-center justify-between mb-3">
                 <div>
