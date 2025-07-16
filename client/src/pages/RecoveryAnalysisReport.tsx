@@ -273,21 +273,155 @@ export default function RecoveryAnalysisReport() {
       
       // Case Details Sheet
       const caseSheet = XLSX.utils.json_to_sheet(caseData);
-      XLSX.utils.book_append_sheet(wb, caseSheet, 'Case Details');
       
-      // Summary Sheet
-      const summarySheet = XLSX.utils.json_to_sheet(summaryData);
-      XLSX.utils.book_append_sheet(wb, summarySheet, 'Summary');
-
-      // Auto-size columns
+      // Auto-size columns for case sheet
       const caseColWidths = [
         { wch: 15 }, { wch: 25 }, { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 12 }, 
         { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 18 }, { wch: 15 }, { wch: 12 }, { wch: 12 }
       ];
       caseSheet['!cols'] = caseColWidths;
       
+      // Add filters to the case details header
+      const caseHeaderRange = XLSX.utils.encode_range({
+        s: { c: 0, r: 0 },
+        e: { c: 12, r: 0 }
+      });
+      caseSheet['!autofilter'] = { ref: caseHeaderRange };
+      
+      // Style case details header row
+      const caseHeaderRow = 0;
+      for (let col = 0; col < 13; col++) {
+        const cellRef = XLSX.utils.encode_cell({ c: col, r: caseHeaderRow });
+        if (!caseSheet[cellRef]) continue;
+        caseSheet[cellRef].s = {
+          fill: { fgColor: { rgb: "4A90E2" } },
+          font: { bold: true, color: { rgb: "FFFFFF" } },
+          alignment: { horizontal: "center" }
+        };
+      }
+      
+      // Color code status and stage cells in case details
+      for (let row = 1; row < caseData.length; row++) {
+        const statusCellRef = XLSX.utils.encode_cell({ c: 2, r: row });
+        const stageCellRef = XLSX.utils.encode_cell({ c: 3, r: row });
+        
+        if (caseSheet[statusCellRef]) {
+          const status = caseData[row]['Status'];
+          let statusColor = "FFFFFF";
+          if (status === 'Closed') statusColor = "C8E6C9";
+          else if (status === 'Active') statusColor = "FFF9C4";
+          else if (status === 'New') statusColor = "BBDEFB";
+          
+          caseSheet[statusCellRef].s = {
+            fill: { fgColor: { rgb: statusColor } },
+            alignment: { horizontal: "center" }
+          };
+        }
+        
+        if (caseSheet[stageCellRef]) {
+          const stage = caseData[row]['Stage'];
+          let stageColor = "FFFFFF";
+          if (stage?.includes('Pre-Legal')) stageColor = "BBDEFB";
+          else if (stage?.includes('Payment') || stage?.includes('Paid')) stageColor = "C8E6C9";
+          else if (stage?.includes('Claim')) stageColor = "FFF9C4";
+          else if (stage?.includes('Judgment')) stageColor = "FFCC80";
+          else if (stage?.includes('Enforcement')) stageColor = "FFCDD2";
+          
+          caseSheet[stageCellRef].s = {
+            fill: { fgColor: { rgb: stageColor } },
+            alignment: { horizontal: "center" }
+          };
+        }
+      }
+      
+      XLSX.utils.book_append_sheet(wb, caseSheet, 'Case Details');
+      
+      // Summary Sheet
+      const summarySheet = XLSX.utils.json_to_sheet(summaryData);
+      
       const summaryColWidths = [{ wch: 30 }, { wch: 20 }];
       summarySheet['!cols'] = summaryColWidths;
+      
+      // Style summary sheet header
+      const summaryHeaderRow = 0;
+      for (let col = 0; col < 2; col++) {
+        const cellRef = XLSX.utils.encode_cell({ c: col, r: summaryHeaderRow });
+        if (!summarySheet[cellRef]) continue;
+        summarySheet[cellRef].s = {
+          fill: { fgColor: { rgb: "2E7D32" } },
+          font: { bold: true, color: { rgb: "FFFFFF" } },
+          alignment: { horizontal: "center" }
+        };
+      }
+      
+      // Style summary data rows with alternating colors
+      for (let row = 1; row < summaryData.length; row++) {
+        const bgColor = row % 2 === 0 ? "F5F5F5" : "FFFFFF";
+        for (let col = 0; col < 2; col++) {
+          const cellRef = XLSX.utils.encode_cell({ c: col, r: row });
+          if (!summarySheet[cellRef]) continue;
+          summarySheet[cellRef].s = {
+            fill: { fgColor: { rgb: bgColor } },
+            font: { bold: col === 0 }
+          };
+        }
+      }
+      
+      XLSX.utils.book_append_sheet(wb, summarySheet, 'Summary');
+
+      // Add Legend Sheet
+      const legendData = [
+        { 'Category': 'Status Colors', 'Item': 'Closed', 'Color': 'Light Green' },
+        { 'Category': '', 'Item': 'Active', 'Color': 'Light Yellow' },
+        { 'Category': '', 'Item': 'New', 'Color': 'Light Blue' },
+        { 'Category': '', 'Item': '', 'Color': '' },
+        { 'Category': 'Stage Colors', 'Item': 'Pre-Legal', 'Color': 'Light Blue' },
+        { 'Category': '', 'Item': 'Payment Plan/Paid', 'Color': 'Light Green' },
+        { 'Category': '', 'Item': 'Claim', 'Color': 'Light Yellow' },
+        { 'Category': '', 'Item': 'Judgment', 'Color': 'Light Orange' },
+        { 'Category': '', 'Item': 'Enforcement', 'Color': 'Light Red' },
+      ];
+      
+      const legendSheet = XLSX.utils.json_to_sheet(legendData);
+      legendSheet['!cols'] = [{ wch: 15 }, { wch: 20 }, { wch: 15 }];
+      
+      // Style legend header
+      for (let col = 0; col < 3; col++) {
+        const cellRef = XLSX.utils.encode_cell({ c: col, r: 0 });
+        if (!legendSheet[cellRef]) continue;
+        legendSheet[cellRef].s = {
+          fill: { fgColor: { rgb: "6A1B9A" } },
+          font: { bold: true, color: { rgb: "FFFFFF" } },
+          alignment: { horizontal: "center" }
+        };
+      }
+      
+      // Apply colors to legend items
+      const colorMap: { [key: string]: string } = {
+        'Closed': 'C8E6C9',
+        'Active': 'FFF9C4',
+        'New': 'BBDEFB',
+        'Pre-Legal': 'BBDEFB',
+        'Payment Plan/Paid': 'C8E6C9',
+        'Claim': 'FFF9C4',
+        'Judgment': 'FFCC80',
+        'Enforcement': 'FFCDD2'
+      };
+      
+      for (let row = 1; row < legendData.length; row++) {
+        const item = legendData[row]['Item'];
+        if (item && colorMap[item]) {
+          const cellRef = XLSX.utils.encode_cell({ c: 1, r: row });
+          if (legendSheet[cellRef]) {
+            legendSheet[cellRef].s = {
+              fill: { fgColor: { rgb: colorMap[item] } },
+              alignment: { horizontal: "center" }
+            };
+          }
+        }
+      }
+      
+      XLSX.utils.book_append_sheet(wb, legendSheet, 'Color Legend');
 
       // Generate filename
       const now = new Date();
