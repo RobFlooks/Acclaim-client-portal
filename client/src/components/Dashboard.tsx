@@ -8,6 +8,7 @@ import { FolderOpen, CheckCircle, PoundSterling, TrendingUp, User, Building, Clo
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
 import CaseDetail from "./CaseDetail";
 
 interface DashboardProps {
@@ -21,6 +22,7 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
   const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+  const { user } = useAuth();
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/dashboard/stats"],
@@ -195,7 +197,9 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">Welcome to your debt recovery portal</p>
+          <p className="text-gray-600 mt-1">
+            Welcome back {user?.firstName ? `${user.firstName}` : 'User'}
+          </p>
         </div>
         <Button 
           className="bg-acclaim-teal hover:bg-acclaim-teal/90 text-white"
