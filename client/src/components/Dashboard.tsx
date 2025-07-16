@@ -141,15 +141,25 @@ export default function Dashboard() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-GB', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) {
+      return 'Yesterday';
+    } else if (diffDays <= 7) {
+      return `${diffDays} days ago`;
+    } else {
+      return date.toLocaleDateString('en-GB', {
+        month: 'short',
+        day: 'numeric',
+      });
+    }
   };
 
   const recentCases = cases?.slice(0, 3) || [];
-  const recentMessages = messages?.slice(0, 3) || [];
+  const recentMessages = messages?.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 8) || [];
 
   const handleCaseClick = (caseData: any) => {
     setSelectedCase(caseData);
@@ -313,7 +323,17 @@ export default function Dashboard() {
         <div>
           <Card>
             <CardHeader>
-              <CardTitle>Recent Messages</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Recent Messages</CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLocation("/?section=messages")}
+                  className="text-acclaim-teal border-acclaim-teal hover:bg-acclaim-teal hover:text-white"
+                >
+                  View All Messages
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {messagesLoading ? (
@@ -329,22 +349,37 @@ export default function Dashboard() {
                   {recentMessages.map((message: any) => (
                     <div 
                       key={message.id} 
-                      className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100 last:border-b-0"
                       onClick={() => handleMessageClick(message)}
                     >
                       <div className="w-8 h-8 bg-acclaim-teal bg-opacity-10 rounded-full flex items-center justify-center">
                         <User className="text-acclaim-teal h-4 w-4" />
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">
-                          {message.subject || "System Message"}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {formatDate(message.createdAt)}
-                        </p>
-                        <p className="text-sm text-gray-700 mt-1 truncate">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {message.subject || "System Message"}
+                          </p>
+                          <p className="text-xs text-gray-500 flex-shrink-0 ml-2">
+                            {formatDate(message.createdAt)}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-xs text-gray-500">
+                            From: {message.senderName || message.senderEmail || 'Unknown'}
+                          </p>
+                          <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                            {message.senderIsAdmin ? "Acclaim" : "User"}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-700 line-clamp-2 leading-relaxed">
                           {message.content}
                         </p>
+                        {message.caseId && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Related to case
+                          </p>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -407,10 +442,10 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900">
-                      {selectedMessage.recipientType === 'user' ? 'From Team' : 'From You'}
+                      {selectedMessage.senderIsAdmin ? 'From Acclaim Team' : 'From You'}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {selectedMessage.isRead ? 'Read' : 'Unread'}
+                      {selectedMessage.senderEmail || 'System Message'}
                     </p>
                   </div>
                 </div>
