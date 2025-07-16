@@ -380,14 +380,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Message not found" });
       }
       
-      // Only mark as read if:
-      // 1. The user is the intended recipient (not the sender)
-      // 2. OR if the user is admin and the message is from a non-admin user
+      // Only mark as read if the user is NOT the sender
+      // This means the recipient is viewing the message
       if (message.senderId !== userId) {
         await storage.markMessageAsRead(messageId);
         res.json({ message: "Message marked as read" });
       } else {
-        // User is trying to mark their own message as read - don't allow this
+        // User is viewing their own message - don't mark as read
         res.json({ message: "Cannot mark own message as read" });
       }
     } catch (error) {

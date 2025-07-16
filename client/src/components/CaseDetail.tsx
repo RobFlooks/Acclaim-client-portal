@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
+import { formatDate } from "@/lib/utils";
 
 interface CaseDetailProps {
   case: any;
@@ -140,6 +141,27 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
       }
     },
   });
+
+  // Mark messages as read when they're viewed in the messages tab
+  useEffect(() => {
+    if (activeTab === "messages" && messages && user?.id) {
+      const unreadMessages = messages.filter((message: any) => 
+        !message.isRead && message.senderId !== user.id
+      );
+      
+      unreadMessages.forEach(async (message: any) => {
+        try {
+          await apiRequest(`/api/messages/${message.id}/read`, {
+            method: "PUT",
+          });
+          queryClient.invalidateQueries({ queryKey: ["/api/cases", caseData.id, "messages"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
+        } catch (error) {
+          console.error("Failed to mark message as read:", error);
+        }
+      });
+    }
+  }, [activeTab, messages, user?.id, queryClient, caseData.id]);
 
   const { data: payments, isLoading: paymentsLoading } = useQuery({
     queryKey: ["/api/cases", caseData.id, "payments"],
@@ -1330,9 +1352,20 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               ) : messages && messages.length > 0 ? (
                 <div className="space-y-4 max-h-64 overflow-y-auto">
                   {messages.map((message: any) => (
-                    <div key={message.id} className="p-3 border rounded-lg">
+                    <div key={message.id} className={`p-3 border rounded-lg ${
+                      !message.isRead && message.senderId !== user?.id
+                        ? "bg-white border-acclaim-teal shadow-sm border-l-4 border-l-acclaim-teal"
+                        : "bg-gray-50 border-gray-200"
+                    }`}>
                       <div className="flex items-center justify-between mb-2">
-                        <p className="font-medium text-sm">{message.subject}</p>
+                        <div className="flex items-center space-x-2">
+                          <p className="font-medium text-sm">{message.subject}</p>
+                          {!message.isRead && message.senderId !== user?.id && (
+                            <Badge variant="secondary" className="bg-red-100 text-red-800 text-xs">
+                              New
+                            </Badge>
+                          )}
+                        </div>
                         <div className="flex items-center space-x-2">
                           <p className="text-xs text-gray-500">{formatDate(message.createdAt)}</p>
                           {user?.isAdmin && (
