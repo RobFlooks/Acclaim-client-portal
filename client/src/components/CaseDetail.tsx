@@ -560,10 +560,12 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             }
             .logo-icon {
-              width: 35px;
-              height: 35px;
-              background: #0d9488;
-              clip-path: polygon(50% 0%, 83% 12%, 100% 43%, 94% 78%, 68% 100%, 32% 100%, 6% 78%, 0% 43%, 17% 12%);
+              width: 40px;
+              height: 40px;
+              background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik01MCA1QzYwIDI1IDc1IDQwIDk1IDUwQzc1IDYwIDYwIDc1IDUwIDk1QzQwIDc1IDI1IDYwIDUgNTBDMjUgNDAgNDAgMjUgNTAgNVoiIGZpbGw9IiMwZDk0ODgiLz4KPHBhdGggZD0iTTUwIDIwQzU4IDM1IDY1IDQyIDgwIDUwQzY1IDU4IDU4IDY1IDUwIDgwQzQyIDY1IDM1IDU4IDIwIDUwQzM1IDQyIDQyIDM1IDUwIDIwWiIgZmlsbD0iIzE0YjhhNiIvPgo8L3N2Zz4K');
+              background-size: contain;
+              background-repeat: no-repeat;
+              background-position: center;
             }
             .header h1 {
               margin: 0;
@@ -709,11 +711,13 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
             .footer-logo {
               width: 24px;
               height: 24px;
-              background: #0d9488;
               display: inline-block;
               margin-right: 8px;
-              clip-path: polygon(50% 0%, 83% 12%, 100% 43%, 94% 78%, 68% 100%, 32% 100%, 6% 78%, 0% 43%, 17% 12%);
               vertical-align: middle;
+              background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik01MCA1QzYwIDI1IDc1IDQwIDk1IDUwQzc1IDYwIDYwIDc1IDUwIDk1QzQwIDc1IDI1IDYwIDUgNTBDMjUgNDAgNDAgMjUgNTAgNVoiIGZpbGw9IiMwZDk0ODgiLz4KPHBhdGggZD0iTTUwIDIwQzU4IDM1IDY1IDQyIDgwIDUwQzY1IDU4IDU4IDY1IDUwIDgwQzQyIDY1IDM1IDU4IDIwIDUwQzM1IDQyIDQyIDM1IDUwIDIwWiIgZmlsbD0iIzE0YjhhNiIvPgo8L3N2Zz4K');
+              background-size: contain;
+              background-repeat: no-repeat;
+              background-position: center;
             }
             .no-events {
               text-align: center;
