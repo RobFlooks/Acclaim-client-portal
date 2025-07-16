@@ -28,9 +28,16 @@ export default function Home() {
   // Handle URL parameters for navigation
   useEffect(() => {
     console.log('Home useEffect - location changed:', location);
-    const urlParams = new URLSearchParams(location.split('?')[1] || '');
+    console.log('Window location search:', window.location.search);
+    
+    // Try both the wouter location and window.location for query parameters
+    const queryString = window.location.search || (location.includes('?') ? location.split('?')[1] : '');
+    const urlParams = new URLSearchParams(queryString);
     const section = urlParams.get('section');
+    
+    console.log('Query string:', queryString);
     console.log('Parsed section from URL:', section);
+    
     if (section && ['dashboard', 'cases', 'messages', 'reports', 'documents'].includes(section)) {
       console.log('Setting activeSection to:', section);
       setActiveSection(section);
