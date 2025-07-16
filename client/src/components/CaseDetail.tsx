@@ -1013,16 +1013,14 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
       printWindow.document.write(htmlContent);
       printWindow.document.close();
       
+      // Just open the report in a new tab without printing
       printWindow.onload = () => {
-        setTimeout(() => {
-          printWindow.print();
-          printWindow.close();
-        }, 250);
+        // Window remains open for user to view, print manually if needed
       };
       
       toast({
-        title: "PDF Print Dialog Opened",
-        description: "Use your browser's print dialog to save as PDF.",
+        title: "Case Report Opened",
+        description: "The case report has been opened in a new tab.",
       });
     } catch (error) {
       console.error('Error generating PDF:', error);
