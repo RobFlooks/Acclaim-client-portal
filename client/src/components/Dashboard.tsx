@@ -175,6 +175,20 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
     setMessageDialogOpen(true);
   };
 
+  const getCaseAccountNumber = (caseId: number) => {
+    const caseData = cases?.find((c: any) => c.id === caseId);
+    return caseData?.accountNumber || `Case #${caseId}`;
+  };
+
+  const handleCaseClickFromMessage = (caseId: number) => {
+    const caseData = cases?.find((c: any) => c.id === caseId);
+    if (caseData) {
+      setMessageDialogOpen(false);
+      setSelectedCase(caseData);
+      setDialogOpen(true);
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Dashboard Header */}
@@ -431,9 +445,25 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
                   {formatDate(selectedMessage.createdAt)}
                 </p>
                 {selectedMessage.caseId && (
-                  <p className="text-sm text-gray-600 mt-1">
-                    Related to Case ID: {selectedMessage.caseId}
-                  </p>
+                  <div className="bg-gray-50 p-3 rounded-lg mt-3">
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium">Related to case:</span>{" "}
+                      <button
+                        onClick={() => handleCaseClickFromMessage(selectedMessage.caseId)}
+                        className="text-acclaim-teal hover:text-acclaim-teal/80 font-medium underline cursor-pointer"
+                      >
+                        {getCaseAccountNumber(selectedMessage.caseId)}
+                      </button>
+                      {(() => {
+                        const caseData = cases?.find((c: any) => c.id === selectedMessage.caseId);
+                        return caseData?.caseName ? (
+                          <span className="text-gray-500 ml-2">
+                            - {caseData.caseName}
+                          </span>
+                        ) : null;
+                      })()}
+                    </p>
+                  </div>
                 )}
               </div>
               
