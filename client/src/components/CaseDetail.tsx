@@ -142,24 +142,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
     },
   });
 
-  // Mark messages as read when they're viewed in the messages tab
-  useEffect(() => {
-    if (activeTab === "messages" && messages) {
-      const unreadMessages = messages.filter((message: any) => !message.isRead);
-      
-      unreadMessages.forEach(async (message: any) => {
-        try {
-          await apiRequest(`/api/messages/${message.id}/read`, {
-            method: "PUT",
-          });
-          queryClient.invalidateQueries({ queryKey: ["/api/cases", caseData.id, "messages"] });
-          queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
-        } catch (error) {
-          console.error("Failed to mark message as read:", error);
-        }
-      });
-    }
-  }, [activeTab, messages, queryClient, caseData.id]);
+
 
   const { data: payments, isLoading: paymentsLoading } = useQuery({
     queryKey: ["/api/cases", caseData.id, "payments"],
