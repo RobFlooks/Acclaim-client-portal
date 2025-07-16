@@ -359,9 +359,16 @@ export default function Messages() {
                       <User className="h-5 w-5 text-acclaim-teal" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">
-                        {viewingMessage.senderName || viewingMessage.senderEmail || 'Unknown'}
-                      </p>
+                      <div className="flex items-center space-x-2">
+                        <p className="font-medium text-gray-900">
+                          {viewingMessage.senderName || viewingMessage.senderEmail || 'Unknown'}
+                        </p>
+                        {viewingMessage.senderIsAdmin && (
+                          <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                            Admin
+                          </Badge>
+                        )}
+                      </div>
                       <p className="text-sm text-gray-500">
                         {formatDate(viewingMessage.createdAt)}
                       </p>
@@ -524,9 +531,16 @@ export default function Messages() {
                         </div>
                         <div className="mb-2">
                           <div className="flex items-center justify-between mb-1">
-                            <p className="text-xs text-gray-500">
-                              From: {message.senderName || message.senderEmail || 'Unknown'}
-                            </p>
+                            <div className="flex items-center space-x-2">
+                              <p className="text-xs text-gray-500">
+                                From: <span className="font-medium">{message.senderName || message.senderEmail || 'Unknown'}</span>
+                              </p>
+                              {message.senderIsAdmin && (
+                                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                                  Admin
+                                </Badge>
+                              )}
+                            </div>
                             {message.attachmentFileName && (
                               <div className="flex items-center text-xs text-gray-500">
                                 <Paperclip className="h-3 w-3 mr-1" />
