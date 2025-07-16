@@ -424,80 +424,101 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
       const outstandingAmount = getOutstandingAmount();
       
       // Create a comprehensive timeline combining all events
-      const timelineEvents = [];
+      const timelineEvents: any[] = [];
       
       // Add case creation event
-      timelineEvents.push({
-        date: caseData.createdAt,
-        type: 'case_created',
-        title: 'Case Created',
-        description: `Case ${caseData.accountNumber} was created`,
-        icon: '🏗️',
-        color: '#3B82F6'
-      });
+      if (caseData.createdAt) {
+        timelineEvents.push({
+          id: `case_${caseData.id}`,
+          date: caseData.createdAt,
+          type: 'case_created',
+          title: 'Case Created',
+          description: `Case ${caseData.accountNumber} was created`,
+          icon: '🏗️',
+          color: '#3B82F6'
+        });
+      }
       
       // Add activities
-      if (activities && activities.length > 0) {
+      if (activities && Array.isArray(activities)) {
         activities.forEach((activity: any) => {
-          timelineEvents.push({
-            date: activity.createdAt,
-            type: 'activity',
-            title: activity.activityType || 'Activity',
-            description: activity.description || 'No description',
-            icon: '⚡',
-            color: '#10B981'
-          });
-        });
-      }
-      
-      // Add messages
-      if (messages && messages.length > 0) {
-        messages.forEach((message: any) => {
-          timelineEvents.push({
-            date: message.createdAt,
-            type: 'message',
-            title: message.subject || 'Message',
-            description: `Message from ${message.senderName || 'Unknown'}`,
-            icon: '💬',
-            color: '#6366F1'
-          });
-        });
-      }
-      
-      // Add documents
-      if (documents && documents.length > 0) {
-        documents.forEach((document: any) => {
-          timelineEvents.push({
-            date: document.createdAt,
-            type: 'document',
-            title: 'Document Uploaded',
-            description: document.fileName || 'Unknown file',
-            icon: '📄',
-            color: '#F59E0B'
-          });
-        });
-      }
-      
-      // Add payments
-      if (payments && payments.length > 0) {
-        payments.forEach((payment: any) => {
-          const numericAmount = parseFloat(payment.amount || 0);
-          
-          if (!isNaN(numericAmount) && payment.paymentDate) {
+          if (activity && activity.createdAt) {
             timelineEvents.push({
-              date: payment.paymentDate,
-              type: 'payment',
-              title: 'Payment Received',
-              description: `Payment of ${formatCurrency(numericAmount)} received`,
-              icon: '💰',
-              color: '#059669'
+              id: `activity_${activity.id}`,
+              date: activity.createdAt,
+              type: 'activity',
+              title: activity.activityType || 'Activity',
+              description: activity.description || 'No description',
+              icon: '⚡',
+              color: '#10B981'
             });
           }
         });
       }
       
-      // Sort events chronologically
-      timelineEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      // Add messages
+      if (messages && Array.isArray(messages)) {
+        messages.forEach((message: any) => {
+          if (message && message.createdAt) {
+            timelineEvents.push({
+              id: `message_${message.id}`,
+              date: message.createdAt,
+              type: 'message',
+              title: message.subject || 'Message',
+              description: `Message from ${message.senderName || 'Unknown'}`,
+              icon: '💬',
+              color: '#6366F1'
+            });
+          }
+        });
+      }
+      
+      // Add documents
+      if (documents && Array.isArray(documents)) {
+        documents.forEach((document: any) => {
+          if (document && document.createdAt) {
+            timelineEvents.push({
+              id: `document_${document.id}`,
+              date: document.createdAt,
+              type: 'document',
+              title: 'Document Uploaded',
+              description: document.fileName || 'Unknown file',
+              icon: '📄',
+              color: '#F59E0B'
+            });
+          }
+        });
+      }
+      
+      // Add payments
+      if (payments && Array.isArray(payments)) {
+        payments.forEach((payment: any) => {
+          if (payment && payment.paymentDate) {
+            const numericAmount = parseFloat(payment.amount || 0);
+            
+            if (!isNaN(numericAmount)) {
+              timelineEvents.push({
+                id: `payment_${payment.id}`,
+                date: payment.paymentDate,
+                type: 'payment',
+                title: 'Payment Received',
+                description: `Payment of ${formatCurrency(numericAmount)} received`,
+                icon: '💰',
+                color: '#059669'
+              });
+            }
+          }
+        });
+      }
+      
+      // Sort events chronologically (only if we have valid events)
+      if (timelineEvents.length > 0) {
+        timelineEvents.sort((a, b) => {
+          const dateA = new Date(a.date);
+          const dateB = new Date(b.date);
+          return dateA.getTime() - dateB.getTime();
+        });
+      }
       
       const htmlContent = `
         <!DOCTYPE html>
