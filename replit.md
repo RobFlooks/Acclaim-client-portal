@@ -128,6 +128,8 @@ Preferred communication style: Simple, everyday language.
 - **Multi-Route Support**: Admin panel accessible at both `/admin` and `/admin-enhanced`
 - **Report Focus Updates**: Case Summary Report now defaults to active cases only, Recovery Analysis Report includes comprehensive analysis of all active and closed cases
 - **Payment Display Fix**: Resolved £NaN display issue in payment amounts across all components
+- **Report Navigation Enhancement**: All report pages now have consistent "Back to Reports" navigation that properly returns to the Reports tab instead of Dashboard
+- **Stage Badge Implementation**: Added color-coded stage badges across Case Summary and Recovery Analysis reports (Blue: Pre-Legal, Green: Payment Plan/Paid, Yellow: Claim, Orange: Judgment, Red: Enforcement)
 
 ### Scaling Considerations
 - Database uses connection pooling for efficiency
