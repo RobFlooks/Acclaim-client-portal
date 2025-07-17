@@ -1217,6 +1217,387 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // External API endpoints for case management system integration
   
+  // Create or update organization
+  app.post('/api/external/organizations', async (req: any, res) => {
+    try {
+      // TODO: Add API key authentication here
+      const { name, contactEmail, contactPhone, address, externalRef } = req.body;
+      
+      if (!name || !externalRef) {
+        return res.status(400).json({ message: "Name and externalRef are required" });
+      }
+      
+      // Check if organization already exists
+      const existing = await storage.getOrganisationByExternalRef(externalRef);
+      if (existing) {
+        // Update existing organization
+        const updated = await storage.updateOrganisation(existing.id, {
+          name,
+          contactEmail,
+          contactPhone,
+          address,
+        });
+        return res.json({ message: "Organization updated successfully", organization: updated });
+      }
+      
+      // Create new organization
+      const organization = await storage.createOrganisation({
+        name,
+        contactEmail,
+        contactPhone,
+        address,
+        externalRef,
+      });
+      
+      res.status(201).json({ message: "Organization created successfully", organization });
+    } catch (error) {
+      console.error("Error creating/updating organization via external API:", error);
+      res.status(500).json({ message: "Failed to create/update organization" });
+    }
+  });
+
+  // Create or update user
+  app.post('/api/external/users', async (req: any, res) => {
+    try {
+      // TODO: Add API key authentication here
+      const { firstName, lastName, email, phone, organisationExternalRef, isAdmin, externalRef } = req.body;
+      
+      if (!firstName || !lastName || !email || !externalRef) {
+        return res.status(400).json({ message: "firstName, lastName, email, and externalRef are required" });
+      }
+      
+      // Find organization by external reference
+      let organisationId = null;
+      if (organisationExternalRef) {
+        const organization = await storage.getOrganisationByExternalRef(organisationExternalRef);
+        if (!organization) {
+          return res.status(404).json({ message: "Organization not found" });
+        }
+        organisationId = organization.id;
+      }
+      
+      // Check if user already exists
+      const existing = await storage.getUserByExternalRef(externalRef);
+      if (existing) {
+        // Update existing user
+        const updated = await storage.updateUser(existing.id, {
+          firstName,
+          lastName,
+          phone,
+        });
+        
+        // Update organization assignment if provided
+        if (organisationId) {
+          await storage.assignUserToOrganisation(existing.id, organisationId);
+        }
+        
+        return res.json({ message: "User updated successfully", user: updated });
+      }
+      
+      // Create new user with external reference
+      const result = await storage.createUserWithExternalRef({
+        firstName,
+        lastName,
+        email,
+        phone,
+        organisationId,
+        isAdmin: isAdmin || false,
+        externalRef,
+      });
+      
+      res.status(201).json({ 
+        message: "User created successfully", 
+        user: result.user,
+        tempPassword: result.tempPassword 
+      });
+    } catch (error) {
+      console.error("Error creating/updating user via external API:", error);
+      res.status(500).json({ message: "Failed to create/update user" });
+    }
+  });
+
+  // Create or update case
+  app.post('/api/external/cases', async (req: any, res) => {
+    try {
+      // TODO: Add API key authentication here
+      const {
+        accountNumber,
+        caseName,
+        debtorEmail,
+        debtorPhone,
+        debtorAddress,
+        debtorType,
+        originalAmount,
+        outstandingAmount,
+        costsAdded,
+        interestAdded,
+        feesAdded,
+        status,
+        stage,
+        organisationExternalRef,
+        assignedTo,
+        externalRef
+      } = req.body;
+      
+      if (!accountNumber || !caseName || !originalAmount || !outstandingAmount || !organisationExternalRef || !externalRef) {
+        return res.status(400).json({ 
+          message: "accountNumber, caseName, originalAmount, outstandingAmount, organisationExternalRef, and externalRef are required" 
+        });
+      }
+      
+      // Find organization by external reference
+      const organization = await storage.getOrganisationByExternalRef(organisationExternalRef);
+      if (!organization) {
+        return res.status(404).json({ message: "Organization not found" });
+      }
+      
+      // Check if case already exists
+      const existing = await storage.getCaseByExternalRef(externalRef);
+      if (existing) {
+        // Update existing case
+        const updated = await storage.updateCase(existing.id, {
+          accountNumber,
+          caseName,
+          debtorEmail,
+          debtorPhone,
+          debtorAddress,
+          debtorType: debtorType || 'individual',
+          originalAmount,
+          outstandingAmount,
+          costsAdded: costsAdded || '0.00',
+          interestAdded: interestAdded || '0.00',
+          feesAdded: feesAdded || '0.00',
+          status: status || 'active',
+          stage: stage || 'initial_contact',
+          assignedTo: assignedTo || 'System',
+        });
+        
+        // Add case activity
+        await storage.addCaseActivity({
+          caseId: existing.id,
+          activityType: "case_updated",
+          description: `Case updated via external system`,
+          performedBy: 'SYSTEM',
+        });
+        
+        return res.json({ message: "Case updated successfully", case: updated });
+      }
+      
+      // Create new case
+      const newCase = await storage.createCase({
+        accountNumber,
+        caseName,
+        debtorEmail,
+        debtorPhone,
+        debtorAddress,
+        debtorType: debtorType || 'individual',
+        originalAmount,
+        outstandingAmount,
+        costsAdded: costsAdded || '0.00',
+        interestAdded: interestAdded || '0.00',
+        feesAdded: feesAdded || '0.00',
+        status: status || 'active',
+        stage: stage || 'initial_contact',
+        organisationId: organization.id,
+        assignedTo: assignedTo || 'System',
+        externalRef,
+      });
+      
+      // Add case activity
+      await storage.addCaseActivity({
+        caseId: newCase.id,
+        activityType: "case_created",
+        description: `Case created via external system`,
+        performedBy: 'SYSTEM',
+      });
+      
+      res.status(201).json({ message: "Case created successfully", case: newCase });
+    } catch (error) {
+      console.error("Error creating/updating case via external API:", error);
+      res.status(500).json({ message: "Failed to create/update case" });
+    }
+  });
+
+  // Create payment
+  app.post('/api/external/payments', async (req: any, res) => {
+    try {
+      // TODO: Add API key authentication here
+      const {
+        caseExternalRef,
+        amount,
+        paymentDate,
+        paymentMethod,
+        reference,
+        notes,
+        externalRef
+      } = req.body;
+      
+      if (!caseExternalRef || !amount || !paymentDate || !externalRef) {
+        return res.status(400).json({ 
+          message: "caseExternalRef, amount, paymentDate, and externalRef are required" 
+        });
+      }
+      
+      // Find case by external reference
+      const case_ = await storage.getCaseByExternalRef(caseExternalRef);
+      if (!case_) {
+        return res.status(404).json({ message: "Case not found" });
+      }
+      
+      // Create payment
+      const payment = await storage.createPayment({
+        caseId: case_.id,
+        amount,
+        paymentDate: new Date(paymentDate),
+        paymentMethod: paymentMethod || 'UNKNOWN',
+        reference,
+        notes,
+        organisationId: case_.organisationId,
+        recordedBy: 'SYSTEM',
+        externalRef,
+      });
+      
+      // Add case activity
+      await storage.addCaseActivity({
+        caseId: case_.id,
+        activityType: "payment_received",
+        description: `Payment received via external system: £${amount}`,
+        performedBy: 'SYSTEM',
+      });
+      
+      res.status(201).json({ message: "Payment created successfully", payment });
+    } catch (error) {
+      console.error("Error creating payment via external API:", error);
+      res.status(500).json({ message: "Failed to create payment" });
+    }
+  });
+
+  // Update case status/stage
+  app.put('/api/external/cases/:externalRef/status', async (req: any, res) => {
+    try {
+      // TODO: Add API key authentication here
+      const { externalRef } = req.params;
+      const { status, stage, notes } = req.body;
+      
+      if (!status && !stage) {
+        return res.status(400).json({ message: "Status or stage is required" });
+      }
+      
+      // Find case by external reference
+      const case_ = await storage.getCaseByExternalRef(externalRef);
+      if (!case_) {
+        return res.status(404).json({ message: "Case not found" });
+      }
+      
+      // Update case
+      const updates: any = {};
+      if (status) updates.status = status;
+      if (stage) updates.stage = stage;
+      
+      const updatedCase = await storage.updateCase(case_.id, updates);
+      
+      // Add case activity
+      const description = `Case ${status ? `status changed to ${status}` : ''}${status && stage ? ', ' : ''}${stage ? `stage changed to ${stage}` : ''} via external system${notes ? `. Notes: ${notes}` : ''}`;
+      await storage.addCaseActivity({
+        caseId: case_.id,
+        activityType: "status_updated",
+        description,
+        performedBy: 'SYSTEM',
+      });
+      
+      res.json({ message: "Case status updated successfully", case: updatedCase });
+    } catch (error) {
+      console.error("Error updating case status via external API:", error);
+      res.status(500).json({ message: "Failed to update case status" });
+    }
+  });
+
+  // Bulk data sync endpoint
+  app.post('/api/external/sync', async (req: any, res) => {
+    try {
+      // TODO: Add API key authentication here
+      const { organizations, users, cases, payments } = req.body;
+      
+      const results = {
+        organizations: { created: 0, updated: 0, errors: [] },
+        users: { created: 0, updated: 0, errors: [] },
+        cases: { created: 0, updated: 0, errors: [] },
+        payments: { created: 0, updated: 0, errors: [] },
+      };
+      
+      // Process organizations first
+      if (organizations && Array.isArray(organizations)) {
+        for (const org of organizations) {
+          try {
+            const existing = await storage.getOrganisationByExternalRef(org.externalRef);
+            if (existing) {
+              await storage.updateOrganisation(existing.id, org);
+              results.organizations.updated++;
+            } else {
+              await storage.createOrganisation(org);
+              results.organizations.created++;
+            }
+          } catch (error) {
+            results.organizations.errors.push({ externalRef: org.externalRef, error: error.message });
+          }
+        }
+      }
+      
+      // Process users
+      if (users && Array.isArray(users)) {
+        for (const user of users) {
+          try {
+            const existing = await storage.getUserByExternalRef(user.externalRef);
+            if (existing) {
+              await storage.updateUser(existing.id, user);
+              results.users.updated++;
+            } else {
+              await storage.createUserWithExternalRef(user);
+              results.users.created++;
+            }
+          } catch (error) {
+            results.users.errors.push({ externalRef: user.externalRef, error: error.message });
+          }
+        }
+      }
+      
+      // Process cases
+      if (cases && Array.isArray(cases)) {
+        for (const case_ of cases) {
+          try {
+            const existing = await storage.getCaseByExternalRef(case_.externalRef);
+            if (existing) {
+              await storage.updateCase(existing.id, case_);
+              results.cases.updated++;
+            } else {
+              await storage.createCase(case_);
+              results.cases.created++;
+            }
+          } catch (error) {
+            results.cases.errors.push({ externalRef: case_.externalRef, error: error.message });
+          }
+        }
+      }
+      
+      // Process payments
+      if (payments && Array.isArray(payments)) {
+        for (const payment of payments) {
+          try {
+            await storage.createPayment(payment);
+            results.payments.created++;
+          } catch (error) {
+            results.payments.errors.push({ externalRef: payment.externalRef, error: error.message });
+          }
+        }
+      }
+      
+      res.json({ message: "Bulk sync completed", results });
+    } catch (error) {
+      console.error("Error in bulk sync via external API:", error);
+      res.status(500).json({ message: "Failed to complete bulk sync" });
+    }
+  });
+
   // Delete payment by external reference (for case management system)
   app.delete('/api/external/payments/:externalRef', async (req: any, res) => {
     try {

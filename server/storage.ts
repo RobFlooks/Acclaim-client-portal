@@ -39,12 +39,15 @@ export interface IStorage {
   // User operations (mandatory for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  getUserByExternalRef(externalRef: string): Promise<User | undefined>;
+  createUserWithExternalRef(userData: any): Promise<{ user: User; tempPassword: string }>;
   
   // Organisation operations
   getOrganisation(id: number): Promise<Organization | undefined>;
   createOrganisation(org: InsertOrganization): Promise<Organization>;
   updateOrganisation(id: number, org: Partial<InsertOrganization>): Promise<Organization>;
   deleteOrganisation(id: number): Promise<void>;
+  getOrganisationByExternalRef(externalRef: string): Promise<Organization | undefined>;
   getOrganisationStats(id: number): Promise<{
     userCount: number;
     caseCount: number;
@@ -227,6 +230,39 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUserByExternalRef(externalRef: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.externalRef, externalRef));
+    return user;
+  }
+
+  async createUserWithExternalRef(userData: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    organisationId?: number;
+    isAdmin?: boolean;
+    externalRef: string;
+  }): Promise<{ user: User; tempPassword: string }> {
+    const tempPassword = nanoid(12);
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+    
+    const [user] = await db
+      .insert(users)
+      .values({
+        ...userData,
+        organisationId: userData.organisationId?.toString(),
+        hashedPassword,
+        mustChangePassword: true,
+        isAdmin: userData.isAdmin || false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+
+    return { user, tempPassword };
+  }
+
   async getOrganisation(id: number): Promise<Organization | undefined> {
     const [org] = await db.select().from(organisations).where(eq(organisations.id, id));
     return org;
@@ -258,6 +294,11 @@ export class DatabaseStorage implements IStorage {
     }
 
     await db.delete(organisations).where(eq(organisations.id, id));
+  }
+
+  async getOrganisationByExternalRef(externalRef: string): Promise<Organization | undefined> {
+    const [organisation] = await db.select().from(organisations).where(eq(organisations.externalRef, externalRef));
+    return organisation;
   }
 
   async getOrganisationStats(id: number): Promise<{

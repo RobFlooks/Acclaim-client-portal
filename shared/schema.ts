@@ -39,6 +39,7 @@ export const users = pgTable("users", {
   passwordHash: varchar("password_hash"),
   tempPassword: varchar("temp_password"),
   mustChangePassword: boolean("must_change_password").default(false),
+  externalRef: varchar("external_ref", { length: 100 }).unique(), // For external system integration
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -50,6 +51,7 @@ export const organisations = pgTable("organisations", {
   contactEmail: varchar("contact_email"),
   contactPhone: varchar("contact_phone"),
   address: text("address"),
+  externalRef: varchar("external_ref", { length: 100 }).unique(), // For external system integration
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

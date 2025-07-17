@@ -8,9 +8,109 @@ This document outlines how your external case management system can integrate wi
 
 ### 1. External API Endpoints (Recommended)
 
-The portal provides dedicated endpoints for your case management system to push data changes:
+The portal provides comprehensive endpoints for your case management system to push data changes:
 
-#### Payment Deletion
+#### Data Creation Endpoints
+
+##### Create/Update Organization
+```
+POST /api/external/organizations
+Body: {
+  name: string,
+  contactEmail?: string,
+  contactPhone?: string,
+  address?: string,
+  externalRef: string
+}
+```
+- Creates new organization or updates existing one by external reference
+- Returns: `{ message: "Organization created/updated successfully", organization: object }`
+
+##### Create/Update User
+```
+POST /api/external/users
+Body: {
+  firstName: string,
+  lastName: string,
+  email: string,
+  phone?: string,
+  organisationExternalRef?: string,
+  isAdmin?: boolean,
+  externalRef: string
+}
+```
+- Creates new user or updates existing one by external reference
+- Returns: `{ message: "User created/updated successfully", user: object, tempPassword?: string }`
+
+##### Create/Update Case
+```
+POST /api/external/cases
+Body: {
+  accountNumber: string,
+  caseName: string,
+  debtorEmail?: string,
+  debtorPhone?: string,
+  debtorAddress?: string,
+  debtorType?: string,
+  originalAmount: string,
+  outstandingAmount: string,
+  costsAdded?: string,
+  interestAdded?: string,
+  feesAdded?: string,
+  status?: string,
+  stage?: string,
+  organisationExternalRef: string,
+  assignedTo?: string,
+  externalRef: string
+}
+```
+- Creates new case or updates existing one by external reference
+- Returns: `{ message: "Case created/updated successfully", case: object }`
+
+##### Create Payment
+```
+POST /api/external/payments
+Body: {
+  caseExternalRef: string,
+  amount: string,
+  paymentDate: string,
+  paymentMethod?: string,
+  reference?: string,
+  notes?: string,
+  externalRef: string
+}
+```
+- Creates new payment for a case
+- Returns: `{ message: "Payment created successfully", payment: object }`
+
+##### Update Case Status/Stage
+```
+PUT /api/external/cases/{externalRef}/status
+Body: {
+  status?: string,
+  stage?: string,
+  notes?: string
+}
+```
+- Updates case status and/or stage
+- Returns: `{ message: "Case status updated successfully", case: object }`
+
+##### Bulk Data Synchronization
+```
+POST /api/external/sync
+Body: {
+  organizations?: Array<OrganizationData>,
+  users?: Array<UserData>,
+  cases?: Array<CaseData>,
+  payments?: Array<PaymentData>
+}
+```
+- Bulk create/update multiple entities in one request
+- Returns: `{ message: "Bulk sync completed", results: { created: number, updated: number, errors: Array } }`
+
+#### Data Deletion/Reversal Endpoints
+
+##### Payment Deletion
 ```
 DELETE /api/external/payments/{externalRef}
 ```
@@ -18,7 +118,7 @@ DELETE /api/external/payments/{externalRef}
 - Adds audit trail activity to the case
 - Returns: `{ message: "Payment deleted successfully", paymentId: number }`
 
-#### Bulk Payment Deletion
+##### Bulk Payment Deletion
 ```
 DELETE /api/external/cases/{externalRef}/payments
 ```
@@ -26,7 +126,7 @@ DELETE /api/external/cases/{externalRef}/payments
 - Adds audit trail activity to the case
 - Returns: `{ message: "All payments deleted successfully", deletedCount: number }`
 
-#### Payment Reversal
+##### Payment Reversal
 ```
 POST /api/external/payments/{externalRef}/reverse
 Body: { reason: string, reversalRef?: string }
@@ -48,7 +148,162 @@ Added `externalRef` fields to support external system integration:
 
 ### 3. Implementation Examples
 
-#### Node.js/JavaScript Example
+#### Data Creation Examples
+
+##### Node.js/JavaScript - Create Organization
+```javascript
+// Create new organization
+const response = await fetch('https://your-portal.com/api/external/organizations', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY', // TODO: Add authentication
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    name: 'Acme Corporation',
+    contactEmail: 'contact@acme.com',
+    contactPhone: '01234567890',
+    address: '123 Business St, City, County, AB1 2CD',
+    externalRef: 'ACME-ORG-001'
+  })
+});
+
+const result = await response.json();
+console.log(result.message); // "Organization created successfully"
+```
+
+##### Node.js/JavaScript - Create User
+```javascript
+// Create new user
+const response = await fetch('https://your-portal.com/api/external/users', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY', // TODO: Add authentication
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    firstName: 'John',
+    lastName: 'Smith',
+    email: 'john.smith@acme.com',
+    phone: '07123456789',
+    organisationExternalRef: 'ACME-ORG-001',
+    isAdmin: false,
+    externalRef: 'USER-001'
+  })
+});
+
+const result = await response.json();
+console.log(result.message); // "User created successfully"
+console.log(result.tempPassword); // Temporary password for first login
+```
+
+##### Node.js/JavaScript - Create Case
+```javascript
+// Create new case
+const response = await fetch('https://your-portal.com/api/external/cases', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY', // TODO: Add authentication
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    accountNumber: 'ACC-2024-001',
+    caseName: 'John Doe Debt Recovery',
+    debtorEmail: 'john.doe@example.com',
+    debtorPhone: '01234567890',
+    debtorAddress: '456 Debtor St, City, County, CD3 4EF',
+    debtorType: 'individual',
+    originalAmount: '5000.00',
+    outstandingAmount: '3500.00',
+    costsAdded: '150.00',
+    interestAdded: '75.00',
+    feesAdded: '50.00',
+    status: 'active',
+    stage: 'initial_contact',
+    organisationExternalRef: 'ACME-ORG-001',
+    assignedTo: 'Recovery Team',
+    externalRef: 'CASE-001'
+  })
+});
+
+const result = await response.json();
+console.log(result.message); // "Case created successfully"
+```
+
+##### Node.js/JavaScript - Create Payment
+```javascript
+// Create new payment
+const response = await fetch('https://your-portal.com/api/external/payments', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY', // TODO: Add authentication
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    caseExternalRef: 'CASE-001',
+    amount: '500.00',
+    paymentDate: '2024-01-15T10:30:00Z',
+    paymentMethod: 'BANK_TRANSFER',
+    reference: 'TXN-123456',
+    notes: 'First payment installment',
+    externalRef: 'PAYMENT-001'
+  })
+});
+
+const result = await response.json();
+console.log(result.message); // "Payment created successfully"
+```
+
+##### Python - Bulk Data Sync
+```python
+import requests
+
+# Bulk sync data
+response = requests.post(
+    "https://your-portal.com/api/external/sync",
+    headers={
+        "Authorization": "Bearer YOUR_API_KEY",  # TODO: Add authentication
+        "Content-Type": "application/json"
+    },
+    json={
+        "organizations": [
+            {
+                "name": "Tech Corp",
+                "contactEmail": "info@techcorp.com",
+                "externalRef": "TECH-ORG-001"
+            }
+        ],
+        "users": [
+            {
+                "firstName": "Jane",
+                "lastName": "Doe",
+                "email": "jane.doe@techcorp.com",
+                "organisationExternalRef": "TECH-ORG-001",
+                "externalRef": "USER-002"
+            }
+        ],
+        "cases": [
+            {
+                "accountNumber": "ACC-2024-002",
+                "caseName": "ABC Ltd Recovery",
+                "originalAmount": "10000.00",
+                "outstandingAmount": "8000.00",
+                "organisationExternalRef": "TECH-ORG-001",
+                "externalRef": "CASE-002"
+            }
+        ]
+    }
+)
+
+result = response.json()
+print(f"Organizations created: {result['results']['organizations']['created']}")
+print(f"Users created: {result['results']['users']['created']}")
+print(f"Cases created: {result['results']['cases']['created']}")
+```
+
+#### Data Deletion/Reversal Examples
+
+##### Node.js/JavaScript - Delete Payment
 ```javascript
 // Delete payment by external reference
 const response = await fetch(`https://your-portal.com/api/external/payments/${externalRef}`, {
@@ -63,7 +318,7 @@ const result = await response.json();
 console.log(result.message);
 ```
 
-#### Python Example
+##### Python - Reverse Payment
 ```python
 import requests
 
@@ -84,13 +339,18 @@ result = response.json()
 print(result["message"])
 ```
 
-#### cURL Example
+##### cURL - Update Case Status
 ```bash
-# Delete all payments for a case
-curl -X DELETE \
-  "https://your-portal.com/api/external/cases/CASE-EXT-123/payments" \
+# Update case status and stage
+curl -X PUT \
+  "https://your-portal.com/api/external/cases/CASE-001/status" \
   -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json"
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "closed",
+    "stage": "resolved",
+    "notes": "Payment plan completed successfully"
+  }'
 ```
 
 ## Security Considerations
