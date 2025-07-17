@@ -75,6 +75,7 @@ export const cases = pgTable("cases", {
   isArchived: boolean("is_archived").default(false),
   archivedAt: timestamp("archived_at"),
   archivedBy: varchar("archived_by"),
+  externalRef: varchar("external_ref", { length: 100 }).unique(), // For external system integration
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -129,6 +130,7 @@ export const payments = pgTable("payments", {
   reference: varchar("reference", { length: 100 }),
   notes: text("notes"),
   recordedBy: varchar("recorded_by").references(() => users.id),
+  externalRef: varchar("external_ref", { length: 100 }).unique(), // For external system integration
   createdAt: timestamp("created_at").defaultNow(),
   organisationId: integer("organisation_id").references(() => organisations.id).notNull(),
 });

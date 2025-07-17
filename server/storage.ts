@@ -88,6 +88,8 @@ export interface IStorage {
   createPayment(payment: InsertPayment): Promise<Payment>;
   updatePayment(id: number, payment: Partial<InsertPayment>): Promise<Payment>;
   deletePayment(id: number, organisationId: number): Promise<void>;
+  getPaymentByExternalRef(externalRef: string): Promise<Payment | undefined>;
+  getCaseByExternalRef(externalRef: string): Promise<Case | undefined>;
   
   // Statistics
   getCaseStats(organisationId: number): Promise<{
@@ -761,6 +763,22 @@ export class DatabaseStorage implements IStorage {
         eq(payments.id, id),
         eq(payments.organisationId, organisationId)
       ));
+  }
+
+  async getPaymentByExternalRef(externalRef: string): Promise<Payment | undefined> {
+    const [payment] = await db
+      .select()
+      .from(payments)
+      .where(eq(payments.externalRef, externalRef));
+    return payment;
+  }
+
+  async getCaseByExternalRef(externalRef: string): Promise<Case | undefined> {
+    const [case_] = await db
+      .select()
+      .from(cases)
+      .where(eq(cases.externalRef, externalRef));
+    return case_;
   }
 
   async getCaseStats(organisationId: number): Promise<{

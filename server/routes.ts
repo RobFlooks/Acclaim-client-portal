@@ -1215,6 +1215,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // External API endpoints for case management system integration
+  
+  // Delete payment by external reference (for case management system)
+  app.delete('/api/external/payments/:externalRef', async (req: any, res) => {
+    try {
+      // TODO: Add API key authentication here
+      const externalRef = req.params.externalRef;
+      
+      // Find payment by external reference
+      const payment = await storage.getPaymentByExternalRef(externalRef);
+      
+      if (!payment) {
+        return res.status(404).json({ message: "Payment not found" });
+      }
+      
+      // Delete payment
+      await storage.deletePayment(payment.id, payment.organisationId);
+      
+      // Add case activity for audit trail
+      await storage.addCaseActivity({
+        caseId: payment.caseId,
+        activityType: "payment_deleted",
+        description: `Payment deleted via external system: £${payment.amount}`,
+        performedBy: 'SYSTEM',
+      });
+      
+      res.json({ message: "Payment deleted successfully", paymentId: payment.id });
+    } catch (error) {
+      console.error("Error deleting payment via external API:", error);
+      res.status(500).json({ message: "Failed to delete payment" });
+    }
+  });
+
+  // Bulk delete payments by case external reference
+  app.delete('/api/external/cases/:externalRef/payments', async (req: any, res) => {
+    try {
+      // TODO: Add API key authentication here
+      const externalRef = req.params.externalRef;
+      
+      // Find case by external reference
+      const case_ = await storage.getCaseByExternalRef(externalRef);
+      
+      if (!case_) {
+        return res.status(404).json({ message: "Case not found" });
+      }
+      
+      // Get all payments for the case
+      const payments = await storage.getPaymentsForCase(case_.id);
+      
+      // Delete all payments
+      for (const payment of payments) {
+        await storage.deletePayment(payment.id, case_.organisationId);
+      }
+      
+      // Add case activity for audit trail
+      await storage.addCaseActivity({
+        caseId: case_.id,
+        activityType: "payments_bulk_deleted",
+        description: `All payments deleted via external system (${payments.length} payments)`,
+        performedBy: 'SYSTEM',
+      });
+      
+      res.json({ 
+        message: "All payments deleted successfully", 
+        deletedCount: payments.length 
+      });
+    } catch (error) {
+      console.error("Error bulk deleting payments via external API:", error);
+      res.status(500).json({ message: "Failed to delete payments" });
+    }
+  });
+
+  // Reverse specific payment by external reference
+  app.post('/api/external/payments/:externalRef/reverse', async (req: any, res) => {
+    try {
+      // TODO: Add API key authentication here
+      const externalRef = req.params.externalRef;
+      const { reason, reversalRef } = req.body;
+      
+      // Find payment by external reference
+      const payment = await storage.getPaymentByExternalRef(externalRef);
+      
+      if (!payment) {
+        return res.status(404).json({ message: "Payment not found" });
+      }
+      
+      // Create reversal payment (negative amount)
+      const reversal = await storage.createPayment({
+        caseId: payment.caseId,
+        amount: `-${payment.amount}`,
+        paymentDate: new Date(),
+        paymentMethod: 'REVERSAL',
+        reference: reversalRef || `REV-${payment.reference}`,
+        notes: `Reversal of payment ${payment.reference}. Reason: ${reason}`,
+        organisationId: payment.organisationId,
+        recordedBy: 'SYSTEM',
+        externalRef: `${externalRef}-REVERSAL`,
+      });
+      
+      // Add case activity for audit trail
+      await storage.addCaseActivity({
+        caseId: payment.caseId,
+        activityType: "payment_reversed",
+        description: `Payment reversed via external system: £${payment.amount}. Reason: ${reason}`,
+        performedBy: 'SYSTEM',
+      });
+      
+      res.json({ 
+        message: "Payment reversed successfully", 
+        originalPayment: payment,
+        reversalPayment: reversal
+      });
+    } catch (error) {
+      console.error("Error reversing payment via external API:", error);
+      res.status(500).json({ message: "Failed to reverse payment" });
+    }
+  });
+
   // Admin case management routes
   app.get("/api/admin/cases/all", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
