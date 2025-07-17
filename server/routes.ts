@@ -1,4 +1,4 @@
-import type { Express, RequestHandler } from "express";
+import express, { type Express, type RequestHandler } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -49,6 +49,9 @@ const isAdmin: RequestHandler = async (req, res, next) => {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+  
+  // Serve screenshots for user guide
+  app.use("/screenshots", express.static(path.join(__dirname, "../screenshots")));
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {

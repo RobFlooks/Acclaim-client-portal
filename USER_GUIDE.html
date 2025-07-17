@@ -137,6 +137,18 @@
             height: auto;
         }
 
+        .screenshot-container {
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+
+        .screenshot-caption {
+            font-style: italic;
+            color: #666;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+
         .feature-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -324,6 +336,11 @@
             
             <p>The dashboard provides a comprehensive overview of your case management activities and key performance metrics.</p>
             
+            <div class="screenshot-container">
+                <img src="/screenshots/dashboard-screenshot.png" alt="Dashboard Screenshot" class="screenshot">
+                <p class="screenshot-caption">The main dashboard showing case statistics, recent activity, and navigation options</p>
+            </div>
+            
             <h3>Key Statistics</h3>
             <div class="feature-grid">
                 <div class="feature-card">
@@ -382,6 +399,10 @@
                     <li>Current status</li>
                     <li>Recovery stage</li>
                 </ul>
+            </div>
+
+            <div class="alert alert-info">
+                <strong>Visual Reference:</strong> The screenshots in this guide show the actual interface you'll see when using the portal. All features and layouts are current as of the latest system update.
             </div>
 
             <h3>Case Status Indicators</h3>
