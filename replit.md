@@ -131,6 +131,7 @@ Preferred communication style: Simple, everyday language.
 - **Report Navigation Enhancement**: All report pages now have consistent "Back to Reports" navigation that properly returns to the Reports tab instead of Dashboard
 - **Stage Badge Implementation**: Added color-coded stage badges across Case Summary and Recovery Analysis reports (Blue: Pre-Legal, Green: Payment Plan/Paid, Yellow: Claim, Orange: Judgment, Red: Enforcement)
 - **Comprehensive User Guide System**: Created detailed user guide with placeholder screenshots and step-by-step instructions accessible from admin panel, available in both HTML and editable Word formats
+- **Portal Rebranding**: Updated portal branding from "Acclaim Portal" to "myAcclaim" across all interface elements, documentation, and user guides
 
 ### Scaling Considerations
 - Database uses connection pooling for efficiency

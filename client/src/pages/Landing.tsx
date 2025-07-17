@@ -17,7 +17,7 @@ export default function Landing() {
             <div className="flex items-center">
               <img src={roseLogoPath} alt="Acclaim Logo" className="h-8 w-8 mr-3" />
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Acclaim</h1>
+                <h1 className="text-xl font-bold text-gray-900">myAcclaim</h1>
                 <p className="text-sm text-gray-600">Credit Management & Recovery</p>
               </div>
             </div>
@@ -31,7 +31,7 @@ export default function Landing() {
       <section className="bg-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Welcome to Your Client Portal
+            Welcome to myAcclaim
           </h2>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
             Manage your debt recovery cases, track progress, and communicate with our team 
