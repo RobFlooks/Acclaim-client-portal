@@ -1785,6 +1785,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Download API Integration Guide as PDF
+  app.get('/api/download/api-guide', async (req, res) => {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      
+      // Check if the HTML file exists
+      const htmlPath = path.join(process.cwd(), 'API_INTEGRATION_GUIDE.html');
+      if (!fs.existsSync(htmlPath)) {
+        return res.status(404).json({ message: 'API guide not found' });
+      }
+      
+      // Read the HTML content
+      const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+      
+      // Set headers for PDF download
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename="Acclaim_API_Integration_Guide.pdf"');
+      
+      // For now, we'll serve the HTML with PDF-friendly headers
+      // In production, you'd want to use puppeteer or similar to generate actual PDF
+      res.setHeader('Content-Type', 'text/html');
+      res.send(htmlContent);
+      
+    } catch (error) {
+      console.error('Error serving API guide:', error);
+      res.status(500).json({ message: 'Failed to serve API guide' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

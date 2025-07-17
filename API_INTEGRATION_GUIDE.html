@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acclaim Portal API Integration Guide</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+        }
+        .header {
+            background: #0891b2;
+            color: white;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.2em;
+        }
+        h2 {
+            color: #0891b2;
+            border-bottom: 2px solid #0891b2;
+            padding-bottom: 10px;
+            margin-top: 40px;
+        }
+        h3 {
+            color: #0f766e;
+            margin-top: 30px;
+        }
+        .endpoint-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .endpoint-title {
+            font-weight: bold;
+            color: #0891b2;
+            margin-bottom: 10px;
+        }
+        .method {
+            background: #059669;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            margin-right: 10px;
+        }
+        .method.delete {
+            background: #dc2626;
+        }
+        .method.put {
+            background: #d97706;
+        }
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.9em;
+        }
+        .code-block {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin: 10px 0;
+        }
+        .warning {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .info {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background: #f8fafc;
+            font-weight: bold;
+            color: #0891b2;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+        .toc {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .toc h3 {
+            margin-top: 0;
+            color: #0891b2;
+        }
+        .toc ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .toc li {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+        .toc a {
+            color: #0891b2;
+            text-decoration: none;
+        }
+        @media print {
+            body {
+                font-size: 12pt;
+                line-height: 1.4;
+            }
+            .header {
+                background: #0891b2 !important;
+                color: white !important;
+            }
+            pre {
+                background: #f8fafc !important;
+                color: #1e293b !important;
+                border: 1px solid #e2e8f0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Acclaim Portal</h1>
+        <p>API Integration Guide</p>
+        <p>Case Management System Integration</p>
+    </div>
+
+    <div class="toc">
+        <h3>Table of Contents</h3>
+        <ul>
+            <li><a href="#overview">1. Overview</a></li>
+            <li><a href="#authentication">2. Authentication Setup</a></li>
+            <li><a href="#endpoints">3. API Endpoints</a>
+                <ul style="margin-left: 20px;">
+                    <li><a href="#data-creation">3.1 Data Creation Endpoints</a></li>
+                    <li><a href="#data-management">3.2 Data Management Endpoints</a></li>
+                    <li><a href="#data-deletion">3.3 Data Deletion Endpoints</a></li>
+                </ul>
+            </li>
+            <li><a href="#examples">4. Implementation Examples</a></li>
+            <li><a href="#testing">5. Testing Your Integration</a></li>
+            <li><a href="#troubleshooting">6. Troubleshooting</a></li>
+            <li><a href="#best-practices">7. Best Practices</a></li>
+        </ul>
+    </div>
+
+    <h2 id="overview">1. Overview</h2>
+    <p>This guide explains how to integrate your case management system with the Acclaim Portal using our comprehensive API endpoints. The API allows you to:</p>
+    <ul>
+        <li>Create and update organizations, users, cases, and payments</li>
+        <li>Synchronize data between your system and the portal</li>
+        <li>Delete and reverse payments when needed</li>
+        <li>Update case statuses and stages in real-time</li>
+        <li>Perform bulk data operations</li>
+    </ul>
+
+    <div class="info">
+        <strong>Base URL:</strong> https://your-portal-domain.com<br>
+        <strong>Content-Type:</strong> application/json<br>
+        <strong>Authentication:</strong> Bearer token (API key required)
+    </div>
+
+    <h2 id="authentication">2. Authentication Setup</h2>
+    <div class="warning">
+        <strong>Important:</strong> All API endpoints require authentication. You'll need to implement API key validation before using these endpoints in production.
+    </div>
+
+    <p>Each API request must include the following headers:</p>
+    <pre>
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+    </pre>
+
+    <h2 id="endpoints">3. API Endpoints</h2>
+
+    <h3 id="data-creation">3.1 Data Creation Endpoints</h3>
+
+    <div class="endpoint-box">
+        <div class="endpoint-title">
+            <span class="method">POST</span> Create/Update Organization
+        </div>
+        <div class="code-block">POST /api/external/organizations</div>
+        <p><strong>Purpose:</strong> Creates a new organization or updates an existing one by external reference.</p>
+        <p><strong>Request Body:</strong></p>
+        <pre>
+{
+  "name": "Acme Corporation",
+  "contactEmail": "contact@acme.com",
+  "contactPhone": "01234567890",
+  "address": "123 Business St, City, County, AB1 2CD",
+  "externalRef": "ACME-ORG-001"
+}
+        </pre>
+        <p><strong>Response:</strong></p>
+        <pre>
+{
+  "message": "Organization created successfully",
+  "organization": {
+    "id": 1,
+    "name": "Acme Corporation",
+    "externalRef": "ACME-ORG-001",
+    // ... other fields
+  }
+}
+        </pre>
+    </div>
+
+    <div class="endpoint-box">
+        <div class="endpoint-title">
+            <span class="method">POST</span> Create/Update User
+        </div>
+        <div class="code-block">POST /api/external/users</div>
+        <p><strong>Purpose:</strong> Creates a new user or updates an existing one by external reference.</p>
+        <p><strong>Request Body:</strong></p>
+        <pre>
+{
+  "firstName": "John",
+  "lastName": "Smith",
+  "email": "john.smith@acme.com",
+  "phone": "07123456789",
+  "organisationExternalRef": "ACME-ORG-001",
+  "isAdmin": false,
+  "externalRef": "USER-001"
+}
+        </pre>
+        <p><strong>Response:</strong></p>
+        <pre>
+{
+  "message": "User created successfully",
+  "user": {
+    "id": "user123",
+    "firstName": "John",
+    "lastName": "Smith",
+    "email": "john.smith@acme.com",
+    "externalRef": "USER-001"
+  },
+  "tempPassword": "randomPass123"
+}
+        </pre>
+    </div>
+
+    <div class="endpoint-box">
+        <div class="endpoint-title">
+            <span class="method">POST</span> Create/Update Case
+        </div>
+        <div class="code-block">POST /api/external/cases</div>
+        <p><strong>Purpose:</strong> Creates a new case or updates an existing one by external reference.</p>
+        <p><strong>Request Body:</strong></p>
+        <pre>
+{
+  "accountNumber": "ACC-2024-001",
+  "caseName": "John Doe Debt Recovery",
+  "debtorEmail": "john.doe@example.com",
+  "debtorPhone": "01234567890",
+  "debtorAddress": "456 Debtor St, City, County, CD3 4EF",
+  "debtorType": "individual",
+  "originalAmount": "5000.00",
+  "outstandingAmount": "3500.00",
+  "costsAdded": "150.00",
+  "interestAdded": "75.00",
+  "feesAdded": "50.00",
+  "status": "active",
+  "stage": "initial_contact",
+  "organisationExternalRef": "ACME-ORG-001",
+  "assignedTo": "Recovery Team",
+  "externalRef": "CASE-001"
+}
+        </pre>
+    </div>
+
+    <div class="endpoint-box">
+        <div class="endpoint-title">
+            <span class="method">POST</span> Create Payment
+        </div>
+        <div class="code-block">POST /api/external/payments</div>
+        <p><strong>Purpose:</strong> Creates a new payment record for a case.</p>
+        <p><strong>Request Body:</strong></p>
+        <pre>
+{
+  "caseExternalRef": "CASE-001",
+  "amount": "500.00",
+  "paymentDate": "2024-01-15T10:30:00Z",
+  "paymentMethod": "BANK_TRANSFER",
+  "reference": "TXN-123456",
+  "notes": "First payment installment",
+  "externalRef": "PAYMENT-001"
+}
+        </pre>
+    </div>
+
+    <h3 id="data-management">3.2 Data Management Endpoints</h3>
+
+    <div class="endpoint-box">
+        <div class="endpoint-title">
+            <span class="method put">PUT</span> Update Case Status
+        </div>
+        <div class="code-block">PUT /api/external/cases/{externalRef}/status</div>
+        <p><strong>Purpose:</strong> Updates the status and/or stage of a case.</p>
+        <p><strong>Request Body:</strong></p>
+        <pre>
+{
+  "status": "closed",
+  "stage": "resolved",
+  "notes": "Payment plan completed successfully"
+}
+        </pre>
+    </div>
+
+    <div class="endpoint-box">
+        <div class="endpoint-title">
+            <span class="method">POST</span> Bulk Data Synchronization
+        </div>
+        <div class="code-block">POST /api/external/sync</div>
+        <p><strong>Purpose:</strong> Synchronizes multiple entities in a single request.</p>
+        <p><strong>Request Body:</strong></p>
+        <pre>
+{
+  "organizations": [
+    {
+      "name": "Tech Corp",
+      "contactEmail": "info@techcorp.com",
+      "externalRef": "TECH-ORG-001"
+    }
+  ],
+  "users": [
+    {
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "email": "jane.doe@techcorp.com",
+      "organisationExternalRef": "TECH-ORG-001",
+      "externalRef": "USER-002"
+    }
+  ],
+  "cases": [
+    {
+      "accountNumber": "ACC-2024-002",
+      "caseName": "ABC Ltd Recovery",
+      "originalAmount": "10000.00",
+      "outstandingAmount": "8000.00",
+      "organisationExternalRef": "TECH-ORG-001",
+      "externalRef": "CASE-002"
+    }
+  ],
+  "payments": [
+    {
+      "caseExternalRef": "CASE-002",
+      "amount": "2000.00",
+      "paymentDate": "2024-01-20T14:00:00Z",
+      "externalRef": "PAYMENT-002"
+    }
+  ]
+}
+        </pre>
+        <p><strong>Response:</strong></p>
+        <pre>
+{
+  "message": "Bulk sync completed",
+  "results": {
+    "organizations": { "created": 1, "updated": 0, "errors": [] },
+    "users": { "created": 1, "updated": 0, "errors": [] },
+    "cases": { "created": 1, "updated": 0, "errors": [] },
+    "payments": { "created": 1, "updated": 0, "errors": [] }
+  }
+}
+        </pre>
+    </div>
+
+    <h3 id="data-deletion">3.3 Data Deletion Endpoints</h3>
+
+    <div class="endpoint-box">
+        <div class="endpoint-title">
+            <span class="method delete">DELETE</span> Delete Payment
+        </div>
+        <div class="code-block">DELETE /api/external/payments/{externalRef}</div>
+        <p><strong>Purpose:</strong> Deletes a specific payment by external reference.</p>
+        <p><strong>Response:</strong></p>
+        <pre>
+{
+  "message": "Payment deleted successfully",
+  "paymentId": 123
+}
+        </pre>
+    </div>
+
+    <div class="endpoint-box">
+        <div class="endpoint-title">
+            <span class="method delete">DELETE</span> Delete All Case Payments
+        </div>
+        <div class="code-block">DELETE /api/external/cases/{externalRef}/payments</div>
+        <p><strong>Purpose:</strong> Deletes all payments for a specific case.</p>
+        <p><strong>Response:</strong></p>
+        <pre>
+{
+  "message": "All payments deleted successfully",
+  "deletedCount": 5
+}
+        </pre>
+    </div>
+
+    <div class="endpoint-box">
+        <div class="endpoint-title">
+            <span class="method">POST</span> Reverse Payment
+        </div>
+        <div class="code-block">POST /api/external/payments/{externalRef}/reverse</div>
+        <p><strong>Purpose:</strong> Creates a reversal payment (negative amount) while keeping the original payment record.</p>
+        <p><strong>Request Body:</strong></p>
+        <pre>
+{
+  "reason": "Chargeback received",
+  "reversalRef": "CHB-2024-001"
+}
+        </pre>
+    </div>
+
+    <div class="page-break"></div>
+
+    <h2 id="examples">4. Implementation Examples</h2>
+
+    <h3>Node.js/JavaScript Example</h3>
+    <pre>
+// Example: Create organization and user
+async function createOrganizationAndUser() {
+  const API_KEY = 'your-api-key-here';
+  const BASE_URL = 'https://your-portal-domain.com';
+  
+  const headers = {
+    'Authorization': `Bearer ${API_KEY}`,
+    'Content-Type': 'application/json'
+  };
+
+  // Create organization
+  const orgResponse = await fetch(`${BASE_URL}/api/external/organizations`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      name: 'Acme Corporation',
+      contactEmail: 'contact@acme.com',
+      contactPhone: '01234567890',
+      address: '123 Business St, City, County, AB1 2CD',
+      externalRef: 'ACME-ORG-001'
+    })
+  });
+
+  const orgResult = await orgResponse.json();
+  console.log('Organization:', orgResult.message);
+
+  // Create user
+  const userResponse = await fetch(`${BASE_URL}/api/external/users`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      firstName: 'John',
+      lastName: 'Smith',
+      email: 'john.smith@acme.com',
+      phone: '07123456789',
+      organisationExternalRef: 'ACME-ORG-001',
+      isAdmin: false,
+      externalRef: 'USER-001'
+    })
+  });
+
+  const userResult = await userResponse.json();
+  console.log('User:', userResult.message);
+  console.log('Temp Password:', userResult.tempPassword);
+}
+
+// Example: Delete payment
+async function deletePayment(externalRef) {
+  const response = await fetch(`${BASE_URL}/api/external/payments/${externalRef}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${API_KEY}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  const result = await response.json();
+  console.log(result.message);
+}
+    </pre>
+
+    <h3>Python Example</h3>
+    <pre>
+import requests
+import json
+
+class AcclaimAPI:
+    def __init__(self, base_url, api_key):
+        self.base_url = base_url
+        self.headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        }
+    
+    def create_case(self, case_data):
+        """Create a new case"""
+        response = requests.post(
+            f"{self.base_url}/api/external/cases",
+            headers=self.headers,
+            json=case_data
+        )
+        return response.json()
+    
+    def update_case_status(self, external_ref, status_data):
+        """Update case status"""
+        response = requests.put(
+            f"{self.base_url}/api/external/cases/{external_ref}/status",
+            headers=self.headers,
+            json=status_data
+        )
+        return response.json()
+    
+    def reverse_payment(self, external_ref, reason):
+        """Reverse a payment"""
+        response = requests.post(
+            f"{self.base_url}/api/external/payments/{external_ref}/reverse",
+            headers=self.headers,
+            json={'reason': reason}
+        )
+        return response.json()
+    
+    def bulk_sync(self, data):
+        """Bulk synchronize data"""
+        response = requests.post(
+            f"{self.base_url}/api/external/sync",
+            headers=self.headers,
+            json=data
+        )
+        return response.json()
+
+# Usage example
+api = AcclaimAPI('https://your-portal-domain.com', 'your-api-key')
+
+# Create a case
+case_result = api.create_case({
+    'accountNumber': 'ACC-2024-001',
+    'caseName': 'John Doe Debt Recovery',
+    'originalAmount': '5000.00',
+    'outstandingAmount': '3500.00',
+    'organisationExternalRef': 'ACME-ORG-001',
+    'externalRef': 'CASE-001'
+})
+
+print(f"Case created: {case_result['message']}")
+    </pre>
+
+    <h3>cURL Examples</h3>
+    <pre>
+# Create organization
+curl -X POST "https://your-portal-domain.com/api/external/organizations" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Acme Corporation",
+    "contactEmail": "contact@acme.com",
+    "externalRef": "ACME-ORG-001"
+  }'
+
+# Update case status
+curl -X PUT "https://your-portal-domain.com/api/external/cases/CASE-001/status" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "closed",
+    "stage": "resolved",
+    "notes": "Payment plan completed"
+  }'
+
+# Delete payment
+curl -X DELETE "https://your-portal-domain.com/api/external/payments/PAYMENT-001" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json"
+    </pre>
+
+    <h2 id="testing">5. Testing Your Integration</h2>
+
+    <div class="info">
+        <h4>Testing Checklist:</h4>
+        <ul>
+            <li>✓ Verify API key authentication works</li>
+            <li>✓ Test organization creation and updates</li>
+            <li>✓ Test user creation with temporary passwords</li>
+            <li>✓ Test case creation with all required fields</li>
+            <li>✓ Test payment creation and deletion</li>
+            <li>✓ Test bulk synchronization</li>
+            <li>✓ Test error handling for invalid data</li>
+        </ul>
+    </div>
+
+    <h3>Error Response Format</h3>
+    <p>All API endpoints return errors in the following format:</p>
+    <pre>
+{
+  "message": "Error description",
+  "error": "Detailed error information"
+}
+    </pre>
+
+    <h3>Common HTTP Status Codes</h3>
+    <table>
+        <tr><th>Code</th><th>Meaning</th><th>Description</th></tr>
+        <tr><td>200</td><td>Success</td><td>Request completed successfully</td></tr>
+        <tr><td>201</td><td>Created</td><td>Resource created successfully</td></tr>
+        <tr><td>400</td><td>Bad Request</td><td>Invalid request data</td></tr>
+        <tr><td>401</td><td>Unauthorized</td><td>Invalid or missing API key</td></tr>
+        <tr><td>404</td><td>Not Found</td><td>Resource not found</td></tr>
+        <tr><td>500</td><td>Server Error</td><td>Internal server error</td></tr>
+    </table>
+
+    <h2 id="troubleshooting">6. Troubleshooting</h2>
+
+    <h3>Common Issues and Solutions</h3>
+
+    <div class="warning">
+        <h4>401 Unauthorized Error</h4>
+        <p><strong>Cause:</strong> Missing or invalid API key</p>
+        <p><strong>Solution:</strong> Ensure the Authorization header is correctly formatted: <code>Bearer YOUR_API_KEY</code></p>
+    </div>
+
+    <div class="warning">
+        <h4>404 Not Found Error</h4>
+        <p><strong>Cause:</strong> External reference not found</p>
+        <p><strong>Solution:</strong> Verify the external reference exists in your system and matches exactly</p>
+    </div>
+
+    <div class="warning">
+        <h4>400 Bad Request Error</h4>
+        <p><strong>Cause:</strong> Missing required fields or invalid data format</p>
+        <p><strong>Solution:</strong> Check the request body matches the expected format and includes all required fields</p>
+    </div>
+
+    <h3>Debugging Tips</h3>
+    <ul>
+        <li>Log all API requests and responses for debugging</li>
+        <li>Use proper error handling in your code</li>
+        <li>Implement retry logic for transient failures</li>
+        <li>Monitor API response times and success rates</li>
+    </ul>
+
+    <h2 id="best-practices">7. Best Practices</h2>
+
+    <h3>Security</h3>
+    <ul>
+        <li>Store API keys securely using environment variables</li>
+        <li>Use HTTPS for all API calls</li>
+        <li>Implement proper authentication validation</li>
+        <li>Add rate limiting to prevent abuse</li>
+    </ul>
+
+    <h3>Performance</h3>
+    <ul>
+        <li>Use bulk synchronization for large datasets</li>
+        <li>Implement caching where appropriate</li>
+        <li>Handle rate limiting gracefully</li>
+        <li>Use connection pooling for high-volume operations</li>
+    </ul>
+
+    <h3>Data Integrity</h3>
+    <ul>
+        <li>Always use external references for linking records</li>
+        <li>Implement proper error handling and rollback logic</li>
+        <li>Validate data before sending to the API</li>
+        <li>Monitor audit trails for all operations</li>
+    </ul>
+
+    <h3>Monitoring</h3>
+    <ul>
+        <li>Log all API operations for audit purposes</li>
+        <li>Monitor API response times and error rates</li>
+        <li>Set up alerts for failed API calls</li>
+        <li>Track synchronization success rates</li>
+    </ul>
+
+    <div class="success">
+        <h4>Support</h4>
+        <p>For technical support or questions about the API integration, contact the development team.</p>
+    </div>
+
+    <div style="text-align: center; margin-top: 50px; color: #64748b; font-size: 0.9em;">
+        <p>© 2024 Acclaim Credit Management and Recovery</p>
+        <p>API Integration Guide v1.0</p>
+    </div>
+</body>
+</html>

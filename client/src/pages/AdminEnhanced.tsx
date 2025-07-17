@@ -17,6 +17,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrganisationSchema } from "@shared/schema";
 import { z } from "zod";
 import { Link } from "wouter";
+import ApiGuideDownload from "@/components/ApiGuideDownload";
 
 interface User {
   id: string;
@@ -825,6 +826,7 @@ export default function AdminEnhanced() {
           <TabsTrigger value="users">User Management</TabsTrigger>
           <TabsTrigger value="organisations">Organisations</TabsTrigger>
           <TabsTrigger value="cases">Case Management</TabsTrigger>
+          <TabsTrigger value="api-guide">API Integration</TabsTrigger>
         </TabsList>
 
         {/* User Management Tab */}
@@ -1174,6 +1176,13 @@ export default function AdminEnhanced() {
               <CaseManagementTab />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* API Integration Tab */}
+        <TabsContent value="api-guide">
+          <div className="flex justify-center">
+            <ApiGuideDownload />
+          </div>
         </TabsContent>
       </Tabs>
 
