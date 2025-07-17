@@ -1171,7 +1171,7 @@ export default function AdminEnhanced() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Case Management</CardTitle>
-                  <CardDescription>Archive or permanently delete cases across all organizations</CardDescription>
+                  <CardDescription>Archive or permanently delete cases across all organisations</CardDescription>
                 </div>
               </div>
             </CardHeader>

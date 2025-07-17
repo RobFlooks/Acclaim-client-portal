@@ -96,7 +96,7 @@ export const caseActivities = pgTable("case_activities", {
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
   senderId: varchar("sender_id").references(() => users.id).notNull(),
-  recipientType: varchar("recipient_type", { length: 20 }).notNull(), // 'user' or 'organization'
+  recipientType: varchar("recipient_type", { length: 20 }).notNull(), // 'user' or 'organisation'
   recipientId: varchar("recipient_id").notNull(),
   caseId: integer("case_id").references(() => cases.id),
   subject: varchar("subject", { length: 255 }),
@@ -167,7 +167,7 @@ export const systemMetrics = pgTable("system_metrics", {
 
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
-  organization: one(organisations, {
+  organisation: one(organisations, {
     fields: [users.organisationId],
     references: [organisations.id],
   }),
@@ -182,7 +182,7 @@ export const organisationsRelations = relations(organisations, ({ many }) => ({
 }));
 
 export const casesRelations = relations(cases, ({ one, many }) => ({
-  organization: one(organisations, {
+  organisation: one(organisations, {
     fields: [cases.organisationId],
     references: [organisations.id],
   }),
@@ -219,7 +219,7 @@ export const documentsRelations = relations(documents, ({ one }) => ({
     fields: [documents.uploadedBy],
     references: [users.id],
   }),
-  organization: one(organisations, {
+  organisation: one(organisations, {
     fields: [documents.organisationId],
     references: [organisations.id],
   }),
@@ -234,7 +234,7 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
     fields: [payments.recordedBy],
     references: [users.id],
   }),
-  organization: one(organisations, {
+  organisation: one(organisations, {
     fields: [payments.organisationId],
     references: [organisations.id],
   }),

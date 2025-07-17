@@ -183,7 +183,7 @@ export default function Messages() {
     }
 
     sendMessageMutation.mutate({
-      recipientType: "organization",
+      recipientType: "organisation",
       recipientId: "support",
       subject: newSubject,
       content: messageContent,

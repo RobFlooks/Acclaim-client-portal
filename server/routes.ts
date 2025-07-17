@@ -78,10 +78,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let stats;
       if (user.isAdmin) {
-        // Admin sees global stats across all organizations
+        // Admin sees global stats across all organisations
         stats = await storage.getGlobalCaseStats();
       } else {
-        // Regular users see only their organization's stats
+        // Regular users see only their organisation's stats
         if (!user.organisationId) {
           return res.status(404).json({ message: "User organisation not found" });
         }
@@ -107,10 +107,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let cases;
       if (user.isAdmin) {
-        // Admin sees all cases across all organizations
+        // Admin sees all cases across all organisations
         cases = await storage.getAllCases();
       } else {
-        // Regular users see only their organization's cases
+        // Regular users see only their organisation's cases
         if (!user.organisationId) {
           return res.status(404).json({ message: "User organisation not found" });
         }
@@ -137,10 +137,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let case_;
       
       if (user.isAdmin) {
-        // Admin can access any case across all organizations
+        // Admin can access any case across all organisations
         case_ = await storage.getCaseById(caseId);
       } else {
-        // Regular users can only access cases from their organization
+        // Regular users can only access cases from their organisation
         if (!user.organisationId) {
           return res.status(404).json({ message: "User organisation not found" });
         }
@@ -247,10 +247,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let case_;
       
       if (user.isAdmin) {
-        // Admin can access any case across all organizations
+        // Admin can access any case across all organisations
         case_ = await storage.getCaseById(caseId);
       } else {
-        // Regular users can only access cases from their organization
+        // Regular users can only access cases from their organisation
         if (!user.organisationId) {
           return res.status(404).json({ message: "User organisation not found" });
         }
@@ -294,10 +294,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let case_;
       
       if (user.isAdmin) {
-        // Admin can access any case across all organizations
+        // Admin can access any case across all organisations
         case_ = await storage.getCaseById(caseId);
       } else {
-        // Regular users can only access cases from their organization
+        // Regular users can only access cases from their organisation
         if (!user.organisationId) {
           return res.status(404).json({ message: "User organisation not found" });
         }
@@ -334,10 +334,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let case_;
         
         if (user.isAdmin) {
-          // Admin can access any case across all organizations
+          // Admin can access any case across all organisations
           case_ = await storage.getCaseById(caseId);
         } else {
-          // Regular users can only access cases from their organization
+          // Regular users can only access cases from their organisation
           if (!user.organisationId) {
             return res.status(404).json({ message: "User organisation not found" });
           }
@@ -350,8 +350,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // For case messages, determine the recipient based on sender
         if (user.isAdmin) {
-          // Admin sending to organization (case client)
-          recipientType = 'organization';
+          // Admin sending to organisation (case client)
+          recipientType = 'organisation';
           recipientId = case_.organisationId.toString();
         } else {
           // User sending to admin - find an admin user
@@ -361,8 +361,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             recipientType = 'user';
             recipientId = adminUser.id;
           } else {
-            // Fallback - send to organization if no admin found
-            recipientType = 'organization';
+            // Fallback - send to organisation if no admin found
+            recipientType = 'organisation';
             recipientId = case_.organisationId.toString();
           }
         }
@@ -544,10 +544,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let case_;
       
       if (user.isAdmin) {
-        // Admin can access any case across all organizations
+        // Admin can access any case across all organisations
         case_ = await storage.getCaseById(caseId);
       } else {
-        // Regular users can only access cases from their organization
+        // Regular users can only access cases from their organisation
         if (!user.organisationId) {
           return res.status(404).json({ message: "User organisation not found" });
         }
@@ -624,14 +624,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let payments: any[] = [];
       
       if (user.isAdmin) {
-        // Admin can access all payments across all organizations
+        // Admin can access all payments across all organisations
         const allCases = await storage.getAllCases();
         for (const case_ of allCases) {
           const casePayments = await storage.getPaymentsForCase(case_.id);
           payments.push(...casePayments);
         }
       } else {
-        // Regular users can only access payments from their organization's cases
+        // Regular users can only access payments from their organisation's cases
         if (!user.organisationId) {
           return res.status(404).json({ message: "User organisation not found" });
         }
@@ -663,10 +663,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let case_;
       
       if (user.isAdmin) {
-        // Admin can access any case across all organizations
+        // Admin can access any case across all organisations
         case_ = await storage.getCaseById(caseId);
       } else {
-        // Regular users can only access cases from their organization
+        // Regular users can only access cases from their organisation
         if (!user.organisationId) {
           return res.status(404).json({ message: "User organisation not found" });
         }
@@ -965,7 +965,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Organization Management Routes (Admin only)
   
-  // Create organization
+  // Create organisation
   app.post('/api/admin/organisations', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const orgData = createOrganisationSchema.parse(req.body);
@@ -977,7 +977,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update organization
+  // Update organisation
   app.put('/api/admin/organisations/:id', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const orgId = parseInt(req.params.id);
@@ -990,7 +990,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete organization
+  // Delete organisation
   app.delete('/api/admin/organisations/:id', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const orgId = parseInt(req.params.id);
@@ -1006,7 +1006,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get organization stats
+  // Get organisation stats
   app.get('/api/admin/organisations/:id/stats', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const orgId = parseInt(req.params.id);
@@ -1174,13 +1174,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Advanced reporting endpoints
-  app.get("/api/admin/reports/cross-organization", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/reports/cross-organisation", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const performance = await storage.getCrossOrganizationPerformance();
       res.json(performance);
     } catch (error) {
-      console.error("Error fetching cross-organization performance:", error);
-      res.status(500).json({ message: "Failed to fetch cross-organization performance" });
+      console.error("Error fetching cross-organisation performance:", error);
+      res.status(500).json({ message: "Failed to fetch cross-organisation performance" });
     }
   });
 
@@ -1221,8 +1221,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // External API endpoints for case management system integration
   
-  // Create or update organization
-  app.post('/api/external/organizations', async (req: any, res) => {
+  // Create or update organisation
+  app.post('/api/external/organisations', async (req: any, res) => {
     try {
       // TODO: Add API key authentication here
       const { name, contactEmail, contactPhone, address, externalRef } = req.body;
@@ -1231,21 +1231,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Name and externalRef are required" });
       }
       
-      // Check if organization already exists
+      // Check if organisation already exists
       const existing = await storage.getOrganisationByExternalRef(externalRef);
       if (existing) {
-        // Update existing organization
+        // Update existing organisation
         const updated = await storage.updateOrganisation(existing.id, {
           name,
           contactEmail,
           contactPhone,
           address,
         });
-        return res.json({ message: "Organization updated successfully", organization: updated });
+        return res.json({ message: "Organization updated successfully", organisation: updated });
       }
       
-      // Create new organization
-      const organization = await storage.createOrganisation({
+      // Create new organisation
+      const organisation = await storage.createOrganisation({
         name,
         contactEmail,
         contactPhone,
@@ -1253,10 +1253,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         externalRef,
       });
       
-      res.status(201).json({ message: "Organization created successfully", organization });
+      res.status(201).json({ message: "Organization created successfully", organisation });
     } catch (error) {
-      console.error("Error creating/updating organization via external API:", error);
-      res.status(500).json({ message: "Failed to create/update organization" });
+      console.error("Error creating/updating organisation via external API:", error);
+      res.status(500).json({ message: "Failed to create/update organisation" });
     }
   });
 
@@ -1270,14 +1270,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "firstName, lastName, email, and externalRef are required" });
       }
       
-      // Find organization by external reference
+      // Find organisation by external reference
       let organisationId = null;
       if (organisationExternalRef) {
-        const organization = await storage.getOrganisationByExternalRef(organisationExternalRef);
-        if (!organization) {
+        const organisation = await storage.getOrganisationByExternalRef(organisationExternalRef);
+        if (!organisation) {
           return res.status(404).json({ message: "Organization not found" });
         }
-        organisationId = organization.id;
+        organisationId = organisation.id;
       }
       
       // Check if user already exists
@@ -1290,7 +1290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           phone,
         });
         
-        // Update organization assignment if provided
+        // Update organisation assignment if provided
         if (organisationId) {
           await storage.assignUserToOrganisation(existing.id, organisationId);
         }
@@ -1349,9 +1349,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Find organization by external reference
-      const organization = await storage.getOrganisationByExternalRef(organisationExternalRef);
-      if (!organization) {
+      // Find organisation by external reference
+      const organisation = await storage.getOrganisationByExternalRef(organisationExternalRef);
+      if (!organisation) {
         return res.status(404).json({ message: "Organization not found" });
       }
       
@@ -1402,7 +1402,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         feesAdded: feesAdded || '0.00',
         status: status || 'active',
         stage: stage || 'initial_contact',
-        organisationId: organization.id,
+        organisationId: organisation.id,
         assignedTo: assignedTo || 'System',
         externalRef,
       });
@@ -1520,29 +1520,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/external/sync', async (req: any, res) => {
     try {
       // TODO: Add API key authentication here
-      const { organizations, users, cases, payments } = req.body;
+      const { organisations, users, cases, payments } = req.body;
       
       const results = {
-        organizations: { created: 0, updated: 0, errors: [] },
+        organisations: { created: 0, updated: 0, errors: [] },
         users: { created: 0, updated: 0, errors: [] },
         cases: { created: 0, updated: 0, errors: [] },
         payments: { created: 0, updated: 0, errors: [] },
       };
       
-      // Process organizations first
-      if (organizations && Array.isArray(organizations)) {
-        for (const org of organizations) {
+      // Process organisations first
+      if (organisations && Array.isArray(organisations)) {
+        for (const org of organisations) {
           try {
             const existing = await storage.getOrganisationByExternalRef(org.externalRef);
             if (existing) {
               await storage.updateOrganisation(existing.id, org);
-              results.organizations.updated++;
+              results.organisations.updated++;
             } else {
               await storage.createOrganisation(org);
-              results.organizations.created++;
+              results.organisations.created++;
             }
           } catch (error) {
-            results.organizations.errors.push({ externalRef: org.externalRef, error: error.message });
+            results.organisations.errors.push({ externalRef: org.externalRef, error: error.message });
           }
         }
       }

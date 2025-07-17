@@ -7,6 +7,7 @@ This is a full-stack web application for debt recovery and credit management. It
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Language preference: British English (organisation not organization, colour not color, etc.)
 
 ## System Architecture
 
@@ -121,9 +122,9 @@ Preferred communication style: Simple, everyday language.
   - `ISSUER_URL`: OpenID Connect issuer
 
 ### Recent Changes (January 2025)
-- **Advanced Admin Features**: Complete admin panel with user/organization management
+- **Advanced Admin Features**: Complete admin panel with user/organisation management
 - **System Monitoring**: Comprehensive activity tracking and system health monitoring
-- **Advanced Reporting**: Cross-organization performance, user activity reports, system health dashboards, custom report builders
+- **Advanced Reporting**: Cross-organisation performance, user activity reports, system health dashboards, custom report builders
 - **Enhanced Security**: Password management, admin domain restrictions, temporary passwords
 - **Multi-Route Support**: Admin panel accessible at both `/admin` and `/admin-enhanced`
 - **Report Focus Updates**: Case Summary Report now defaults to active cases only, Recovery Analysis Report includes comprehensive analysis of all active and closed cases
@@ -131,6 +132,7 @@ Preferred communication style: Simple, everyday language.
 - **Report Navigation Enhancement**: All report pages now have consistent "Back to Reports" navigation that properly returns to the Reports tab instead of Dashboard
 - **Stage Badge Implementation**: Added color-coded stage badges across Case Summary and Recovery Analysis reports (Blue: Pre-Legal, Green: Payment Plan/Paid, Yellow: Claim, Orange: Judgment, Red: Enforcement)
 - **Comprehensive User Guide System**: Created detailed user guide with placeholder screenshots and step-by-step instructions accessible from admin panel, available in both HTML and editable Word formats
+- **Language Standardisation**: Updated all text to use British English spelling (organisation instead of organization, colour instead of color, etc.) across all components, documentation, and user interfaces
 
 ### Scaling Considerations
 - Database uses connection pooling for efficiency

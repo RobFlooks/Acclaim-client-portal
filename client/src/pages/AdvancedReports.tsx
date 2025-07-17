@@ -15,8 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 
 interface CrossOrgPerformance {
-  organizationId: number;
-  organizationName: string;
+  organisationId: number;
+  organisationName: string;
   totalCases: number;
   activeCases: number;
   closedCases: number;
@@ -32,7 +32,7 @@ interface UserActivity {
   userEmail: string;
   userFirstName: string;
   userLastName: string;
-  organizationName: string;
+  organisationName: string;
   loginCount: number;
   lastLogin: Date;
   actionCount: number;
@@ -83,9 +83,9 @@ export default function AdvancedReports() {
     }
   }, [isAuthenticated, isLoading, user, toast]);
 
-  // Cross-organization performance query
+  // Cross-organisation performance query
   const { data: crossOrgData, isLoading: isLoadingCrossOrg } = useQuery({
-    queryKey: ['/api/admin/reports/cross-organization'],
+    queryKey: ['/api/admin/reports/cross-organisation'],
     retry: false,
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -242,13 +242,13 @@ export default function AdvancedReports() {
       {/* Main Content Tabs */}
       <Tabs defaultValue="cross-org" className="space-y-4">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="cross-org">Cross-Organization</TabsTrigger>
+          <TabsTrigger value="cross-org">Cross-Organisation</TabsTrigger>
           <TabsTrigger value="user-activity">User Activity</TabsTrigger>
           <TabsTrigger value="system-health">System Health</TabsTrigger>
           <TabsTrigger value="custom-reports">Custom Reports</TabsTrigger>
         </TabsList>
 
-        {/* Cross-Organization Performance */}
+        {/* Cross-Organisation Performance */}
         <TabsContent value="cross-org" className="space-y-4">
           <Card>
             <CardHeader>
@@ -256,14 +256,14 @@ export default function AdvancedReports() {
                 <div>
                   <CardTitle className="flex items-center">
                     <Building className="h-5 w-5 mr-2" />
-                    Cross-Organization Performance
+                    Cross-Organisation Performance
                   </CardTitle>
-                  <CardDescription>Compare performance metrics across all organizations</CardDescription>
+                  <CardDescription>Compare performance metrics across all organisations</CardDescription>
                 </div>
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => exportToJSON(crossOrgData, 'cross-organization-performance')}
+                  onClick={() => exportToJSON(crossOrgData, 'cross-organisation-performance')}
                   disabled={!crossOrgData}
                 >
                   <Download className="h-4 w-4 mr-2" />
@@ -281,7 +281,7 @@ export default function AdvancedReports() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Organization</TableHead>
+                        <TableHead>Organisation</TableHead>
                         <TableHead>Total Cases</TableHead>
                         <TableHead>Active Cases</TableHead>
                         <TableHead>Closed Cases</TableHead>
@@ -294,8 +294,8 @@ export default function AdvancedReports() {
                     </TableHeader>
                     <TableBody>
                       {crossOrgData?.map((org: CrossOrgPerformance) => (
-                        <TableRow key={org.organizationId}>
-                          <TableCell className="font-medium">{org.organizationName}</TableCell>
+                        <TableRow key={org.organisationId}>
+                          <TableCell className="font-medium">{org.organisationName}</TableCell>
                           <TableCell>{org.totalCases}</TableCell>
                           <TableCell>{org.activeCases}</TableCell>
                           <TableCell>{org.closedCases}</TableCell>
@@ -364,7 +364,7 @@ export default function AdvancedReports() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>User</TableHead>
-                        <TableHead>Organization</TableHead>
+                        <TableHead>Organisation</TableHead>
                         <TableHead>Login Count</TableHead>
                         <TableHead>Last Login</TableHead>
                         <TableHead>Actions</TableHead>
@@ -382,7 +382,7 @@ export default function AdvancedReports() {
                               <div className="text-sm text-gray-500">{user.userEmail}</div>
                             </div>
                           </TableCell>
-                          <TableCell>{user.organizationName}</TableCell>
+                          <TableCell>{user.organisationName}</TableCell>
                           <TableCell>{user.loginCount}</TableCell>
                           <TableCell>
                             {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
@@ -505,8 +505,8 @@ export default function AdvancedReports() {
                     <SelectContent>
                       <SelectItem value="cases">Cases</SelectItem>
                       <SelectItem value="users">Users</SelectItem>
-                      <SelectItem value="cases,organisations">Cases & Organizations</SelectItem>
-                      <SelectItem value="users,organisations">Users & Organizations</SelectItem>
+                      <SelectItem value="cases,organisations">Cases & Organisations</SelectItem>
+                      <SelectItem value="users,organisations">Users & Organisations</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

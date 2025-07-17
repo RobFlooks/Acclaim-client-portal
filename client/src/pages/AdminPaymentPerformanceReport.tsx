@@ -14,7 +14,7 @@ import 'jspdf-autotable';
 
 export default function AdminPaymentPerformanceReport() {
   const { toast } = useToast();
-  const [selectedOrganization, setSelectedOrganization] = useState<string>("all");
+  const [selectedOrganisation, setSelectedOrganisation] = useState<string>("all");
 
   const { data: payments, isLoading: paymentsLoading } = useQuery({
     queryKey: ["/api/payments"],
@@ -60,7 +60,7 @@ export default function AdminPaymentPerformanceReport() {
     },
   });
 
-  const { data: organizations, isLoading: organizationsLoading } = useQuery({
+  const { data: organisations, isLoading: organisationsLoading } = useQuery({
     queryKey: ["/api/admin/organisations"],
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -76,7 +76,7 @@ export default function AdminPaymentPerformanceReport() {
       }
       toast({
         title: "Error",
-        description: "Failed to load organizations",
+        description: "Failed to load organisations",
         variant: "destructive",
       });
     },
@@ -97,15 +97,15 @@ export default function AdminPaymentPerformanceReport() {
   const filteredPayments = useMemo(() => {
     if (!payments || !cases) return [];
     
-    if (selectedOrganization === "all") {
+    if (selectedOrganisation === "all") {
       return payments;
     }
     
-    const orgCases = cases.filter(c => c.organisationId === parseInt(selectedOrganization));
+    const orgCases = cases.filter(c => c.organisationId === parseInt(selectedOrganisation));
     const orgCaseIds = orgCases.map(c => c.id);
     
     return payments.filter(p => orgCaseIds.includes(p.caseId));
-  }, [payments, cases, selectedOrganization]);
+  }, [payments, cases, selectedOrganisation]);
 
   const getPaymentMetrics = () => {
     if (!filteredPayments || !cases) return null;
@@ -197,7 +197,7 @@ export default function AdminPaymentPerformanceReport() {
     const summaryData = [
       ['Payment Performance Report'],
       ['Generated on:', new Date().toLocaleDateString('en-GB')],
-      ['Organization:', selectedOrganization === "all" ? "All Organizations" : organizations?.find(o => o.id === parseInt(selectedOrganization))?.name || "Unknown"],
+      ['Organisation:', selectedOrganisation === "all" ? "All Organisations" : organisations?.find(o => o.id === parseInt(selectedOrganisation))?.name || "Unknown"],
       [''],
       ['Key Metrics'],
       ['Total Payments:', metrics?.totalPayments || 0],
@@ -252,7 +252,7 @@ export default function AdminPaymentPerformanceReport() {
     XLSX.utils.book_append_sheet(wb, detailWs, 'Payment Details');
 
     // Save the file
-    const orgName = selectedOrganization === "all" ? "All-Organizations" : organizations?.find(o => o.id === parseInt(selectedOrganization))?.name?.replace(/\s+/g, '-') || "Unknown";
+    const orgName = selectedOrganisation === "all" ? "All-Organisations" : organisations?.find(o => o.id === parseInt(selectedOrganisation))?.name?.replace(/\s+/g, '-') || "Unknown";
     const fileName = `Admin-Payment-Performance-${orgName}-${new Date().toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(wb, fileName);
 
@@ -270,7 +270,7 @@ export default function AdminPaymentPerformanceReport() {
     const methodBreakdown = getPaymentMethodBreakdown();
 
     // Create HTML content for PDF
-    const orgName = selectedOrganization === "all" ? "All Organizations" : organizations?.find(o => o.id === parseInt(selectedOrganization))?.name || "Unknown";
+    const orgName = selectedOrganisation === "all" ? "All Organisations" : organisations?.find(o => o.id === parseInt(selectedOrganisation))?.name || "Unknown";
     
     const htmlContent = `
       <html>
@@ -295,7 +295,7 @@ export default function AdminPaymentPerformanceReport() {
         <body>
           <div class="header">
             <h1>Admin Payment Performance Report</h1>
-            <p><strong>Organization:</strong> ${orgName}</p>
+            <p><strong>Organisation:</strong> ${orgName}</p>
             <p><strong>Generated on:</strong> ${new Date().toLocaleDateString('en-GB')}</p>
           </div>
           
@@ -401,7 +401,7 @@ export default function AdminPaymentPerformanceReport() {
   const monthlyTrends = getMonthlyTrends();
   const methodBreakdown = getPaymentMethodBreakdown();
 
-  if (paymentsLoading || casesLoading || organizationsLoading) {
+  if (paymentsLoading || casesLoading || organisationsLoading) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="flex items-center justify-center min-h-96">
@@ -442,20 +442,20 @@ export default function AdminPaymentPerformanceReport() {
         </div>
       </div>
 
-      {/* Organization Filter */}
+      {/* Organisation Filter */}
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle>Filter by Organization</CardTitle>
+          <CardTitle>Filter by Organisation</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center space-x-4">
-            <Select value={selectedOrganization} onValueChange={setSelectedOrganization}>
+            <Select value={selectedOrganisation} onValueChange={setSelectedOrganisation}>
               <SelectTrigger className="w-64">
-                <SelectValue placeholder="Select organization" />
+                <SelectValue placeholder="Select organisation" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Organizations</SelectItem>
-                {organizations?.map((org) => (
+                <SelectItem value="all">All Organisations</SelectItem>
+                {organisations?.map((org) => (
                   <SelectItem key={org.id} value={org.id.toString()}>
                     {org.name}
                   </SelectItem>

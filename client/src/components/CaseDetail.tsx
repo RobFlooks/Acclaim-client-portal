@@ -342,7 +342,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
 
     sendMessageMutation.mutate({
       caseId: caseData.id,
-      recipientType: "organization",
+      recipientType: "organisation",
       recipientId: "support",
       subject: subject,
       content: newMessage,
