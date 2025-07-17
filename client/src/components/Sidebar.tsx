@@ -39,7 +39,7 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
   ];
 
   return (
-    <div className="w-64 bg-acclaim-teal shadow-lg flex flex-col">
+    <div className="w-64 h-screen bg-acclaim-teal shadow-lg flex flex-col">
       {/* Brand Header */}
       <div className="flex items-center justify-center h-16 bg-acclaim-teal border-b border-teal-700">
         <button 
