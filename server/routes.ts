@@ -1881,8 +1881,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         '5. Document Management',
         '6. Reports & Analytics',
         '7. User Profile & Settings',
-        '8. Admin Features',
-        '9. Troubleshooting'
+        '8. Troubleshooting'
       ];
       
       tocList.forEach(item => {
@@ -2054,7 +2053,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'Document Management', 
         'Reports & Analytics',
         'User Profile & Settings',
-        'Admin Features',
         'Troubleshooting'
       ];
       

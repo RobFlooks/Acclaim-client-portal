@@ -54,7 +54,6 @@ export default function UserGuideDownload() {
     { icon: FileText, title: "Document Management", description: "Upload and manage case documents" },
     { icon: BarChart3, title: "Reports & Analytics", description: "Track performance and generate reports" },
     { icon: CreditCard, title: "Payment Tracking", description: "Monitor debtor payments and recovery progress" },
-    { icon: Settings, title: "Admin Controls", description: "User management and system administration" },
   ];
 
   return (
@@ -204,10 +203,7 @@ export default function UserGuideDownload() {
             <MessageSquare className="h-4 w-4 text-acclaim-teal" />
             <span className="text-sm">Use the in-portal messaging system to contact support</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <Users className="h-4 w-4 text-acclaim-teal" />
-            <span className="text-sm">Admin users can access additional management features</span>
-          </div>
+
         </CardContent>
       </Card>
     </div>
