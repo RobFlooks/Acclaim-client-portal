@@ -1,4 +1,4 @@
-import { Scale, Home, FolderOpen, MessageSquare, BarChart3, FileText, User, LogOut, Settings, Shield, UserCog } from "lucide-react";
+import { Scale, Home, FolderOpen, MessageSquare, BarChart3, FileText, User, LogOut, Settings, Shield, UserCog, HelpCircle } from "lucide-react";
 import logoImage from "@assets/cl-bg_1752271318153.png";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,6 +32,7 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
     { id: "messages", label: "Messages", icon: MessageSquare },
     { id: "documents", label: "Documents", icon: FileText },
     { id: "reports", label: "Reports", icon: BarChart3 },
+    { id: "help", label: "Help", icon: HelpCircle },
     // Only show admin link to admin users
     ...(user?.isAdmin ? [
       { id: "admin", label: "Admin Panel", icon: Shield, isRoute: true, route: "/admin" }

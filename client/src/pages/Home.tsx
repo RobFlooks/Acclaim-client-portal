@@ -5,6 +5,7 @@ import Cases from "@/components/Cases";
 import Messages from "@/components/Messages";
 import Reports from "@/components/Reports";
 import Documents from "@/components/Documents";
+import Help from "@/components/Help";
 import { Bell, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,7 +35,7 @@ export default function Home() {
     console.log('Query string:', queryString);
     console.log('Parsed section from URL:', section);
     
-    if (section && ['dashboard', 'cases', 'messages', 'reports', 'documents'].includes(section)) {
+    if (section && ['dashboard', 'cases', 'messages', 'reports', 'documents', 'help'].includes(section)) {
       console.log('Setting activeSection to:', section);
       setActiveSection(section);
     }
@@ -68,6 +69,8 @@ export default function Home() {
         return <Reports />;
       case "documents":
         return <Documents />;
+      case "help":
+        return <Help />;
       default:
         return <Dashboard setActiveSection={setActiveSection} />;
     }

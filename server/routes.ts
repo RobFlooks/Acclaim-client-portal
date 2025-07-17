@@ -1788,9 +1788,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Download API Integration Guide as PDF
   app.get('/api/download/api-guide', async (req, res) => {
     try {
-      const fs = require('fs');
-      const path = require('path');
-      
       // Check if the HTML file exists
       const htmlPath = path.join(process.cwd(), 'API_INTEGRATION_GUIDE.html');
       if (!fs.existsSync(htmlPath)) {
@@ -1800,18 +1797,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Read the HTML content
       const htmlContent = fs.readFileSync(htmlPath, 'utf8');
       
-      // Set headers for PDF download
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', 'attachment; filename="Acclaim_API_Integration_Guide.pdf"');
-      
-      // For now, we'll serve the HTML with PDF-friendly headers
-      // In production, you'd want to use puppeteer or similar to generate actual PDF
+      // Set headers for HTML display
       res.setHeader('Content-Type', 'text/html');
+      res.setHeader('Content-Disposition', 'inline; filename="Acclaim_API_Integration_Guide.html"');
+      
       res.send(htmlContent);
       
     } catch (error) {
       console.error('Error serving API guide:', error);
       res.status(500).json({ message: 'Failed to serve API guide' });
+    }
+  });
+
+  // Download User Guide
+  app.get('/api/download/user-guide', async (req, res) => {
+    try {
+      // Check if the HTML file exists
+      const htmlPath = path.join(process.cwd(), 'USER_GUIDE.html');
+      if (!fs.existsSync(htmlPath)) {
+        return res.status(404).json({ message: 'User guide not found' });
+      }
+      
+      // Read the HTML content
+      const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+      
+      // Set headers for HTML display
+      res.setHeader('Content-Type', 'text/html');
+      res.setHeader('Content-Disposition', 'inline; filename="Acclaim_User_Guide.html"');
+      
+      res.send(htmlContent);
+      
+    } catch (error) {
+      console.error('Error serving user guide:', error);
+      res.status(500).json({ message: 'Failed to serve user guide' });
     }
   });
 

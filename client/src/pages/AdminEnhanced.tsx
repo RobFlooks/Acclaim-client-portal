@@ -18,6 +18,7 @@ import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrg
 import { z } from "zod";
 import { Link } from "wouter";
 import ApiGuideDownload from "@/components/ApiGuideDownload";
+import UserGuideDownload from "@/components/UserGuideDownload";
 
 interface User {
   id: string;
@@ -827,6 +828,7 @@ export default function AdminEnhanced() {
           <TabsTrigger value="organisations">Organisations</TabsTrigger>
           <TabsTrigger value="cases">Case Management</TabsTrigger>
           <TabsTrigger value="api-guide">API Integration</TabsTrigger>
+          <TabsTrigger value="user-guide">User Guide</TabsTrigger>
         </TabsList>
 
         {/* User Management Tab */}
@@ -1182,6 +1184,13 @@ export default function AdminEnhanced() {
         <TabsContent value="api-guide">
           <div className="flex justify-center">
             <ApiGuideDownload />
+          </div>
+        </TabsContent>
+
+        {/* User Guide Tab */}
+        <TabsContent value="user-guide">
+          <div className="flex justify-center">
+            <UserGuideDownload />
           </div>
         </TabsContent>
       </Tabs>

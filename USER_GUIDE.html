@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acclaim Portal User Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8fafc;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #006B5B 0%, #008B73 100%);
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .toc {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin: 2rem 0;
+            padding: 2rem;
+        }
+
+        .toc h2 {
+            color: #006B5B;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .toc ul {
+            list-style: none;
+        }
+
+        .toc li {
+            margin: 0.5rem 0;
+        }
+
+        .toc a {
+            color: #006B5B;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .toc a:hover {
+            color: #008B73;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin: 2rem 0;
+            padding: 2rem;
+        }
+
+        .section h2 {
+            color: #006B5B;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #006B5B;
+            padding-bottom: 0.5rem;
+        }
+
+        .section h3 {
+            color: #333;
+            font-size: 1.3rem;
+            margin: 1.5rem 0 1rem 0;
+        }
+
+        .section h4 {
+            color: #555;
+            font-size: 1.1rem;
+            margin: 1rem 0 0.5rem 0;
+        }
+
+        .step {
+            background: #f8fafc;
+            border-left: 4px solid #006B5B;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .step-number {
+            background: #006B5B;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-right: 0.5rem;
+        }
+
+        .screenshot {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            margin: 1rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 100%;
+            height: auto;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .feature-card {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .alert {
+            background: #fef3cd;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            border-color: #a7f3d0;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            border-color: #93c5fd;
+        }
+
+        .code-block {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+
+        .tip {
+            background: #f0f9ff;
+            border-left: 4px solid #0ea5e9;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .warning {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .badge {
+            background: #006B5B;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: inline-block;
+            margin: 0.25rem;
+        }
+
+        .footer {
+            background: #1f2937;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .section {
+                padding: 1rem;
+            }
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .header {
+                background: #006B5B;
+                -webkit-print-color-adjust: exact;
+            }
+            
+            .section {
+                box-shadow: none;
+                border: 1px solid #e5e7eb;
+                break-inside: avoid;
+            }
+            
+            .screenshot {
+                max-width: 100%;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>Acclaim Portal User Guide</h1>
+            <p>Complete guide to using your debt recovery case management system</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Table of Contents -->
+        <div class="toc">
+            <h2>📋 Table of Contents</h2>
+            <ul>
+                <li><a href="#getting-started">1. Getting Started</a></li>
+                <li><a href="#dashboard">2. Dashboard Overview</a></li>
+                <li><a href="#case-management">3. Case Management</a></li>
+                <li><a href="#messaging">4. Messaging System</a></li>
+                <li><a href="#documents">5. Document Management</a></li>
+                <li><a href="#reports">6. Reports & Analytics</a></li>
+                <li><a href="#user-profile">7. User Profile & Settings</a></li>
+                <li><a href="#admin-features">8. Admin Features</a></li>
+                <li><a href="#troubleshooting">9. Troubleshooting</a></li>
+            </ul>
+        </div>
+
+        <!-- Getting Started -->
+        <div class="section" id="getting-started">
+            <h2>🚀 Getting Started</h2>
+            
+            <h3>Logging In</h3>
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Navigate to the portal:</strong> Go to your Acclaim Portal URL provided by your administrator
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>Click "Log In":</strong> Click the login button to access the authentication system
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>Enter credentials:</strong> Use your email and password provided by your administrator
+            </div>
+
+            <div class="alert alert-info">
+                <strong>First-time users:</strong> You may be required to change your password on first login for security purposes.
+            </div>
+
+            <h3>Navigation Overview</h3>
+            <p>Once logged in, you'll see the main navigation with the following sections:</p>
+            <ul>
+                <li><span class="badge">Dashboard</span> - Overview of your cases and statistics</li>
+                <li><span class="badge">Cases</span> - Manage your debt recovery cases</li>
+                <li><span class="badge">Messages</span> - Communication with your recovery team</li>
+                <li><span class="badge">Documents</span> - File management and uploads</li>
+                <li><span class="badge">Reports</span> - Analytics and performance tracking</li>
+                <li><span class="badge">Submit Case</span> - Create new recovery cases</li>
+            </ul>
+        </div>
+
+        <!-- Dashboard -->
+        <div class="section" id="dashboard">
+            <h2>📊 Dashboard Overview</h2>
+            
+            <p>The dashboard provides a comprehensive overview of your case management activities and key performance metrics.</p>
+            
+            <h3>Key Statistics</h3>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h4>Active Cases</h4>
+                    <p>Number of cases currently in progress</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✅</div>
+                    <h4>Closed Cases</h4>
+                    <p>Successfully resolved cases</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h4>Outstanding Amount</h4>
+                    <p>Total amount to be recovered</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h4>Recovery Amount</h4>
+                    <p>Total amount recovered so far</p>
+                </div>
+            </div>
+
+            <h3>Recent Activity</h3>
+            <p>The dashboard shows your most recent:</p>
+            <ul>
+                <li>Case updates and status changes</li>
+                <li>New messages from your recovery team</li>
+                <li>Document uploads and downloads</li>
+                <li>Payment notifications</li>
+            </ul>
+
+            <div class="tip">
+                <strong>Pro tip:</strong> The dashboard automatically refreshes to show the latest information. Check it regularly to stay updated on your cases.
+            </div>
+        </div>
+
+        <!-- Case Management -->
+        <div class="section" id="case-management">
+            <h2>📁 Case Management</h2>
+            
+            <h3>Viewing Your Cases</h3>
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Navigate to Cases:</strong> Click on "Cases" in the main navigation
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>Review case list:</strong> You'll see all your cases with key information including:
+                <ul>
+                    <li>Account number</li>
+                    <li>Case name</li>
+                    <li>Outstanding amount</li>
+                    <li>Current status</li>
+                    <li>Recovery stage</li>
+                </ul>
+            </div>
+
+            <h3>Case Status Indicators</h3>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔵</div>
+                    <h4>Pre-Legal</h4>
+                    <p>Initial contact and negotiation phase</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🟡</div>
+                    <h4>Claim</h4>
+                    <p>Legal claim has been filed</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🟠</div>
+                    <h4>Judgment</h4>
+                    <p>Court judgment obtained</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔴</div>
+                    <h4>Enforcement</h4>
+                    <p>Enforcement action being taken</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🟢</div>
+                    <h4>Paid/Payment Plan</h4>
+                    <p>Payment received or plan in place</p>
+                </div>
+            </div>
+
+            <h3>Creating a New Case</h3>
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Click "Submit Case":</strong> Navigate to the case submission form
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>Fill in debtor details:</strong>
+                <ul>
+                    <li>Debtor name and contact information</li>
+                    <li>Outstanding amount</li>
+                    <li>Account number</li>
+                    <li>Description of debt</li>
+                </ul>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>Upload supporting documents:</strong> Attach relevant invoices, contracts, or correspondence
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                <strong>Submit case:</strong> Review all information and submit for processing
+            </div>
+
+            <div class="alert alert-success">
+                <strong>Accepted file formats:</strong> PDF, DOC, DOCX, TXT, JPG, JPEG, PNG, GIF, XLSX, XLS, CSV (max 10MB per file)
+            </div>
+
+            <h3>Tracking Case Progress</h3>
+            <p>Each case includes a detailed activity timeline showing:</p>
+            <ul>
+                <li>Status changes and updates</li>
+                <li>Communication with debtors</li>
+                <li>Payment notifications</li>
+                <li>Document uploads</li>
+                <li>Legal actions taken</li>
+            </ul>
+        </div>
+
+        <!-- Messaging -->
+        <div class="section" id="messaging">
+            <h2>💬 Messaging System</h2>
+            
+            <h3>Sending Messages</h3>
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Navigate to Messages:</strong> Click on "Messages" in the main navigation
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>Create new message:</strong> Click "New Message" button
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>Select recipient:</strong> Choose from your recovery team or specific case handlers
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                <strong>Choose message type:</strong>
+                <ul>
+                    <li><strong>Case-specific:</strong> Related to a particular case</li>
+                    <li><strong>General:</strong> General inquiries or support</li>
+                </ul>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">5</span>
+                <strong>Write and send:</strong> Type your message and click send
+            </div>
+
+            <h3>Message Features</h3>
+            <ul>
+                <li><strong>File attachments:</strong> Attach documents to your messages</li>
+                <li><strong>Case linking:</strong> Messages automatically link to relevant cases</li>
+                <li><strong>Search functionality:</strong> Find specific messages quickly</li>
+                <li><strong>Response tracking:</strong> See when messages are sent and received</li>
+            </ul>
+
+            <div class="tip">
+                <strong>Communication tip:</strong> Be specific about your case when sending messages. Include account numbers or case names for faster responses.
+            </div>
+        </div>
+
+        <!-- Documents -->
+        <div class="section" id="documents">
+            <h2>📄 Document Management</h2>
+            
+            <h3>Uploading Documents</h3>
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Navigate to Documents:</strong> Click on "Documents" in the main navigation
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>Select case:</strong> Choose the case you want to upload documents for
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>Upload files:</strong> Drag and drop or click to select files
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                <strong>Add description:</strong> Provide a brief description of the document
+            </div>
+
+            <h3>Document Organization</h3>
+            <p>Documents are automatically organized by:</p>
+            <ul>
+                <li><strong>Case:</strong> All documents grouped by case</li>
+                <li><strong>Date:</strong> Chronological order of uploads</li>
+                <li><strong>Type:</strong> Categories like invoices, contracts, correspondence</li>
+                <li><strong>Size:</strong> File size information for management</li>
+            </ul>
+
+            <h3>Downloading Documents</h3>
+            <p>You can download documents at any time by:</p>
+            <ul>
+                <li>Clicking the download button next to any document</li>
+                <li>Viewing documents directly in your browser</li>
+                <li>Downloading multiple documents as a zip file</li>
+            </ul>
+
+            <div class="warning">
+                <strong>Security note:</strong> All documents are securely stored and encrypted. Only authorized users can access your files.
+            </div>
+        </div>
+
+        <!-- Reports -->
+        <div class="section" id="reports">
+            <h2>📈 Reports & Analytics</h2>
+            
+            <h3>Available Reports</h3>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h4>Case Summary</h4>
+                    <p>Overview of all active cases with current status</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h4>Recovery Analysis</h4>
+                    <p>Detailed analysis of recovery performance</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📅</div>
+                    <h4>Monthly Statements</h4>
+                    <p>Monthly breakdown of case activity</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h4>Payment Performance</h4>
+                    <p>Track payment success rates and trends</p>
+                </div>
+            </div>
+
+            <h3>Generating Reports</h3>
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Select report type:</strong> Choose from available report options
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>Set parameters:</strong> Choose date ranges and filtering options
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>Generate report:</strong> Click "Generate Report" to create your analytics
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                <strong>Export data:</strong> Download reports as Excel files for further analysis
+            </div>
+
+            <h3>Report Features</h3>
+            <ul>
+                <li><strong>Excel export:</strong> Download detailed spreadsheets</li>
+                <li><strong>Date filtering:</strong> Custom date ranges for analysis</li>
+                <li><strong>Status filtering:</strong> Filter by case status or stage</li>
+                <li><strong>Performance metrics:</strong> Key performance indicators</li>
+                <li><strong>Visual charts:</strong> Graphs and charts for easy understanding</li>
+            </ul>
+        </div>
+
+        <!-- User Profile -->
+        <div class="section" id="user-profile">
+            <h2>👤 User Profile & Settings</h2>
+            
+            <h3>Accessing Your Profile</h3>
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Click profile menu:</strong> Click on your name in the top right corner
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>Select "Profile":</strong> Choose "Profile" from the dropdown menu
+            </div>
+
+            <h3>Profile Information</h3>
+            <p>Your profile contains:</p>
+            <ul>
+                <li><strong>Personal details:</strong> Name, email, phone number</li>
+                <li><strong>Organization:</strong> Your company or organization</li>
+                <li><strong>Account settings:</strong> Login preferences and security</li>
+                <li><strong>Notification preferences:</strong> Email and system notifications</li>
+            </ul>
+
+            <h3>Changing Your Password</h3>
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Go to profile settings:</strong> Access your profile page
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>Click "Change Password":</strong> Find the password section
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>Enter current password:</strong> Verify your current password
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                <strong>Enter new password:</strong> Create a strong new password
+            </div>
+            
+            <div class="step">
+                <span class="step-number">5</span>
+                <strong>Confirm and save:</strong> Confirm your new password and save changes
+            </div>
+
+            <div class="alert alert-info">
+                <strong>Password requirements:</strong> Use a strong password with at least 8 characters, including uppercase, lowercase, numbers, and special characters.
+            </div>
+        </div>
+
+        <!-- Admin Features -->
+        <div class="section" id="admin-features">
+            <h2>⚙️ Admin Features</h2>
+            
+            <div class="alert alert-info">
+                <strong>Note:</strong> Admin features are only available to users with administrator privileges.
+            </div>
+
+            <h3>User Management</h3>
+            <p>Admin users can:</p>
+            <ul>
+                <li><strong>Create new users:</strong> Add team members with temporary passwords</li>
+                <li><strong>Manage permissions:</strong> Grant or revoke admin privileges</li>
+                <li><strong>Reset passwords:</strong> Help users with password issues</li>
+                <li><strong>Assign organizations:</strong> Link users to specific companies</li>
+            </ul>
+
+            <h3>Organization Management</h3>
+            <p>Manage client organizations:</p>
+            <ul>
+                <li><strong>Create organizations:</strong> Add new client companies</li>
+                <li><strong>Edit details:</strong> Update organization information</li>
+                <li><strong>View statistics:</strong> Organization-specific analytics</li>
+                <li><strong>Manage users:</strong> Assign users to organizations</li>
+            </ul>
+
+            <h3>Case Management</h3>
+            <p>Advanced case management features:</p>
+            <ul>
+                <li><strong>View all cases:</strong> See cases across all organizations</li>
+                <li><strong>Archive cases:</strong> Archive completed or inactive cases</li>
+                <li><strong>Delete cases:</strong> Permanently remove cases (with caution)</li>
+                <li><strong>Bulk operations:</strong> Perform actions on multiple cases</li>
+            </ul>
+
+            <h3>System Monitoring</h3>
+            <p>Monitor system health and activity:</p>
+            <ul>
+                <li><strong>User activity:</strong> Track login and usage patterns</li>
+                <li><strong>System metrics:</strong> Monitor performance indicators</li>
+                <li><strong>Error logs:</strong> Review system errors and issues</li>
+                <li><strong>Analytics:</strong> Generate system-wide reports</li>
+            </ul>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="section" id="troubleshooting">
+            <h2>🔧 Troubleshooting</h2>
+            
+            <h3>Common Issues</h3>
+            
+            <h4>Can't log in</h4>
+            <ul>
+                <li>Check your username and password</li>
+                <li>Ensure caps lock is off</li>
+                <li>Try resetting your password</li>
+                <li>Contact your administrator if issues persist</li>
+            </ul>
+
+            <h4>File upload problems</h4>
+            <ul>
+                <li>Check file size (max 10MB)</li>
+                <li>Ensure file format is supported</li>
+                <li>Try a different browser</li>
+                <li>Check your internet connection</li>
+            </ul>
+
+            <h4>Missing cases or data</h4>
+            <ul>
+                <li>Check if filters are applied</li>
+                <li>Ensure you're in the correct organization</li>
+                <li>Try refreshing the page</li>
+                <li>Contact support if data is missing</li>
+            </ul>
+
+            <h4>Performance issues</h4>
+            <ul>
+                <li>Close unnecessary browser tabs</li>
+                <li>Clear your browser cache</li>
+                <li>Try using a different browser</li>
+                <li>Check your internet connection speed</li>
+            </ul>
+
+            <h3>Browser Support</h3>
+            <p>The portal works best with:</p>
+            <ul>
+                <li>Chrome (recommended)</li>
+                <li>Firefox</li>
+                <li>Safari</li>
+                <li>Edge</li>
+            </ul>
+
+            <h3>Getting Help</h3>
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Use the messaging system:</strong> Send a message to your support team
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>Provide details:</strong> Include screenshots and error messages
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>Check response:</strong> Monitor your messages for replies
+            </div>
+
+            <div class="tip">
+                <strong>Help tip:</strong> When reporting issues, include your browser type, operating system, and a detailed description of what you were doing when the problem occurred.
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <p>&copy; 2025 Acclaim Credit Management and Recovery. All rights reserved.</p>
+            <p>This guide was generated on: <span id="current-date"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Add current date
+        document.getElementById('current-date').textContent = new Date().toLocaleDateString();
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
