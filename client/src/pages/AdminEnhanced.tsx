@@ -19,6 +19,7 @@ import { z } from "zod";
 import { Link } from "wouter";
 import ApiGuideDownload from "@/components/ApiGuideDownload";
 import UserGuideDownload from "@/components/UserGuideDownload";
+import UserGuideWordDownload from "@/components/UserGuideWordDownload";
 
 interface User {
   id: string;
@@ -1190,7 +1191,10 @@ export default function AdminEnhanced() {
         {/* User Guide Tab */}
         <TabsContent value="user-guide">
           <div className="flex justify-center">
-            <UserGuideDownload />
+            <div className="space-y-6 max-w-4xl">
+              <UserGuideDownload />
+              <UserGuideWordDownload />
+            </div>
           </div>
         </TabsContent>
       </Tabs>

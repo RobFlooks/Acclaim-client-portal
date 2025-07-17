@@ -17,6 +17,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import officegen from "officegen";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1833,6 +1834,258 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error serving user guide:', error);
       res.status(500).json({ message: 'Failed to serve user guide' });
+    }
+  });
+
+  // Download User Guide as Word Document
+  app.get('/api/download/user-guide-word', async (req, res) => {
+    try {
+      // Create a new Word document
+      const docx = officegen('docx');
+      
+      // Set document properties
+      docx.creator = 'Acclaim Credit Management & Recovery';
+      docx.title = 'Acclaim Portal User Guide';
+      docx.subject = 'Complete guide to using your debt recovery case management system';
+      
+      // Add header
+      const headerParagraph = docx.createP();
+      headerParagraph.addText('Acclaim Portal User Guide', { 
+        font_size: 24, 
+        bold: true, 
+        color: '006B5B' 
+      });
+      headerParagraph.addLineBreak();
+      headerParagraph.addText('Complete guide to using your debt recovery case management system', { 
+        font_size: 14, 
+        color: '666666' 
+      });
+      
+      // Add some space
+      docx.createP().addLineBreak();
+      
+      // Table of Contents
+      const tocParagraph = docx.createP();
+      tocParagraph.addText('Table of Contents', { 
+        font_size: 18, 
+        bold: true, 
+        color: '006B5B' 
+      });
+      docx.createP().addLineBreak();
+      
+      const tocList = [
+        '1. Getting Started',
+        '2. Dashboard Overview',
+        '3. Case Management',
+        '4. Messaging System',
+        '5. Document Management',
+        '6. Reports & Analytics',
+        '7. User Profile & Settings',
+        '8. Admin Features',
+        '9. Troubleshooting'
+      ];
+      
+      tocList.forEach(item => {
+        const tocItem = docx.createP();
+        tocItem.addText(item, { font_size: 12 });
+      });
+      
+      docx.createP().addLineBreak();
+      
+      // Getting Started Section
+      const gettingStartedHeader = docx.createP();
+      gettingStartedHeader.addText('1. Getting Started', { 
+        font_size: 18, 
+        bold: true, 
+        color: '006B5B' 
+      });
+      
+      const loginHeader = docx.createP();
+      loginHeader.addText('Logging In', { 
+        font_size: 14, 
+        bold: true 
+      });
+      
+      const loginSteps = [
+        'Navigate to the portal: Go to your Acclaim Portal URL provided by your administrator',
+        'Click "Log In": Click the login button to access the authentication system',
+        'Enter credentials: Use your email and password provided by your administrator'
+      ];
+      
+      loginSteps.forEach((step, index) => {
+        const stepP = docx.createP();
+        stepP.addText(`${index + 1}. ${step}`, { font_size: 12 });
+      });
+      
+      const firstTimeNote = docx.createP();
+      firstTimeNote.addText('First-time users: You may be required to change your password on first login for security purposes.', { 
+        font_size: 12, 
+        italic: true,
+        color: '0066CC'
+      });
+      
+      docx.createP().addLineBreak();
+      
+      // Navigation Overview
+      const navHeader = docx.createP();
+      navHeader.addText('Navigation Overview', { 
+        font_size: 14, 
+        bold: true 
+      });
+      
+      const navText = docx.createP();
+      navText.addText('Once logged in, you\'ll see the main navigation with the following sections:', { font_size: 12 });
+      
+      const navItems = [
+        'Dashboard - Overview of your cases and statistics',
+        'Cases - Manage your debt recovery cases',
+        'Messages - Communication with your recovery team',
+        'Documents - File management and uploads',
+        'Reports - Analytics and performance tracking',
+        'Submit Case - Create new recovery cases'
+      ];
+      
+      navItems.forEach(item => {
+        const navItem = docx.createP();
+        navItem.addText(`• ${item}`, { font_size: 12 });
+      });
+      
+      docx.createP().addLineBreak();
+      
+      // Dashboard Overview Section
+      const dashboardHeader = docx.createP();
+      dashboardHeader.addText('2. Dashboard Overview', { 
+        font_size: 18, 
+        bold: true, 
+        color: '006B5B' 
+      });
+      
+      const dashboardText = docx.createP();
+      dashboardText.addText('The dashboard provides a comprehensive overview of your case management activities and key performance metrics.', { font_size: 12 });
+      
+      // Screenshot placeholder
+      const screenshotNote = docx.createP();
+      screenshotNote.addText('[INSERT SCREENSHOT: Dashboard showing case statistics, recent activity, and navigation options]', { 
+        font_size: 12, 
+        italic: true,
+        color: '0066CC'
+      });
+      
+      docx.createP().addLineBreak();
+      
+      const keyStatsHeader = docx.createP();
+      keyStatsHeader.addText('Key Statistics', { 
+        font_size: 14, 
+        bold: true 
+      });
+      
+      const statsItems = [
+        'Active Cases - Number of cases currently in progress',
+        'Closed Cases - Successfully resolved cases',
+        'Outstanding Amount - Total amount to be recovered',
+        'Recovery Amount - Total amount recovered so far'
+      ];
+      
+      statsItems.forEach(item => {
+        const statsItem = docx.createP();
+        statsItem.addText(`• ${item}`, { font_size: 12 });
+      });
+      
+      docx.createP().addLineBreak();
+      
+      // Case Management Section
+      const caseHeader = docx.createP();
+      caseHeader.addText('3. Case Management', { 
+        font_size: 18, 
+        bold: true, 
+        color: '006B5B' 
+      });
+      
+      const caseViewHeader = docx.createP();
+      caseViewHeader.addText('Viewing Your Cases', { 
+        font_size: 14, 
+        bold: true 
+      });
+      
+      const caseSteps = [
+        'Navigate to Cases: Click on "Cases" in the main navigation',
+        'Review case list: You\'ll see all your cases with key information including account number, case name, outstanding amount, current status, and recovery stage'
+      ];
+      
+      caseSteps.forEach((step, index) => {
+        const stepP = docx.createP();
+        stepP.addText(`${index + 1}. ${step}`, { font_size: 12 });
+      });
+      
+      const visualRef = docx.createP();
+      visualRef.addText('Visual Reference: The screenshots in this guide show the actual interface you\'ll see when using the portal. All features and layouts are current as of the latest system update.', { 
+        font_size: 12, 
+        italic: true,
+        color: '0066CC'
+      });
+      
+      docx.createP().addLineBreak();
+      
+      // Case Status Indicators
+      const statusHeader = docx.createP();
+      statusHeader.addText('Case Status Indicators', { 
+        font_size: 14, 
+        bold: true 
+      });
+      
+      const statusItems = [
+        'Pre-Legal - Initial contact and negotiation phase',
+        'Claim - Legal claim has been filed',
+        'Judgment - Court judgment obtained',
+        'Enforcement - Enforcement action being taken',
+        'Paid/Payment Plan - Payment received or plan in place'
+      ];
+      
+      statusItems.forEach(item => {
+        const statusItem = docx.createP();
+        statusItem.addText(`• ${item}`, { font_size: 12 });
+      });
+      
+      docx.createP().addLineBreak();
+      
+      // Add placeholder sections for remaining content
+      const remainingSections = [
+        'Messaging System',
+        'Document Management', 
+        'Reports & Analytics',
+        'User Profile & Settings',
+        'Admin Features',
+        'Troubleshooting'
+      ];
+      
+      remainingSections.forEach((section, index) => {
+        const sectionHeader = docx.createP();
+        sectionHeader.addText(`${index + 4}. ${section}`, { 
+          font_size: 18, 
+          bold: true, 
+          color: '006B5B' 
+        });
+        
+        const placeholder = docx.createP();
+        placeholder.addText(`[Content for ${section} section - detailed instructions and screenshots to be added]`, { 
+          font_size: 12, 
+          italic: true,
+          color: '999999'
+        });
+        
+        docx.createP().addLineBreak();
+      });
+      
+      // Set response headers
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      res.setHeader('Content-Disposition', 'attachment; filename="Acclaim_User_Guide.docx"');
+      
+      // Generate and send the document
+      docx.generate(res);
+      
+    } catch (error) {
+      console.error('Error generating Word document:', error);
+      res.status(500).json({ message: 'Failed to generate Word document' });
     }
   });
 
