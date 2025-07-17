@@ -48,7 +48,7 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
         >
           <img src={logoImage} alt="Acclaim Logo" className="w-8 h-8 mr-3 filter brightness-0 invert" />
           <div className="text-white">
-            <div className="text-lg font-bold ml-[0px] mr-[0px] text-left">myAcclaim</div>
+            <div className="text-lg font-bold ml-[0px] mr-[0px] text-left">Acclaim</div>
             <div className="text-xs opacity-80 text-left">Credit Management & Recovery</div>
           </div>
         </button>

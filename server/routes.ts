@@ -1845,12 +1845,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Set document properties
       docx.creator = 'Acclaim Credit Management & Recovery';
-      docx.title = 'myAcclaim User Guide';
+      docx.title = 'Acclaim Portal User Guide';
       docx.subject = 'Complete guide to using your debt recovery case management system';
       
       // Add header
       const headerParagraph = docx.createP();
-      headerParagraph.addText('myAcclaim User Guide', { 
+      headerParagraph.addText('Acclaim Portal User Guide', { 
         font_size: 24, 
         bold: true, 
         color: '006B5B' 
@@ -2078,7 +2078,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Set response headers
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-      res.setHeader('Content-Disposition', 'attachment; filename="myAcclaim_User_Guide.docx"');
+      res.setHeader('Content-Disposition', 'attachment; filename="Acclaim_User_Guide.docx"');
       
       // Generate and send the document
       docx.generate(res);
