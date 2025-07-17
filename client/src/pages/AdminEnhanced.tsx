@@ -745,7 +745,7 @@ export default function AdminEnhanced() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold">Enhanced Admin Panel</h1>
+            <h1 className="text-2xl font-bold">Admin Panel</h1>
             <p className="text-gray-600">Comprehensive user and organisation management</p>
           </div>
         </div>
