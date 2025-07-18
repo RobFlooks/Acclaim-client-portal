@@ -135,7 +135,7 @@ Language preference: British English (organisation not organization, colour not 
 - **Language Standardisation**: Updated all text to use British English spelling (organisation instead of organization, colour instead of color, etc.) across all components, documentation, and user interfaces
 - **Case Management Integration**: Implemented HTTP API endpoint `/api/external/case/update` that matches existing SOS workflow patterns for seamless integration with current case management systems, including balance updates, status synchronisation, and comprehensive integration documentation
 - **Case Activities Management**: Modified system to exclusively manage case activities through external API endpoints. Removed all automatic activity generation from internal operations. Added dedicated endpoints `/api/external/cases/:externalRef/activities` and `/api/external/activities/bulk` for pushing activities from external systems
-- **Case Messages Integration**: Implemented `/api/external/cases/:externalRef/messages` endpoint to allow external systems to send messages linked to specific cases. Messages appear in the portal's Messages section and case-specific message tabs with proper user attribution
+- **Case Messages Integration**: Implemented `/api/external/cases/:externalRef/messages` endpoint to allow external systems to send messages linked to specific cases. Messages appear in the portal's Messages section and case-specific message tabs with proper user attribution. Added support for custom subject lines - when sent from case management system, custom subjects can be provided; when sent from the portal, automatic subject generation is used
 
 ### Scaling Considerations
 - Database uses connection pooling for efficiency

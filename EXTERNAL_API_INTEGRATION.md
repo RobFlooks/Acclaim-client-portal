@@ -90,10 +90,12 @@ POST /api/external/cases/:externalRef/messages
 Body: {
   message: string,
   senderName: string,
-  messageType?: string (defaults to 'case_update')
+  messageType?: string (defaults to 'case_update'),
+  subject?: string (optional custom subject)
 }
 ```
 - Creates a new message linked to the specified case
+- If `subject` is provided, uses custom subject; otherwise generates automatic subject
 - Returns: `{ message: "Case message created successfully", messageData: object }`
 
 ##### Bulk Create Case Activities

@@ -1289,14 +1289,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { externalRef } = req.params;
       
       // Support both JSON and form data
-      let message, senderName, messageType;
+      let message, senderName, messageType, subject;
       
       if (req.headers['content-type']?.includes('application/json')) {
-        ({ message, senderName, messageType } = req.body);
+        ({ message, senderName, messageType, subject } = req.body);
       } else {
         message = req.body.message;
         senderName = req.body.senderName;
         messageType = req.body.messageType || 'case_update';
+        subject = req.body.subject;
       }
       
       if (!message || !senderName) {
@@ -1314,12 +1315,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use a system admin user as sender (from the database)
       const systemUserId = 'jZJVUVcC3I'; // Admin user: mattperry@chadlaw.co.uk
       
+      // Use custom subject if provided, otherwise generate automatically
+      const messageSubject = subject || `${messageType}: ${case_.caseName}`;
+      
       // Create message linked to the case
       const newMessage = await storage.createMessage({
         senderId: systemUserId,
         recipientType: 'case',
         recipientId: case_.id.toString(),
-        subject: `${messageType}: ${case_.caseName}`,
+        subject: messageSubject,
         content: message,
         senderName: senderName,
         isRead: false,

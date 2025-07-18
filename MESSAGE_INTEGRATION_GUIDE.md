@@ -18,6 +18,7 @@ https://your-portal.replit.app/api/external/cases/{EXTERNAL_CASE_REF}/messages
 - `message` (required): The message content
 - `senderName` (required): Name of the person sending the message
 - `messageType` (optional): Type of message (defaults to 'case_update')
+- `subject` (optional): Custom subject line for the message
 
 **Message Types**:
 - `case_update` - General case update
@@ -28,6 +29,28 @@ https://your-portal.replit.app/api/external/cases/{EXTERNAL_CASE_REF}/messages
 - `urgent` - Urgent message
 - `reminder` - Reminder message
 
+## Custom Subject Support
+
+You can now provide your own custom subject line when sending messages from the case management system:
+
+### With Custom Subject
+```
+# Variables
+subject = 'Payment Reminder - Account ' + matter.entityref
+message = 'This is a payment reminder for the outstanding balance'
+senderName = 'Collections Team'
+messageType = 'reminder'
+```
+
+### Without Custom Subject (Automatic)
+```
+# Variables (no subject provided)
+message = 'This is a payment reminder for the outstanding balance'
+senderName = 'Collections Team'
+messageType = 'reminder'
+# System will generate: "reminder: [Case Name]"
+```
+
 ## SOS Workflow Implementation
 
 ### Form Data Format (Recommended for SOS)
@@ -37,13 +60,15 @@ HttpWebRequest SendMessage
         url = url
         method = 'POST'
         ContentType = 'application/x-www-form-urlencoded'
-        Postvariables = 'message,senderName,messageType'
+        Postvariables = 'message,senderName,messageType,subject'
         IgnoreCertificateErrors = TRUE
     CardPosX 230
     CardPosY 10
     GOTO Success WHEN html.contains("message created")
     GOTO Error
 ```
+
+**Note**: Include `subject` in the `Postvariables` list if you want to send a custom subject. If you omit it, the system will generate one automatically.
 
 ### Variables Setup
 ```
@@ -57,6 +82,7 @@ url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.repli
 message = 'This is an automated message from the case management system'
 senderName = 'Matthew Perry'
 messageType = 'case_update'
+subject = 'Custom Subject From CMS' # Optional: Use custom subject instead of automatic generation
 ```
 
 ## Example Messages
