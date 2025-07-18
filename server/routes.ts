@@ -1542,7 +1542,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         contentType: req.get('Content-Type')
       });
       
-      const { organisation_id, username, password, external_case_ref, balance, status, stage, notes } = req.body;
+      const { organisation_id, username, password, external_case_ref, balance, outstanding_amount, status, stage, notes, costs_added, interest_added, fees_added } = req.body;
       
       if (!organisation_id || !username || !password || !external_case_ref) {
         return res.status(400).json({ 
@@ -1576,6 +1576,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (balance !== undefined) {
         updates.totalOwed = parseFloat(balance.toString());
         activities.push(`balance updated to £${balance}`);
+      }
+      
+      if (outstanding_amount !== undefined) {
+        updates.outstandingAmount = parseFloat(outstanding_amount.toString());
+        activities.push(`outstanding amount updated to £${outstanding_amount}`);
+      }
+      
+      if (costs_added !== undefined) {
+        updates.costsAdded = parseFloat(costs_added.toString());
+        activities.push(`costs added updated to £${costs_added}`);
+      }
+      
+      if (interest_added !== undefined) {
+        updates.interestAdded = parseFloat(interest_added.toString());
+        activities.push(`interest added updated to £${interest_added}`);
+      }
+      
+      if (fees_added !== undefined) {
+        updates.feesAdded = parseFloat(fees_added.toString());
+        activities.push(`fees added updated to £${fees_added}`);
       }
       
       if (status) {
