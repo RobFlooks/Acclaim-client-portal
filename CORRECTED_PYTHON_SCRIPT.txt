@@ -1,0 +1,83 @@
+import System
+from System import *
+from System.Text import *
+from System.IO import *
+
+import clr
+clr.AddReference("System.Xml")
+from System.Xml import *
+clr.AddReference("System.Web")
+from System.Web import *
+clr.AddReference("System.Net")
+from System.Net import WebRequest
+
+try:
+	boundary = '----------' + System.DateTime.Now.Ticks.ToString('x')
+
+	web_request = WebRequest.Create(url)
+	web_request.ContentType = 'multipart/form-data; boundary=' + boundary
+	web_request.Method = 'POST'
+
+	# Build form data as string - NO STRINGBUILDER to avoid .NET type conflicts
+	form_data = '--' + boundary + '\r\n'
+	form_data += 'Content-Disposition: form-data; name="fileName"\r\n'
+	form_data += '\r\n'
+	form_data += str(file_1_name) + '\r\n'
+	
+	form_data += '--' + boundary + '\r\n'
+	form_data += 'Content-Disposition: form-data; name="documentType"\r\n'
+	form_data += '\r\n'
+	form_data += 'correspondence\r\n'
+	
+	form_data += '--' + boundary + '\r\n'
+	form_data += 'Content-Disposition: form-data; name="description"\r\n'
+	form_data += '\r\n'
+	form_data += 'Document uploaded from SOS\r\n'
+	
+	form_data += '--' + boundary + '\r\n'
+	form_data += 'Content-Disposition: form-data; name="document"; filename="' + str(file_1_name) + '"\r\n'
+	form_data += 'Content-Type: ' + str(file_1_type) + '\r\n'
+	form_data += '\r\n'
+
+	post_header_bytes = Encoding.UTF8.GetBytes(form_data)
+	boundary_bytes = Encoding.ASCII.GetBytes('\r\n--' + boundary + '--\r\n')
+
+	file_stream = FileStream(file_1, FileMode.Open, FileAccess.Read)
+	length = post_header_bytes.Length + file_stream.Length + boundary_bytes.Length
+
+	web_request.ContentLength = length
+	request_stream = web_request.GetRequestStream()
+
+	# Write form header
+	request_stream.Write(post_header_bytes, 0, post_header_bytes.Length)
+
+	# Write file content
+	buffer = Array.CreateInstance(System.Byte, 4096)
+	while True:
+		bytes_read = file_stream.Read(buffer, 0, buffer.Length)
+		if bytes_read == 0:
+			break
+		request_stream.Write(buffer, 0, bytes_read)
+
+	# Write boundary footer
+	request_stream.Write(boundary_bytes, 0, boundary_bytes.Length)
+	
+	# Close streams
+	file_stream.Close()
+	request_stream.Close()
+
+	# Get response
+	r = web_request.GetResponse()
+	s = r.GetResponseStream()
+	sr = StreamReader(s)
+	response = sr.ReadToEnd()
+	
+	# Close response streams
+	sr.Close()
+	s.Close()
+	r.Close()
+
+except System.Net.WebException, e:
+	response = "WebException: " + str(e.Message)
+except System.Exception, e:
+	response = "Exception: " + str(e.Message)

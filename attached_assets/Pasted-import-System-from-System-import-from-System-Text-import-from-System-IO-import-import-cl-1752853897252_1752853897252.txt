@@ -1,0 +1,130 @@
+import System
+from System import *
+from System.Text import *
+from System.IO import *
+
+import clr
+clr.AddReference("System.Xml")
+from System.Xml import *
+clr.AddReference("System.Web")
+from System.Web import *
+clr.AddReference("System.Net")
+from System.Net import WebRequest
+
+try:
+	file_form_name = 'file_1'
+
+	boundary = '----------' + System.DateTime.Now.Ticks.ToString('x')
+
+	web_request = WebRequest.Create(url)
+	web_request.ContentType = 'multipart/form-data; boundary=' + boundary
+
+	web_request.Method = 'POST'
+
+	sb = StringBuilder()
+
+	sb.Append('--')
+	sb.Append(boundary)
+	sb.Append('\r\n')
+	sb.Append('Content-Disposition: form-data; name="username"')
+	sb.Append('\r\n')
+	sb.Append('\r\n')
+	sb.Append(username)
+	sb.Append('\r\n')
+
+	sb.Append('--')
+	sb.Append(boundary)
+	sb.Append('\r\n')
+	sb.Append('Content-Disposition: form-data; name="password"')
+	sb.Append('\r\n')
+	sb.Append('\r\n')
+	sb.Append(password)
+	sb.Append('\r\n')
+
+	sb.Append('--')
+	sb.Append(boundary)
+	sb.Append('\r\n')
+	sb.Append('Content-Disposition: form-data; name="organisation_id"')
+	sb.Append('\r\n')
+	sb.Append('\r\n')
+	sb.Append(organisation_id)
+	sb.Append('\r\n')
+
+	sb.Append('--')
+	sb.Append(boundary)
+	sb.Append('\r\n')
+	sb.Append('Content-Disposition: form-data; name="external_case_ref_encoded"')
+	sb.Append('\r\n')
+	sb.Append('\r\n')
+	sb.Append(external_case_ref_encoded)
+	sb.Append('\r\n')
+
+
+	sb.Append('--')
+	sb.Append(boundary)
+	sb.Append('\r\n')
+	sb.Append('Content-Disposition: form-data; name="file_1_name"')
+	sb.Append('\r\n')
+	sb.Append('\r\n')
+	sb.Append(file_1_name)
+	sb.Append('\r\n')
+
+	sb.Append('--')
+	sb.Append(boundary)
+	sb.Append('\r\n')
+	sb.Append('Content-Disposition: form-data; name="file_1_type"')
+	sb.Append('\r\n')
+	sb.Append('\r\n')
+	sb.Append('application/msword')
+	sb.Append('\r\n')
+
+
+	sb.Append('--')
+	sb.Append(boundary)
+	sb.Append('\r\n')
+	sb.Append('Content-Disposition: form-data; name="file_1"; filename="doc1.docx"')
+	sb.Append('\r\n')
+	sb.Append('Content-Type: application/msword')
+	sb.Append('\r\n')
+	sb.Append('\r\n')		
+
+	post_header = sb.ToString()
+
+	post_header_bytes = Encoding.UTF8.GetBytes(post_header)
+
+	boundary_bytes = Encoding.ASCII.GetBytes('\r\n--' + boundary + '--\r\n')
+
+	file_stream = FileStream(file_1, FileMode.Open, FileAccess.Read)
+	length = post_header_bytes.Length + file_stream.Length + boundary_bytes.Length
+
+	web_request.ContentLength = length
+
+	request_stream = web_request.GetRequestStream()
+
+	request_stream.Write(post_header_bytes, 0, post_header_bytes.Length)
+
+	buffer = Array.CreateInstance(System.Byte, file_stream.Length)
+
+	while True:
+		bytes_read = file_stream.Read(buffer, 0, buffer.Length)
+		if bytes_read == 0:
+			break
+		request_stream.Write(buffer, 0, bytes_read)
+
+	request_stream.Write(boundary_bytes, 0, boundary_bytes.Length)
+
+	r = web_request.GetResponse()
+
+	s = r.GetResponseStream()
+
+	sr = StreamReader(s)
+
+	response = sr.ReadToEnd()
+
+except System.Net.WebException, e:
+	response = e.Message
+#	error_encoding = System.Text.Encoding.GetEncoding('utf-8')
+#	error_sr = StreamReader(e.Response.GetResponseStream(), error_encoding)
+#	response = error_sr.ReadToEnd()
+
+#	response = e.Response
