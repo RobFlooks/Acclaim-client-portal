@@ -1,0 +1,108 @@
+# SOSFLOW 1.4
+#Hash 90e374d006efdbf6ed182c8f2f90245c
+#ModifiedBy CHADLAW\Matt.Perry on vm-uks-sh-18
+#LastSave 18/07/2025 14:47:44
+SetVariables SetVariables1
+	Initializations
+		###############
+		#Case Database#
+		###############
+		#id / case id on portal
+		#account_number / our reference matter number
+		#case_name / our matter details
+		#debtor_email / not in use
+		#debtor_phone / not in use
+		#debtor_address / not in use
+		#original_amount / principal debt (pushed when case opened)
+		#outstanding_amount / MATTER.CUSTOM.DEBTNOTE.TOTAL - updated each time
+		#status / active or closed (active if on-going, but if we look to close matter, it will change to closed)
+		#stage / matter.custom.debtkey.STAGE - updated each time
+		#organisation_id / the client ref as in SOS
+		#assigned_to / Matter fee earner
+		#created_at / auto update in portal
+		#updated_at / auto update in portal
+		#debtor_type / matter.custom.debt4.DTYPE (pushed when case opened)
+		#costs_added / Matter.custom.debtnote.tcosts + Matter.custom.debtnote.tcf
+		#interest_added / Matter.custom.debtnote.tint
+		#fees_added / Matter.custom.debtnote.LPFEES
+		#external_ref / 'Ref ' + ConnectApp.System.Firmsname + ":" + matter.entitytype + ":" + matter.entityref
+		
+		
+		
+		#For subsequent workflows (runscriptfile)
+		FROMWORKFLOW=TRUE
+		
+		#Authentication
+		organisation_id =3
+		username = 'acclaim.orgadmin@acclaim.law'
+		password ='Chadw1ck816!!'
+		
+		external_case_ref = 'Ref ' + ConnectApp.System.Firmsname + ":" + matter.entitytype + ":" + matter.entityref
+		
+		#url='https://your-portal.replit.app/api/external/cases/'+external_case_ref+'/activities'
+		url='https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases/'+external_case_ref+'/activities'
+		# Add balance calculation
+		
+		
+		activity_type='ClaimIssued'
+		description='Claim form raised'
+		performed_by='Matthew Perry'
+		
+		activityType=activity_type
+		description=description
+		performedBy=performed_by
+		
+		json_body='{"activityType": "'+activity_type+'", "description": "'+description+'", "performedBy": "'+performed_by+'"}'
+	CardPosX 0
+	CardPosY 0
+	GOTO HttpWebRequest1
+
+RunScriptFile RunScriptFile1
+	IgnoreMissingFile False
+	ScriptFile Applications\Debt\Scripts\Debt Due calculation.sos
+	CardPosX 10
+	CardPosY -110
+	GOTO SetVariables1
+
+HttpWebRequest HttpWebRequest1
+	Initializations
+		method='POST'
+		ContentType='application/json'
+		IgnoreCertificateErrors=TRUE
+	CardPosX 230
+	CardPosY 10
+	GOTO Message2 WHEN html.contains("id")
+	GOTO Message1
+
+Message Message1
+	Message %[external_case_ref]
+	Centred False
+	Location main_area
+	MessageType Information
+	CardPosX 90
+	CardPosY 110
+
+DoNothing DoNothing1
+	CardPosX 310
+	CardPosY 130
+	GOTO Message2
+
+Message Message2
+	Message The Portal has been updated
+	Centred True
+	Location system_tray
+	MessageType Information
+	CardPosX 510
+	CardPosY 70
+
+DebugMessage DebugMessage2
+	Message
+		diving into next parentid=%[parentid]
+		json is currently 
+		%[json]
+	Centred False
+	Location main_area
+	MessageType Information
+	CardPosX 110
+	CardPosY 230
+
