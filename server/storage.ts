@@ -738,8 +738,18 @@ export class DatabaseStorage implements IStorage {
 
   async getDocumentsForCase(caseId: number): Promise<Document[]> {
     // Only return documents for non-archived cases
-    return await db
-      .select()
+    const results = await db
+      .select({
+        id: documents.id,
+        caseId: documents.caseId,
+        fileName: documents.fileName,
+        fileSize: documents.fileSize,
+        fileType: documents.fileType,
+        filePath: documents.filePath,
+        uploadedBy: documents.uploadedBy,
+        organisationId: documents.organisationId,
+        createdAt: documents.createdAt,
+      })
       .from(documents)
       .leftJoin(cases, eq(documents.caseId, cases.id))
       .where(and(
@@ -747,12 +757,24 @@ export class DatabaseStorage implements IStorage {
         eq(cases.isArchived, false)
       ))
       .orderBy(desc(documents.createdAt));
+    
+    return results;
   }
 
   async getDocumentsForOrganisation(organisationId: number): Promise<Document[]> {
     // Only return documents for non-archived cases
-    return await db
-      .select()
+    const results = await db
+      .select({
+        id: documents.id,
+        caseId: documents.caseId,
+        fileName: documents.fileName,
+        fileSize: documents.fileSize,
+        fileType: documents.fileType,
+        filePath: documents.filePath,
+        uploadedBy: documents.uploadedBy,
+        organisationId: documents.organisationId,
+        createdAt: documents.createdAt,
+      })
       .from(documents)
       .leftJoin(cases, eq(documents.caseId, cases.id))
       .where(and(
@@ -763,6 +785,8 @@ export class DatabaseStorage implements IStorage {
         )
       ))
       .orderBy(desc(documents.createdAt));
+    
+    return results;
   }
 
   async createDocument(document: InsertDocument): Promise<Document> {
