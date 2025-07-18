@@ -1,0 +1,88 @@
+# SOSFLOW 1.4
+#Hash 3236a12317d5c6930cf54a5894ece02b
+#ModifiedBy CHADLAW\Matt.Perry on vm-uks-sh-18
+#LastSave 18/07/2025 16:14:39
+SelectFile SelectFile1
+	Centred False
+	Location main_area
+	MessageType Information
+	CardPosX 10
+	CardPosY -110
+	GOTO SetVariables1
+
+SetVariables SetVariables1
+	Initializations
+		###############
+		#Case Database#
+		###############
+		#id / case id on portal
+		#account_number / our reference matter number
+		#case_name / our matter details
+		#debtor_email / not in use
+		#debtor_phone / not in use
+		#debtor_address / not in use
+		#original_amount / principal debt (pushed when case opened)
+		#outstanding_amount / MATTER.CUSTOM.DEBTNOTE.TOTAL - updated each time
+		#status / active or closed (active if on-going, but if we look to close matter, it will change to closed)
+		#stage / matter.custom.debtkey.STAGE - updated each time
+		#organisation_id / the client ref as in SOS
+		#assigned_to / Matter fee earner
+		#created_at / auto update in portal
+		#updated_at / auto update in portal
+		#debtor_type / matter.custom.debt4.DTYPE (pushed when case opened)
+		#costs_added / Matter.custom.debtnote.tcosts + Matter.custom.debtnote.tcf
+		#interest_added / Matter.custom.debtnote.tint
+		#fees_added / Matter.custom.debtnote.LPFEES
+		#external_ref / 'Ref ' + ConnectApp.System.Firmsname + ":" + matter.entitytype + ":" + matter.entityref
+		
+		#For subsequent workflows (runscriptfile)
+		FROMWORKFLOW=TRUE
+		
+		#Authentication
+		organisation_id =3
+		username = 'acclaim.orgadmin@acclaim.law'
+		password ='Chadw1ck816!!'
+		
+		external_case_ref = 'Ref ' + ConnectApp.System.Firmsname + ":" + matter.entitytype + ":" + matter.entityref
+		external_case_ref_encoded=replace(external_case_ref," ","_")
+		
+		url='https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases/'+external_case_ref_encoded+'/documents'
+		
+		# Add balance calculation
+		
+		document = filename
+	CardPosX 0
+	CardPosY 0
+	GOTO HttpWebRequest1
+
+HttpWebRequest HttpWebRequest1
+	Initializations
+		method='POST'
+		postvariables='document'
+		ContentType='application/x-www-form-urlencoded'
+		IgnoreCertificateErrors=TRUE
+	CardPosX 230
+	CardPosY 10
+	GOTO Message2 WHEN html.contains("id")
+	GOTO DoNothing1
+
+Message Message1
+	Message %[external_case_ref]
+	Centred False
+	Location main_area
+	MessageType Information
+	CardPosX 90
+	CardPosY 110
+
+DoNothing DoNothing1
+	CardPosX 290
+	CardPosY 130
+
+Message Message2
+	Message The Portal has been updated
+	Centred True
+	Location system_tray
+	MessageType Information
+	CardPosX 510
+	CardPosY 70
+
