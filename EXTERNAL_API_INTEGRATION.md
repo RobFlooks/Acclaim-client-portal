@@ -4,6 +4,10 @@
 
 This document outlines how your external case management system can integrate with the Acclaim Portal to handle data synchronization, particularly for payment deletion and reversal operations.
 
+## Important Note: Case Activities Management
+
+**Case activities are now exclusively managed through the external API.** The system no longer automatically generates case activities for internal operations. All case activities must be pushed from your external system using the dedicated activity endpoints described below.
+
 ## Integration Approaches
 
 ### 1. External API Endpoints (Recommended)
@@ -66,6 +70,37 @@ Body: {
 ```
 - Creates new case or updates existing one by external reference
 - Returns: `{ message: "Case created/updated successfully", case: object }`
+
+##### Create Case Activity
+```
+POST /api/external/cases/:externalRef/activities
+Body: {
+  activityType: string,
+  description: string,
+  performedBy: string,
+  activityDate?: string (ISO format)
+}
+```
+- Creates a new case activity for the specified case
+- Returns: `{ message: "Case activity created successfully", activity: object }`
+
+##### Bulk Create Case Activities
+```
+POST /api/external/activities/bulk
+Body: {
+  activities: [
+    {
+      caseExternalRef: string,
+      activityType: string,
+      description: string,
+      performedBy: string,
+      activityDate?: string (ISO format)
+    }
+  ]
+}
+```
+- Creates multiple case activities in one request
+- Returns: `{ message: "Bulk activity creation completed", results: object }`
 
 ##### Create Payment
 ```

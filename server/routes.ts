@@ -215,17 +215,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Add initial activity
-      const fileInfo = uploadedFiles && uploadedFiles.length > 0 
-        ? ` Files uploaded: ${uploadedFiles.map(f => f.originalname).join(', ')}.`
-        : '';
-      
-      await storage.addCaseActivity({
-        caseId: newCase.id,
-        activityType: "case_created",
-        description: `Case created by ${user.firstName || 'User'} ${user.lastName || ''}. Debt details: ${parsedCaseData.debtDetails || 'N/A'}${fileInfo}`,
-        performedBy: userId,
-      });
+      // Note: Case activities are now only created via external API
+      // No automatic activity generation for internal operations
 
       res.status(201).json(newCase);
     } catch (error) {
@@ -1222,6 +1213,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // External API endpoints for case management system integration
   
+  // Create case activity (for external system to push activities)
+  app.post('/api/external/cases/:externalRef/activities', async (req: any, res) => {
+    try {
+      // TODO: Add API key authentication here
+      const { externalRef } = req.params;
+      const { activityType, description, performedBy, activityDate } = req.body;
+      
+      if (!activityType || !description || !performedBy) {
+        return res.status(400).json({ 
+          message: "activityType, description, and performedBy are required" 
+        });
+      }
+      
+      // Find case by external reference
+      const case_ = await storage.getCaseByExternalRef(externalRef);
+      if (!case_) {
+        return res.status(404).json({ message: "Case not found" });
+      }
+      
+      // Create case activity
+      const activity = await storage.addCaseActivity({
+        caseId: case_.id,
+        activityType,
+        description,
+        performedBy,
+        activityDate: activityDate ? new Date(activityDate) : new Date(),
+      });
+      
+      res.status(201).json({ 
+        message: "Case activity created successfully", 
+        activity,
+        timestamp: new Date().toISOString(),
+        refreshRequired: true 
+      });
+    } catch (error) {
+      console.error("Error creating case activity via external API:", error);
+      res.status(500).json({ message: "Failed to create case activity" });
+    }
+  });
+
+  // Bulk create case activities (for external system to push multiple activities at once)
+  app.post('/api/external/activities/bulk', async (req: any, res) => {
+    try {
+      // TODO: Add API key authentication here
+      const { activities } = req.body;
+      
+      if (!activities || !Array.isArray(activities)) {
+        return res.status(400).json({ 
+          message: "activities array is required" 
+        });
+      }
+      
+      const results = {
+        created: 0,
+        errors: [] as any[]
+      };
+      
+      for (const activity of activities) {
+        try {
+          const { caseExternalRef, activityType, description, performedBy, activityDate } = activity;
+          
+          if (!caseExternalRef || !activityType || !description || !performedBy) {
+            results.errors.push({ 
+              activity, 
+              error: "caseExternalRef, activityType, description, and performedBy are required" 
+            });
+            continue;
+          }
+          
+          // Find case by external reference
+          const case_ = await storage.getCaseByExternalRef(caseExternalRef);
+          if (!case_) {
+            results.errors.push({ 
+              activity, 
+              error: "Case not found" 
+            });
+            continue;
+          }
+          
+          // Create case activity
+          await storage.addCaseActivity({
+            caseId: case_.id,
+            activityType,
+            description,
+            performedBy,
+            activityDate: activityDate ? new Date(activityDate) : new Date(),
+          });
+          
+          results.created++;
+        } catch (error) {
+          results.errors.push({ 
+            activity, 
+            error: error.message 
+          });
+        }
+      }
+      
+      res.status(201).json({ 
+        message: "Bulk activity creation completed", 
+        results,
+        timestamp: new Date().toISOString(),
+        refreshRequired: true 
+      });
+    } catch (error) {
+      console.error("Error creating bulk case activities via external API:", error);
+      res.status(500).json({ message: "Failed to create bulk case activities" });
+    }
+  });
+  
   // Create or update organisation
   app.post('/api/external/organisations', async (req: any, res) => {
     try {
@@ -1377,13 +1477,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           assignedTo: assignedTo || 'System',
         });
         
-        // Add case activity
-        await storage.addCaseActivity({
-          caseId: existing.id,
-          activityType: "case_updated",
-          description: `Case updated via external system`,
-          performedBy: 'SYSTEM',
-        });
+        // Case activities are now only created via dedicated API endpoint
+        // No automatic activity generation
         
         // Send immediate response to trigger frontend refresh
         res.json({ 
@@ -1414,13 +1509,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         externalRef,
       });
       
-      // Add case activity
-      await storage.addCaseActivity({
-        caseId: newCase.id,
-        activityType: "case_created",
-        description: `Case created via external system`,
-        performedBy: 'SYSTEM',
-      });
+      // Case activities are now only created via dedicated API endpoint
+      // No automatic activity generation
       
       res.status(201).json({ 
         message: "Case created successfully", 
@@ -1473,13 +1563,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         externalRef,
       });
       
-      // Add case activity
-      await storage.addCaseActivity({
-        caseId: case_.id,
-        activityType: "payment_received",
-        description: `Payment received via external system: £${amount}`,
-        performedBy: 'SYSTEM',
-      });
+      // Case activities are now only created via dedicated API endpoint
+      // No automatic activity generation
       
       res.status(201).json({ 
         message: "Payment created successfully", 
@@ -1517,14 +1602,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const updatedCase = await storage.updateCase(case_.id, updates);
       
-      // Add case activity
-      const description = `Case ${status ? `status changed to ${status}` : ''}${status && stage ? ', ' : ''}${stage ? `stage changed to ${stage}` : ''} via external system${notes ? `. Notes: ${notes}` : ''}`;
-      await storage.addCaseActivity({
-        caseId: case_.id,
-        activityType: "status_updated",
-        description,
-        performedBy: 'SYSTEM',
-      });
+      // Case activities are now only created via dedicated API endpoint
+      // No automatic activity generation
       
       res.json({ 
         message: "Case status updated successfully", 
@@ -1759,13 +1838,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Delete payment
       await storage.deletePayment(payment.id, payment.organisationId);
       
-      // Add case activity for audit trail
-      await storage.addCaseActivity({
-        caseId: payment.caseId,
-        activityType: "payment_deleted",
-        description: `Payment deleted via external system: £${payment.amount}`,
-        performedBy: 'SYSTEM',
-      });
+      // Case activities are now only created via dedicated API endpoint
+      // No automatic activity generation
       
       res.json({ message: "Payment deleted successfully", paymentId: payment.id });
     } catch (error) {
@@ -1795,13 +1869,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.deletePayment(payment.id, case_.organisationId);
       }
       
-      // Add case activity for audit trail
-      await storage.addCaseActivity({
-        caseId: case_.id,
-        activityType: "payments_bulk_deleted",
-        description: `All payments deleted via external system (${payments.length} payments)`,
-        performedBy: 'SYSTEM',
-      });
+      // Case activities are now only created via dedicated API endpoint
+      // No automatic activity generation
       
       res.json({ 
         message: "All payments deleted successfully", 
@@ -1840,13 +1909,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         externalRef: `${externalRef}-REVERSAL`,
       });
       
-      // Add case activity for audit trail
-      await storage.addCaseActivity({
-        caseId: payment.caseId,
-        activityType: "payment_reversed",
-        description: `Payment reversed via external system: £${payment.amount}. Reason: ${reason}`,
-        performedBy: 'SYSTEM',
-      });
+      // Case activities are now only created via dedicated API endpoint
+      // No automatic activity generation
       
       res.json({ 
         message: "Payment reversed successfully", 
