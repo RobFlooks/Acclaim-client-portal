@@ -1216,6 +1216,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create case activity (for external system to push activities)
   app.post('/api/external/cases/:externalRef/activities', async (req: any, res) => {
     try {
+      // Debug logging
+      console.log('Activity API Request:', {
+        method: req.method,
+        url: req.url,
+        contentType: req.headers['content-type'],
+        body: req.body,
+        rawBody: req.rawBody || 'not available'
+      });
+      
       // TODO: Add API key authentication here
       const { externalRef } = req.params;
       const { activityType, description, performedBy, activityDate } = req.body;
