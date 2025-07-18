@@ -1517,9 +1517,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Debug middleware for external API calls
+  app.use('/api/external/*', (req, res, next) => {
+    console.log('External API call:', {
+      method: req.method,
+      url: req.url,
+      originalUrl: req.originalUrl,
+      path: req.path,
+      baseUrl: req.baseUrl,
+      headers: req.headers,
+      body: req.body
+    });
+    next();
+  });
+
   // Case balance update endpoint (matching your case management system format)
   app.post('/api/external/case/update', async (req: any, res) => {
     try {
+      console.log('External API request received:', {
+        method: req.method,
+        url: req.url,
+        headers: req.headers,
+        body: req.body,
+        contentType: req.get('Content-Type')
+      });
+      
       const { organisation_id, username, password, external_case_ref, balance, status, stage, notes } = req.body;
       
       if (!organisation_id || !username || !password || !external_case_ref) {
