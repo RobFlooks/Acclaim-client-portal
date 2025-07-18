@@ -144,6 +144,22 @@ Body: {
 - Updates case status and/or stage
 - Returns: `{ message: "Case status updated successfully", case: object }`
 
+##### Upload Document to Case
+```
+POST /api/external/cases/{externalRef}/documents
+Content-Type: multipart/form-data
+Body: {
+  document: file (required),
+  fileName?: string,
+  documentType?: string,
+  description?: string
+}
+```
+- Uploads a document to the specified case
+- Supports all common file types (PDF, DOC, DOCX, TXT, JPG, PNG, etc.)
+- Maximum file size: 10MB
+- Returns: `{ message: "Document uploaded successfully", documentData: object }`
+
 ##### Bulk Data Synchronization
 ```
 POST /api/external/sync

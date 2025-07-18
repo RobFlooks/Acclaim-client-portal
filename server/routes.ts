@@ -1347,6 +1347,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // External Document Upload API - Upload documents to cases from external system
+  app.post('/api/external/cases/:externalRef/documents', upload.single('document'), async (req: any, res) => {
+    try {
+      // Extract form data
+      const externalRef = req.params.externalRef;
+      const { fileName, documentType, description } = req.body;
+      
+      if (!externalRef) {
+        return res.status(400).json({ message: "External reference is required" });
+      }
+      
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      // Find case by external reference
+      const case_ = await storage.getCaseByExternalRef(externalRef);
+      if (!case_) {
+        return res.status(404).json({ message: "Case not found" });
+      }
+      
+      // Get the system user for file attribution
+      const systemUserId = 'jZJVUVcC3I';
+      
+      // Use provided fileName or fall back to original filename
+      const finalFileName = fileName || req.file.originalname;
+      
+      // Create document record
+      const document = await storage.createDocument({
+        caseId: case_.id,
+        fileName: finalFileName,
+        fileSize: req.file.size,
+        fileType: req.file.mimetype,
+        filePath: req.file.path,
+        uploadedBy: systemUserId,
+        organisationId: case_.organisationId,
+        createdAt: new Date(),
+      });
+      
+      res.status(201).json({
+        message: "Document uploaded successfully",
+        documentData: document,
+        caseInfo: {
+          id: case_.id,
+          accountNumber: case_.accountNumber,
+          caseName: case_.caseName
+        },
+        timestamp: new Date().toISOString(),
+        refreshRequired: true
+      });
+    } catch (error) {
+      console.error("Error uploading document via external API:", error);
+      res.status(500).json({ message: "Failed to upload document" });
+    }
+  });
+
   // Bulk create case activities (for external system to push multiple activities at once)
   app.post('/api/external/activities/bulk', async (req: any, res) => {
     try {
@@ -1711,19 +1767,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Debug middleware for external API calls
-  app.use('/api/external/*', (req, res, next) => {
-    console.log('External API call:', {
-      method: req.method,
-      url: req.url,
-      originalUrl: req.originalUrl,
-      path: req.path,
-      baseUrl: req.baseUrl,
-      headers: req.headers,
-      body: req.body
-    });
-    next();
-  });
+
 
   // Case balance update endpoint (matching your case management system format)
   app.post('/api/external/case/update', async (req: any, res) => {
