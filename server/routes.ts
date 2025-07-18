@@ -1227,7 +1227,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // TODO: Add API key authentication here
       const { externalRef } = req.params;
-      const { activityType, description, performedBy, activityDate } = req.body;
+      
+      // Support both JSON and form data
+      let activityType, description, performedBy, activityDate;
+      
+      if (req.headers['content-type']?.includes('application/json')) {
+        // JSON format
+        ({ activityType, description, performedBy, activityDate } = req.body);
+      } else {
+        // Form data format (for SOS systems)
+        activityType = req.body.activityType;
+        description = req.body.description;
+        performedBy = req.body.performedBy;
+        activityDate = req.body.activityDate;
+      }
       
       if (!activityType || !description || !performedBy) {
         return res.status(400).json({ 

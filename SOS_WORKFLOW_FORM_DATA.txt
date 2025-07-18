@@ -1,0 +1,53 @@
+# SOSFLOW 1.4 - CORRECTED FOR SOS SYSTEM (FORM DATA)
+# This version uses form data instead of JSON body since SOS doesn't support body parameter
+
+SetVariables SetVariables1
+	Initializations
+		# For subsequent workflows (runscriptfile)
+		FROMWORKFLOW=TRUE
+		
+		# Build external case reference
+		external_case_ref = 'Ref ' + ConnectApp.System.Firmsname + ":" + matter.entitytype + ":" + matter.entityref
+		
+		# URL encode spaces in external_case_ref
+		external_case_ref_encoded = external_case_ref.replace(' ', '%20')
+		
+		# Build the URL
+		url='https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases/'+external_case_ref_encoded+'/activities'
+		
+		# Activity data as separate variables (for form data)
+		activityType='ClaimIssued'
+		description='Claim form raised'
+		performedBy='Matthew Perry'
+		
+	CardPosX 0
+	CardPosY 0
+	GOTO HttpWebRequest1
+
+HttpWebRequest HttpWebRequest1
+	Initializations
+		url=url
+		method='POST'
+		ContentType='application/x-www-form-urlencoded'
+		Postvariables='activityType,description,performedBy'
+		IgnoreCertificateErrors=TRUE
+	CardPosX 230
+	CardPosY 10
+	GOTO Message2 WHEN html.contains("activity created")
+	GOTO Message1
+
+Message Message1
+	Message Error updating portal: %[html]
+	Centred False
+	Location main_area
+	MessageType Information
+	CardPosX 90
+	CardPosY 110
+
+Message Message2
+	Message The Portal has been updated with activity: %[activityType]
+	Centred True
+	Location system_tray
+	MessageType Information
+	CardPosX 510
+	CardPosY 70
