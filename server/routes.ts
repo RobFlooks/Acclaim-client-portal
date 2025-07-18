@@ -18,6 +18,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import officegen from "officegen";
+import bcrypt from "bcrypt";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1927,7 +1928,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Hash the password
-      const bcrypt = require('bcrypt');
       const passwordHash = await bcrypt.hash(password, 10);
 
       const credential = await storage.createExternalApiCredential({
