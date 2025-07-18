@@ -1,0 +1,79 @@
+import System
+from System import *
+from System.Text import *
+from System.IO import *
+import clr
+clr.AddReference("System.Net")
+from System.Net import WebRequest
+
+# Start with debug info
+response = "DEBUG: Starting upload process...\n"
+response = response + "URL: " + str(url) + "\n"
+response = response + "External Case Ref: " + str(external_case_ref_encoded) + "\n"
+response = response + "Files Selected: " + str(count_of_files) + "\n"
+
+try:
+    if count_of_files < 1:
+        response = response + "ERROR: No file selected for upload"
+    else:
+        response = response + "File Name: " + str(file_1_name) + "\n"
+        response = response + "File Path: " + str(file_1) + "\n"
+        response = response + "File Type: " + str(file_1_type) + "\n"
+        
+        # Create a simple test request first
+        boundary = "----------12345678901234567890"
+        
+        web_request = WebRequest.Create(url)
+        web_request.ContentType = "multipart/form-data; boundary=" + boundary
+        web_request.Method = "POST"
+        
+        # Simple form data
+        form_data = "--" + boundary + "\r\n"
+        form_data = form_data + "Content-Disposition: form-data; name=\"fileName\"\r\n"
+        form_data = form_data + "\r\n"
+        form_data = form_data + str(file_1_name) + "\r\n"
+        
+        form_data = form_data + "--" + boundary + "\r\n"
+        form_data = form_data + "Content-Disposition: form-data; name=\"documentType\"\r\n"
+        form_data = form_data + "\r\n"
+        form_data = form_data + "correspondence\r\n"
+        
+        form_data = form_data + "--" + boundary + "\r\n"
+        form_data = form_data + "Content-Disposition: form-data; name=\"description\"\r\n"
+        form_data = form_data + "\r\n"
+        form_data = form_data + "Document from SOS - DEBUG TEST\r\n"
+        
+        form_data = form_data + "--" + boundary + "\r\n"
+        form_data = form_data + "Content-Disposition: form-data; name=\"document\"; filename=\"" + str(file_1_name) + "\"\r\n"
+        form_data = form_data + "Content-Type: " + str(file_1_type) + "\r\n"
+        form_data = form_data + "\r\n"
+        
+        # Add test content instead of file
+        form_data = form_data + "TEST CONTENT FROM SOS SCRIPT\r\n"
+        form_data = form_data + "--" + boundary + "--\r\n"
+        
+        post_data_bytes = Encoding.UTF8.GetBytes(form_data)
+        web_request.ContentLength = post_data_bytes.Length
+        
+        request_stream = web_request.GetRequestStream()
+        request_stream.Write(post_data_bytes, 0, post_data_bytes.Length)
+        request_stream.Close()
+        
+        response = response + "DEBUG: Request sent, waiting for response...\n"
+        
+        # Get response
+        r = web_request.GetResponse()
+        s = r.GetResponseStream()
+        sr = StreamReader(s)
+        server_response = sr.ReadToEnd()
+        
+        sr.Close()
+        s.Close()
+        r.Close()
+        
+        response = response + "SUCCESS: Server responded with: " + server_response
+
+except System.Net.WebException as e:
+    response = response + "WebException: " + str(e.Message)
+except System.Exception as e:
+    response = response + "Exception: " + str(e.Message)
