@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { FolderOpen, CheckCircle, PoundSterling, TrendingUp, User, Building, Clock, FileText, Check, AlertTriangle, Store, UserCheck, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -422,6 +422,9 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
         <DialogContent className="max-w-7xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Case Details</DialogTitle>
+            <DialogDescription>
+              View comprehensive case information including timeline, documents, and messages.
+            </DialogDescription>
           </DialogHeader>
           {selectedCase && (
             <CaseDetail case={selectedCase} />

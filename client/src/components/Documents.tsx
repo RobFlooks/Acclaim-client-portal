@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText, Download, Search, Upload, Calendar, User, Trash2, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -538,6 +538,9 @@ export default function Documents() {
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Case Details</DialogTitle>
+              <DialogDescription>
+                View comprehensive case information including timeline, documents, and messages.
+              </DialogDescription>
             </DialogHeader>
             <CaseDetail case={selectedCase} />
           </DialogContent>

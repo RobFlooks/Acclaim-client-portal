@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Search, User, Building, Factory, Clock, Check, AlertTriangle, Eye, UserCog, Users, Store, UserCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -221,6 +221,9 @@ export default function Cases() {
                     <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto w-[95vw]">
                       <DialogHeader>
                         <DialogTitle>Case Details - {case_.caseName}</DialogTitle>
+                        <DialogDescription>
+                          View comprehensive case information including timeline, documents, and messages.
+                        </DialogDescription>
                       </DialogHeader>
                       <CaseDetail case={case_} />
                     </DialogContent>

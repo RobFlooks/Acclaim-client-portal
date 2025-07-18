@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 
 import { Send, MessageSquare, Plus, User, Paperclip, Download, Trash2, Search, Filter, Calendar, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -710,6 +710,9 @@ export default function Messages() {
         <DialogContent className="max-w-7xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Case Details - {selectedCase?.caseName}</DialogTitle>
+            <DialogDescription>
+              View comprehensive case information including timeline, documents, and messages.
+            </DialogDescription>
           </DialogHeader>
           {selectedCase && (
             <CaseDetail case={selectedCase} />
