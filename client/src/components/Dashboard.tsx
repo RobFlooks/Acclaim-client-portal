@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation } from "wouter";
 import CaseDetail from "./CaseDetail";
+import RefreshIndicator from "./RefreshIndicator";
 
 interface DashboardProps {
   setActiveSection?: (section: string) => void;
@@ -22,8 +23,10 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
   const [messageDialogOpen, setMessageDialogOpen] = useState(false);
 
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  const { data: stats, isLoading: statsLoading, isFetching: statsIsFetching, dataUpdatedAt: statsDataUpdatedAt } = useQuery({
     queryKey: ["/api/dashboard/stats"],
+    refetchInterval: 15000, // Refresh every 15 seconds for stats
+    staleTime: 0, // Always consider stats data stale to ensure fresh data
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
@@ -46,6 +49,8 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
 
   const { data: cases, isLoading: casesLoading } = useQuery({
     queryKey: ["/api/cases"],
+    refetchInterval: 10000, // Refresh every 10 seconds for cases
+    staleTime: 0, // Always consider cases data stale to ensure fresh data
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
@@ -208,11 +213,18 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
 
       {/* Live Cases Statistics */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <div className="p-2 bg-green-100 rounded-lg">
-            <TrendingUp className="text-green-600 h-5 w-5" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <TrendingUp className="text-green-600 h-5 w-5" />
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900">Live Cases Stats</h2>
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">Live Cases Stats</h2>
+          <RefreshIndicator 
+            isRefreshing={statsIsFetching && !statsLoading}
+            lastRefresh={statsDataUpdatedAt ? new Date(statsDataUpdatedAt) : undefined}
+            showLastRefresh={false}
+          />
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">

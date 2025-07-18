@@ -1385,7 +1385,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           performedBy: 'SYSTEM',
         });
         
-        return res.json({ message: "Case updated successfully", case: updated });
+        // Send immediate response to trigger frontend refresh
+        res.json({ 
+          message: "Case updated successfully", 
+          case: updated,
+          timestamp: new Date().toISOString(),
+          refreshRequired: true 
+        });
       }
       
       // Create new case
@@ -1416,7 +1422,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         performedBy: 'SYSTEM',
       });
       
-      res.status(201).json({ message: "Case created successfully", case: newCase });
+      res.status(201).json({ 
+        message: "Case created successfully", 
+        case: newCase,
+        timestamp: new Date().toISOString(),
+        refreshRequired: true 
+      });
     } catch (error) {
       console.error("Error creating/updating case via external API:", error);
       res.status(500).json({ message: "Failed to create/update case" });
@@ -1470,7 +1481,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         performedBy: 'SYSTEM',
       });
       
-      res.status(201).json({ message: "Payment created successfully", payment });
+      res.status(201).json({ 
+        message: "Payment created successfully", 
+        payment,
+        timestamp: new Date().toISOString(),
+        refreshRequired: true 
+      });
     } catch (error) {
       console.error("Error creating payment via external API:", error);
       res.status(500).json({ message: "Failed to create payment" });
@@ -1510,7 +1526,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         performedBy: 'SYSTEM',
       });
       
-      res.json({ message: "Case status updated successfully", case: updatedCase });
+      res.json({ 
+        message: "Case status updated successfully", 
+        case: updatedCase,
+        timestamp: new Date().toISOString(),
+        refreshRequired: true 
+      });
     } catch (error) {
       console.error("Error updating case status via external API:", error);
       res.status(500).json({ message: "Failed to update case status" });

@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/useAuth";
 import CaseDetail from "./CaseDetail";
+import RefreshIndicator from "./RefreshIndicator";
 
 export default function Cases() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -18,8 +19,10 @@ export default function Cases() {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const { data: cases, isLoading } = useQuery({
+  const { data: cases, isLoading, isFetching, dataUpdatedAt } = useQuery({
     queryKey: ["/api/cases"],
+    refetchInterval: 10000, // Refresh every 10 seconds for cases
+    staleTime: 0, // Always consider cases data stale to ensure fresh data
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
@@ -149,9 +152,15 @@ export default function Cases() {
       {/* Cases List */}
       <Card>
         <CardHeader>
-          <CardTitle>
-            {user?.isAdmin ? `All Cases - Global View (${filteredCases.length})` : `All Cases (${filteredCases.length})`}
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>
+              {user?.isAdmin ? `All Cases - Global View (${filteredCases.length})` : `All Cases (${filteredCases.length})`}
+            </CardTitle>
+            <RefreshIndicator 
+              isRefreshing={isFetching && !isLoading}
+              lastRefresh={dataUpdatedAt ? new Date(dataUpdatedAt) : undefined}
+            />
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
