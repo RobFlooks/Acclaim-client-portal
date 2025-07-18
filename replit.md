@@ -133,6 +133,7 @@ Language preference: British English (organisation not organization, colour not 
 - **Stage Badge Implementation**: Added color-coded stage badges across Case Summary and Recovery Analysis reports (Blue: Pre-Legal, Green: Payment Plan/Paid, Yellow: Claim, Orange: Judgment, Red: Enforcement)
 - **Comprehensive User Guide System**: Created detailed user guide with placeholder screenshots and step-by-step instructions accessible from admin panel, available in both HTML and editable Word formats
 - **Language Standardisation**: Updated all text to use British English spelling (organisation instead of organization, colour instead of color, etc.) across all components, documentation, and user interfaces
+- **Case Management Integration**: Implemented HTTP API endpoint `/api/external/case/update` that matches existing SOS workflow patterns for seamless integration with current case management systems, including balance updates, status synchronisation, and comprehensive integration documentation
 
 ### Scaling Considerations
 - Database uses connection pooling for efficiency

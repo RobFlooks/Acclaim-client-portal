@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Management System Integration Guide - Acclaim Portal</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8fafc;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #006B5B 0%, #008B73 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .header p {
+            margin: 1rem 0 0 0;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        h2 {
+            color: #006B5B;
+            border-bottom: 2px solid #006B5B;
+            padding-bottom: 0.5rem;
+            font-size: 1.8rem;
+            margin-top: 2rem;
+        }
+        
+        h3 {
+            color: #006B5B;
+            font-size: 1.3rem;
+            margin-top: 1.5rem;
+        }
+        
+        h4 {
+            color: #555;
+            font-size: 1.1rem;
+            margin-top: 1rem;
+        }
+        
+        code {
+            background: #f1f5f9;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+        }
+        
+        pre {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 1rem;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .endpoint {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .endpoint-header {
+            font-weight: bold;
+            color: #0369a1;
+            margin-bottom: 0.5rem;
+        }
+        
+        .warning {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .success {
+            background: #dcfce7;
+            border: 1px solid #16a34a;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .error {
+            background: #fee2e2;
+            border: 1px solid #dc2626;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        
+        th, td {
+            border: 1px solid #e5e7eb;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        
+        th {
+            background: #f9fafb;
+            font-weight: 600;
+        }
+        
+        .nav {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .nav a {
+            color: #006B5B;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+        
+        .nav a:hover {
+            background-color: #f0f9ff;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .nav ul {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Case Management System Integration Guide</h1>
+        <p>HTTP API Integration for External Case Management Systems</p>
+    </div>
+    
+    <div class="nav">
+        <ul>
+            <li><a href="#overview">Overview</a></li>
+            <li><a href="#authentication">Authentication</a></li>
+            <li><a href="#case-update">Case Updates</a></li>
+            <li><a href="#workflow-integration">Workflow Integration</a></li>
+            <li><a href="#testing">Testing</a></li>
+            <li><a href="#security">Security</a></li>
+        </ul>
+    </div>
+    
+    <div class="content">
+        <h2 id="overview">Overview</h2>
+        <p>This guide shows how to integrate your existing case management system with the Acclaim portal using HTTP requests, similar to your current workflow patterns.</p>
+        
+        <p>The integration allows you to:</p>
+        <ul>
+            <li>Update case balances from your case management system</li>
+            <li>Synchronise case statuses and stages</li>
+            <li>Record payments and track case progress</li>
+            <li>Maintain audit trails of all changes</li>
+        </ul>
+        
+        <h2 id="authentication">Authentication</h2>
+        <p>All API endpoints require authentication via organisation credentials:</p>
+        
+        <table>
+            <tr>
+                <th>Parameter</th>
+                <th>Description</th>
+                <th>Required</th>
+            </tr>
+            <tr>
+                <td><code>organisation_id</code></td>
+                <td>Your organisation ID in the system</td>
+                <td>Yes</td>
+            </tr>
+            <tr>
+                <td><code>username</code></td>
+                <td>Your organisation admin username</td>
+                <td>Yes</td>
+            </tr>
+            <tr>
+                <td><code>password</code></td>
+                <td>Your organisation admin password</td>
+                <td>Yes</td>
+            </tr>
+        </table>
+        
+        <h3>Base URL</h3>
+        <pre>https://your-acclaim-portal.replit.app/api/external</pre>
+        
+        <h2 id="case-update">Case Update Endpoint</h2>
+        <p>This endpoint matches your existing workflow pattern for updating case information.</p>
+        
+        <div class="endpoint">
+            <div class="endpoint-header">POST /api/external/case/update</div>
+            <p><strong>Purpose:</strong> Update case balance, status, and stage information from your case management system</p>
+        </div>
+        
+        <h3>Request Format</h3>
+        <pre>POST /api/external/case/update
+Content-Type: application/x-www-form-urlencoded
+
+organisation_id=119&username=acclaimdebt.orgadmin@lavatech.ltd.uk&password=Your_Password&external_case_ref=Ref_Chadwick_Lawrence:MA:12345&balance=456.78</pre>
+        
+        <h3>Request Parameters</h3>
+        <table>
+            <tr>
+                <th>Parameter</th>
+                <th>Description</th>
+                <th>Required</th>
+                <th>Example</th>
+            </tr>
+            <tr>
+                <td><code>organisation_id</code></td>
+                <td>Your organisation ID</td>
+                <td>Yes</td>
+                <td>119</td>
+            </tr>
+            <tr>
+                <td><code>username</code></td>
+                <td>Organisation admin username</td>
+                <td>Yes</td>
+                <td>admin@example.com</td>
+            </tr>
+            <tr>
+                <td><code>password</code></td>
+                <td>Organisation admin password</td>
+                <td>Yes</td>
+                <td>SecurePassword123</td>
+            </tr>
+            <tr>
+                <td><code>external_case_ref</code></td>
+                <td>The external case reference</td>
+                <td>Yes</td>
+                <td>Ref_Chadwick_Lawrence:MA:12345</td>
+            </tr>
+            <tr>
+                <td><code>balance</code></td>
+                <td>New case balance amount</td>
+                <td>No</td>
+                <td>456.78</td>
+            </tr>
+            <tr>
+                <td><code>status</code></td>
+                <td>Case status (active, closed, etc.)</td>
+                <td>No</td>
+                <td>active</td>
+            </tr>
+            <tr>
+                <td><code>stage</code></td>
+                <td>Case stage (pre_legal, claim, etc.)</td>
+                <td>No</td>
+                <td>pre_legal</td>
+            </tr>
+            <tr>
+                <td><code>notes</code></td>
+                <td>Additional notes about the update</td>
+                <td>No</td>
+                <td>Updated from case management system</td>
+            </tr>
+        </table>
+        
+        <h3>Success Response</h3>
+        <div class="success">
+            <pre>{
+  "message": "Case updated successfully",
+  "id": 123,
+  "case": {
+    "id": 123,
+    "accountNumber": "ACC-2024-123",
+    "caseName": "Example Case",
+    "totalOwed": 456.78,
+    "status": "active",
+    "stage": "pre_legal"
+  },
+  "updates": [
+    "balance updated to £456.78",
+    "status changed to active"
+  ]
+}</pre>
+        </div>
+        
+        <h3>Error Responses</h3>
+        <div class="error">
+            <ul>
+                <li><strong>400:</strong> Missing required parameters</li>
+                <li><strong>404:</strong> Organisation or case not found</li>
+                <li><strong>500:</strong> Server error</li>
+            </ul>
+        </div>
+        
+        <h2 id="workflow-integration">Integration with Your Workflow</h2>
+        
+        <h3>Updating Your SOS Script</h3>
+        <p>Replace the HttpWebRequest section in your workflow with:</p>
+        
+        <pre>HttpWebRequest HttpWebRequest14
+    Initializations
+        url="https://your-acclaim-portal.replit.app/api/external/case/update"
+        method='POST'
+        postvariables="organisation_id,username,password,external_case_ref,balance"
+        ContentType='application/x-www-form-urlencoded'
+        IgnoreCertificateErrors=TRUE
+    CardPosX 530
+    CardPosY 350
+    GOTO DoNothing15 WHEN html.contains("id")
+    GOTO Message14</pre>
+        
+        <h3>Success Detection</h3>
+        <p>The endpoint returns a JSON response with an "id" field when successful, which matches your existing workflow's success detection logic.</p>
+        
+        <h3>Variable Setup</h3>
+        <p>Your existing variable setup can remain the same:</p>
+        
+        <pre>SetVariables SetVariables1
+    Initializations
+        organisation_id=119
+        username='acclaimdebt.orgadmin@lavatech.ltd.uk'
+        password='Your_Secure_Password'
+        external_case_ref='Ref ' + ConnectApp.System.Firmsname + ":" + matter.entitytype + ":" + matter.entityref
+        BALANCE=twodec(MATTER.CUSTOM.DEBTNOTE.TOTAL)
+        IF FROMSCRIPTCLOSE=TRUE THEN BALANCE=0.00</pre>
+        
+        <h2 id="testing">Testing</h2>
+        
+        <h3>Test with curl</h3>
+        <pre>curl -X POST https://your-acclaim-portal.replit.app/api/external/case/update \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "organisation_id=119&username=test@example.com&password=testpass&external_case_ref=TEST-123&balance=500.00"</pre>
+        
+        <h3>Expected Response</h3>
+        <div class="success">
+            <pre>{
+  "message": "Case updated successfully",
+  "id": 123,
+  "case": {
+    "id": 123,
+    "accountNumber": "ACC-2024-123",
+    "totalOwed": 500.00
+  },
+  "updates": [
+    "balance updated to £500.00"
+  ]
+}</pre>
+        </div>
+        
+        <h2 id="security">Security Notes</h2>
+        <div class="warning">
+            <ul>
+                <li>All requests should use HTTPS</li>
+                <li>Store credentials securely in your system</li>
+                <li>Consider implementing IP whitelisting for additional security</li>
+                <li>The password is transmitted in the request body (encrypted in transit)</li>
+                <li>Monitor API usage and implement rate limiting if needed</li>
+            </ul>
+        </div>
+        
+        <h2>Error Handling</h2>
+        <p>Your workflow should check for:</p>
+        <ul>
+            <li>HTTP response contains "id" field (success)</li>
+            <li>HTTP error codes (400, 404, 500)</li>
+            <li>Network connectivity issues</li>
+            <li>Invalid credentials or organisation access</li>
+        </ul>
+        
+        <h2>Additional Endpoints</h2>
+        
+        <h3>Payment Recording</h3>
+        <div class="endpoint">
+            <div class="endpoint-header">POST /api/external/payments</div>
+            <p>Record a payment against a case:</p>
+            <pre>{
+  "caseExternalRef": "Ref_Chadwick_Lawrence:MA:12345",
+  "amount": 100.00,
+  "paymentDate": "2025-01-17",
+  "paymentMethod": "BANK_TRANSFER",
+  "reference": "Payment ref 123",
+  "notes": "Partial payment received",
+  "externalRef": "PAY-12345"
+}</pre>
+        </div>
+        
+        <h3>Bulk Data Synchronisation</h3>
+        <div class="endpoint">
+            <div class="endpoint-header">POST /api/external/sync</div>
+            <p>Synchronise multiple records in a single request for organisations, users, cases, and payments.</p>
+        </div>
+        
+        <h2>Next Steps</h2>
+        <ol>
+            <li>Update your organisation credentials in the system</li>
+            <li>Test the endpoint with a sample case</li>
+            <li>Update your SOS workflow scripts</li>
+            <li>Monitor the integration for any issues</li>
+            <li>Implement error handling and logging</li>
+        </ol>
+        
+        <div class="success">
+            <p><strong>For technical support:</strong> Please contact your system administrator or refer to the complete API documentation.</p>
+        </div>
+    </div>
+</body>
+</html>

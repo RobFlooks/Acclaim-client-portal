@@ -20,6 +20,7 @@ import { Link } from "wouter";
 import ApiGuideDownload from "@/components/ApiGuideDownload";
 import UserGuideDownload from "@/components/UserGuideDownload";
 import UserGuideWordDownload from "@/components/UserGuideWordDownload";
+import CaseManagementGuideDownload from "@/components/CaseManagementGuideDownload";
 
 interface User {
   id: string;
@@ -829,6 +830,7 @@ export default function AdminEnhanced() {
           <TabsTrigger value="organisations">Organisations</TabsTrigger>
           <TabsTrigger value="cases">Case Management</TabsTrigger>
           <TabsTrigger value="api-guide">API Integration</TabsTrigger>
+          <TabsTrigger value="case-management">Case Management Integration</TabsTrigger>
           <TabsTrigger value="user-guide">User Guide</TabsTrigger>
         </TabsList>
 
@@ -1185,6 +1187,13 @@ export default function AdminEnhanced() {
         <TabsContent value="api-guide">
           <div className="flex justify-center">
             <ApiGuideDownload />
+          </div>
+        </TabsContent>
+
+        {/* Case Management Integration Tab */}
+        <TabsContent value="case-management">
+          <div className="flex justify-center">
+            <CaseManagementGuideDownload />
           </div>
         </TabsContent>
 

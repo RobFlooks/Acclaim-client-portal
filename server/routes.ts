@@ -1516,6 +1516,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Case balance update endpoint (matching your case management system format)
+  app.post('/api/external/case/update', async (req: any, res) => {
+    try {
+      // TODO: Add API key authentication here
+      const { organisation_id, username, password, external_case_ref, balance, status, stage, notes } = req.body;
+      
+      if (!organisation_id || !username || !password || !external_case_ref) {
+        return res.status(400).json({ 
+          message: "organisation_id, username, password, and external_case_ref are required" 
+        });
+      }
+      
+      // TODO: Validate credentials against organisation
+      // For now, we'll just check if organisation exists
+      const organisation = await storage.getOrganisation(parseInt(organisation_id));
+      if (!organisation) {
+        return res.status(404).json({ message: "Organisation not found" });
+      }
+      
+      // Find case by external reference
+      const case_ = await storage.getCaseByExternalRef(external_case_ref);
+      if (!case_) {
+        return res.status(404).json({ message: "Case not found" });
+      }
+      
+      // Prepare updates
+      const updates: any = {};
+      const activities: string[] = [];
+      
+      if (balance !== undefined) {
+        updates.totalOwed = parseFloat(balance.toString());
+        activities.push(`balance updated to £${balance}`);
+      }
+      
+      if (status) {
+        updates.status = status;
+        activities.push(`status changed to ${status}`);
+      }
+      
+      if (stage) {
+        updates.stage = stage;
+        activities.push(`stage changed to ${stage}`);
+      }
+      
+      // Update case if there are changes
+      let updatedCase = case_;
+      if (Object.keys(updates).length > 0) {
+        updatedCase = await storage.updateCase(case_.id, updates);
+        
+        // Add case activity
+        const description = `Case ${activities.join(', ')} via external system${notes ? `. Notes: ${notes}` : ''}`;
+        await storage.addCaseActivity({
+          caseId: case_.id,
+          activityType: balance !== undefined ? "balance_updated" : "status_updated",
+          description,
+          performedBy: 'SYSTEM',
+        });
+      }
+      
+      // Return success response with case ID (matching your workflow expectation)
+      res.json({ 
+        message: Object.keys(updates).length > 0 ? "Case updated successfully" : "Case found", 
+        id: case_.id,
+        case: updatedCase,
+        updates: activities
+      });
+    } catch (error) {
+      console.error("Error updating case via external API:", error);
+      res.status(500).json({ message: "Failed to update case" });
+    }
+  });
+
   // Bulk data sync endpoint
   app.post('/api/external/sync', async (req: any, res) => {
     try {
@@ -1810,6 +1882,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error serving API guide:', error);
       res.status(500).json({ message: 'Failed to serve API guide' });
+    }
+  });
+
+  // Download Case Management Integration Guide
+  app.get('/api/download/case-management-guide', async (req, res) => {
+    try {
+      // Check if the HTML file exists
+      const htmlPath = path.join(process.cwd(), 'CASE_MANAGEMENT_INTEGRATION_GUIDE.html');
+      if (!fs.existsSync(htmlPath)) {
+        return res.status(404).json({ message: 'Case management integration guide not found' });
+      }
+      
+      // Read the HTML content
+      const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+      
+      // Set headers for HTML display
+      res.setHeader('Content-Type', 'text/html');
+      res.setHeader('Content-Disposition', 'inline; filename="Acclaim_Case_Management_Integration_Guide.html"');
+      
+      res.send(htmlContent);
+      
+    } catch (error) {
+      console.error('Error serving case management integration guide:', error);
+      res.status(500).json({ message: 'Failed to serve case management integration guide' });
     }
   });
 

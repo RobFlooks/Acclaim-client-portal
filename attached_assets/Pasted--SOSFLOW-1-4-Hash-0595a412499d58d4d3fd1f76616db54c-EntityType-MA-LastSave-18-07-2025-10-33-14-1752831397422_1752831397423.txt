@@ -1,0 +1,143 @@
+# SOSFLOW 1.4
+#Hash 0595a412499d58d4d3fd1f76616db54c
+#EntityType MA
+#LastSave 18/07/2025 10:33:14
+#Menu Nowhere
+#Contextual False
+#SubMenu Incase Actions
+#Icon docgetlatest.png
+#ModifiedBy CHADLAW\Matt.Perry on vm-uks-sh-18
+#SubMenuIndex 0
+DoNothing DoNothing1
+	CardPosX 330
+	CardPosY 70
+	GOTO DoNothing14 WHEN entitytype='MA'
+	GOTO Message2
+
+SetVariables SetVariables1
+	Initializations
+		#For susbequent workflows (runscriptfile)
+		FROMWORKFLOW=TRUE
+		
+		#inCase Authentication
+		organisation_id=getentity('BR','001').custom.inbranch.orgid
+		username=getentity('BR','001').custom.inbranch.orguser
+		password=getentity('BR','001').custom.inbranch.orgpass
+		catchall=getentity('BR','001').custom.inbranch.catchall
+		external_case_ref=matter.custom.incase.extref
+		
+		organisation_id = 119
+		username = 'acclaimdebt.orgadmin@lavatech.ltd.uk'
+		password = 'No!Hc4bU1W!4q%&W'
+		external_case_ref = 'Ref ' + ConnectApp.System.Firmsname + ":" + matter.entitytype + ":" + matter.entityref
+		#BALANCE=twodec(456.78)
+		BALANCE=twodec(MATTER.CUSTOM.DEBTNOTE.TOTAL)
+		IF FROMSCRIPTCLOSE=TRUE THEN BALANCE=0.00
+	CardPosX 322
+	CardPosY 350
+	GOTO Question1 WHEN BALANCE=0
+	GOTO HttpWebRequest14
+
+Message Message2
+	Message This workflow needs to be run from a matter
+	Centred True
+	Location main_area
+	MessageType Information
+	CardPosX 530
+	CardPosY 70
+
+Message Message3
+	Message
+		It looks like this matter has not been registered with the Gateway.
+		
+		You will now be directed to the set up the matter
+	Centred True
+	MessageTitle Matter not registered with inCase App
+	Location main_area
+	MessageType Information
+	CardPosX -90
+	CardPosY 250
+	GOTO RunScriptFile1
+
+RunScriptFile RunScriptFile1
+	IgnoreMissingFile False
+	ScriptFile Scripts\Chadwick Lawrence\Chadwick Lawrence\SOS Scripts\incase\Acclaim Scripts\01.Setup app users for this matter acclaim.sos
+	CardPosX -90
+	CardPosY 350
+
+DoNothing DoNothing13
+	CardPosX 930
+	CardPosY 570
+	GOTO DebugMessage1
+
+HttpWebRequest HttpWebRequest14
+	Initializations
+		url="https://middleware-prod.incase-api.co.uk/20/v2/case/update"
+		method='POST'
+		postvariables="organisation_id,username,password,external_case_ref,balance"
+		ContentType='application/x-www-form-urlencoded'
+		IgnoreCertificateErrors=TRUE
+	CardPosX 530
+	CardPosY 350
+	GOTO DoNothing15 WHEN html.contains("id")
+	GOTO Message14
+
+Message Message13
+	Message InCase balance has been updated to %[BALANCE]
+	Centred True
+	Location inset_error_control
+	MessageType Information
+	CardPosX 930
+	CardPosY 350
+	GOTO DoNothing13
+
+Message Message14
+	Message
+		There was a problem updating the Gateway, please check the data and try again.
+		
+		Title: %[external_case_ref]
+	Centred True
+	Location message_box
+	MessageType Error
+	CardPosX 730
+	CardPosY 450
+	GOTO DoNothing13
+
+DoNothing DoNothing14
+	CardPosX 330
+	CardPosY 250
+	GOTO Message3 WHEN matter.custom.INCASE.ISREGD<>TRUE
+	GOTO SetVariables1
+
+Question Question1
+	Message The balance is zero, do you still wish to update?
+	Answer1 Yes
+	Answer2 No
+	NbColumns 1
+	CustomAllowed False
+	ShowAsButtons True
+	Initializations Answer='No'
+	CardPosX 330
+	CardPosY 570
+	GOTO HttpWebRequest14 WHEN question1.answer='Yes'
+	GOTO DoNothing13
+
+DebugMessage DebugMessage1
+	Message
+		END
+		
+		Balance - %[balance]
+		
+		HTML Message Returned : 
+		%[html]
+	Centred True
+	Location main_area
+	MessageType Information
+	CardPosX 930
+	CardPosY 670
+
+DoNothing DoNothing15
+	CardPosX 890
+	CardPosY 250
+	GOTO DoNothing13
+
