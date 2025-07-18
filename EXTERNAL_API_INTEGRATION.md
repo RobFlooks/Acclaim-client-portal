@@ -84,6 +84,18 @@ Body: {
 - Creates a new case activity for the specified case
 - Returns: `{ message: "Case activity created successfully", activity: object }`
 
+##### Create Case Message
+```
+POST /api/external/cases/:externalRef/messages
+Body: {
+  message: string,
+  senderName: string,
+  messageType?: string (defaults to 'case_update')
+}
+```
+- Creates a new message linked to the specified case
+- Returns: `{ message: "Case message created successfully", messageData: object }`
+
 ##### Bulk Create Case Activities
 ```
 POST /api/external/activities/bulk

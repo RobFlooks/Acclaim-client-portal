@@ -1,0 +1,49 @@
+# SOS Workflow for Sending Messages to Cases
+
+SetVariables SetVariables1
+	Initializations
+		# Build external case reference
+		external_case_ref = 'Ref_' + ConnectApp.System.Firmsname + "_" + matter.entitytype + "_" + matter.entityref
+		
+		# Note: Use underscores in the external reference (as stored in database)
+		# The database stores: Ref_Chadwick_Lawrence_LLP:MA:CLS00003-028
+		
+		# Build the URL for messages
+		url='https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases/'+external_case_ref+'/messages'
+		
+		# Message data
+		message='This is an automated message from the case management system'
+		senderName='Matthew Perry'
+		messageType='case_update'
+		
+	CardPosX 0
+	CardPosY 0
+	GOTO HttpWebRequest1
+
+HttpWebRequest HttpWebRequest1
+	Initializations
+		url=url
+		method='POST'
+		ContentType='application/x-www-form-urlencoded'
+		Postvariables='message,senderName,messageType'
+		IgnoreCertificateErrors=TRUE
+	CardPosX 230
+	CardPosY 10
+	GOTO Message2 WHEN html.contains("message created")
+	GOTO Message1
+
+Message Message1
+	Message Error sending message: %[html]
+	Centred False
+	Location main_area
+	MessageType Information
+	CardPosX 90
+	CardPosY 110
+
+Message Message2
+	Message Message sent to case: %[external_case_ref]
+	Centred True
+	Location system_tray
+	MessageType Information
+	CardPosX 510
+	CardPosY 70

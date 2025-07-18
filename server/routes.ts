@@ -1275,6 +1275,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create case message (for external system to send messages to specific cases)
+  app.post('/api/external/cases/:externalRef/messages', async (req: any, res) => {
+    try {
+      // Debug logging
+      console.log('Message API Request:', {
+        method: req.method,
+        url: req.url,
+        contentType: req.headers['content-type'],
+        body: req.body
+      });
+      
+      const { externalRef } = req.params;
+      
+      // Support both JSON and form data
+      let message, senderName, messageType;
+      
+      if (req.headers['content-type']?.includes('application/json')) {
+        ({ message, senderName, messageType } = req.body);
+      } else {
+        message = req.body.message;
+        senderName = req.body.senderName;
+        messageType = req.body.messageType || 'case_update';
+      }
+      
+      if (!message || !senderName) {
+        return res.status(400).json({ 
+          message: "message and senderName are required" 
+        });
+      }
+      
+      // Find case by external reference
+      const case_ = await storage.getCaseByExternalRef(externalRef);
+      if (!case_) {
+        return res.status(404).json({ message: "Case not found" });
+      }
+      
+      // Use a system admin user as sender (from the database)
+      const systemUserId = 'jZJVUVcC3I'; // Admin user: mattperry@chadlaw.co.uk
+      
+      // Create message linked to the case
+      const newMessage = await storage.createMessage({
+        senderId: systemUserId,
+        recipientType: 'case',
+        recipientId: case_.id.toString(),
+        subject: `${messageType}: ${case_.caseName}`,
+        content: message,
+        senderName: senderName,
+        isRead: false,
+        createdAt: new Date(),
+      });
+      
+      res.status(201).json({ 
+        message: "Case message created successfully", 
+        messageData: newMessage,
+        caseInfo: {
+          id: case_.id,
+          accountNumber: case_.accountNumber,
+          caseName: case_.caseName
+        },
+        timestamp: new Date().toISOString(),
+        refreshRequired: true 
+      });
+    } catch (error) {
+      console.error("Error creating case message via external API:", error);
+      res.status(500).json({ message: "Failed to create case message" });
+    }
+  });
+
   // Bulk create case activities (for external system to push multiple activities at once)
   app.post('/api/external/activities/bulk', async (req: any, res) => {
     try {
