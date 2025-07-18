@@ -1323,9 +1323,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         senderId: systemUserId,
         recipientType: 'case',
         recipientId: case_.id.toString(),
+        caseId: case_.id, // Set the caseId for proper filtering
         subject: messageSubject,
         content: message,
-        senderName: senderName,
         isRead: false,
         createdAt: new Date(),
       });

@@ -677,7 +677,11 @@ export class DatabaseStorage implements IStorage {
           and(
             eq(messages.recipientType, 'organization'),
             eq(messages.recipientId, userOrgId?.toString() || '')
-          ) // Messages sent to user's organization
+          ), // Messages sent to user's organization
+          and(
+            eq(messages.recipientType, 'case'),
+            eq(cases.organisationId, userOrgId || 0)
+          ) // Messages sent to cases in user's organization
         ),
         or(
           isNull(messages.caseId), // General messages not tied to a case
