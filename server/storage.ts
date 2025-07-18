@@ -9,6 +9,7 @@ import {
   userActivityLogs,
   loginAttempts,
   systemMetrics,
+  externalApiCredentials,
   type User,
   type UpsertUser,
   type Organization,
@@ -29,6 +30,8 @@ import {
   type InsertLoginAttempt,
   type SystemMetric,
   type InsertSystemMetric,
+  type ExternalApiCredential,
+  type InsertExternalApiCredential,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, sql, or, isNull } from "drizzle-orm";
@@ -164,6 +167,14 @@ export interface IStorage {
     failedLogins: number;
     systemHealth: string;
   }>;
+
+  // External API credentials operations
+  createExternalApiCredential(credential: InsertExternalApiCredential): Promise<ExternalApiCredential>;
+  getExternalApiCredentials(organisationId: number): Promise<ExternalApiCredential[]>;
+  verifyExternalApiCredential(organisationId: number, username: string, password: string): Promise<boolean>;
+  getExternalApiCredentialByUsername(username: string): Promise<ExternalApiCredential | undefined>;
+  updateExternalApiCredential(id: number, updates: Partial<InsertExternalApiCredential>): Promise<ExternalApiCredential>;
+  deleteExternalApiCredential(id: number): Promise<void>;
 
   // Advanced reporting operations
   getCrossOrganizationPerformance(): Promise<{
@@ -1440,6 +1451,59 @@ export class DatabaseStorage implements IStorage {
       console.error('Custom report query error:', error);
       return [];
     }
+  }
+
+  // External API credentials operations
+  async createExternalApiCredential(credential: InsertExternalApiCredential): Promise<ExternalApiCredential> {
+    const [result] = await db.insert(externalApiCredentials).values(credential).returning();
+    return result;
+  }
+
+  async getExternalApiCredentials(organisationId: number): Promise<ExternalApiCredential[]> {
+    return await db
+      .select()
+      .from(externalApiCredentials)
+      .where(eq(externalApiCredentials.organisationId, organisationId));
+  }
+
+  async verifyExternalApiCredential(organisationId: number, username: string, password: string): Promise<boolean> {
+    const [credential] = await db
+      .select()
+      .from(externalApiCredentials)
+      .where(
+        and(
+          eq(externalApiCredentials.organisationId, organisationId),
+          eq(externalApiCredentials.username, username),
+          eq(externalApiCredentials.isActive, true)
+        )
+      );
+
+    if (!credential) {
+      return false;
+    }
+
+    return await bcrypt.compare(password, credential.passwordHash);
+  }
+
+  async getExternalApiCredentialByUsername(username: string): Promise<ExternalApiCredential | undefined> {
+    const [credential] = await db
+      .select()
+      .from(externalApiCredentials)
+      .where(eq(externalApiCredentials.username, username));
+    return credential;
+  }
+
+  async updateExternalApiCredential(id: number, updates: Partial<InsertExternalApiCredential>): Promise<ExternalApiCredential> {
+    const [result] = await db
+      .update(externalApiCredentials)
+      .set(updates)
+      .where(eq(externalApiCredentials.id, id))
+      .returning();
+    return result;
+  }
+
+  async deleteExternalApiCredential(id: number): Promise<void> {
+    await db.delete(externalApiCredentials).where(eq(externalApiCredentials.id, id));
   }
 }
 

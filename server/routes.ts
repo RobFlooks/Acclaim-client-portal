@@ -1519,7 +1519,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Case balance update endpoint (matching your case management system format)
   app.post('/api/external/case/update', async (req: any, res) => {
     try {
-      // TODO: Add API key authentication here
       const { organisation_id, username, password, external_case_ref, balance, status, stage, notes } = req.body;
       
       if (!organisation_id || !username || !password || !external_case_ref) {
@@ -1528,9 +1527,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // TODO: Validate credentials against organisation
-      // For now, we'll just check if organisation exists
-      const organisation = await storage.getOrganisation(parseInt(organisation_id));
+      // Validate credentials against organisation
+      const organisationIdInt = parseInt(organisation_id);
+      const isValidCredentials = await storage.verifyExternalApiCredential(organisationIdInt, username, password);
+      if (!isValidCredentials) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      // Get organisation
+      const organisation = await storage.getOrganisation(organisationIdInt);
       if (!organisation) {
         return res.status(404).json({ message: "Organisation not found" });
       }
@@ -1906,6 +1911,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error serving case management integration guide:', error);
       res.status(500).json({ message: 'Failed to serve case management integration guide' });
+    }
+  });
+
+  // External API credentials management
+  app.post('/api/admin/external-credentials', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { organisationId, username, password, description } = req.body;
+      
+      if (!organisationId || !username || !password) {
+        return res.status(400).json({ 
+          message: "organisationId, username, and password are required" 
+        });
+      }
+
+      // Hash the password
+      const bcrypt = require('bcrypt');
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      const credential = await storage.createExternalApiCredential({
+        organisationId: parseInt(organisationId),
+        username,
+        passwordHash,
+        description,
+        createdBy: userId,
+      });
+
+      res.status(201).json({ 
+        message: "External API credentials created successfully", 
+        credential: { ...credential, passwordHash: undefined } // Don't return the hash
+      });
+    } catch (error) {
+      console.error("Error creating external API credentials:", error);
+      res.status(500).json({ message: "Failed to create external API credentials" });
+    }
+  });
+
+  app.get('/api/admin/external-credentials', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const organisations = await storage.getAllOrganisations();
+      const credentialsWithOrgs = [];
+
+      for (const org of organisations) {
+        const credentials = await storage.getExternalApiCredentials(org.id);
+        credentialsWithOrgs.push({
+          organisationId: org.id,
+          organisationName: org.name,
+          credentials: credentials.map(cred => ({
+            ...cred,
+            passwordHash: undefined // Don't return the hash
+          }))
+        });
+      }
+
+      res.json(credentialsWithOrgs);
+    } catch (error) {
+      console.error("Error fetching external API credentials:", error);
+      res.status(500).json({ message: "Failed to fetch external API credentials" });
+    }
+  });
+
+  app.delete('/api/admin/external-credentials/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const credentialId = parseInt(req.params.id);
+      await storage.deleteExternalApiCredential(credentialId);
+      
+      res.json({ message: "External API credentials deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting external API credentials:", error);
+      res.status(500).json({ message: "Failed to delete external API credentials" });
     }
   });
 

@@ -165,6 +165,19 @@ export const systemMetrics = pgTable("system_metrics", {
   recordedAt: timestamp("recorded_at").defaultNow(),
 });
 
+// External API credentials table for case management integration
+export const externalApiCredentials = pgTable("external_api_credentials", {
+  id: serial("id").primaryKey(),
+  organisationId: integer("organisation_id").references(() => organisations.id).notNull(),
+  username: varchar("username", { length: 100 }).notNull(),
+  passwordHash: varchar("password_hash", { length: 255 }).notNull(),
+  isActive: boolean("is_active").default(true),
+  description: text("description"),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   organisation: one(organisations, {
@@ -247,6 +260,17 @@ export const userActivityLogsRelations = relations(userActivityLogs, ({ one }) =
   }),
 }));
 
+export const externalApiCredentialsRelations = relations(externalApiCredentials, ({ one }) => ({
+  organisation: one(organisations, {
+    fields: [externalApiCredentials.organisationId],
+    references: [organisations.id],
+  }),
+  createdBy: one(users, {
+    fields: [externalApiCredentials.createdBy],
+    references: [users.id],
+  }),
+}));
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -278,6 +302,9 @@ export type InsertLoginAttempt = typeof loginAttempts.$inferInsert;
 export type SystemMetric = typeof systemMetrics.$inferSelect;
 export type InsertSystemMetric = typeof systemMetrics.$inferInsert;
 
+export type ExternalApiCredential = typeof externalApiCredentials.$inferSelect;
+export type InsertExternalApiCredential = typeof externalApiCredentials.$inferInsert;
+
 // Schemas
 export const insertOrganisationSchema = createInsertSchema(organisations);
 export const insertCaseSchema = createInsertSchema(cases).extend({
@@ -287,6 +314,7 @@ export const insertCaseActivitySchema = createInsertSchema(caseActivities);
 export const insertMessageSchema = createInsertSchema(messages);
 export const insertDocumentSchema = createInsertSchema(documents);
 export const insertPaymentSchema = createInsertSchema(payments);
+export const insertExternalApiCredentialSchema = createInsertSchema(externalApiCredentials);
 
 // User management schemas
 export const createUserSchema = z.object({

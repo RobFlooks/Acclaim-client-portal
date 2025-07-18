@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,11 +13,31 @@ import {
   CheckCircle,
   Globe
 } from "lucide-react";
+import ExternalApiCredentialsManager from "./ExternalApiCredentialsManager";
 
 export default function CaseManagementGuideDownload() {
   const handleViewOnline = () => {
     window.open('/api/download/case-management-guide', '_blank');
   };
+
+  const [showCredentialsManager, setShowCredentialsManager] = useState(false);
+
+  if (showCredentialsManager) {
+    return (
+      <div className="w-full max-w-6xl mx-auto">
+        <div className="mb-4">
+          <Button
+            variant="outline"
+            onClick={() => setShowCredentialsManager(false)}
+            className="mb-4"
+          >
+            ← Back to Integration Guide
+          </Button>
+        </div>
+        <ExternalApiCredentialsManager />
+      </div>
+    );
+  }
 
   const features = [
     { icon: Database, title: "Case Balance Updates", description: "Synchronise case balances from your case management system" },
@@ -125,6 +146,23 @@ export default function CaseManagementGuideDownload() {
               >
                 <FileText className="h-4 w-4" />
                 <span>General API Documentation</span>
+              </Button>
+            </div>
+
+            {/* Credentials Setup Notice */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+              <h4 className="font-medium text-blue-900 mb-2">Setup Required</h4>
+              <p className="text-sm text-blue-800 mb-3">
+                To use the case management integration, you need to set up master admin credentials for your organisation.
+                These credentials will be used by your case management system to authenticate API requests.
+              </p>
+              <Button
+                onClick={() => setShowCredentialsManager(true)}
+                variant="outline"
+                className="border-blue-300 text-blue-700 hover:bg-blue-100"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Set Up Credentials
               </Button>
             </div>
 
