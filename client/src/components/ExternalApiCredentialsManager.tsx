@@ -51,10 +51,7 @@ export default function ExternalApiCredentialsManager() {
 
   const createCredentialMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest('/api/admin/external-credentials', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
+      return apiRequest('POST', '/api/admin/external-credentials', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/external-credentials'] });
@@ -78,9 +75,7 @@ export default function ExternalApiCredentialsManager() {
 
   const deleteCredentialMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/admin/external-credentials/${id}`, {
-        method: 'DELETE',
-      });
+      return apiRequest('DELETE', `/api/admin/external-credentials/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/external-credentials'] });
