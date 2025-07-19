@@ -913,7 +913,12 @@ export default function AdminEnhanced() {
                             <SelectItem value="none">No organisation</SelectItem>
                             {organisations?.map((org: Organisation) => (
                               <SelectItem key={org.id} value={org.id.toString()}>
-                                {org.name}
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{org.name}</span>
+                                  {org.externalRef && (
+                                    <span className="text-xs text-gray-500">Ref: {org.externalRef}</span>
+                                  )}
+                                </div>
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -1270,7 +1275,12 @@ export default function AdminEnhanced() {
                   <SelectItem value="none">Select organisation</SelectItem>
                   {organisations?.map((org: Organisation) => (
                     <SelectItem key={org.id} value={org.id.toString()}>
-                      {org.name}
+                      <div className="flex flex-col">
+                        <span className="font-medium">{org.name}</span>
+                        {org.externalRef && (
+                          <span className="text-xs text-gray-500">Ref: {org.externalRef}</span>
+                        )}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
