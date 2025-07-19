@@ -1294,10 +1294,15 @@ export default function AdminEnhanced() {
             <Button
               onClick={() => {
                 if (selectedUser && selectedOrgId && selectedOrgId !== "none") {
-                  assignUserMutation.mutate({
-                    userId: selectedUser.id,
-                    organisationId: parseInt(selectedOrgId)
-                  });
+                  const selectedOrg = organisations?.find(org => org.id.toString() === selectedOrgId);
+                  const confirmMessage = `Are you sure you want to assign ${selectedUser.firstName} ${selectedUser.lastName} to ${selectedOrg?.name}${selectedOrg?.externalRef ? ` (Ref: ${selectedOrg.externalRef})` : ''}?`;
+                  
+                  if (confirm(confirmMessage)) {
+                    assignUserMutation.mutate({
+                      userId: selectedUser.id,
+                      organisationId: parseInt(selectedOrgId)
+                    });
+                  }
                 }
               }}
               disabled={assignUserMutation.isPending}
