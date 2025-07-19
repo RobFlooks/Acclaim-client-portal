@@ -1574,6 +1574,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create or update case
   app.post('/api/external/cases', async (req: any, res) => {
     try {
+      // Debug logging
+      console.log('Case API Request:', {
+        method: req.method,
+        url: req.url,
+        contentType: req.headers['content-type'],
+        body: req.body,
+        bodyKeys: Object.keys(req.body || {}),
+        rawBody: req.rawBody || 'not available'
+      });
+      
       // TODO: Add API key authentication here
       const {
         accountNumber,
