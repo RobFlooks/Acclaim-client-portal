@@ -1606,8 +1606,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Organization not found" });
       }
       
-      // Check if case already exists
-      const existing = await storage.getCaseByExternalRef(externalRef);
+      // Check if case already exists by external reference
+      let existing = await storage.getCaseByExternalRef(externalRef);
+      
+      // If not found by external reference, also check by account number to prevent duplicates
+      if (!existing) {
+        const casesByAccount = await storage.getCasesByAccountNumber(accountNumber);
+        if (casesByAccount && casesByAccount.length > 0) {
+          // Update the existing case with the new external reference
+          existing = casesByAccount[0];
+        }
+      }
+      
       if (existing) {
         // Update existing case
         const updated = await storage.updateCase(existing.id, {
@@ -1625,6 +1635,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           status: status || 'active',
           stage: stage || 'initial_contact',
           assignedTo: assignedTo || 'System',
+          externalRef, // Ensure external ref is updated
         });
         
         // Case activities are now only created via dedicated API endpoint
@@ -1662,7 +1673,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Case activities are now only created via dedicated API endpoint
       // No automatic activity generation
       
-      res.status(201).json({ 
+      return res.status(201).json({ 
         message: "Case created successfully", 
         case: newCase,
         timestamp: new Date().toISOString(),
@@ -1670,7 +1681,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Error creating/updating case via external API:", error);
-      res.status(500).json({ message: "Failed to create/update case" });
+      
+      // Check if response was already sent
+      if (!res.headersSent) {
+        return res.status(500).json({ message: "Failed to create/update case" });
+      }
     }
   });
 

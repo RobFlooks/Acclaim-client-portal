@@ -861,6 +861,14 @@ export class DatabaseStorage implements IStorage {
     return case_;
   }
 
+  async getCasesByAccountNumber(accountNumber: string): Promise<Case[]> {
+    const cases_ = await db
+      .select()
+      .from(cases)
+      .where(eq(cases.accountNumber, accountNumber));
+    return cases_;
+  }
+
   async getCaseStats(organisationId: number): Promise<{
     activeCases: number;
     closedCases: number;
