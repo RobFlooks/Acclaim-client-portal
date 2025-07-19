@@ -1594,9 +1594,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         externalRef
       } = req.body;
       
-      if (!accountNumber || !caseName || !originalAmount || !outstandingAmount || !organisationExternalRef || !externalRef) {
+      if (!accountNumber || !caseName || !organisationExternalRef || !externalRef) {
         return res.status(400).json({ 
-          message: "accountNumber, caseName, originalAmount, outstandingAmount, organisationExternalRef, and externalRef are required" 
+          message: "accountNumber, caseName, organisationExternalRef, and externalRef are required" 
         });
       }
       
@@ -1617,8 +1617,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           debtorPhone,
           debtorAddress,
           debtorType: debtorType || 'individual',
-          originalAmount,
-          outstandingAmount,
+          originalAmount: originalAmount || '0.00',
+          outstandingAmount: outstandingAmount || '0.00',
           costsAdded: costsAdded || '0.00',
           interestAdded: interestAdded || '0.00',
           feesAdded: feesAdded || '0.00',
@@ -1647,8 +1647,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         debtorPhone,
         debtorAddress,
         debtorType: debtorType || 'individual',
-        originalAmount,
-        outstandingAmount,
+        originalAmount: originalAmount || '0.00',
+        outstandingAmount: outstandingAmount || '0.00',
         costsAdded: costsAdded || '0.00',
         interestAdded: interestAdded || '0.00',
         feesAdded: feesAdded || '0.00',
