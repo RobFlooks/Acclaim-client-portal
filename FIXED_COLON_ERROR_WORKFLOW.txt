@@ -1,0 +1,53 @@
+# SOSFLOW 1.4 - FIXED COLON ERROR VERSION
+# Replaces colons with underscores to avoid formula parsing errors
+
+DoNothing DoNothing1
+	CardPosX 10
+	CardPosY -110
+	GOTO SetVariables1
+
+SetVariables SetVariables1
+	Initializations
+		# API endpoint for case creation
+		url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases'
+		
+		# External reference format - replace ALL special characters with underscores
+		external_case_ref_raw = 'Ref_' + ConnectApp.System.Firmsname + '_' + matter.entitytype + '_' + matter.entityref
+		external_case_ref_encoded = replace(replace(external_case_ref_raw,' ','_'),':','_')
+		
+		# Data to send
+		organisation_external_ref = client.cl_code
+		account_number = matter.entityref
+		case_name = matter.mattername
+		debtor_type = 'individual'
+		original_amount = matter.debtvalue
+		outstanding_amount = matter.balance
+		status = 'active'
+		stage = 'pre_legal'
+		assigned_to = matter.feeearner
+		
+		# Build form data string with required fields
+		post_data = 'externalRef=' + external_case_ref_encoded + '&organisationExternalRef=' + organisation_external_ref + '&accountNumber=' + account_number + '&caseName=' + case_name + '&originalAmount=' + original_amount + '&outstandingAmount=' + outstanding_amount + '&debtorType=' + debtor_type + '&status=' + status + '&stage=' + stage + '&assignedTo=' + assigned_to
+	CardPosX 10
+	CardPosY 50
+	GOTO HttpWebRequest1
+
+HttpWebRequest HttpWebRequest1
+	URL url
+	Method POST
+	PostData post_data
+	ContentType application/x-www-form-urlencoded
+	ResponseVariable response_text
+	StatusCodeVariable status_code
+	IgnoreCertificateErrors TRUE
+	CardPosX 210
+	CardPosY 50
+	GOTO Message1
+
+Message Message1
+	Message Case creation - Status: {status_code} Response: {response_text}
+	Centred True
+	Location system_tray
+	MessageType Information
+	CardPosX 410
+	CardPosY 50
