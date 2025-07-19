@@ -1,0 +1,64 @@
+import System
+from System import *
+from System.Text import *
+from System.IO import *
+import clr
+clr.AddReference("System.Net")
+from System.Net import WebRequest
+clr.AddReference("System.Web")
+from System.Web import *
+
+response = "Creating new case in portal using HTMLWebRequest...\n"
+
+try:
+    # Create JSON payload for case creation
+    json_data = "{"
+    json_data = json_data + "\"accountNumber\": \"" + str(account_number) + "\","
+    json_data = json_data + "\"caseName\": \"" + str(case_name) + "\","
+    json_data = json_data + "\"debtorEmail\": \"" + str(debtor_email) + "\","
+    json_data = json_data + "\"debtorPhone\": \"" + str(debtor_phone) + "\","
+    json_data = json_data + "\"debtorAddress\": \"" + str(debtor_address) + "\","
+    json_data = json_data + "\"debtorType\": \"" + str(debtor_type) + "\","
+    json_data = json_data + "\"originalAmount\": \"" + str(original_amount) + "\","
+    json_data = json_data + "\"outstandingAmount\": \"" + str(outstanding_amount) + "\","
+    json_data = json_data + "\"costsAdded\": \"" + str(costs_added) + "\","
+    json_data = json_data + "\"interestAdded\": \"" + str(interest_added) + "\","
+    json_data = json_data + "\"feesAdded\": \"" + str(fees_added) + "\","
+    json_data = json_data + "\"status\": \"" + str(status) + "\","
+    json_data = json_data + "\"stage\": \"" + str(stage) + "\","
+    json_data = json_data + "\"organisationExternalRef\": \"" + str(organisation_external_ref) + "\","
+    json_data = json_data + "\"assignedTo\": \"" + str(assigned_to) + "\","
+    json_data = json_data + "\"externalRef\": \"" + str(external_case_ref) + "\""
+    json_data = json_data + "}"
+    
+    response = response + "Case data prepared:\n"
+    response = response + "Account: " + str(account_number) + "\n"
+    response = response + "Case Name: " + str(case_name) + "\n"
+    response = response + "Original Amount: £" + str(original_amount) + "\n"
+    response = response + "Outstanding: £" + str(outstanding_amount) + "\n"
+    response = response + "External Ref: " + str(external_case_ref) + "\n\n"
+    
+    # Use HTMLWebRequest for better SOS compatibility
+    html_request = HTMLWebRequest()
+    html_request.Method = "POST"
+    html_request.URL = url
+    html_request.ContentType = "application/json"
+    html_request.PostData = json_data
+    
+    # Execute the request
+    html_request.Execute()
+    
+    # Get the response
+    server_response = html_request.ResponseText
+    status_code = html_request.StatusCode
+    
+    if status_code == 200 or status_code == 201:
+        response = response + "SUCCESS: Case created in portal\n"
+        response = response + "HTTP Status: " + str(status_code) + "\n"
+        response = response + "Server response: " + server_response
+    else:
+        response = response + "ERROR: HTTP Status " + str(status_code) + "\n"
+        response = response + "Server response: " + server_response
+
+except System.Exception as e:
+    response = response + "Exception: " + str(e.Message)
