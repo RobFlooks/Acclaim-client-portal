@@ -1,0 +1,51 @@
+# SOSFLOW 1.4 - SIMPLIFIED VERSION (Only Required Fields)
+# Uses exactly the fields you specified
+
+DoNothing DoNothing1
+	CardPosX 10
+	CardPosY -110
+	GOTO SetVariables1
+
+SetVariables SetVariables1
+	Initializations
+		# API endpoint for case creation
+		url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases'
+		
+		# External reference format (must be unique)
+		external_case_ref = 'Ref ' + ConnectApp.System.Firmsname + ":" + matter.entitytype + ":" + matter.entityref
+		external_case_ref_encoded = replace(external_case_ref," ","_")
+		
+		# Data to send (only the fields you specified)
+		organisation_external_ref = client.cl_code
+		account_number = matter.entityref
+		case_name = matter.mattername
+		debtor_type = matter.custom.debt4.dtype
+		status = 'active'
+		stage = 'pre_legal'
+		assigned_to = matter.feeearner
+		
+		# Build minimal form data string
+		post_data = 'externalRef=' + external_case_ref_encoded + '&organisationExternalRef=' + organisation_external_ref + '&accountNumber=' + account_number + '&caseName=' + case_name + '&debtorType=' + debtor_type + '&status=' + status + '&stage=' + stage + '&assignedTo=' + assigned_to
+	CardPosX 10
+	CardPosY 50
+	GOTO HttpWebRequest1
+
+HttpWebRequest HttpWebRequest1
+	URL url
+	Method POST
+	PostData post_data
+	ContentType application/x-www-form-urlencoded
+	ResponseVariable response_text
+	StatusCodeVariable status_code
+	IgnoreCertificateErrors TRUE
+	CardPosX 210
+	CardPosY 50
+	GOTO Message1
+
+Message Message1
+	Message Case creation - Status: {status_code} Response: {response_text}
+	Centred True
+	Location system_tray
+	MessageType Information
+	CardPosX 410
+	CardPosY 50
