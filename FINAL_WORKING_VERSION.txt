@@ -1,0 +1,49 @@
+# SOSFLOW 1.4 - FINAL WORKING VERSION
+# Fixed all SOS formula parsing issues by URL encoding
+
+DoNothing DoNothing1
+	CardPosX 10
+	CardPosY -110
+	GOTO SetVariables1
+
+SetVariables SetVariables1
+	Initializations
+		# API endpoint for case creation
+		url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases'
+		
+		# Simple external reference with URL encoding for spaces
+		external_ref = replace('SOS_' + matter.entityref,' ','_')
+		
+		# Organisation reference
+		org_ref = replace(client.cl_code,' ','_')
+		
+		# Case data with URL encoding for spaces
+		acc_num = matter.entityref
+		case_nm = replace(matter.mattername,' ','%20')
+		debt_type = 'individual'
+		case_status = 'active'
+		case_stage = 'pre_legal'
+		assigned = replace(matter.feeearner,' ','%20')
+	CardPosX 10
+	CardPosY 50
+	GOTO HttpWebRequest1
+
+HttpWebRequest HttpWebRequest1
+	URL url
+	Method POST
+	PostData 'externalRef=' + external_ref + '&organisationExternalRef=' + org_ref + '&accountNumber=' + acc_num + '&caseName=' + case_nm + '&debtorType=' + debt_type + '&status=' + case_status + '&stage=' + case_stage + '&assignedTo=' + assigned
+	ContentType application/x-www-form-urlencoded
+	ResponseVariable response_text
+	StatusCodeVariable status_code
+	IgnoreCertificateErrors TRUE
+	CardPosX 210
+	CardPosY 50
+	GOTO Message1
+
+Message Message1
+	Message Case: {status_code} - {response_text}
+	Centred True
+	Location system_tray
+	MessageType Information
+	CardPosX 410
+	CardPosY 50

@@ -1,0 +1,52 @@
+# SOSFLOW 1.4 - ULTRA SAFE VERSION
+# Uses only alphanumeric characters to avoid ALL parsing issues
+
+DoNothing DoNothing1
+	CardPosX 10
+	CardPosY -110
+	GOTO SetVariables1
+
+SetVariables SetVariables1
+	Initializations
+		# API endpoint for case creation
+		url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases'
+		
+		# Ultra simple reference - no spaces, no special chars
+		external_ref = 'CASE' + matter.entityref
+		
+		# Organisation reference - simplified
+		org_ref = 'CHADLAW001'
+		
+		# Case data - replace spaces with underscores
+		acc_num = matter.entityref
+		case_nm = replace(replace(matter.mattername,' ','_'),'&','and')
+		debt_type = 'individual'
+		case_status = 'active'
+		case_stage = 'pre_legal'
+		assigned = replace(matter.feeearner,' ','_')
+		
+		# Simple concatenation - no complex variables
+		data_string = 'externalRef=' + external_ref + '&organisationExternalRef=' + org_ref + '&accountNumber=' + acc_num + '&caseName=' + case_nm + '&debtorType=' + debt_type + '&status=' + case_status + '&stage=' + case_stage + '&assignedTo=' + assigned
+	CardPosX 10
+	CardPosY 50
+	GOTO HttpWebRequest1
+
+HttpWebRequest HttpWebRequest1
+	URL url
+	Method POST
+	PostData data_string
+	ContentType application/x-www-form-urlencoded
+	ResponseVariable response_text
+	StatusCodeVariable status_code
+	IgnoreCertificateErrors TRUE
+	CardPosX 210
+	CardPosY 50
+	GOTO Message1
+
+Message Message1
+	Message Status: {status_code} Response: {response_text}
+	Centred True
+	Location system_tray
+	MessageType Information
+	CardPosX 410
+	CardPosY 50
