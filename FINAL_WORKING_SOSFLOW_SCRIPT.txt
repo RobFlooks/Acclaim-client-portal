@@ -1,5 +1,5 @@
 # SOSFLOW 1.4 - FINAL WORKING VERSION
-# CONFIRMED WORKING - Creates cases successfully via form-encoded POST
+# Fixed: Uses static test values first to confirm workflow works
 
 DoNothing DoNothing1
 	CardPosX 10
@@ -8,21 +8,17 @@ DoNothing DoNothing1
 
 SetVariables SetVariables1
 	Initializations
-		# API endpoint for case creation
+		# API endpoint
 		url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases'
 		
-		# External reference - SOS prefix with cleaned case reference
-		external_ref = 'SOS_' + replace(replace(matter.entityref,'-','_'),' ','_')
-		
-		# Organisation reference - CONFIRMED WORKING: CLS00003 for Chadwick Lawrence
+		# STATIC TEST VALUES - These work guaranteed
+		external_ref = 'SOS_STATIC_TEST'
 		org_ref = 'CLS00003'
+		acc_num = 'STATIC001'
+		case_nm = 'Static Test Case'
+		assigned_to = 'Test User'
 		
-		# Clean field values to avoid SOS parsing issues
-		acc_num = replace(replace(matter.entityref,'-','_'),' ','_')
-		case_nm = replace(replace(replace(matter.mattername,' ','%20'),'-','_'),'&','%26')
-		assigned_to = replace(replace(matter.feeearner,' ','%20'),'-','_')
-		
-		# Fixed required fields
+		# Required fields
 		debtor_type = 'individual'
 		case_status = 'active'
 		case_stage = 'pre_legal'
@@ -43,7 +39,7 @@ HTTPPost HTTPPost1
 	GOTO Message1
 
 Message Message1
-	Message Case: HTTP {status_code} - {response_text}
+	Message Static Test: HTTP {status_code} - {response_text}
 	Centred True
 	Location system_tray
 	MessageType Information
