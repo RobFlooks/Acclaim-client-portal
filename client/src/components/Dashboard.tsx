@@ -93,23 +93,38 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
     },
   });
 
-  const getStatusBadge = (status: string, stage: string) => {
+  const getStageBadge = (status: string, stage: string) => {
     if (status === "resolved" || status?.toLowerCase() === "closed") {
-      return <Badge variant="secondary" className="bg-green-100 text-green-800"><Check className="w-3 h-3 mr-1" />Closed</Badge>;
+      return <Badge className="bg-green-100 text-green-800"><Check className="w-3 h-3 mr-1" />Closed</Badge>;
     }
     
-    // Normalize stage for comparison
-    const normalizedStage = stage?.toLowerCase().replace(/[_-]/g, '');
+    // Normalize stage for consistent comparison
+    const normalizedStage = stage?.toLowerCase().replace(/[_-\s]/g, '');
     
     switch (normalizedStage) {
-      case "paymentplan":
-        return <Badge variant="secondary" className="bg-green-100 text-green-800"><Check className="w-3 h-3 mr-1" />Payment Plan</Badge>;
-      case "legalaction":
-        return <Badge variant="destructive"><AlertTriangle className="w-3 h-3 mr-1" />Legal Action</Badge>;
+      case "initialcontact":
       case "prelegal":
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-800"><Clock className="w-3 h-3 mr-1" />Pre-Legal</Badge>;
+        return <Badge className="bg-blue-100 text-blue-800">Pre-Legal</Badge>;
+      case "claim":
+        return <Badge className="bg-yellow-100 text-yellow-800">Claim</Badge>;
+      case "judgment":
+      case "judgement":
+        return <Badge className="bg-orange-100 text-orange-800">Judgment</Badge>;
+      case "enforcement":
+        return <Badge className="bg-red-100 text-red-800">Enforcement</Badge>;
+      case "paymentplan":
+        return <Badge className="bg-green-100 text-green-800">Payment Plan</Badge>;
+      case "paid":
+        return <Badge className="bg-green-100 text-green-800">Paid</Badge>;
+      case "legalaction":
+        return <Badge className="bg-orange-100 text-orange-800">Legal Action</Badge>;
       default:
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800"><Clock className="w-3 h-3 mr-1" />In Progress</Badge>;
+        // Display the actual stage name, formatted nicely
+        const formattedStage = stage?.replace(/[_-]/g, ' ')
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ') || 'Active';
+        return <Badge className="bg-gray-100 text-gray-800">{formattedStage}</Badge>;
     }
   };
 
@@ -334,7 +349,7 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
                         <p className="font-semibold text-gray-900">
                           {formatCurrency(case_.outstandingAmount)}
                         </p>
-                        {getStatusBadge(case_.status, case_.stage)}
+                        {getStageBadge(case_.status, case_.stage)}
                       </div>
                     </div>
                   ))}
