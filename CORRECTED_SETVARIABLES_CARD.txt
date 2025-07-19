@@ -1,0 +1,23 @@
+# CORRECTED SetVariables Card
+# Fixed the issues in your original
+
+# API endpoint for case creation
+url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases'
+
+# External reference format (must be unique)
+external_case_ref = 'Ref ' + ConnectApp.System.Firmsname + ":" + matter.entitytype + ":" + matter.entityref
+external_case_ref_encoded = replace(external_case_ref," ","_")
+
+# Organisation reference (matches your organisation in the portal)
+organisation_external_ref = client.cl_code
+
+# Extract case data from SOS matter
+account_number = matter.entityref
+case_name = matter.mattername
+debtor_type = 'individual'
+status = 'active'
+stage = 'pre_legal'
+assigned_to = matter.feeearner
+
+# Build form data string
+post_data = 'externalRef=' + external_case_ref_encoded + '&organisationExternalRef=' + organisation_external_ref + '&accountNumber=' + account_number + '&caseName=' + case_name + '&debtorType=' + debtor_type + '&status=' + status + '&stage=' + stage + '&assignedTo=' + assigned_to
