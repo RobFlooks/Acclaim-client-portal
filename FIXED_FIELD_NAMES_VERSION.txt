@@ -1,0 +1,51 @@
+# SOSFLOW 1.4 - FIXED FIELD NAMES VERSION
+# Uses correct camelCase field names that match the API
+
+DoNothing DoNothing1
+	CardPosX 10
+	CardPosY -110
+	GOTO SetVariables1
+
+SetVariables SetVariables1
+	Initializations
+		# API endpoint
+		url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases'
+		
+		# External reference - clean format, no hyphens
+		external_ref = 'SOS_' + replace(replace(matter.entityref,'-','_'),' ','_')
+		
+		# Organisation reference - CORRECT: CLS00003
+		org_ref = 'CLS00003'
+		
+		# Clean field values - remove hyphens and spaces
+		acc_num = replace(replace(matter.entityref,'-','_'),' ','_')
+		case_nm = replace(replace(replace(matter.mattername,' ','%20'),'-','_'),'&','%26')
+		assigned_to = replace(replace(matter.feeearner,' ','%20'),'-','_')
+		
+		# Required fields
+		debtor_type = 'individual'
+		case_status = 'active'
+		case_stage = 'pre_legal'
+		orig_amount = '0.00'
+		outstanding = '0.00'
+	CardPosX 10
+	CardPosY 50
+	GOTO HTTPPost1
+
+HTTPPost HTTPPost1
+	URL url
+	ContentType application/x-www-form-urlencoded
+	PostData 'externalRef=' + external_ref + '&organisationExternalRef=' + org_ref + '&accountNumber=' + acc_num + '&caseName=' + case_nm + '&debtorType=' + debtor_type + '&status=' + case_status + '&stage=' + case_stage + '&assignedTo=' + assigned_to + '&originalAmount=' + orig_amount + '&outstandingAmount=' + outstanding
+	ResponseVariable response_text
+	StatusCodeVariable status_code
+	CardPosX 210
+	CardPosY 50
+	GOTO Message1
+
+Message Message1
+	Message Case: HTTP {status_code} - {response_text}
+	Centred True
+	Location system_tray
+	MessageType Information
+	CardPosX 410
+	CardPosY 50
