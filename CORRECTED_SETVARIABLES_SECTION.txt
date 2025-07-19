@@ -1,0 +1,21 @@
+SetVariables SetVariables2
+	Initializations
+		#Authentication
+		organisation_id = 3
+		username = 'acclaim.orgadmin@acclaim.law'
+		password = 'Chadw1ck816!!'
+		
+		external_case_ref = 'Ref ' + ConnectApp.System.Firmsname + ":" + matter.entitytype + ":" + matter.entityref
+		external_case_ref_encoded = replace(external_case_ref," ","_")
+		
+		url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases/' + external_case_ref_encoded + '/documents'
+		
+		count_of_files = SelectDocument1.SelectedDocuments.count
+		
+		if count_of_files >= 1 then file_1_name = SelectDocument1.SelectedDocuments(0).description + SelectDocument1.SelectedDocuments(0).fileext
+		if count_of_files >= 1 then file_1_type = SelectDocument1.SelectedDocuments(0).mimetype
+		if count_of_files >= 1 then file_1 = SelectDocument1.SelectedDocuments(0).doc_name
+		
+	CardPosX 10
+	CardPosY 250
+	GOTO PythonScript1
