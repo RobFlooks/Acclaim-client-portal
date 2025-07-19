@@ -1,0 +1,67 @@
+# SOSFLOW 1.4 - FIXED SOS FORMULA PARSING ERROR
+# Solution: Replace colons with underscores in external reference
+
+DoNothing DoNothing1
+	CardPosX 10
+	CardPosY -110
+	GOTO SetVariables1
+
+SetVariables SetVariables1
+	Initializations
+		# API endpoint for case creation
+		url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases'
+		
+		# External reference format - NO COLONS to avoid formula parsing issues
+		external_case_ref_base = 'Ref_' + ConnectApp.System.Firmsname + '_' + matter.entitytype + '_' + matter.entityref
+		external_case_ref_encoded = replace(external_case_ref_base," ","_")
+		
+		# Organisation reference
+		organisation_external_ref = client.cl_code
+		
+		# Extract case data from SOS matter
+		account_number = matter.entityref
+		case_name = matter.mattername
+		debtor_type = 'individual'
+		status = 'active'
+		stage = 'pre_legal'
+		assigned_to = matter.feeearner
+	CardPosX 10
+	CardPosY 50
+	GOTO SetVariables2
+
+SetVariables SetVariables2
+	Initializations
+		# Build post data in parts to avoid colon parsing issues
+		part1 = 'externalRef=' + external_case_ref_encoded
+		part2 = '&organisationExternalRef=' + organisation_external_ref
+		part3 = '&accountNumber=' + account_number
+		part4 = '&caseName=' + case_name
+		part5 = '&debtorType=' + debtor_type
+		part6 = '&status=' + status
+		part7 = '&stage=' + stage
+		part8 = '&assignedTo=' + assigned_to
+		
+		post_data = part1 + part2 + part3 + part4 + part5 + part6 + part7 + part8
+	CardPosX 10
+	CardPosY 150
+	GOTO HttpWebRequest1
+
+HttpWebRequest HttpWebRequest1
+	URL url
+	Method POST
+	PostData post_data
+	ContentType application/x-www-form-urlencoded
+	ResponseVariable response_text
+	StatusCodeVariable status_code
+	IgnoreCertificateErrors TRUE
+	CardPosX 210
+	CardPosY 150
+	GOTO Message1
+
+Message Message1
+	Message Case creation - Status: {status_code} Response: {response_text}
+	Centred True
+	Location system_tray
+	MessageType Information
+	CardPosX 410
+	CardPosY 150

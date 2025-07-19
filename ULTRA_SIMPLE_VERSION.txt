@@ -1,0 +1,62 @@
+# SOSFLOW 1.4 - ULTRA SIMPLE VERSION
+# Minimal external reference to avoid ALL parsing issues
+
+DoNothing DoNothing1
+	CardPosX 10
+	CardPosY -110
+	GOTO SetVariables1
+
+SetVariables SetVariables1
+	Initializations
+		# API endpoint for case creation
+		url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases'
+		
+		# Super simple external reference - just the matter reference
+		external_ref = 'SOS_' + matter.entityref
+		
+		# Organisation reference
+		org_ref = client.cl_code
+		
+		# Case data
+		acc_num = matter.entityref
+		case_nm = matter.mattername
+		debt_type = 'individual'
+		case_status = 'active'
+		case_stage = 'pre_legal'
+		assigned = matter.feeearner
+	CardPosX 10
+	CardPosY 50
+	GOTO SetVariables2
+
+SetVariables SetVariables2
+	Initializations
+		# Build form data with simple concatenation
+		data_part1 = 'externalRef=' + external_ref + '&organisationExternalRef=' + org_ref
+		data_part2 = '&accountNumber=' + acc_num + '&caseName=' + case_nm
+		data_part3 = '&debtorType=' + debt_type + '&status=' + case_status
+		data_part4 = '&stage=' + case_stage + '&assignedTo=' + assigned
+		
+		post_data = data_part1 + data_part2 + data_part3 + data_part4
+	CardPosX 10
+	CardPosY 150
+	GOTO HttpWebRequest1
+
+HttpWebRequest HttpWebRequest1
+	URL url
+	Method POST
+	PostData post_data
+	ContentType application/x-www-form-urlencoded
+	ResponseVariable response_text
+	StatusCodeVariable status_code
+	IgnoreCertificateErrors TRUE
+	CardPosX 210
+	CardPosY 150
+	GOTO Message1
+
+Message Message1
+	Message Case: {status_code} - {response_text}
+	Centred True
+	Location system_tray
+	MessageType Information
+	CardPosX 410
+	CardPosY 150
