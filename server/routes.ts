@@ -1584,6 +1584,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         rawBody: req.rawBody || 'not available'
       });
       
+      // Debug specific field values
+      console.log('Field validation check:', {
+        accountNumber: req.body.accountNumber,
+        accountNumberExists: !!req.body.accountNumber,
+        caseName: req.body.caseName, 
+        caseNameExists: !!req.body.caseName,
+        organisationExternalRef: req.body.organisationExternalRef,
+        orgRefExists: !!req.body.organisationExternalRef,
+        externalRef: req.body.externalRef,
+        extRefExists: !!req.body.externalRef
+      });
+      
       // TODO: Add API key authentication here
       const {
         accountNumber,
