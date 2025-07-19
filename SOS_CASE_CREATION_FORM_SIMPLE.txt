@@ -1,0 +1,22 @@
+# SOSFLOW 1.4 - SIMPLE CASE CREATION (Form Encoded)
+# Cleanest possible implementation using form-encoded data
+
+SetVariables SetVariables1
+	Initializations
+		url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases'
+		external_ref = replace('Ref ' + ConnectApp.System.Firmsname + ':' + matter.entitytype + ':' + matter.entityref,' ','_')
+		
+		form_data = 'accountNumber=' + matter.entityref + '&caseName=' + matter.mattername + '&debtorEmail=' + matter.email1 + '&debtorPhone=' + matter.phone1 + '&debtorAddress=' + matter.address1 + '&debtorType=individual&originalAmount=' + matter.debtvalue + '&outstandingAmount=' + matter.balance + '&costsAdded=0.00&interestAdded=0.00&feesAdded=0.00&status=active&stage=pre_legal&organisationExternalRef=CHADLAW-ORG-001&assignedTo=Recovery Team&externalRef=' + external_ref
+		
+	GOTO HTTPPost1
+
+HTTPPost HTTPPost1
+	URL url
+	ContentType application/x-www-form-urlencoded
+	PostData form_data
+	ResponseVariable response
+	StatusCodeVariable status
+	GOTO Message1
+
+Message Message1
+	Message Case: HTTP {status} - {response}
