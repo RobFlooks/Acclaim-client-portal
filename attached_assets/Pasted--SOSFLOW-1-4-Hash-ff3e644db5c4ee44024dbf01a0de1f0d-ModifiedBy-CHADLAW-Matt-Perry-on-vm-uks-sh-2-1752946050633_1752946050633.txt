@@ -1,0 +1,145 @@
+# SOSFLOW 1.4
+#Hash ff3e644db5c4ee44024dbf01a0de1f0d
+#ModifiedBy CHADLAW\Matt.Perry on vm-uks-sh-20
+#LastSave 19/07/2025 18:24:24
+SelectFile SelectFile1
+	Centred False
+	Location main_area
+	MessageType Information
+	CardPosX 10
+	CardPosY -110
+	GOTO SetVariables2
+
+DoNothing DoNothing1
+	CardPosX 290
+	CardPosY 130
+
+Message Message2
+	Message The Portal has been updated
+	Centred True
+	Location system_tray
+	MessageType Information
+	CardPosX 510
+	CardPosY 70
+
+SetVariables SetVariables2
+	Initializations
+		#Authentication
+		organisation_id =3
+		username = 'acclaim.orgadmin@acclaim.law'
+		password ='Chadw1ck816!!'
+		
+		
+		external_case_ref = 'Ref ' + ConnectApp.System.Firmsname + ":" + matter.entitytype + ":" + matter.entityref
+		external_case_ref_encoded=replace(external_case_ref," ","_")
+		
+		url='https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases/'+external_case_ref_encoded+'/documents'
+		
+		#subject = trim(SendCustomMessageForm.TitleTextBox)
+		#message = trim(SendCustomMessageForm.MessageEditMemo)
+		
+		count_of_files = SelectDocument1.SelectedDocuments.count
+		
+		
+		#sender = session.user.email_addr
+		#sender = session.user.shortdescription
+		#reply_to = Globals.matter.fee_earner.email
+		
+		if count_of_files >= 1 then file_1_name = SelectDocument1.SelectedDocuments(0).description + SelectDocument1.SelectedDocuments(0).fileext
+		#if count_of_files >= 1 then file_1_type = 'application/ms-word'
+		if count_of_files >= 1 then file_1 = SelectDocument1.SelectedDocuments(0).doc_name
+		
+		
+		
+		#send_push_notification = true
+	CardPosX 10
+	CardPosY 250
+	GOTO PythonScript1
+
+PythonScript PythonScript1
+	InputVars url,external_case_ref_encoded,count_of_files,file_1_name,file_1_type,file_1
+	OutputVars response
+	Source
+		import System
+		from System import *
+		from System.Text import *
+		from System.IO import *
+		import clr
+		clr.AddReference("System.Net")
+		from System.Net import WebRequest
+		
+		# Start with debug info
+		response = "DEBUG: Starting upload process...\n"
+		response = response + "URL: " + str(url) + "\n"
+		response = response + "External Case Ref: " + str(external_case_ref_encoded) + "\n"
+		response = response + "Files Selected: " + str(count_of_files) + "\n"
+		
+		try:
+		    if count_of_files < 1:
+		        response = response + "ERROR: No file selected for upload"
+		    else:
+		        response = response + "File Name: " + str(file_1_name) + "\n"
+		        response = response + "File Path: " + str(file_1) + "\n"
+		        response = response + "File Type: " + str(file_1_type) + "\n"
+		
+		        # Create a simple test request first
+		        boundary = "----------12345678901234567890"
+		
+		        web_request = WebRequest.Create(url)
+		        web_request.ContentType = "multipart/form-data; boundary=" + boundary
+		        web_request.Method = "POST"
+		
+		        # Simple form data
+		        form_data = "--" + boundary + "\r\n"
+		        form_data = form_data + "Content-Disposition: form-data; name=\"fileName\"\r\n"
+		        form_data = form_data + "\r\n"
+		        form_data = form_data + str(file_1_name) + "\r\n"
+		
+		        form_data = form_data + "--" + boundary + "\r\n"
+		        form_data = form_data + "Content-Disposition: form-data; name=\"documentType\"\r\n"
+		        form_data = form_data + "\r\n"
+		        form_data = form_data + "correspondence\r\n"
+		
+		        form_data = form_data + "--" + boundary + "\r\n"
+		        form_data = form_data + "Content-Disposition: form-data; name=\"description\"\r\n"
+		        form_data = form_data + "\r\n"
+		        form_data = form_data + "Document from SOS - DEBUG TEST\r\n"
+		
+		        form_data = form_data + "--" + boundary + "\r\n"
+		        form_data = form_data + "Content-Disposition: form-data; name=\"document\"; filename=\"" + str(file_1_name) + "\"\r\n"
+		        form_data = form_data + "Content-Type: " + str(file_1_type) + "\r\n"
+		        form_data = form_data + "\r\n"
+		
+		        # Add test content instead of file
+		        form_data = form_data + "TEST CONTENT FROM SOS SCRIPT\r\n"
+		        form_data = form_data + "--" + boundary + "--\r\n"
+		
+		        post_data_bytes = Encoding.UTF8.GetBytes(form_data)
+		        web_request.ContentLength = post_data_bytes.Length
+		
+		        request_stream = web_request.GetRequestStream()
+		        request_stream.Write(post_data_bytes, 0, post_data_bytes.Length)
+		        request_stream.Close()
+		
+		        response = response + "DEBUG: Request sent, waiting for response...\n"
+		
+		        # Get response
+		        r = web_request.GetResponse()
+		        s = r.GetResponseStream()
+		        sr = StreamReader(s)
+		        server_response = sr.ReadToEnd()
+		
+		        sr.Close()
+		        s.Close()
+		        r.Close()
+		
+		        response = response + "SUCCESS: Server responded with: " + server_response
+		
+		except System.Net.WebException as e:
+		    response = response + "WebException: " + str(e.Message)
+		except System.Exception as e:
+		    response = response + "Exception: " + str(e.Message)
+	CardPosX 210
+	CardPosY 250
+	GOTO DoNothing1
+
