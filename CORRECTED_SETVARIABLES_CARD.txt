@@ -1,23 +1,54 @@
-# CORRECTED SetVariables Card
-# Fixed the issues in your original
+# SOSFLOW 1.4 - CORRECTED SETVARIABLES VERSION
+# Fixed with all required fields and defaults for amounts
 
-# API endpoint for case creation
-url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases'
+DoNothing DoNothing1
+	CardPosX 10
+	CardPosY -110
+	GOTO SetVariables1
 
-# External reference format (must be unique)
-external_case_ref = 'Ref ' + ConnectApp.System.Firmsname + ":" + matter.entitytype + ":" + matter.entityref
-external_case_ref_encoded = replace(external_case_ref," ","_")
+SetVariables SetVariables1
+	Initializations
+		# API endpoint for case creation
+		url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases'
+		
+		# External reference - simple format to avoid parsing issues
+		external_ref = 'SOS_' + matter.entityref
+		
+		# Organisation reference - use simple format
+		org_ref = 'CHADLAW001'
+		
+		# Required fields with clean data
+		acc_num = matter.entityref
+		case_nm = matter.mattername
+		debt_type = 'individual'
+		case_status = 'active'
+		case_stage = 'pre_legal'
+		assigned = matter.feeearner
+		
+		# Add the missing amount fields that might be required
+		orig_amount = '0.00'
+		outstanding = '0.00'
+		
+		# Build clean form data with all required fields
+		form_data = 'externalRef=' + external_ref + '&organisationExternalRef=' + org_ref + '&accountNumber=' + acc_num + '&caseName=' + case_nm + '&debtorType=' + debt_type + '&status=' + case_status + '&stage=' + case_stage + '&assignedTo=' + assigned + '&originalAmount=' + orig_amount + '&outstandingAmount=' + outstanding
+	CardPosX 10
+	CardPosY 50
+	GOTO HTTPPost1
 
-# Organisation reference (matches your organisation in the portal)
-organisation_external_ref = client.cl_code
+HTTPPost HTTPPost1
+	URL url
+	ContentType application/x-www-form-urlencoded
+	PostData form_data
+	ResponseVariable response_text
+	StatusCodeVariable status_code
+	CardPosX 210
+	CardPosY 50
+	GOTO Message1
 
-# Extract case data from SOS matter
-account_number = matter.entityref
-case_name = matter.mattername
-debtor_type = 'individual'
-status = 'active'
-stage = 'pre_legal'
-assigned_to = matter.feeearner
-
-# Build form data string
-post_data = 'externalRef=' + external_case_ref_encoded + '&organisationExternalRef=' + organisation_external_ref + '&accountNumber=' + account_number + '&caseName=' + case_name + '&debtorType=' + debtor_type + '&status=' + status + '&stage=' + stage + '&assignedTo=' + assigned_to
+Message Message1
+	Message Status: {status_code} Response: {response_text}
+	Centred True
+	Location system_tray
+	MessageType Information
+	CardPosX 410
+	CardPosY 50

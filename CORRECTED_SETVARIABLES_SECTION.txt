@@ -1,21 +1,43 @@
-SetVariables SetVariables2
+# SOSFLOW 1.4 - CORRECTED SETVARIABLES SECTION ONLY
+# Just the SetVariables card with proper field handling
+
+SetVariables SetVariables1
 	Initializations
-		#Authentication
-		organisation_id = 3
-		username = 'acclaim.orgadmin@acclaim.law'
-		password = 'Chadw1ck816!!'
+		# API endpoint
+		url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases'
 		
-		external_case_ref = 'Ref ' + ConnectApp.System.Firmsname + ":" + matter.entitytype + ":" + matter.entityref
-		external_case_ref_encoded = replace(external_case_ref," ","_")
+		# Clean external reference - no special characters
+		external_ref = 'SOS_' + replace(replace(matter.entityref,'-','_'),' ','_')
 		
-		url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases/' + external_case_ref_encoded + '/documents'
+		# Organisation reference  
+		org_ref = 'CHADLAW001'
 		
-		count_of_files = SelectDocument1.SelectedDocuments.count
+		# Clean all field values to avoid parsing issues
+		acc_num = replace(replace(matter.entityref,'-','_'),' ','_')
+		case_nm = replace(replace(matter.mattername,'-','_'),' ','_')
+		assigned_clean = replace(replace(matter.feeearner,'-','_'),' ','_')
 		
-		if count_of_files >= 1 then file_1_name = SelectDocument1.SelectedDocuments(0).description + SelectDocument1.SelectedDocuments(0).fileext
-		if count_of_files >= 1 then file_1_type = SelectDocument1.SelectedDocuments(0).mimetype
-		if count_of_files >= 1 then file_1 = SelectDocument1.SelectedDocuments(0).doc_name
+		# Fixed values
+		debt_type = 'individual'
+		case_status = 'active'
+		case_stage = 'pre_legal'
+		orig_amount = '0.00'
+		outstanding = '0.00'
 		
+		# Build form string step by step to avoid complex concatenation
+		part1 = 'externalRef=' + external_ref
+		part2 = 'organisationExternalRef=' + org_ref  
+		part3 = 'accountNumber=' + acc_num
+		part4 = 'caseName=' + case_nm
+		part5 = 'debtorType=' + debt_type
+		part6 = 'status=' + case_status
+		part7 = 'stage=' + case_stage
+		part8 = 'assignedTo=' + assigned_clean
+		part9 = 'originalAmount=' + orig_amount
+		part10 = 'outstandingAmount=' + outstanding
+		
+		# Final form data
+		form_data = part1 + '&' + part2 + '&' + part3 + '&' + part4 + '&' + part5 + '&' + part6 + '&' + part7 + '&' + part8 + '&' + part9 + '&' + part10
 	CardPosX 10
-	CardPosY 250
-	GOTO PythonScript1
+	CardPosY 50
+	GOTO HTTPPost1
