@@ -1,0 +1,51 @@
+# SOSFLOW 1.4 - UNICODE HYPHEN VERSION
+# Uses Unicode minus sign (U+2212) instead of regular hyphen to avoid operator parsing
+
+DoNothing DoNothing1
+	CardPosX 10
+	CardPosY -110
+	GOTO SetVariables1
+
+SetVariables SetVariables1
+	Initializations
+		# API endpoint for case creation
+		url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases'
+		
+		# External reference with Unicode minus (U+2212) instead of regular hyphen
+		external_ref_base = 'Ref_' + ConnectApp.System.Firmsname + '_' + matter.entitytype + '_' + matter.entityref
+		external_ref = replace(replace(external_ref_base,' ','_'),'-','−')
+		
+		# Organisation reference
+		org_ref = client.cl_code
+		
+		# Case data with Unicode minus for hyphens
+		acc_num = replace(matter.entityref,'-','−')
+		case_nm = replace(matter.mattername,' ','_')
+		debt_type = 'individual'
+		case_status = 'active'
+		case_stage = 'pre_legal'
+		assigned = replace(matter.feeearner,' ','_')
+		
+		# Build form data
+		form_data = 'externalRef=' + external_ref + '&organisationExternalRef=' + org_ref + '&accountNumber=' + acc_num + '&caseName=' + case_nm + '&debtorType=' + debt_type + '&status=' + case_status + '&stage=' + case_stage + '&assignedTo=' + assigned
+	CardPosX 10
+	CardPosY 50
+	GOTO HTTPPost1
+
+HTTPPost HTTPPost1
+	URL url
+	ContentType application/x-www-form-urlencoded
+	PostData form_data
+	ResponseVariable response_text
+	StatusCodeVariable status_code
+	CardPosX 210
+	CardPosY 50
+	GOTO Message1
+
+Message Message1
+	Message Case: {status_code} - {response_text}
+	Centred True
+	Location system_tray
+	MessageType Information
+	CardPosX 410
+	CardPosY 50

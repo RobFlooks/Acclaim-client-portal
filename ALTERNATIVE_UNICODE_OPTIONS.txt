@@ -1,0 +1,23 @@
+# Alternative Unicode Characters for Hyphen/Minus
+
+# Option 1: Unicode Minus Sign (U+2212) - Mathematical minus, not operator
+external_ref = replace(matter.entityref,'-','−')
+
+# Option 2: En Dash (U+2013) - Slightly longer than hyphen
+external_ref = replace(matter.entityref,'-','–')
+
+# Option 3: Em Dash (U+2014) - Longer dash
+external_ref = replace(matter.entityref,'-','—')
+
+# Option 4: Hyphen-Minus Alternative (U+002D but in different context)
+external_ref = replace(matter.entityref,'-','﹣')
+
+# Option 5: Fullwidth Hyphen-Minus (U+FF0D)
+external_ref = replace(matter.entityref,'-','－')
+
+# Recommended: Use Unicode Minus (−) as it looks identical to regular hyphen
+# but won't be parsed as a mathematical operator by SOS
+
+# Example transformation:
+# CLS00003-028 becomes CLS00003−028
+# Visually identical but SOS parser treats it as text, not math
