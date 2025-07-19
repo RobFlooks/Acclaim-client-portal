@@ -1,0 +1,59 @@
+# SOSFLOW 1.4 - WORKING HTTPPost VERSION
+# Uses HTTPPost instead of HttpWebRequest to avoid formula parsing
+
+DoNothing DoNothing1
+	CardPosX 10
+	CardPosY -110
+	GOTO SetVariables1
+
+SetVariables SetVariables1
+	Initializations
+		# API endpoint for case creation
+		url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases'
+		
+		# Simple external reference - avoid hyphens and special chars
+		external_ref = 'CASE' + replace(matter.entityref,'-','_')
+		
+		# Organisation reference
+		org_ref = 'CHADLAW001'
+		
+		# Case data - clean strings only
+		acc_num = replace(matter.entityref,'-','_')
+		case_nm = replace(matter.mattername,' ','_')
+		debt_type = 'individual'
+		case_status = 'active'
+		case_stage = 'pre_legal'
+		assigned = replace(matter.feeearner,' ','_')
+		
+		# Build form data as separate variables
+		data1 = 'externalRef=' + external_ref
+		data2 = 'organisationExternalRef=' + org_ref
+		data3 = 'accountNumber=' + acc_num
+		data4 = 'caseName=' + case_nm
+		data5 = 'debtorType=' + debt_type
+		data6 = 'status=' + case_status
+		data7 = 'stage=' + case_stage
+		data8 = 'assignedTo=' + assigned
+		
+		form_data = data1 + '&' + data2 + '&' + data3 + '&' + data4 + '&' + data5 + '&' + data6 + '&' + data7 + '&' + data8
+	CardPosX 10
+	CardPosY 50
+	GOTO HTTPPost1
+
+HTTPPost HTTPPost1
+	URL url
+	ContentType application/x-www-form-urlencoded
+	PostData form_data
+	ResponseVariable response_text
+	StatusCodeVariable status_code
+	CardPosX 210
+	CardPosY 50
+	GOTO Message1
+
+Message Message1
+	Message Case: {status_code} - {response_text}
+	Centred True
+	Location system_tray
+	MessageType Information
+	CardPosX 410
+	CardPosY 50

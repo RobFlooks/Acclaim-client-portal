@@ -1,0 +1,40 @@
+# SOSFLOW 1.4 - SIMPLEST WORKING VERSION
+# Minimal approach to avoid all SOS parsing issues
+
+DoNothing DoNothing1
+	CardPosX 10
+	CardPosY -110
+	GOTO SetVariables1
+
+SetVariables SetVariables1
+	Initializations
+		url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases'
+		external_ref = 'CASE123'
+		org_ref = 'CHADLAW001'
+		acc_num = 'TEST001'
+		case_nm = 'Test_Case'
+		debt_type = 'individual'
+		case_status = 'active'
+		case_stage = 'pre_legal'
+		assigned = 'System'
+	CardPosX 10
+	CardPosY 50
+	GOTO HTTPPost1
+
+HTTPPost HTTPPost1
+	URL url
+	ContentType application/x-www-form-urlencoded
+	PostData 'externalRef=CASE123&organisationExternalRef=CHADLAW001&accountNumber=TEST001&caseName=Test_Case&debtorType=individual&status=active&stage=pre_legal&assignedTo=System'
+	ResponseVariable response_text
+	StatusCodeVariable status_code
+	CardPosX 210
+	CardPosY 50
+	GOTO Message1
+
+Message Message1
+	Message Status: {status_code} Response: {response_text}
+	Centred True
+	Location system_tray
+	MessageType Information
+	CardPosX 410
+	CardPosY 50
