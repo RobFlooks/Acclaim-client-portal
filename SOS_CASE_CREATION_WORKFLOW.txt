@@ -1,0 +1,129 @@
+# SOSFLOW 1.4 - NEW CASE CREATION
+# Creates a new debt recovery case in the Acclaim portal
+# This workflow extracts case data from the SOS matter and creates it in the portal
+
+DoNothing DoNothing1
+	CardPosX 10
+	CardPosY -110
+	GOTO SetVariables1
+
+SetVariables SetVariables1
+	Initializations
+		# Portal configuration
+		organisation_id = 3
+		username = 'acclaim.orgadmin@acclaim.law'
+		password = 'Chadw1ck816!!'
+		
+		# API endpoint for case creation
+		url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases'
+		
+		# External reference format (must be unique)
+		external_case_ref = 'Ref ' + ConnectApp.System.Firmsname + ":" + matter.entitytype + ":" + matter.entityref
+		
+		# Organisation reference (matches your organisation in the portal)
+		organisation_external_ref = 'CHADLAW-ORG-001'
+		
+		# Extract case data from SOS matter
+		account_number = matter.entityref
+		case_name = matter.mattername
+		debtor_email = matter.email1
+		debtor_phone = matter.phone1
+		debtor_address = matter.address1 + ", " + matter.address2 + ", " + matter.address3 + ", " + matter.postcode
+		debtor_type = 'individual'  # Change to 'company' if needed
+		original_amount = matter.debtvalue
+		outstanding_amount = matter.balance
+		costs_added = '0.00'
+		interest_added = '0.00'
+		fees_added = '0.00'
+		status = 'active'
+		stage = 'pre_legal'
+		assigned_to = 'Recovery Team'
+		
+	CardPosX 10
+	CardPosY 50
+	GOTO PythonScript1
+
+PythonScript PythonScript1
+	InputVars url,external_case_ref,organisation_external_ref,account_number,case_name,debtor_email,debtor_phone,debtor_address,debtor_type,original_amount,outstanding_amount,costs_added,interest_added,fees_added,status,stage,assigned_to
+	OutputVars response
+	Source
+		import System
+		from System import *
+		from System.Text import *
+		from System.IO import *
+		import clr
+		clr.AddReference("System.Net")
+		from System.Net import WebRequest
+		
+		response = "Creating new case in portal...\n"
+		
+		try:
+		    # Create JSON payload for case creation
+		    json_data = "{"
+		    json_data = json_data + "\"accountNumber\": \"" + str(account_number) + "\","
+		    json_data = json_data + "\"caseName\": \"" + str(case_name) + "\","
+		    json_data = json_data + "\"debtorEmail\": \"" + str(debtor_email) + "\","
+		    json_data = json_data + "\"debtorPhone\": \"" + str(debtor_phone) + "\","
+		    json_data = json_data + "\"debtorAddress\": \"" + str(debtor_address) + "\","
+		    json_data = json_data + "\"debtorType\": \"" + str(debtor_type) + "\","
+		    json_data = json_data + "\"originalAmount\": \"" + str(original_amount) + "\","
+		    json_data = json_data + "\"outstandingAmount\": \"" + str(outstanding_amount) + "\","
+		    json_data = json_data + "\"costsAdded\": \"" + str(costs_added) + "\","
+		    json_data = json_data + "\"interestAdded\": \"" + str(interest_added) + "\","
+		    json_data = json_data + "\"feesAdded\": \"" + str(fees_added) + "\","
+		    json_data = json_data + "\"status\": \"" + str(status) + "\","
+		    json_data = json_data + "\"stage\": \"" + str(stage) + "\","
+		    json_data = json_data + "\"organisationExternalRef\": \"" + str(organisation_external_ref) + "\","
+		    json_data = json_data + "\"assignedTo\": \"" + str(assigned_to) + "\","
+		    json_data = json_data + "\"externalRef\": \"" + str(external_case_ref) + "\""
+		    json_data = json_data + "}"
+		    
+		    response = response + "Case data prepared:\n"
+		    response = response + "Account: " + str(account_number) + "\n"
+		    response = response + "Case Name: " + str(case_name) + "\n"
+		    response = response + "Original Amount: £" + str(original_amount) + "\n"
+		    response = response + "Outstanding: £" + str(outstanding_amount) + "\n"
+		    response = response + "External Ref: " + str(external_case_ref) + "\n\n"
+		    
+		    # Create HTTP request
+		    web_request = WebRequest.Create(url)
+		    web_request.ContentType = "application/json"
+		    web_request.Method = "POST"
+		    
+		    # Convert JSON string to bytes
+		    json_bytes = Encoding.UTF8.GetBytes(json_data)
+		    web_request.ContentLength = json_bytes.Length
+		    
+		    # Write JSON data to request
+		    request_stream = web_request.GetRequestStream()
+		    request_stream.Write(json_bytes, 0, json_bytes.Length)
+		    request_stream.Close()
+		    
+		    # Send request and get response
+		    web_response = web_request.GetResponse()
+		    response_stream = web_response.GetResponseStream()
+		    response_reader = StreamReader(response_stream)
+		    server_response = response_reader.ReadToEnd()
+		    
+		    response_reader.Close()
+		    response_stream.Close()
+		    web_response.Close()
+		    
+		    response = response + "SUCCESS: Case created in portal\n"
+		    response = response + "Server response: " + server_response
+
+		except System.Net.WebException as e:
+		    response = response + "WebException: " + str(e.Message)
+		except System.Exception as e:
+		    response = response + "Exception: " + str(e.Message)
+	CardPosX 210
+	CardPosY 50
+	GOTO Message1
+
+Message Message1
+	Message Case creation process completed - check response for details
+	Centred True
+	Location system_tray
+	MessageType Information
+	CardPosX 410
+	CardPosY 50

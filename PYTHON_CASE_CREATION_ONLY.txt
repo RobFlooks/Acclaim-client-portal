@@ -1,0 +1,69 @@
+import System
+from System import *
+from System.Text import *
+from System.IO import *
+import clr
+clr.AddReference("System.Net")
+from System.Net import WebRequest
+
+response = "Creating new case in portal...\n"
+
+try:
+    # Create JSON payload for case creation
+    json_data = "{"
+    json_data = json_data + "\"accountNumber\": \"" + str(account_number) + "\","
+    json_data = json_data + "\"caseName\": \"" + str(case_name) + "\","
+    json_data = json_data + "\"debtorEmail\": \"" + str(debtor_email) + "\","
+    json_data = json_data + "\"debtorPhone\": \"" + str(debtor_phone) + "\","
+    json_data = json_data + "\"debtorAddress\": \"" + str(debtor_address) + "\","
+    json_data = json_data + "\"debtorType\": \"" + str(debtor_type) + "\","
+    json_data = json_data + "\"originalAmount\": \"" + str(original_amount) + "\","
+    json_data = json_data + "\"outstandingAmount\": \"" + str(outstanding_amount) + "\","
+    json_data = json_data + "\"costsAdded\": \"" + str(costs_added) + "\","
+    json_data = json_data + "\"interestAdded\": \"" + str(interest_added) + "\","
+    json_data = json_data + "\"feesAdded\": \"" + str(fees_added) + "\","
+    json_data = json_data + "\"status\": \"" + str(status) + "\","
+    json_data = json_data + "\"stage\": \"" + str(stage) + "\","
+    json_data = json_data + "\"organisationExternalRef\": \"" + str(organisation_external_ref) + "\","
+    json_data = json_data + "\"assignedTo\": \"" + str(assigned_to) + "\","
+    json_data = json_data + "\"externalRef\": \"" + str(external_case_ref) + "\""
+    json_data = json_data + "}"
+    
+    response = response + "Case data prepared:\n"
+    response = response + "Account: " + str(account_number) + "\n"
+    response = response + "Case Name: " + str(case_name) + "\n"
+    response = response + "Original Amount: £" + str(original_amount) + "\n"
+    response = response + "Outstanding: £" + str(outstanding_amount) + "\n"
+    response = response + "External Ref: " + str(external_case_ref) + "\n\n"
+    
+    # Create HTTP request
+    web_request = WebRequest.Create(url)
+    web_request.ContentType = "application/json"
+    web_request.Method = "POST"
+    
+    # Convert JSON string to bytes
+    json_bytes = Encoding.UTF8.GetBytes(json_data)
+    web_request.ContentLength = json_bytes.Length
+    
+    # Write JSON data to request
+    request_stream = web_request.GetRequestStream()
+    request_stream.Write(json_bytes, 0, json_bytes.Length)
+    request_stream.Close()
+    
+    # Send request and get response
+    web_response = web_request.GetResponse()
+    response_stream = web_response.GetResponseStream()
+    response_reader = StreamReader(response_stream)
+    server_response = response_reader.ReadToEnd()
+    
+    response_reader.Close()
+    response_stream.Close()
+    web_response.Close()
+    
+    response = response + "SUCCESS: Case created in portal\n"
+    response = response + "Server response: " + server_response
+
+except System.Net.WebException as e:
+    response = response + "WebException: " + str(e.Message)
+except System.Exception as e:
+    response = response + "Exception: " + str(e.Message)
