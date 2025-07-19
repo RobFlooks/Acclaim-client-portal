@@ -1,5 +1,5 @@
-# SOSFLOW 1.4 - CORRECTED HTTPWEBREQUEST VERSION
-# Fixed HttpWebRequest configuration for proper case creation
+# SOSFLOW 1.4 - CORRECTED VERSION WITH RIGHT ORG REF
+# Uses correct Chadwick Lawrence organisation reference: CLS00003
 
 DoNothing DoNothing1
 	CardPosX 10
@@ -8,52 +8,42 @@ DoNothing DoNothing1
 
 SetVariables SetVariables1
 	Initializations
-		# API endpoint for case creation
+		# API endpoint
 		url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases'
 		
-		# External reference format (must be unique)
-		external_case_ref = 'Ref ' + ConnectApp.System.Firmsname + ":" + matter.entitytype + ":" + matter.entityref
-		external_case_ref_encoded = replace(external_case_ref," ","_")
+		# External reference - clean format
+		external_ref = 'SOS_' + replace(replace(matter.entityref,'-','_'),' ','_')
 		
-		# Organisation reference (matches your organisation in the portal)
-		organisation_external_ref = client.cl_code
+		# CORRECTED organisation reference - use the actual external_ref from database
+		org_ref = 'CLS00003'
 		
-		# Extract case data from SOS matter
-		account_number = matter.entityref
-		case_name = matter.mattername
-		debtor_email = matter.email1
-		debtor_phone = matter.phone1
-		debtor_address = matter.address1
+		# Clean field values for URL encoding
+		acc_num = replace(replace(matter.entityref,'-','_'),' ','_')
+		case_nm = replace(replace(replace(matter.mattername,' ','%20'),'-','_'),'&','%26')
+		assigned_to = replace(replace(matter.feeearner,' ','%20'),'-','_')
+		
+		# Required fields
 		debtor_type = 'individual'
-		original_amount = matter.debtvalue
-		outstanding_amount = matter.balance
-		costs_added = '0.00'
-		interest_added = '0.00'
-		fees_added = '0.00'
-		status = 'active'
-		stage = 'pre_legal'
-		assigned_to = matter.feeearner
-		
-		# Build the form data string for POST body
-		post_data = 'accountNumber=' + account_number + '&caseName=' + case_name + '&debtorEmail=' + debtor_email + '&debtorPhone=' + debtor_phone + '&debtorAddress=' + debtor_address + '&debtorType=' + debtor_type + '&originalAmount=' + original_amount + '&outstandingAmount=' + outstanding_amount + '&costsAdded=' + costs_added + '&interestAdded=' + interest_added + '&feesAdded=' + fees_added + '&status=' + status + '&stage=' + stage + '&organisationExternalRef=' + organisation_external_ref + '&assignedTo=' + assigned_to + '&externalRef=' + external_case_ref_encoded
+		case_status = 'active'
+		case_stage = 'pre_legal'
+		orig_amount = '0.00'
+		outstanding = '0.00'
 	CardPosX 10
 	CardPosY 50
-	GOTO HttpWebRequest1
+	GOTO HTTPPost1
 
-HttpWebRequest HttpWebRequest1
+HTTPPost HTTPPost1
 	URL url
-	Method POST
-	PostData post_data
 	ContentType application/x-www-form-urlencoded
+	PostData 'externalRef=' + external_ref + '&organisationExternalRef=' + org_ref + '&accountNumber=' + acc_num + '&caseName=' + case_nm + '&debtorType=' + debtor_type + '&status=' + case_status + '&stage=' + case_stage + '&assignedTo=' + assigned_to + '&originalAmount=' + orig_amount + '&outstandingAmount=' + outstanding
 	ResponseVariable response_text
 	StatusCodeVariable status_code
-	IgnoreCertificateErrors TRUE
 	CardPosX 210
 	CardPosY 50
 	GOTO Message1
 
 Message Message1
-	Message Case creation completed - Status: {status_code} Response: {response_text}
+	Message Case Created: HTTP {status_code} - {response_text}
 	Centred True
 	Location system_tray
 	MessageType Information
