@@ -1,0 +1,66 @@
+# SOSFLOW 1.4 - NEW CASE CREATION (HTTPPost Version)
+# Creates a new debt recovery case in the Acclaim portal
+# Uses native SOS HTTPPost functionality - no Python required
+
+DoNothing DoNothing1
+	CardPosX 10
+	CardPosY -110
+	GOTO SetVariables1
+
+SetVariables SetVariables1
+	Initializations
+		# Portal configuration
+		organisation_id = 3
+		username = 'acclaim.orgadmin@acclaim.law'
+		password = 'Chadw1ck816!!'
+		
+		# API endpoint for case creation
+		url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases'
+		
+		# External reference format (must be unique)
+		external_case_ref = 'Ref ' + ConnectApp.System.Firmsname + ":" + matter.entitytype + ":" + matter.entityref
+		external_case_ref_encoded = replace(external_case_ref," ","_")
+		
+		# Organisation reference (matches your organisation in the portal)
+		organisation_external_ref = 'CHADLAW-ORG-001'
+		
+		# Extract case data from SOS matter
+		account_number = matter.entityref
+		case_name = matter.mattername
+		debtor_email = matter.email1
+		debtor_phone = matter.phone1
+		debtor_address = matter.address1 + ", " + matter.address2 + ", " + matter.address3 + ", " + matter.postcode
+		debtor_type = 'individual'  # Change to 'company' if needed
+		original_amount = matter.debtvalue
+		outstanding_amount = matter.balance
+		costs_added = '0.00'
+		interest_added = '0.00'
+		fees_added = '0.00'
+		status = 'active'
+		stage = 'pre_legal'
+		assigned_to = 'Recovery Team'
+		
+		# Build JSON payload
+		json_payload = '{"accountNumber":"' + account_number + '","caseName":"' + case_name + '","debtorEmail":"' + debtor_email + '","debtorPhone":"' + debtor_phone + '","debtorAddress":"' + debtor_address + '","debtorType":"' + debtor_type + '","originalAmount":"' + original_amount + '","outstandingAmount":"' + outstanding_amount + '","costsAdded":"' + costs_added + '","interestAdded":"' + interest_added + '","feesAdded":"' + fees_added + '","status":"' + status + '","stage":"' + stage + '","organisationExternalRef":"' + organisation_external_ref + '","assignedTo":"' + assigned_to + '","externalRef":"' + external_case_ref_encoded + '"}'
+		
+	CardPosX 10
+	CardPosY 50
+	GOTO HTTPPost1
+
+HTTPPost HTTPPost1
+	URL url
+	ContentType application/json
+	PostData json_payload
+	ResponseVariable response_text
+	StatusCodeVariable status_code
+	CardPosX 210
+	CardPosY 50
+	GOTO Message1
+
+Message Message1
+	Message Case creation completed - Status: {status_code} Response: {response_text}
+	Centred True
+	Location system_tray
+	MessageType Information
+	CardPosX 410
+	CardPosY 50

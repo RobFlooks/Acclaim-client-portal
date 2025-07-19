@@ -1,0 +1,28 @@
+# SOSFLOW 1.4 - SIMPLE CASE CREATION
+# Minimal workflow for creating cases using HTTPPost
+
+SetVariables SetVariables1
+	Initializations
+		# API Configuration
+		url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases'
+		organisation_external_ref = 'CHADLAW-ORG-001'
+		
+		# Case Reference
+		external_case_ref = replace('Ref ' + ConnectApp.System.Firmsname + ":" + matter.entitytype + ":" + matter.entityref," ","_")
+		
+		# JSON Data
+		json_payload = '{"accountNumber":"' + matter.entityref + '","caseName":"' + matter.mattername + '","debtorEmail":"' + matter.email1 + '","debtorPhone":"' + matter.phone1 + '","debtorAddress":"' + matter.address1 + ', ' + matter.address2 + ', ' + matter.address3 + ', ' + matter.postcode + '","debtorType":"individual","originalAmount":"' + matter.debtvalue + '","outstandingAmount":"' + matter.balance + '","costsAdded":"0.00","interestAdded":"0.00","feesAdded":"0.00","status":"active","stage":"pre_legal","organisationExternalRef":"' + organisation_external_ref + '","assignedTo":"Recovery Team","externalRef":"' + external_case_ref + '"}'
+		
+	GOTO HTTPPost1
+
+HTTPPost HTTPPost1
+	URL url
+	ContentType application/json
+	PostData json_payload
+	ResponseVariable api_response
+	StatusCodeVariable http_status
+	GOTO Message1
+
+Message Message1
+	Message Case creation: HTTP {http_status} - {api_response}
+	MessageType Information
