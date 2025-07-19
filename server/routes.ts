@@ -1574,28 +1574,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create or update case
   app.post('/api/external/cases', async (req: any, res) => {
     try {
-      // Debug logging
-      console.log('Case API Request:', {
-        method: req.method,
-        url: req.url,
-        contentType: req.headers['content-type'],
-        body: req.body,
-        bodyKeys: Object.keys(req.body || {}),
-        rawBody: req.rawBody || 'not available'
-      });
-      
-      // Debug specific field values
-      console.log('Field validation check:', {
-        accountNumber: req.body.accountNumber,
-        accountNumberExists: !!req.body.accountNumber,
-        caseName: req.body.caseName, 
-        caseNameExists: !!req.body.caseName,
-        organisationExternalRef: req.body.organisationExternalRef,
-        orgRefExists: !!req.body.organisationExternalRef,
-        externalRef: req.body.externalRef,
-        extRefExists: !!req.body.externalRef
-      });
-      
       // TODO: Add API key authentication here
       const {
         accountNumber,
@@ -1653,7 +1631,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // No automatic activity generation
         
         // Send immediate response to trigger frontend refresh
-        res.json({ 
+        return res.json({ 
           message: "Case updated successfully", 
           case: updated,
           timestamp: new Date().toISOString(),
