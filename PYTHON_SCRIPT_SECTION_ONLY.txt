@@ -1,0 +1,89 @@
+PythonScript PythonScript1
+	InputVars url,external_case_ref_encoded,count_of_files,file_1_name,file_1_type,file_1
+	OutputVars response
+	Source
+		import System
+		from System import *
+		from System.Text import *
+		from System.IO import *
+		import clr
+		clr.AddReference("System.Net")
+		from System.Net import WebRequest
+		
+		response = "Starting document upload..."
+		
+		try:
+		    if count_of_files < 1:
+		        response = "Error: No file selected for upload"
+		    else:
+		        # Handle filename and file type properly
+		        actual_filename = str(file_1_name) if file_1_name != "None" and file_1_name is not None else "Document_from_SOS.txt"
+		        actual_filetype = str(file_1_type) if file_1_type != "None" and file_1_type is not None else "application/octet-stream"
+		        
+		        boundary = "----------12345678901234567890"
+		        
+		        web_request = WebRequest.Create(url)
+		        web_request.ContentType = "multipart/form-data; boundary=" + boundary
+		        web_request.Method = "POST"
+		        
+		        form_data = "--" + boundary + "\r\n"
+		        form_data = form_data + "Content-Disposition: form-data; name=\"fileName\"\r\n"
+		        form_data = form_data + "\r\n"
+		        form_data = form_data + actual_filename + "\r\n"
+		        
+		        form_data = form_data + "--" + boundary + "\r\n"
+		        form_data = form_data + "Content-Disposition: form-data; name=\"documentType\"\r\n"
+		        form_data = form_data + "\r\n"
+		        form_data = form_data + "correspondence\r\n"
+		        
+		        form_data = form_data + "--" + boundary + "\r\n"
+		        form_data = form_data + "Content-Disposition: form-data; name=\"description\"\r\n"
+		        form_data = form_data + "\r\n"
+		        form_data = form_data + "Document uploaded from SOS case management system\r\n"
+		        
+		        form_data = form_data + "--" + boundary + "\r\n"
+		        form_data = form_data + "Content-Disposition: form-data; name=\"document\"; filename=\"" + actual_filename + "\"\r\n"
+		        form_data = form_data + "Content-Type: " + actual_filetype + "\r\n"
+		        form_data = form_data + "\r\n"
+		        
+		        post_header_bytes = Encoding.UTF8.GetBytes(form_data)
+		        boundary_bytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n")
+		        
+		        file_stream = FileStream(file_1, FileMode.Open, FileAccess.Read)
+		        length = post_header_bytes.Length + file_stream.Length + boundary_bytes.Length
+		        
+		        web_request.ContentLength = length
+		        request_stream = web_request.GetRequestStream()
+		        
+		        request_stream.Write(post_header_bytes, 0, post_header_bytes.Length)
+		        
+		        buffer = Array.CreateInstance(System.Byte, 4096)
+		        while True:
+		            bytes_read = file_stream.Read(buffer, 0, buffer.Length)
+		            if bytes_read == 0:
+		                break
+		            request_stream.Write(buffer, 0, bytes_read)
+		        
+		        request_stream.Write(boundary_bytes, 0, boundary_bytes.Length)
+		        
+		        file_stream.Close()
+		        request_stream.Close()
+		        
+		        r = web_request.GetResponse()
+		        s = r.GetResponseStream()
+		        sr = StreamReader(s)
+		        server_response = sr.ReadToEnd()
+		        
+		        sr.Close()
+		        s.Close()
+		        r.Close()
+		        
+		        response = "Upload successful: " + actual_filename + " (" + actual_filetype + ") uploaded to portal"
+		
+		except System.Net.WebException as e:
+		    response = "WebException: " + str(e.Message)
+		except System.Exception as e:
+		    response = "Exception: " + str(e.Message)
+	CardPosX 210
+	CardPosY 250
+	GOTO Message2
