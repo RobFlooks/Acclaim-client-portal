@@ -1,68 +1,39 @@
-# SOSFLOW 1.4 - ALTERNATIVE SIMPLE VERSION
-# Uses simple concatenation to avoid formula parsing issues
+# SOSFLOW 1.4 - ALTERNATIVE SIMPLE WORKFLOW
+# Multiple content type options for HTML card
 
-DoNothing DoNothing1
-	CardPosX 10
-	CardPosY -110
-	GOTO SetVariables1
-
-SetVariables SetVariables1
-	Initializations
-		# API endpoint for case creation
-		url = 'https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases'
-		
-		# Simple external reference without special characters
-		external_case_ref_encoded = 'Ref_' + matter.entityref
-		
-		# Data to send
-		organisation_external_ref = client.cl_code
-		account_number = matter.entityref
-		case_name = matter.mattername
-		debtor_type = 'individual'
-		original_amount = matter.debtvalue
-		outstanding_amount = matter.balance
-		status = 'active'
-		stage = 'pre_legal'
-		assigned_to = matter.feeearner
-	CardPosX 10
-	CardPosY 50
-	GOTO SetVariables2
-
-SetVariables SetVariables2
-	Initializations
-		# Build form data string piece by piece to avoid parsing issues
-		part1 = 'externalRef=' + external_case_ref_encoded
-		part2 = '&organisationExternalRef=' + organisation_external_ref  
-		part3 = '&accountNumber=' + account_number
-		part4 = '&caseName=' + case_name
-		part5 = '&originalAmount=' + original_amount
-		part6 = '&outstandingAmount=' + outstanding_amount
-		part7 = '&debtorType=' + debtor_type
-		part8 = '&status=' + status
-		part9 = '&stage=' + stage
-		part10 = '&assignedTo=' + assigned_to
-		
-		post_data = part1 + part2 + part3 + part4 + part5 + part6 + part7 + part8 + part9 + part10
-	CardPosX 10
-	CardPosY 150
-	GOTO HttpWebRequest1
-
-HttpWebRequest HttpWebRequest1
+# Option 1: text/plain content type
+HTMLWebRequest HTMLWebRequest1
 	URL url
 	Method POST
-	PostData post_data
-	ContentType application/x-www-form-urlencoded
+	PostData form_data
+	ContentType text/plain
 	ResponseVariable response_text
 	StatusCodeVariable status_code
-	IgnoreCertificateErrors TRUE
-	CardPosX 210
-	CardPosY 150
-	GOTO Message1
 
-Message Message1
-	Message Case creation - Status: {status_code} Response: {response_text}
-	Centred True
-	Location system_tray
-	MessageType Information
-	CardPosX 410
-	CardPosY 150
+# Option 2: multipart/form-data content type  
+HTMLWebRequest HTMLWebRequest2
+	URL url
+	Method POST
+	PostData form_data
+	ContentType multipart/form-data
+	ResponseVariable response_text
+	StatusCodeVariable status_code
+
+# Option 3: application/json content type (if API supports it)
+HTMLWebRequest HTMLWebRequest3
+	URL url
+	Method POST
+	PostData '{"externalRef":"' + external_ref + '","organisationExternalRef":"' + org_ref + '","accountNumber":"' + acc_num + '","caseName":"' + case_nm + '","debtorType":"' + debt_type + '","status":"' + case_status + '","stage":"' + case_stage + '","assignedTo":"' + assigned + '"}'
+	ContentType application/json
+	ResponseVariable response_text
+	StatusCodeVariable status_code
+
+# Option 4: No content type specified (let SOS decide)
+HTMLWebRequest HTMLWebRequest4
+	URL url
+	Method POST
+	PostData form_data
+	ResponseVariable response_text
+	StatusCodeVariable status_code
+
+# Recommended: Try text/plain first as it may bypass form-data parsing issues
