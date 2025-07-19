@@ -235,11 +235,7 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
             </div>
             <h2 className="text-lg font-semibold text-gray-900">Live Cases Stats</h2>
           </div>
-          <RefreshIndicator 
-            isRefreshing={statsIsFetching && !statsLoading}
-            lastRefresh={statsDataUpdatedAt ? new Date(statsDataUpdatedAt) : undefined}
-            showLastRefresh={false}
-          />
+
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">

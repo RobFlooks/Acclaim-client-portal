@@ -171,10 +171,7 @@ export default function Cases() {
             <CardTitle>
               {user?.isAdmin ? `All Cases - Global View (${filteredCases.length})` : `All Cases (${filteredCases.length})`}
             </CardTitle>
-            <RefreshIndicator 
-              isRefreshing={isFetching && !isLoading}
-              lastRefresh={dataUpdatedAt ? new Date(dataUpdatedAt) : undefined}
-            />
+
           </div>
         </CardHeader>
         <CardContent>
