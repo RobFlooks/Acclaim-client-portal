@@ -261,6 +261,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete case activity (admin only)
+  app.delete('/api/activities/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const activityId = parseInt(req.params.id);
+      
+      if (isNaN(activityId)) {
+        return res.status(400).json({ message: "Invalid activity ID" });
+      }
+
+      await storage.deleteCaseActivity(activityId);
+      res.json({ message: "Activity deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting case activity:", error);
+      res.status(500).json({ message: "Failed to delete activity" });
+    }
+  });
+
   // Messages routes
   app.get('/api/messages', isAuthenticated, async (req: any, res) => {
     try {

@@ -74,6 +74,7 @@ export interface IStorage {
   // Case activity operations
   getCaseActivities(caseId: number): Promise<CaseActivity[]>;
   addCaseActivity(activity: InsertCaseActivity): Promise<CaseActivity>;
+  deleteCaseActivity(id: number): Promise<void>; // Admin only - delete case activity
   
   // Message operations
   getMessagesForUser(userId: string): Promise<Message[]>;
@@ -634,6 +635,10 @@ export class DatabaseStorage implements IStorage {
   async addCaseActivity(activity: InsertCaseActivity): Promise<CaseActivity> {
     const [newActivity] = await db.insert(caseActivities).values(activity).returning();
     return newActivity;
+  }
+
+  async deleteCaseActivity(id: number): Promise<void> {
+    await db.delete(caseActivities).where(eq(caseActivities.id, id));
   }
 
   async getMessagesForUser(userId: string): Promise<any[]> {

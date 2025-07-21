@@ -162,6 +162,38 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
     },
   });
 
+  const deleteActivityMutation = useMutation({
+    mutationFn: async (activityId: number) => {
+      return await apiRequest(`/api/activities/${activityId}`, "DELETE");
+    },
+    onSuccess: () => {
+      toast({
+        title: "Activity Deleted",
+        description: "Timeline entry has been successfully deleted.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/cases", caseData.id, "activities"] });
+    },
+    onError: (error: any) => {
+      console.error("Error deleting activity:", error);
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete activity.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const sendMessageMutation = useMutation({
     mutationFn: async (messageData: any) => {
       if (messageAttachment) {
@@ -1268,15 +1300,34 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                     <div key={activity.id} className="flex items-start space-x-3">
                       <div className="w-4 h-4 bg-acclaim-teal rounded-full mt-1 flex-shrink-0"></div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{activity.description}</p>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <Calendar className="h-3 w-3 text-gray-400" />
-                          <p className="text-xs text-gray-500">{formatDate(activity.createdAt)}</p>
-                          {activity.performedBy && (
-                            <>
-                              <span className="text-xs text-gray-400">•</span>
-                              <p className="text-xs text-gray-500">by {activity.performedBy}</p>
-                            </>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">{activity.description}</p>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <Calendar className="h-3 w-3 text-gray-400" />
+                              <p className="text-xs text-gray-500">{formatDate(activity.createdAt)}</p>
+                              {activity.performedBy && (
+                                <>
+                                  <span className="text-xs text-gray-400">•</span>
+                                  <p className="text-xs text-gray-500">by {activity.performedBy}</p>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          {user?.isAdmin && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                if (confirm("Are you sure you want to delete this timeline entry? This action cannot be undone.")) {
+                                  deleteActivityMutation.mutate(activity.id);
+                                }
+                              }}
+                              className="text-red-600 hover:text-red-700 ml-2"
+                              disabled={deleteActivityMutation.isPending}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           )}
                         </div>
                       </div>
