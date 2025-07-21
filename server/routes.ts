@@ -1785,12 +1785,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Case activities are now only created via dedicated API endpoint
       // No automatic activity generation
       
-      res.status(201).json({ 
-        message: "Payment created successfully", 
-        payment,
-        timestamp: new Date().toISOString(),
-        refreshRequired: true 
-      });
+      // Check if plain text response is requested via query parameter
+      console.log('Query parameters:', req.query);
+      if (req.query.format === 'text') {
+        // Plain text response for SOS compatibility
+        console.log('Sending plain text response');
+        res.status(201).send('Payment created successfully');
+      } else {
+        console.log('Sending JSON response');
+        // JSON response for other clients
+        res.status(201).json({ 
+          message: "Payment created successfully", 
+          payment,
+          timestamp: new Date().toISOString(),
+          refreshRequired: true 
+        });
+      }
     } catch (error) {
       console.error("Error creating payment via external API:", error);
       res.status(500).json({ message: "Failed to create payment" });
@@ -1819,16 +1829,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Case activities are now only created via dedicated API endpoint
       // No automatic activity generation
       
-      res.json({ 
-        message: "Payment deleted successfully", 
-        deletedPayment: {
-          id: payment.id,
-          externalRef: payment.externalRef,
-          amount: payment.amount
-        },
-        timestamp: new Date().toISOString(),
-        refreshRequired: true 
-      });
+      // Check if plain text response is requested via query parameter
+      if (req.query.format === 'text') {
+        // Plain text response for SOS compatibility  
+        res.send('Payment deleted successfully');
+      } else {
+        // JSON response for other clients
+        res.json({ 
+          message: "Payment deleted successfully", 
+          deletedPayment: {
+            id: payment.id,
+            externalRef: payment.externalRef,
+            amount: payment.amount
+          },
+          timestamp: new Date().toISOString(),
+          refreshRequired: true 
+        });
+      }
     } catch (error) {
       console.error("Error deleting payment via external API:", error);
       res.status(500).json({ message: "Failed to delete payment" });
