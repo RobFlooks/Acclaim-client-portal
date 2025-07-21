@@ -1692,20 +1692,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create payment
   app.post('/api/external/payments', async (req: any, res) => {
     try {
+      // Debug logging
+      console.log('Payment API Request:', {
+        method: req.method,
+        url: req.url,
+        contentType: req.headers['content-type'],
+        body: req.body
+      });
+      
       // TODO: Add API key authentication here
-      const {
-        caseExternalRef,
-        amount,
-        paymentDate,
-        paymentMethod,
-        reference,
-        notes,
-        externalRef
-      } = req.body;
+      
+      // Support both JSON and form data
+      let caseExternalRef, amount, paymentDate, paymentMethod, reference, notes, externalRef;
+      
+      if (req.headers['content-type']?.includes('application/json')) {
+        // JSON format
+        ({ caseExternalRef, amount, paymentDate, paymentMethod, reference, notes, externalRef } = req.body);
+      } else {
+        // Form data format (for SOS systems)
+        caseExternalRef = req.body.caseExternalRef;
+        amount = req.body.amount;
+        paymentDate = req.body.paymentDate;
+        paymentMethod = req.body.paymentMethod;
+        reference = req.body.reference;
+        notes = req.body.notes;
+        externalRef = req.body.externalRef;
+      }
       
       if (!caseExternalRef || !amount || !paymentDate || !externalRef) {
         return res.status(400).json({ 
           message: "caseExternalRef, amount, paymentDate, and externalRef are required" 
+        });
+      }
+      
+      // Parse and validate payment date
+      let parsedPaymentDate;
+      try {
+        // Try to parse the date - handle various formats
+        if (paymentDate.includes('T') || paymentDate.includes('Z')) {
+          // ISO format
+          parsedPaymentDate = new Date(paymentDate);
+        } else if (paymentDate.includes('/')) {
+          // DD/MM/YYYY or MM/DD/YYYY format
+          parsedPaymentDate = new Date(paymentDate);
+        } else if (paymentDate.includes('-')) {
+          // YYYY-MM-DD format
+          parsedPaymentDate = new Date(paymentDate);
+        } else {
+          // Default to current date if format is unrecognised
+          parsedPaymentDate = new Date();
+        }
+        
+        // Check if the date is valid
+        if (isNaN(parsedPaymentDate.getTime())) {
+          throw new Error('Invalid date format');
+        }
+      } catch (dateError) {
+        console.error('Date parsing error:', dateError, 'Original date:', paymentDate);
+        return res.status(400).json({ 
+          message: "Invalid paymentDate format. Use ISO format (YYYY-MM-DDTHH:MM:SSZ) or YYYY-MM-DD" 
         });
       }
       
@@ -1719,7 +1764,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const payment = await storage.createPayment({
         caseId: case_.id,
         amount,
-        paymentDate: new Date(paymentDate),
+        paymentDate: parsedPaymentDate,
         paymentMethod: paymentMethod || 'UNKNOWN',
         reference,
         notes,
