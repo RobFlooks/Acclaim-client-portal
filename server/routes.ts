@@ -1797,6 +1797,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete payment
+  app.delete('/api/external/payments/:externalRef', async (req: any, res) => {
+    try {
+      // TODO: Add API key authentication here
+      const { externalRef } = req.params;
+      
+      if (!externalRef) {
+        return res.status(400).json({ message: "External reference is required" });
+      }
+      
+      // Find payment by external reference
+      const payment = await storage.getPaymentByExternalRef(externalRef);
+      if (!payment) {
+        return res.status(404).json({ message: "Payment not found" });
+      }
+      
+      // Delete payment
+      await storage.deletePayment(payment.id);
+      
+      // Case activities are now only created via dedicated API endpoint
+      // No automatic activity generation
+      
+      res.json({ 
+        message: "Payment deleted successfully", 
+        deletedPayment: {
+          id: payment.id,
+          externalRef: payment.externalRef,
+          amount: payment.amount
+        },
+        timestamp: new Date().toISOString(),
+        refreshRequired: true 
+      });
+    } catch (error) {
+      console.error("Error deleting payment via external API:", error);
+      res.status(500).json({ message: "Failed to delete payment" });
+    }
+  });
+
   // Update case status/stage
   app.put('/api/external/cases/:externalRef/status', async (req: any, res) => {
     try {

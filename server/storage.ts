@@ -837,12 +837,19 @@ export class DatabaseStorage implements IStorage {
     return updatedPayment;
   }
 
-  async deletePayment(id: number, organisationId: number): Promise<void> {
-    await db.delete(payments)
-      .where(and(
-        eq(payments.id, id),
-        eq(payments.organisationId, organisationId)
-      ));
+  async deletePayment(id: number, organisationId?: number): Promise<void> {
+    if (organisationId) {
+      // Standard deletion with organisation check
+      await db.delete(payments)
+        .where(and(
+          eq(payments.id, id),
+          eq(payments.organisationId, organisationId)
+        ));
+    } else {
+      // External API deletion without organisation check
+      await db.delete(payments)
+        .where(eq(payments.id, id));
+    }
   }
 
   async getPaymentByExternalRef(externalRef: string): Promise<Payment | undefined> {
