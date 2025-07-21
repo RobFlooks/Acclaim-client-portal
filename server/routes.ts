@@ -1807,6 +1807,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // SOS-friendly payment endpoints with plain text responses
+  app.post('/api/sos/payments', async (req: any, res) => {
+    try {
+      // Same logic as external payments but with plain text response
+      let caseExternalRef, amount, paymentDate, paymentMethod, reference, notes, externalRef;
+      
+      if (req.headers['content-type'] === 'application/x-www-form-urlencoded') {
+        ({ caseExternalRef, amount, paymentDate, paymentMethod, reference, notes, externalRef } = req.body);
+      } else {
+        ({ caseExternalRef, amount, paymentDate, paymentMethod, reference, notes, externalRef } = req.body);
+      }
+      
+      if (!caseExternalRef || !amount || !externalRef) {
+        res.status(400).send('Missing required fields: caseExternalRef, amount, externalRef');
+        return;
+      }
+      
+      // Parse date
+      let parsedPaymentDate;
+      try {
+        if (paymentDate && paymentDate.includes('/')) {
+          const parts = paymentDate.split('/');
+          if (parts.length === 3) {
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const year = parseInt(parts[2], 10);
+            parsedPaymentDate = new Date(year, month, day, 12, 0, 0, 0);
+            
+            if (parsedPaymentDate.getDate() !== day || 
+                parsedPaymentDate.getMonth() !== month || 
+                parsedPaymentDate.getFullYear() !== year) {
+              throw new Error('Invalid date');
+            }
+          } else {
+            throw new Error('Invalid DD/MM/YYYY format');
+          }
+        } else {
+          parsedPaymentDate = new Date();
+        }
+        
+        if (!parsedPaymentDate || isNaN(parsedPaymentDate.getTime())) {
+          throw new Error('Invalid date format');
+        }
+      } catch (dateError) {
+        res.status(400).send('Invalid date format. Use DD/MM/YYYY');
+        return;
+      }
+      
+      // Find case
+      const case_ = await storage.getCaseByExternalRef(caseExternalRef);
+      if (!case_) {
+        res.status(404).send('Case not found');
+        return;
+      }
+      
+      // Create payment
+      const paymentData = {
+        caseId: case_.id,
+        amount,
+        paymentDate: parsedPaymentDate,
+        paymentMethod: paymentMethod || 'UNKNOWN',
+        reference,
+        notes,
+        organisationId: case_.organisationId,
+        recordedBy: null,
+        externalRef,
+      };
+      
+      await storage.createPayment(paymentData);
+      
+      // Simple plain text response
+      res.status(201).send('Payment created successfully');
+    } catch (error) {
+      console.error("Error creating payment via SOS API:", error);
+      if (error.message && error.message.includes('duplicate key')) {
+        res.status(400).send('Payment with this reference already exists');
+      } else {
+        res.status(500).send('Failed to create payment');
+      }
+    }
+  });
+
+  app.delete('/api/sos/payments/:externalRef', async (req: any, res) => {
+    try {
+      const { externalRef } = req.params;
+      
+      if (!externalRef) {
+        res.status(400).send('External reference is required');
+        return;
+      }
+      
+      const payment = await storage.getPaymentByExternalRef(externalRef);
+      if (!payment) {
+        res.status(404).send('Payment not found');
+        return;
+      }
+      
+      await storage.deletePayment(payment.id);
+      
+      // Simple plain text response
+      res.send('Payment deleted successfully');
+    } catch (error) {
+      console.error("Error deleting payment via SOS API:", error);
+      res.status(500).send('Failed to delete payment');
+    }
+  });
+
   // Delete payment
   app.delete('/api/external/payments/:externalRef', async (req: any, res) => {
     try {
