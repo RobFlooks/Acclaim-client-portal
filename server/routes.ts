@@ -1692,14 +1692,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create payment
   app.post('/api/external/payments', async (req: any, res) => {
     try {
-      // Debug logging
-      console.log('Payment API Request:', {
-        method: req.method,
-        url: req.url,
-        contentType: req.headers['content-type'],
-        body: req.body
-      });
-      
       // TODO: Add API key authentication here
       
       // Support both JSON and form data
@@ -1725,32 +1717,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Parse and validate payment date
+      // Parse and validate payment date  
       let parsedPaymentDate;
       try {
-        // Try to parse the date - handle various formats
-        if (paymentDate.includes('T') || paymentDate.includes('Z')) {
+        // Handle DD/MM/YYYY format specifically
+        if (paymentDate && paymentDate.includes('/')) {
+          const parts = paymentDate.split('/');
+          if (parts.length === 3) {
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1; // JavaScript months are 0-based  
+            const year = parseInt(parts[2], 10);
+            
+            // Create date object and validate
+            parsedPaymentDate = new Date(year, month, day, 12, 0, 0, 0); // Set to noon to avoid timezone issues
+            
+            // Double check by comparing parts
+            if (parsedPaymentDate.getDate() !== day || 
+                parsedPaymentDate.getMonth() !== month || 
+                parsedPaymentDate.getFullYear() !== year) {
+              throw new Error('Date validation failed - invalid day/month/year combination');
+            }
+          } else {
+            throw new Error('Invalid DD/MM/YYYY format - expected 3 parts');
+          }
+        } else if (paymentDate && (paymentDate.includes('T') || paymentDate.includes('Z'))) {
           // ISO format
           parsedPaymentDate = new Date(paymentDate);
-        } else if (paymentDate.includes('/')) {
-          // DD/MM/YYYY or MM/DD/YYYY format
-          parsedPaymentDate = new Date(paymentDate);
-        } else if (paymentDate.includes('-')) {
+        } else if (paymentDate && paymentDate.includes('-')) {
           // YYYY-MM-DD format
-          parsedPaymentDate = new Date(paymentDate);
+          parsedPaymentDate = new Date(paymentDate + 'T12:00:00Z');
         } else {
           // Default to current date if format is unrecognised
           parsedPaymentDate = new Date();
         }
         
-        // Check if the date is valid
-        if (isNaN(parsedPaymentDate.getTime())) {
-          throw new Error('Invalid date format');
+        // Final validation
+        if (!parsedPaymentDate || isNaN(parsedPaymentDate.getTime())) {
+          throw new Error('Invalid date format - could not create valid date object');
         }
       } catch (dateError) {
-        console.error('Date parsing error:', dateError, 'Original date:', paymentDate);
         return res.status(400).json({ 
-          message: "Invalid paymentDate format. Use ISO format (YYYY-MM-DDTHH:MM:SSZ) or YYYY-MM-DD" 
+          message: `Invalid paymentDate format: ${dateError.message}. Use DD/MM/YYYY format (e.g., 21/01/2025)` 
         });
       }
       
@@ -1761,7 +1768,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Create payment
-      const payment = await storage.createPayment({
+      const paymentData = {
         caseId: case_.id,
         amount,
         paymentDate: parsedPaymentDate,
@@ -1769,9 +1776,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         reference,
         notes,
         organisationId: case_.organisationId,
-        recordedBy: 'SYSTEM',
+        recordedBy: null, // Use null for external payments
         externalRef,
-      });
+      };
+      
+      const payment = await storage.createPayment(paymentData);
       
       // Case activities are now only created via dedicated API endpoint
       // No automatic activity generation
