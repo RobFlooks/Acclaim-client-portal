@@ -1,0 +1,442 @@
+
+Acclaim Logo
+Acclaim
+Credit Management & Recovery
+Dashboard
+Cases
+Messages
+Documents
+Reports
+Admin Panel
+Dan Hirst
+danhirst@chadlaw.co.uk
+Profile
+Logout
+Cases
+View and manage all your active cases
+
+
+Search Cases
+Search by debtor name, account number, or email...
+All Cases - Global View (8)
+Test matter only
+
+Account: CLS00003-028
+
+Chadwick Lawrence LLP
+
+Created: 19 Jul 2025
+
+Outstanding Amount
+
+£0.00
+
+*May include interest and costs
+
+Claim
+View Details
+TechNova Solutions Ltd
+
+Account: ACC-2024-001
+
+Acme Corporation
+
+Created: 4 Feb 2025
+
+Outstanding Amount
+
+£7,200.00
+
+*May include interest and costs
+
+Enforcement
+View Details
+Fashion Forward Boutique
+
+Account: ACC-2024-007
+
+Dodo Happy
+
+Created: 10 Oct 2023
+
+Outstanding Amount
+
+£205.00
+
+*May include interest and costs
+
+Claim
+View Details
+Digital Marketing Hub
+
+Account: ACC-2024-003
+
+Acme Corporation
+
+Created: 11 Jul 2025
+
+Outstanding Amount
+
+£8,950.75
+
+*May include interest and costs
+
+Closed
+View Details
+Healthcare Solutions Inc
+
+Account: ACC-2024-005
+
+Acme Corporation
+
+Created: 3 Feb 2025
+
+Outstanding Amount
+
+£19,075.00
+
+*May include interest and costs
+
+Pre-Legal
+View Details
+Green Manufacturing Co
+
+Account: ACC-2024-002
+
+Acme Corporation
+
+Created: 6 Mar 2025
+
+Outstanding Amount
+
+£6,155.25
+
+*May include interest and costs
+
+Closed
+View Details
+Coastal Retail Group
+
+Account: ACC-2024-004
+
+Acme Corporation
+
+Created: 18 Nov 2024
+
+Outstanding Amount
+
+£41,500.00
+
+*May include interest and costs
+
+Judgment
+View Details
+Construction Plus Ltd
+
+Account: ACC-2024-006
+
+Acme Corporation
+
+Created: 11 Jul 2025
+
+Outstanding Amount
+
+£33,000.00
+
+*May include interest and costs
+
+Closed
+View Details
+Case Details - TechNova Solutions Ltd
+View comprehensive case information including timeline, documents, and messages.
+
+TechNova Solutions Ltd
+Print Case PDF
+Enforcement
+Account Number
+
+ACC-2024-001
+
+Outstanding Amount
+
+£7,200.00
+
+*May include interest and recovery costs
+
+Total Payments
+
+£0.00
+Click to view details
+
+Original Amount
+
+£30,000.00
+
+Case Handler
+
+Matt Perry
+
+Last Message
+
+
+Judgment obtained
+
+18 Jul 2025, 15:41 - Click to view
+
+Additional Charges
+Costs Added
+
+£173.75
+
+Legal costs
+
+Interest Added
+
+£465.83
+
+Accrued interest charges
+
+Other Fees
+
+£1,970.00
+
+Compensation, administrative and other fees
+
+Total Additional Charges:
+£2,609.58
+Timeline
+Documents
+Messages
+Payments
+Case Timeline
+View Visual Timeline
+Judgment obtained
+
+18 Jul 2025, 15:35
+
+•
+by Matt Perry
+
+
+Claim form issued
+
+18 Jul 2025, 15:06
+
+•
+by Jordan Crowther
+
+
+Claim form raised
+
+18 Jul 2025, 15:00
+
+•
+by Matthew Perry
+
+
+Claim form raised
+
+18 Jul 2025, 14:57
+
+•
+by Matthew Perry
+
+
+Claim form raised
+
+18 Jul 2025, 14:55
+
+•
+by Matthew Perry
+
+
+Claim form raised
+
+18 Jul 2025, 14:54
+
+•
+by Matthew Perry
+
+
+Claim form raised
+
+18 Jul 2025, 14:53
+
+•
+by Matthew Perry
+
+
+Claim form raised
+
+18 Jul 2025, 14:52
+
+•
+by Matthew Perry
+
+
+Claim form raised
+
+18 Jul 2025, 14:52
+
+•
+by Matthew Perry
+
+
+Test activity from case management system integration
+
+18 Jul 2025, 14:03
+
+•
+by SYSTEM_TEST
+
+
+Case outstanding amount updated to £18869.22, costs added updated to £1698.37, interest added updated to £1762.85, fees added updated to £30, status changed to Active, stage changed to Claim via external system
+
+18 Jul 2025, 13:45
+
+•
+by SYSTEM
+
+
+Case outstanding amount updated to £18869.22, costs added updated to £1698.37, interest added updated to £1762.85, fees added updated to £1208.00, status changed to Active, stage changed to Claim via external system
+
+18 Jul 2025, 13:34
+
+•
+by SYSTEM
+
+
+Case status changed to Active, stage changed to Claim via external system
+
+18 Jul 2025, 13:26
+
+•
+by SYSTEM
+
+
+Case status changed to Active, stage changed to Claim via external system
+
+18 Jul 2025, 13:18
+
+•
+by SYSTEM
+
+
+Case balance updated to £1, status changed to New test 2, stage changed to Claim via external system
+
+18 Jul 2025, 12:29
+
+•
+by SYSTEM
+
+
+Case status changed to New test 2, stage changed to Claim via external system
+
+18 Jul 2025, 12:27
+
+•
+by SYSTEM
+
+
+Case status changed to New test 2, stage changed to Claim via external system
+
+18 Jul 2025, 12:25
+
+•
+by SYSTEM
+
+
+Case balance updated to £18869.22, status changed to New test 2, stage changed to Claim via external system
+
+18 Jul 2025, 12:23
+
+•
+by SYSTEM
+
+
+Case balance updated to £, status changed to New test 2, stage changed to Claim via external system
+
+18 Jul 2025, 12:22
+
+•
+by SYSTEM
+
+
+Case balance updated to £, status changed to New test 2, stage changed to Pre-Legal via external system
+
+18 Jul 2025, 12:21
+
+•
+by SYSTEM
+
+
+Case balance updated to £, status changed to New test 2, stage changed to Enforced via external system
+
+18 Jul 2025, 12:19
+
+•
+by SYSTEM
+
+
+Case balance updated to £, status changed to New test, stage changed to Enforced via external system
+
+18 Jul 2025, 12:19
+
+•
+by SYSTEM
+
+
+Case balance updated to £, status changed to New test, stage changed to Scripts via external system
+
+18 Jul 2025, 12:18
+
+•
+by SYSTEM
+
+
+Phone call made to debtor - no answer, left voicemail
+
+11 Jul 2025, 18:29
+
+•
+by Sarah Johnson
+
+
+Pre-Action correspondence sent
+
+11 Jul 2025, 18:29
+
+•
+by Sarah Johnson
+
+
+Follow-up email sent to accounts department
+
+11 Jul 2025, 18:29
+
+•
+by Sarah Johnson
+
+
+Case created for TechNova Solutions Ltd
+
+11 Jul 2025, 18:29
+
+•
+by system
+
+
+Close
+[plugin:runtime-error-plugin] Failed to execute 'fetch' on 'Window': '/api/activities/56' is not a valid HTTP method.
+/home/runner/workspace/client/src/lib/queryClient.ts:15:21
+13 |    data?: unknown | undefined,
+14 |  ): Promise<Response> {
+15 |    const res = await fetch(url, {
+   |                      ^
+16 |      method,
+17 |      headers: data ? { "Content-Type": "application/json" } : {},
+
+    at apiRequest /home/runner/workspace/client/src/lib/queryClient.ts:15:21
+    at Object.mutationFn /home/runner/workspace/client/src/components/CaseDetail.tsx:167:20
+Click outside, press Esc key, or fix the code to dismiss.
+You can also disable this overlay by setting server.hmr.overlay to false in vite.config.js.

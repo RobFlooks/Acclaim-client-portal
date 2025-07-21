@@ -164,7 +164,20 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
 
   const deleteActivityMutation = useMutation({
     mutationFn: async (activityId: number) => {
-      return await apiRequest(`/api/activities/${activityId}`, "DELETE");
+      const response = await fetch(`/api/activities/${activityId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to delete activity: ${response.status} - ${errorText}`);
+      }
+      
+      return await response.json();
     },
     onSuccess: () => {
       toast({
