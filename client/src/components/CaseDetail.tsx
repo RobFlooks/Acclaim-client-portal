@@ -1477,11 +1477,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               ) : messages && messages.length > 0 ? (
                 <div className="space-y-4 max-h-64 overflow-y-auto">
                   {messages.map((message: any) => (
-                    <div key={message.id} className={`p-3 border rounded-lg ${
-                      !message.isRead && message.senderId !== user?.id
-                        ? "bg-white border-acclaim-teal shadow-sm border-l-4 border-l-acclaim-teal"
-                        : "bg-gray-50 border-gray-200"
-                    }`}>
+                    <div key={message.id} className="p-3 border rounded-lg bg-gray-50 border-gray-200">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
                           <p className="font-medium text-sm">{message.subject}</p>
