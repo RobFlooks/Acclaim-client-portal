@@ -24,7 +24,7 @@ class EmailService {
       if (process.env.NODE_ENV === 'development') {
         const testAccount = await nodemailer.createTestAccount();
         
-        this.transporter = nodemailer.createTransporter({
+        this.transporter = nodemailer.createTransport({
           host: 'smtp.ethereal.email',
           port: 587,
           secure: false,
@@ -35,7 +35,7 @@ class EmailService {
         });
       } else {
         // Production configuration - you can set these via environment variables
-        this.transporter = nodemailer.createTransporter({
+        this.transporter = nodemailer.createTransport({
           host: process.env.SMTP_HOST || 'smtp.gmail.com',
           port: parseInt(process.env.SMTP_PORT || '587'),
           secure: process.env.SMTP_SECURE === 'true',

@@ -19,9 +19,10 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
-  // Redirect if already logged in
+  // Redirect if already logged in - check after all hooks to avoid rule violations
   if (user) {
-    navigate("/");
+    // Use setTimeout to avoid setting state during render
+    setTimeout(() => navigate("/"), 0);
     return null;
   }
 
