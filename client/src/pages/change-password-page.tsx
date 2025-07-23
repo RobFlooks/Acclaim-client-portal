@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, KeyRound } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import acclaimLogo from "@assets/Acclaim rose.Cur_1752271300769.png";
 
 export default function ChangePasswordPage() {
   const [, navigate] = useLocation();
@@ -82,24 +83,41 @@ export default function ChangePasswordPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
       <div className="w-full max-w-md">
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-acclaim-navy">Change Password Required</h1>
-          <p className="text-muted-foreground mt-2 text-sm">
-            You must change your temporary password before accessing the system
-          </p>
+        {/* Logo and Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center mb-6">
+            <img 
+              src={acclaimLogo} 
+              alt="Acclaim Credit Management" 
+              className="h-16 w-16 mr-3"
+            />
+            <div className="text-left">
+              <h1 className="text-2xl font-bold text-acclaim-navy">Acclaim</h1>
+              <p className="text-sm text-muted-foreground">Credit Management & Recovery</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-center mb-4">
+            <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mr-3">
+              <KeyRound className="h-6 w-6 text-amber-600" />
+            </div>
+            <div className="text-left">
+              <h2 className="text-xl font-semibold text-gray-900">Password Change Required</h2>
+              <p className="text-sm text-muted-foreground">Set up your secure password</p>
+            </div>
+          </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Set New Password</CardTitle>
+        <Card className="shadow-lg border-0">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg">Set New Password</CardTitle>
             <CardDescription>
-              Please enter your temporary password and choose a new secure password
+              Enter your temporary password and choose a new secure password
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="currentPassword">Current (Temporary) Password</Label>
+                <Label htmlFor="currentPassword" className="text-sm font-medium">Current (Temporary) Password</Label>
                 <div className="relative">
                   <Input
                     id="currentPassword"
@@ -107,6 +125,7 @@ export default function ChangePasswordPage() {
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     placeholder="Enter your temporary password"
+                    className="h-11 pr-10"
                     required
                   />
                   <Button
@@ -117,16 +136,16 @@ export default function ChangePasswordPage() {
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   >
                     {showCurrentPassword ? (
-                      <EyeOff className="h-4 w-4" />
+                      <EyeOff className="h-4 w-4 text-gray-500" />
                     ) : (
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-4 w-4 text-gray-500" />
                     )}
                   </Button>
                 </div>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
+                <Label htmlFor="newPassword" className="text-sm font-medium">New Password</Label>
                 <div className="relative">
                   <Input
                     id="newPassword"
@@ -134,6 +153,7 @@ export default function ChangePasswordPage() {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Enter your new password"
+                    className="h-11 pr-10"
                     required
                   />
                   <Button
@@ -144,9 +164,9 @@ export default function ChangePasswordPage() {
                     onClick={() => setShowNewPassword(!showNewPassword)}
                   >
                     {showNewPassword ? (
-                      <EyeOff className="h-4 w-4" />
+                      <EyeOff className="h-4 w-4 text-gray-500" />
                     ) : (
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-4 w-4 text-gray-500" />
                     )}
                   </Button>
                 </div>
@@ -156,7 +176,7 @@ export default function ChangePasswordPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm New Password</Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
@@ -164,6 +184,7 @@ export default function ChangePasswordPage() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm your new password"
+                    className="h-11 pr-10"
                     required
                   />
                   <Button
@@ -174,9 +195,9 @@ export default function ChangePasswordPage() {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
                     {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4" />
+                      <EyeOff className="h-4 w-4 text-gray-500" />
                     ) : (
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-4 w-4 text-gray-500" />
                     )}
                   </Button>
                 </div>
@@ -190,16 +211,16 @@ export default function ChangePasswordPage() {
 
               <Button 
                 type="submit" 
-                className="w-full bg-acclaim-teal hover:bg-acclaim-teal/90"
+                className="w-full h-11 bg-acclaim-teal hover:bg-acclaim-teal/90 font-medium"
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Changing Password...
+                    Updating Password...
                   </>
                 ) : (
-                  "Change Password"
+                  "Update Password"
                 )}
               </Button>
             </form>

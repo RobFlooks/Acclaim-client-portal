@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, FileText, MessageSquare, TrendingUp, Shield } from "lucide-react";
+import acclaimLogo from "@assets/Acclaim rose.Cur_1752271300769.png";
 
 export default function AuthPage() {
   const [, navigate] = useLocation();
@@ -51,38 +52,53 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
+    <div className="min-h-screen flex flex-col lg:flex-row bg-gray-50">
       {/* Left side - Form */}
       <div className="flex-1 flex items-center justify-center p-4 lg:p-8">
         <div className="w-full max-w-md">
-          <div className="text-center mb-6 lg:mb-8">
-            <h1 className="text-2xl lg:text-3xl font-bold text-acclaim-navy">Welcome to Acclaim Portal</h1>
-            <p className="text-muted-foreground mt-2 text-sm lg:text-base">Debt Recovery Case Management</p>
+          {/* Logo and Header */}
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center mb-6">
+              <img 
+                src={acclaimLogo} 
+                alt="Acclaim Credit Management" 
+                className="h-16 w-16 mr-3"
+              />
+              <div className="text-left">
+                <h1 className="text-2xl font-bold text-acclaim-navy">Acclaim</h1>
+                <p className="text-sm text-muted-foreground">Credit Management & Recovery</p>
+              </div>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Welcome to your Portal</h2>
+            <p className="text-muted-foreground text-sm">
+              Access your professional debt recovery management system
+            </p>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Sign In</CardTitle>
+          <Card className="shadow-lg border-0">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg">Sign In</CardTitle>
               <CardDescription>
-                Access your account with your credentials
+                Enter your credentials to access your account
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
                   <Input
                     id="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="your.email@company.com"
+                    className="h-11"
                     required
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password" className="text-sm font-medium">Password</Label>
                   <div className="relative">
                     <Input
                       id="password"
@@ -90,6 +106,7 @@ export default function AuthPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter your password"
+                      className="h-11 pr-10"
                       required
                     />
                     <Button
@@ -100,9 +117,9 @@ export default function AuthPage() {
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
+                        <EyeOff className="h-4 w-4 text-gray-500" />
                       ) : (
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-4 w-4 text-gray-500" />
                       )}
                     </Button>
                   </div>
@@ -116,59 +133,84 @@ export default function AuthPage() {
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-acclaim-teal hover:bg-acclaim-teal/90"
+                  className="w-full h-11 bg-acclaim-teal hover:bg-acclaim-teal/90 font-medium"
                   disabled={loginMutation.isPending}
                 >
                   {loginMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Signing In...
+                      Signing in...
                     </>
                   ) : (
-                    "Sign In"
+                    "Sign In to Portal"
                   )}
                 </Button>
               </form>
               
-              <div className="mt-4 text-center text-sm text-muted-foreground">
-                Don't have an account? Contact your administrator to create one for you.
+              <div className="mt-6 text-center text-xs text-muted-foreground">
+                Need assistance? Contact your administrator
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
 
-      {/* Right side - Hero section */}
-      <div className="flex-1 bg-gradient-to-br from-acclaim-navy to-acclaim-teal flex items-center justify-center p-4 lg:p-8 order-first lg:order-last">
-        <div className="text-center text-white space-y-4 lg:space-y-6 max-w-md">
-          <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-8">
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
-              <span className="text-2xl font-bold text-acclaim-navy">A</span>
+      {/* Right side - Feature showcase */}
+      <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-acclaim-teal via-teal-600 to-acclaim-navy items-center justify-center p-8">
+        <div className="max-w-lg text-white">
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold mb-4">Professional Debt Recovery Platform</h2>
+            <p className="text-lg opacity-90 leading-relaxed">
+              Streamline your debt recovery operations with our comprehensive case management system designed for legal professionals.
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0 w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                <FileText className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">Case Management</h3>
+                <p className="text-sm opacity-90">Track cases from initial contact through to resolution with detailed stage progression and activity logs.</p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0 w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                <MessageSquare className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">Secure Communications</h3>
+                <p className="text-sm opacity-90">Integrated messaging system and document management with full audit trails for compliance.</p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0 w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                <TrendingUp className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">Analytics & Reporting</h3>
+                <p className="text-sm opacity-90">Comprehensive reporting tools for recovery analysis, payment tracking, and performance metrics.</p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0 w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                <Shield className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-semibold mb-1">Enterprise Security</h3>
+                <p className="text-sm opacity-90">Bank-level security with role-based access control and complete data protection.</p>
+              </div>
             </div>
           </div>
-          
-          <h2 className="text-xl lg:text-3xl font-bold">Professional Debt Recovery</h2>
-          <p className="text-base lg:text-xl text-white/90">
-            Streamlined case management for efficient debt recovery operations
-          </p>
-          
-          <div className="space-y-4 text-left">
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-white rounded-full"></div>
-              <span>Comprehensive case tracking</span>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-white rounded-full"></div>
-              <span>Secure document management</span>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-white rounded-full"></div>
-              <span>Real-time progress updates</span>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-white rounded-full"></div>
-              <span>Professional communication tools</span>
-            </div>
+
+          <div className="mt-8 pt-6 border-t border-white/20">
+            <p className="text-sm opacity-75">
+              Trusted by legal professionals across the UK for efficient and compliant debt recovery operations.
+            </p>
           </div>
         </div>
       </div>
