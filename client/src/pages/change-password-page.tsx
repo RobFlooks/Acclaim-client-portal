@@ -27,12 +27,12 @@ export default function ChangePasswordPage() {
 
   // Redirect if not logged in or doesn't need password change
   if (!user) {
-    navigate("/auth");
+    setTimeout(() => navigate("/auth"), 0);
     return null;
   }
 
   if (!user.mustChangePassword) {
-    navigate("/");
+    setTimeout(() => navigate("/"), 0);
     return null;
   }
 
