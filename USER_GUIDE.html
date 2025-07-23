@@ -244,6 +244,17 @@
         .screenshot-container {
             text-align: center;
             margin: 1.5rem 0;
+            display: none; /* Hide until actual screenshots are available */
+        }
+
+        .screenshot-placeholder {
+            background: #f3f4f6;
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            margin: 1rem 0;
+            color: #6b7280;
         }
 
         .screenshot-caption {
@@ -354,9 +365,9 @@
             <h3>Navigation Overview</h3>
             <p>Once logged in, you'll see the main navigation with the following sections:</p>
             
-            <div class="screenshot-container">
-                <img src="screenshots/user-guide/main-navigation.png" alt="Main Navigation Bar" class="screenshot">
-                <div class="screenshot-caption">Main navigation bar showing all available sections</div>
+            <div class="screenshot-placeholder">
+                <h4>📷 Screenshot Needed: Main Navigation Bar</h4>
+                <p>Capture the top navigation showing: Dashboard, Cases, Messages, Documents, Reports, Submit Case</p>
             </div>
             
             <ul>
@@ -375,9 +386,9 @@
             
             <p>The dashboard provides a comprehensive overview of your case management activities and key performance metrics.</p>
             
-            <div class="screenshot-container">
-                <img src="screenshots/user-guide/dashboard-overview.png" alt="Dashboard Overview" class="screenshot">
-                <div class="screenshot-caption">Dashboard showing key statistics and recent activity</div>
+            <div class="screenshot-placeholder">
+                <h4>📷 Screenshot Needed: Dashboard Overview</h4>
+                <p>Capture the main dashboard showing the four statistics cards and recent activity section</p>
             </div>
             
             <h3>Key Statistics</h3>
@@ -413,9 +424,9 @@
                 <li>Payment notifications</li>
             </ul>
 
-            <div class="screenshot-container">
-                <img src="screenshots/user-guide/dashboard-stats.png" alt="Dashboard Statistics" class="screenshot">
-                <div class="screenshot-caption">Key statistics cards showing case counts and recent activity</div>
+            <div class="screenshot-placeholder">
+                <h4>📷 Screenshot Needed: Dashboard Statistics Cards</h4>
+                <p>Close-up view of the four statistics cards: Active Cases, Closed Cases, Messages, Documents</p>
             </div>
 
             <div class="tip">
@@ -427,9 +438,9 @@
         <div class="section" id="case-management">
             <h2>📁 Case Management</h2>
             
-            <div class="screenshot-container">
-                <img src="screenshots/user-guide/cases-overview.png" alt="Cases Overview" class="screenshot">
-                <div class="screenshot-caption">Cases page showing list of all debt recovery cases</div>
+            <div class="screenshot-placeholder">
+                <h4>📷 Screenshot Needed: Cases Overview</h4>
+                <p>Cases page showing the case list with account numbers, names, amounts, and status badges</p>
             </div>
             
             <h3>Viewing Your Cases</h3>
@@ -462,9 +473,9 @@
                 <p><strong>Smart Search:</strong> The search automatically expands to search all cases, even when viewing filtered results.</p>
             </div>
 
-            <div class="screenshot-container">
-                <img src="screenshots/user-guide/case-filters.png" alt="Case Filters" class="screenshot">
-                <div class="screenshot-caption">Case filtering options and search functionality</div>
+            <div class="screenshot-placeholder">
+                <h4>📷 Screenshot Needed: Case Filters</h4>
+                <p>Show the filtering tabs (Active/Closed/All) and search bar above the case list</p>
             </div>
 
             <div class="feature-highlight">
@@ -481,9 +492,9 @@
             <h3>Viewing Case Details</h3>
             <p>Click on any case to view comprehensive details in an expanded dialog:</p>
             
-            <div class="screenshot-container">
-                <img src="screenshots/user-guide/case-detail-dialog.png" alt="Case Detail Dialog" class="screenshot">
-                <div class="screenshot-caption">Large case detail dialog showing timeline, documents, messages, and payments</div>
+            <div class="screenshot-placeholder">
+                <h4>📷 Screenshot Needed: Case Detail Dialog</h4>
+                <p>Capture the large popup dialog showing case timeline, documents, messages, and payments tabs</p>
             </div>
 
             <div class="feature-highlight">
@@ -577,9 +588,9 @@
         <div class="section" id="messaging">
             <h2>💬 Messaging System</h2>
             
-            <div class="screenshot-container">
-                <img src="screenshots/user-guide/messages-overview.png" alt="Messages Overview" class="screenshot">
-                <div class="screenshot-caption">Messages page showing inbox and communication tools</div>
+            <div class="screenshot-placeholder">
+                <h4>📷 Screenshot Needed: Messages Overview</h4>
+                <p>Show the messages page with inbox, search functionality, and "New Message" button</p>
             </div>
             
             <h3>Sending Messages</h3>
@@ -631,9 +642,9 @@
                 </ul>
             </div>
 
-            <div class="screenshot-container">
-                <img src="screenshots/user-guide/new-message.png" alt="New Message Form" class="screenshot">
-                <div class="screenshot-caption">New message form with case selection and file attachment options</div>
+            <div class="screenshot-placeholder">
+                <h4>📷 Screenshot Needed: New Message Form</h4>
+                <p>Capture the message composition dialog with recipient selection, case linking, and file attachment</p>
             </div>
 
             <div class="tip">
@@ -645,9 +656,9 @@
         <div class="section" id="documents">
             <h2>📄 Document Management</h2>
             
-            <div class="screenshot-container">
-                <img src="screenshots/user-guide/documents-overview.png" alt="Documents Overview" class="screenshot">
-                <div class="screenshot-caption">Documents page showing file library with pagination and search</div>
+            <div class="screenshot-placeholder">
+                <h4>📷 Screenshot Needed: Documents Overview</h4>
+                <p>Show the documents page with file statistics, search bar, and paginated document list</p>
             </div>
             
             <h3>Uploading Documents</h3>
@@ -671,9 +682,9 @@
                 <strong>Add description:</strong> Provide a brief description of the document
             </div>
 
-            <div class="screenshot-container">
-                <img src="screenshots/user-guide/document-upload.png" alt="Document Upload Form" class="screenshot">
-                <div class="screenshot-caption">Document upload form with case selection and file picker</div>
+            <div class="screenshot-placeholder">
+                <h4>📷 Screenshot Needed: Document Upload Form</h4>
+                <p>Capture the upload dialog showing case selection dropdown and file picker interface</p>
             </div>
 
             <h3>Document Organisation & Pagination</h3>
@@ -696,9 +707,9 @@
                 </ul>
             </div>
 
-            <div class="screenshot-container">
-                <img src="screenshots/user-guide/document-pagination.png" alt="Document Pagination" class="screenshot">
-                <div class="screenshot-caption">Document pagination controls showing page navigation and item counts</div>
+            <div class="screenshot-placeholder">
+                <h4>📷 Screenshot Needed: Document Pagination</h4>
+                <p>Show the pagination controls at the bottom: "Showing X-Y of Z" and Previous/Next buttons</p>
             </div>
 
             <h3>Downloading Documents</h3>
@@ -830,20 +841,36 @@
 
 
 
-        <!-- Screenshot Note -->
-        <div class="section" id="screenshot-note">
+        <!-- Screenshot Instructions -->
+        <div class="section" id="screenshot-instructions">
             <div class="alert alert-info">
-                <h3>📸 Visual Guide Note</h3>
-                <p><strong>Screenshot Placeholders:</strong> This guide includes placeholder references for screenshots of key interface elements. These screenshots would show:</p>
+                <h3>📸 Screenshots Required</h3>
+                <p><strong>For Complete Visual Guide:</strong> To make this user guide fully effective, capture screenshots of the following pages from your running application:</p>
+                
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+                    <h4>Required Screenshots:</h4>
+                    <ol>
+                        <li><strong>main-navigation.png</strong> - Top navigation bar showing all menu items</li>
+                        <li><strong>dashboard-overview.png</strong> - Main dashboard with statistics cards</li>
+                        <li><strong>dashboard-stats.png</strong> - Close-up of the four statistics cards</li>
+                        <li><strong>cases-overview.png</strong> - Cases page showing the case list</li>
+                        <li><strong>case-filters.png</strong> - Case filtering controls (Active/Closed/All)</li>
+                        <li><strong>case-detail-dialog.png</strong> - Large case detail popup window</li>
+                        <li><strong>messages-overview.png</strong> - Messages inbox page</li>
+                        <li><strong>new-message.png</strong> - New message composition form</li>
+                        <li><strong>documents-overview.png</strong> - Documents page with pagination</li>
+                        <li><strong>document-upload.png</strong> - Document upload dialog</li>
+                        <li><strong>document-pagination.png</strong> - Pagination controls at bottom of documents</li>
+                    </ol>
+                </div>
+                
+                <p><strong>Capture Instructions:</strong></p>
                 <ul>
-                    <li>Main navigation and dashboard overview</li>
-                    <li>Case management interface with filtering and pagination</li>
-                    <li>Message composition and inbox views</li>
-                    <li>Document upload and management screens</li>
-                    <li>Case detail dialogs and forms</li>
-                    <li>Report generation and analytics interfaces</li>
+                    <li>Use a desktop browser at 1200px+ width for optimal display</li>
+                    <li>Ensure you're logged in and have sample data visible</li>
+                    <li>Save images as PNG files in the <code>screenshots/user-guide/</code> directory</li>
+                    <li>Focus on showing the interface elements mentioned in each section</li>
                 </ul>
-                <p>Screenshots should be captured at standard desktop resolution and show typical user workflows to help users navigate the system effectively.</p>
             </div>
         </div>
 
