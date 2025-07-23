@@ -82,13 +82,18 @@ export default function Cases() {
       case_.debtorEmail?.toLowerCase().includes(searchLower)
     );
     
-    // Status filter
+    // If there's a search term, search across all cases regardless of status filter
+    if (searchTerm.trim()) {
+      return matchesSearch;
+    }
+    
+    // Only apply status filter when no search term is present
     const isActive = case_.status !== "resolved" && case_.status?.toLowerCase() !== "closed";
     const matchesStatus = statusFilter === "all" || 
                          (statusFilter === "active" && isActive) ||
                          (statusFilter === "closed" && !isActive);
     
-    return matchesSearch && matchesStatus;
+    return matchesStatus;
   }) || [];
 
   // Pagination calculations
@@ -200,16 +205,23 @@ export default function Cases() {
                 <Filter className="h-4 w-4 text-gray-400" />
                 <label className="text-sm font-medium text-gray-700">Status:</label>
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active Cases</SelectItem>
-                  <SelectItem value="closed">Closed Cases</SelectItem>
-                  <SelectItem value="all">All Cases</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center space-x-2">
+                <Select value={statusFilter} onValueChange={setStatusFilter} disabled={!!searchTerm.trim()}>
+                  <SelectTrigger className={`w-[180px] ${searchTerm.trim() ? 'opacity-50' : ''}`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active Cases</SelectItem>
+                    <SelectItem value="closed">Closed Cases</SelectItem>
+                    <SelectItem value="all">All Cases</SelectItem>
+                  </SelectContent>
+                </Select>
+                {searchTerm.trim() && (
+                  <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                    Searching all cases
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </CardContent>
@@ -223,7 +235,12 @@ export default function Cases() {
             </CardTitle>
             <div className="text-sm text-gray-600">
               Showing {startIndex + 1}-{Math.min(endIndex, filteredCases.length)} of {filteredCases.length} cases
-              {filteredCases.length !== (cases?.length || 0) && ` (filtered from ${cases?.length || 0})`}
+              {searchTerm.trim() 
+                ? ` (searching all cases for "${searchTerm}")` 
+                : filteredCases.length !== (cases?.length || 0) 
+                  ? ` (filtered from ${cases?.length || 0})` 
+                  : ''
+              }
               {totalPages > 1 && ` • Page ${currentPage} of ${totalPages}`}
             </div>
 
@@ -311,12 +328,14 @@ export default function Cases() {
             <div className="text-center py-12">
               <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500">
-                {searchTerm || statusFilter !== "all" 
-                  ? `No cases match your current filters (${statusFilter} status${searchTerm ? ', search: "' + searchTerm + '"' : ''})` 
-                  : "No cases found"
+                {searchTerm.trim() 
+                  ? `No cases found matching "${searchTerm}" (searched across all cases)`
+                  : statusFilter !== "all" 
+                    ? `No ${statusFilter} cases found`
+                    : "No cases found"
                 }
               </p>
-              {(searchTerm || statusFilter !== "all") && (
+              {(searchTerm.trim() || statusFilter !== "active") && (
                 <Button
                   variant="outline"
                   className="mt-4"
@@ -326,7 +345,7 @@ export default function Cases() {
                     resetPagination();
                   }}
                 >
-                  Clear Filters
+                  {searchTerm.trim() ? "Clear Search" : "Reset to Active Cases"}
                 </Button>
               )}
             </div>
