@@ -400,8 +400,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/messages/:id/read', isAuthenticated, async (req: any, res) => {
     try {
       const messageId = parseInt(req.params.id);
+      const userId = req.user.claims.sub;
       
-      // Simply mark the message as read when viewed by anyone
+      // Verify the user has access to this message before marking as read
+      const userMessages = await storage.getMessagesForUser(userId);
+      const hasAccess = userMessages.some(m => m.id === messageId);
+      
+      if (!hasAccess) {
+        return res.status(404).json({ message: "Message not found or access denied" });
+      }
+      
       await storage.markMessageAsRead(messageId);
       res.json({ message: "Message marked as read" });
     } catch (error) {
@@ -415,28 +423,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const messageId = parseInt(req.params.id);
       const userId = req.user.claims.sub;
       
-      // Get all messages for the user (including case-specific ones)
+      // Use the secure getMessagesForUser function which already includes proper organisation access control
       const userMessages = await storage.getMessagesForUser(userId);
-      let message = userMessages.find(m => m.id === messageId);
-      
-      // If not found in user messages, check case-specific messages
-      if (!message) {
-        const user = await storage.getUser(userId);
-        if (user && user.organisationId) {
-          // Get all cases for the user's organisation
-          const cases = await storage.getCasesForOrganisation(user.organisationId);
-          
-          // Check each case's messages
-          for (const case_ of cases) {
-            const caseMessages = await storage.getMessagesForCase(case_.id);
-            message = caseMessages.find(m => m.id === messageId);
-            if (message) break;
-          }
-        }
-      }
+      const message = userMessages.find(m => m.id === messageId);
       
       if (!message || !message.attachmentFilePath) {
-        return res.status(404).json({ message: "File not found" });
+        return res.status(404).json({ message: "File not found or access denied" });
       }
 
       const filePath = path.join(__dirname, '..', message.attachmentFilePath);
