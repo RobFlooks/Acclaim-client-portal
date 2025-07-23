@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
-import { Search, User, Building, Factory, Clock, Check, AlertTriangle, Eye, UserCog, Users, Store, UserCheck } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, User, Building, Factory, Clock, Check, AlertTriangle, Eye, UserCog, Users, Store, UserCheck, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,6 +17,9 @@ export default function Cases() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCase, setSelectedCase] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("active"); // active, closed, all
+  const [currentPage, setCurrentPage] = useState(1);
+  const casesPerPage = 20;
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -69,14 +73,39 @@ export default function Cases() {
     }
   }, [cases]);
 
+  // Filter cases by search term and status
   const filteredCases = cases?.filter((case_: any) => {
     const searchLower = searchTerm.toLowerCase();
-    return (
+    const matchesSearch = (
       case_.caseName.toLowerCase().includes(searchLower) ||
       case_.accountNumber.toLowerCase().includes(searchLower) ||
       case_.debtorEmail?.toLowerCase().includes(searchLower)
     );
+    
+    // Status filter
+    const isActive = case_.status !== "resolved" && case_.status?.toLowerCase() !== "closed";
+    const matchesStatus = statusFilter === "all" || 
+                         (statusFilter === "active" && isActive) ||
+                         (statusFilter === "closed" && !isActive);
+    
+    return matchesSearch && matchesStatus;
   }) || [];
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredCases.length / casesPerPage);
+  const startIndex = (currentPage - 1) * casesPerPage;
+  const endIndex = startIndex + casesPerPage;
+  const paginatedCases = filteredCases.slice(startIndex, endIndex);
+
+  // Reset pagination when filters change
+  const resetPagination = () => {
+    setCurrentPage(1);
+  };
+
+  // Reset pagination when search or filter changes
+  useEffect(() => {
+    resetPagination();
+  }, [searchTerm, statusFilter]);
 
   const getStageBadge = (status: string, stage: string) => {
     if (status === "resolved" || status?.toLowerCase() === "closed") {
@@ -152,15 +181,36 @@ export default function Cases() {
           <CardTitle>Search Cases</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Search by debtor name, account number, or email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="space-y-4">
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Search by debtor name, account number, or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            {/* Status Filter */}
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <Filter className="h-4 w-4 text-gray-400" />
+                <label className="text-sm font-medium text-gray-700">Status:</label>
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active Cases</SelectItem>
+                  <SelectItem value="closed">Closed Cases</SelectItem>
+                  <SelectItem value="all">All Cases</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -169,8 +219,13 @@ export default function Cases() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>
-              {user?.isAdmin ? `All Cases - Global View (${filteredCases.length})` : `All Cases (${filteredCases.length})`}
+              {user?.isAdmin ? `All Cases - Global View` : `All Cases`}
             </CardTitle>
+            <div className="text-sm text-gray-600">
+              Showing {startIndex + 1}-{Math.min(endIndex, filteredCases.length)} of {filteredCases.length} cases
+              {filteredCases.length !== (cases?.length || 0) && ` (filtered from ${cases?.length || 0})`}
+              {totalPages > 1 && ` • Page ${currentPage} of ${totalPages}`}
+            </div>
 
           </div>
         </CardHeader>
@@ -183,9 +238,9 @@ export default function Cases() {
                 </div>
               ))}
             </div>
-          ) : filteredCases.length > 0 ? (
+          ) : paginatedCases.length > 0 ? (
             <div className="space-y-4">
-              {filteredCases.map((case_: any) => (
+              {paginatedCases.map((case_: any) => (
                 <div
                   key={case_.id}
                   id={`case-${case_.id}`}
@@ -256,11 +311,90 @@ export default function Cases() {
             <div className="text-center py-12">
               <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500">
-                {searchTerm ? "No cases match your search" : "No cases found"}
+                {searchTerm || statusFilter !== "all" 
+                  ? `No cases match your current filters (${statusFilter} status${searchTerm ? ', search: "' + searchTerm + '"' : ''})` 
+                  : "No cases found"
+                }
               </p>
+              {(searchTerm || statusFilter !== "all") && (
+                <Button
+                  variant="outline"
+                  className="mt-4"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setStatusFilter("active");
+                    resetPagination();
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              )}
             </div>
           )}
         </CardContent>
+        
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t bg-gray-50">
+            <div className="flex items-center space-x-2">
+              <p className="text-sm text-gray-700">
+                Showing {startIndex + 1} to {Math.min(endIndex, filteredCases.length)} of {filteredCases.length} cases
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="text-acclaim-teal border-acclaim-teal hover:bg-acclaim-teal hover:text-white"
+              >
+                Previous
+              </Button>
+              
+              {/* Page numbers */}
+              <div className="flex items-center space-x-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, index) => {
+                  let pageNumber;
+                  if (totalPages <= 5) {
+                    pageNumber = index + 1;
+                  } else if (currentPage <= 3) {
+                    pageNumber = index + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNumber = totalPages - 4 + index;
+                  } else {
+                    pageNumber = currentPage - 2 + index;
+                  }
+                  
+                  return (
+                    <Button
+                      key={pageNumber}
+                      variant={currentPage === pageNumber ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(pageNumber)}
+                      className={currentPage === pageNumber 
+                        ? "bg-acclaim-teal hover:bg-acclaim-teal/90 text-white" 
+                        : "text-acclaim-teal border-acclaim-teal hover:bg-acclaim-teal hover:text-white"
+                      }
+                    >
+                      {pageNumber}
+                    </Button>
+                  );
+                })}
+              </div>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="text-acclaim-teal border-acclaim-teal hover:bg-acclaim-teal hover:text-white"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   );
