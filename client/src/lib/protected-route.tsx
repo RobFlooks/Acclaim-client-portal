@@ -29,5 +29,14 @@ export function ProtectedRoute({
     );
   }
 
+  // Redirect to password change if required
+  if (user.mustChangePassword) {
+    return (
+      <Route path={path}>
+        <Redirect to="/change-password" />
+      </Route>
+    );
+  }
+
   return <Route path={path} component={Component} />;
 }

@@ -50,6 +50,7 @@ export interface IStorage {
   createUser(userData: any): Promise<User>;
   getUserByExternalRef(externalRef: string): Promise<User | undefined>;
   createUserWithExternalRef(userData: any): Promise<{ user: User; tempPassword: string }>;
+  updateUserPassword(id: string, passwordData: { hashedPassword?: string; tempPassword?: string | null; mustChangePassword?: boolean }): Promise<User>;
   
   // Organisation operations
   getOrganisation(id: number): Promise<Organization | undefined>;
@@ -1077,6 +1078,29 @@ export class DatabaseStorage implements IStorage {
       .returning();
 
     return user || null;
+  }
+
+  async updateUserPassword(id: string, passwordData: { 
+    hashedPassword?: string; 
+    tempPassword?: string | null; 
+    mustChangePassword?: boolean 
+  }): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        hashedPassword: passwordData.hashedPassword,
+        tempPassword: passwordData.tempPassword,
+        mustChangePassword: passwordData.mustChangePassword,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, id))
+      .returning();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    return user;
   }
 
   async makeUserAdmin(userId: string): Promise<User | null> {

@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
+import ChangePasswordPage from "@/pages/change-password-page";
 import Home from "@/pages/Home";
 import SubmitCase from "@/pages/SubmitCase";
 import AdminEnhanced from "@/pages/AdminEnhanced";
@@ -35,6 +36,7 @@ function Router() {
       <ProtectedRoute path="/payment-performance-report" component={PaymentPerformanceReport} />
       <ProtectedRoute path="/admin-payment-performance-report" component={AdminPaymentPerformanceReport} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/change-password" component={ChangePasswordPage} />
       <Route component={NotFound} />
     </Switch>
   );

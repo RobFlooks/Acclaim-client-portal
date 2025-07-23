@@ -66,11 +66,21 @@ export function setupAuth(app: Express) {
       async (email, password, done) => {
         try {
           const user = await storage.getUserByEmail(email);
-          if (!user || !user.hashedPassword) {
+          if (!user) {
             return done(null, false, { message: "Invalid email or password" });
           }
 
-          const isValid = await comparePasswords(password, user.hashedPassword);
+          let isValid = false;
+          
+          // Check temporary password first
+          if (user.tempPassword && password === user.tempPassword) {
+            isValid = true;
+          }
+          // Then check hashed password if no temp password match
+          else if (user.hashedPassword) {
+            isValid = await comparePasswords(password, user.hashedPassword);
+          }
+          
           if (!isValid) {
             return done(null, false, { message: "Invalid email or password" });
           }
@@ -148,6 +158,47 @@ export function setupAuth(app: Express) {
       isAdmin: user.isAdmin,
       mustChangePassword: user.mustChangePassword,
     });
+  });
+
+  // Password change endpoint for users with temporary passwords
+  app.post("/api/change-password", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    const user = req.user as SelectUser;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Current password and new password are required" });
+    }
+
+    try {
+      // Verify current password (could be temp password or hashed password)
+      let isCurrentValid = false;
+      if (user.tempPassword && currentPassword === user.tempPassword) {
+        isCurrentValid = true;
+      } else if (user.hashedPassword) {
+        isCurrentValid = await comparePasswords(currentPassword, user.hashedPassword);
+      }
+
+      if (!isCurrentValid) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+
+      // Hash new password and update user
+      const hashedNewPassword = await hashPassword(newPassword);
+      await storage.updateUserPassword(user.id, {
+        hashedPassword: hashedNewPassword,
+        tempPassword: null, // Clear temporary password
+        mustChangePassword: false,
+      });
+
+      res.json({ message: "Password changed successfully" });
+    } catch (error) {
+      console.error("Password change error:", error);
+      res.status(500).json({ message: "Failed to change password" });
+    }
   });
 }
 
