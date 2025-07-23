@@ -19,6 +19,7 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import officegen from "officegen";
 import bcrypt from "bcrypt";
+import { emailService } from "./email-service";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -390,6 +391,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const newMessage = await storage.createMessage(messageData);
+      
+      // Send email notification to admin if a non-admin user sends a message
+      if (!user.isAdmin) {
+        try {
+          // Get the main admin user
+          const adminUser = await storage.getUser("admin_1753292574.014698");
+          
+          if (adminUser && adminUser.email) {
+            // Get organisation name
+            let organisationName = "Unknown Organisation";
+            if (user.organisationId) {
+              const organisation = await storage.getOrganisation(user.organisationId);
+              if (organisation) {
+                organisationName = organisation.name;
+              }
+            }
+
+            // Get case reference if this is a case-specific message
+            let caseReference = undefined;
+            if (messageData.caseId) {
+              const messageCase = await storage.getCaseById(messageData.caseId);
+              if (messageCase) {
+                caseReference = messageCase.accountNumber;
+              }
+            }
+
+            // Send email notification
+            await emailService.sendMessageNotification(
+              {
+                userEmail: user.email,
+                userName: `${user.firstName} ${user.lastName}`.trim() || user.email,
+                messageSubject: messageData.subject,
+                messageContent: messageData.content,
+                caseReference,
+                organisationName,
+              },
+              adminUser.email
+            );
+          }
+        } catch (emailError) {
+          // Log email error but don't fail the message creation
+          console.error("Failed to send email notification:", emailError);
+        }
+      }
+      
       res.status(201).json(newMessage);
     } catch (error) {
       console.error("Error creating message:", error);
