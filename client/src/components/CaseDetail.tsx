@@ -1635,7 +1635,6 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                           <TableHead>Payment Date</TableHead>
                           <TableHead>Amount</TableHead>
                           <TableHead>Method</TableHead>
-                          <TableHead>Reference</TableHead>
                           <TableHead>Notes</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -1657,9 +1656,6 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                                 <Badge variant="outline">
                                   {payment.paymentMethod || "N/A"}
                                 </Badge>
-                              </TableCell>
-                              <TableCell className="text-gray-600">
-                                {payment.reference || "N/A"}
                               </TableCell>
                               <TableCell className="text-gray-600">
                                 {payment.notes || "N/A"}

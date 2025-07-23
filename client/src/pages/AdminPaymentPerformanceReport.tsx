@@ -238,14 +238,13 @@ export default function AdminPaymentPerformanceReport() {
     XLSX.utils.book_append_sheet(wb, methodWs, 'Payment Methods');
 
     // Payment details sheet
-    const detailHeaders = ['Payment ID', 'Case ID', 'Amount', 'Payment Date', 'Payment Method', 'Reference'];
+    const detailHeaders = ['Payment ID', 'Case ID', 'Amount', 'Payment Date', 'Payment Method'];
     const detailRows = filteredPayments.map(payment => [
       payment.id,
       payment.caseId,
       parseFloat(payment.amount),
       formatDate(payment.paymentDate),
-      payment.paymentMethod || 'Not Specified',
-      payment.reference || ''
+      payment.paymentMethod || 'Not Specified'
     ]);
     const detailData = [detailHeaders, ...detailRows];
     const detailWs = XLSX.utils.aoa_to_sheet(detailData);

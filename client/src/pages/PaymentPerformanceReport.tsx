@@ -139,7 +139,7 @@ export default function PaymentPerformanceReport() {
           'Payment Amount': parseFloat(payment.amount),
           'Payment Date': formatDate(payment.createdAt),
           'Payment Method': payment.paymentMethod || 'Not Specified',
-          'Reference': payment.reference || 'N/A',
+
           'Case Status': case_?.status || 'N/A',
           'Original Amount': case_ ? parseFloat(case_.originalAmount) : 0,
           'Outstanding Amount': case_ ? parseFloat(case_.outstandingAmount) : 0,

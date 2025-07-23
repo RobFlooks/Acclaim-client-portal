@@ -161,7 +161,7 @@ export default function MonthlyStatementReport() {
     ];
 
     // Add payment headers
-    summaryData.push(['Account Number', 'Case Name', 'Amount', 'Date', 'Method', 'Reference']);
+    summaryData.push(['Account Number', 'Case Name', 'Amount', 'Date', 'Method']);
     
     // Add payment data
     monthlyData.paymentsInMonth.forEach((payment: any) => {
@@ -170,8 +170,7 @@ export default function MonthlyStatementReport() {
         payment.caseName,
         formatCurrency(payment.amount),
         formatDate(payment.createdAt),
-        payment.method || 'N/A',
-        payment.reference || 'N/A'
+        payment.method || 'N/A'
       ]);
     });
 
@@ -206,7 +205,6 @@ export default function MonthlyStatementReport() {
           <td class="currency">${formatCurrency(payment.amount)}</td>
           <td>${formatDate(payment.createdAt)}</td>
           <td>${payment.method || 'N/A'}</td>
-          <td>${payment.reference || 'N/A'}</td>
         </tr>
       `).join('');
       
@@ -268,7 +266,6 @@ export default function MonthlyStatementReport() {
                     <th>Amount</th>
                     <th>Date</th>
                     <th>Method</th>
-                    <th>Reference</th>
                   </tr>
                 </thead>
                 <tbody>
