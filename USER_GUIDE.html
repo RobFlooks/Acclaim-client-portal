@@ -232,6 +232,40 @@
             margin-top: 3rem;
         }
 
+        .screenshot {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            margin: 1rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .screenshot-container {
+            text-align: center;
+            margin: 1.5rem 0;
+        }
+
+        .screenshot-caption {
+            font-style: italic;
+            color: #6b7280;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .feature-highlight {
+            background: #f0f9ff;
+            border: 2px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .feature-highlight h4 {
+            color: #0ea5e9;
+            margin-bottom: 0.5rem;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 2rem;
@@ -319,6 +353,12 @@
 
             <h3>Navigation Overview</h3>
             <p>Once logged in, you'll see the main navigation with the following sections:</p>
+            
+            <div class="screenshot-container">
+                <img src="screenshots/user-guide/main-navigation.png" alt="Main Navigation Bar" class="screenshot">
+                <div class="screenshot-caption">Main navigation bar showing all available sections</div>
+            </div>
+            
             <ul>
                 <li><span class="badge">Dashboard</span> - Overview of your cases and statistics</li>
                 <li><span class="badge">Cases</span> - Manage your debt recovery cases</li>
@@ -335,8 +375,9 @@
             
             <p>The dashboard provides a comprehensive overview of your case management activities and key performance metrics.</p>
             
-            <div class="alert alert-info">
-                <strong>Dashboard Screenshot:</strong> [Insert screenshot of main dashboard showing case statistics, recent activity, and navigation options]
+            <div class="screenshot-container">
+                <img src="screenshots/user-guide/dashboard-overview.png" alt="Dashboard Overview" class="screenshot">
+                <div class="screenshot-caption">Dashboard showing key statistics and recent activity</div>
             </div>
             
             <h3>Key Statistics</h3>
@@ -372,6 +413,11 @@
                 <li>Payment notifications</li>
             </ul>
 
+            <div class="screenshot-container">
+                <img src="screenshots/user-guide/dashboard-stats.png" alt="Dashboard Statistics" class="screenshot">
+                <div class="screenshot-caption">Key statistics cards showing case counts and recent activity</div>
+            </div>
+
             <div class="tip">
                 <strong>Pro tip:</strong> The dashboard automatically refreshes to show the latest information. Check it regularly to stay updated on your cases.
             </div>
@@ -380,6 +426,11 @@
         <!-- Case Management -->
         <div class="section" id="case-management">
             <h2>📁 Case Management</h2>
+            
+            <div class="screenshot-container">
+                <img src="screenshots/user-guide/cases-overview.png" alt="Cases Overview" class="screenshot">
+                <div class="screenshot-caption">Cases page showing list of all debt recovery cases</div>
+            </div>
             
             <h3>Viewing Your Cases</h3>
             <div class="step">
@@ -396,6 +447,54 @@
                     <li>Outstanding amount</li>
                     <li>Current status</li>
                     <li>Recovery stage</li>
+                </ul>
+            </div>
+
+            <div class="feature-highlight">
+                <h4>🔍 Case Filtering & Search</h4>
+                <p>Use the filtering options to find specific cases:</p>
+                <ul>
+                    <li><strong>Active Cases:</strong> Currently being processed (default view)</li>
+                    <li><strong>Closed Cases:</strong> Successfully resolved cases</li>
+                    <li><strong>All Cases:</strong> Complete view of all cases</li>
+                    <li><strong>Search:</strong> Find cases by account number, debtor name, or case details</li>
+                </ul>
+                <p><strong>Smart Search:</strong> The search automatically expands to search all cases, even when viewing filtered results.</p>
+            </div>
+
+            <div class="screenshot-container">
+                <img src="screenshots/user-guide/case-filters.png" alt="Case Filters" class="screenshot">
+                <div class="screenshot-caption">Case filtering options and search functionality</div>
+            </div>
+
+            <div class="feature-highlight">
+                <h4>📄 Case Pagination</h4>
+                <p>Cases are displayed 20 per page for optimal performance:</p>
+                <ul>
+                    <li><strong>Page Navigation:</strong> Use Previous/Next buttons to browse through cases</li>
+                    <li><strong>Page Information:</strong> Clear indication of current page and total items</li>
+                    <li><strong>Filter-Aware:</strong> Pagination adjusts based on active filters</li>
+                    <li><strong>Search Reset:</strong> Pagination automatically resets when searching</li>
+                </ul>
+            </div>
+
+            <h3>Viewing Case Details</h3>
+            <p>Click on any case to view comprehensive details in an expanded dialog:</p>
+            
+            <div class="screenshot-container">
+                <img src="screenshots/user-guide/case-detail-dialog.png" alt="Case Detail Dialog" class="screenshot">
+                <div class="screenshot-caption">Large case detail dialog showing timeline, documents, messages, and payments</div>
+            </div>
+
+            <div class="feature-highlight">
+                <h4>🔍 Enhanced Case Detail View</h4>
+                <p>The case detail dialog provides a comprehensive view with:</p>
+                <ul>
+                    <li><strong>Large Display:</strong> Utilises most of your screen space for better visibility</li>
+                    <li><strong>Timeline View:</strong> Complete activity history and case progression</li>
+                    <li><strong>Document Access:</strong> Direct access to all case-related documents</li>
+                    <li><strong>Message History:</strong> All communications related to the case</li>
+                    <li><strong>Payment Tracking:</strong> Payment history and outstanding amounts</li>
                 </ul>
             </div>
 
@@ -478,6 +577,11 @@
         <div class="section" id="messaging">
             <h2>💬 Messaging System</h2>
             
+            <div class="screenshot-container">
+                <img src="screenshots/user-guide/messages-overview.png" alt="Messages Overview" class="screenshot">
+                <div class="screenshot-caption">Messages page showing inbox and communication tools</div>
+            </div>
+            
             <h3>Sending Messages</h3>
             <div class="step">
                 <span class="step-number">1</span>
@@ -516,6 +620,22 @@
                 <li><strong>Response tracking:</strong> See when messages are sent and received</li>
             </ul>
 
+            <div class="feature-highlight">
+                <h4>💬 Message Pagination & Search</h4>
+                <p>The messaging system handles large volumes efficiently:</p>
+                <ul>
+                    <li><strong>20 Messages Per Page:</strong> Fast loading even with hundreds of messages</li>
+                    <li><strong>Intelligent Search:</strong> Search across all messages regardless of current page</li>
+                    <li><strong>Auto-Reset:</strong> Pagination resets to page 1 when searching</li>
+                    <li><strong>Navigation Controls:</strong> Easy Previous/Next navigation with page indicators</li>
+                </ul>
+            </div>
+
+            <div class="screenshot-container">
+                <img src="screenshots/user-guide/new-message.png" alt="New Message Form" class="screenshot">
+                <div class="screenshot-caption">New message form with case selection and file attachment options</div>
+            </div>
+
             <div class="tip">
                 <strong>Communication tip:</strong> Be specific about your case when sending messages. Include account numbers or case names for faster responses.
             </div>
@@ -524,6 +644,11 @@
         <!-- Documents -->
         <div class="section" id="documents">
             <h2>📄 Document Management</h2>
+            
+            <div class="screenshot-container">
+                <img src="screenshots/user-guide/documents-overview.png" alt="Documents Overview" class="screenshot">
+                <div class="screenshot-caption">Documents page showing file library with pagination and search</div>
+            </div>
             
             <h3>Uploading Documents</h3>
             <div class="step">
@@ -546,7 +671,12 @@
                 <strong>Add description:</strong> Provide a brief description of the document
             </div>
 
-            <h3>Document Organisation</h3>
+            <div class="screenshot-container">
+                <img src="screenshots/user-guide/document-upload.png" alt="Document Upload Form" class="screenshot">
+                <div class="screenshot-caption">Document upload form with case selection and file picker</div>
+            </div>
+
+            <h3>Document Organisation & Pagination</h3>
             <p>Documents are automatically organised by:</p>
             <ul>
                 <li><strong>Case:</strong> All documents grouped by case</li>
@@ -554,6 +684,22 @@
                 <li><strong>Type:</strong> Categories like invoices, contracts, correspondence</li>
                 <li><strong>Size:</strong> File size information for management</li>
             </ul>
+
+            <div class="feature-highlight">
+                <h4>📄 Efficient Document Browsing</h4>
+                <p>The system displays 20 documents per page to ensure fast loading even with thousands of files:</p>
+                <ul>
+                    <li><strong>Pagination Controls:</strong> Navigate through pages with Previous/Next buttons</li>
+                    <li><strong>Page Information:</strong> See exactly which documents you're viewing (e.g., "Showing 1-20 of 150")</li>
+                    <li><strong>Search Integration:</strong> When searching, pagination automatically resets to page 1</li>
+                    <li><strong>Case Grouping:</strong> Documents are grouped by case for better organisation</li>
+                </ul>
+            </div>
+
+            <div class="screenshot-container">
+                <img src="screenshots/user-guide/document-pagination.png" alt="Document Pagination" class="screenshot">
+                <div class="screenshot-caption">Document pagination controls showing page navigation and item counts</div>
+            </div>
 
             <h3>Downloading Documents</h3>
             <p>You can download documents at any time by:</p>
@@ -684,43 +830,93 @@
 
 
 
+        <!-- Screenshot Note -->
+        <div class="section" id="screenshot-note">
+            <div class="alert alert-info">
+                <h3>📸 Visual Guide Note</h3>
+                <p><strong>Screenshot Placeholders:</strong> This guide includes placeholder references for screenshots of key interface elements. These screenshots would show:</p>
+                <ul>
+                    <li>Main navigation and dashboard overview</li>
+                    <li>Case management interface with filtering and pagination</li>
+                    <li>Message composition and inbox views</li>
+                    <li>Document upload and management screens</li>
+                    <li>Case detail dialogs and forms</li>
+                    <li>Report generation and analytics interfaces</li>
+                </ul>
+                <p>Screenshots should be captured at standard desktop resolution and show typical user workflows to help users navigate the system effectively.</p>
+            </div>
+        </div>
+
         <!-- Troubleshooting -->
         <div class="section" id="troubleshooting">
-            <h2>🔧 Troubleshooting</h2>
+            <h2>🔧 Troubleshooting & FAQ</h2>
             
-            <h3>Common Issues</h3>
+            <h3>Frequently Asked Questions</h3>
             
-            <h4>Can't log in</h4>
-            <ul>
-                <li>Check your username and password</li>
-                <li>Ensure caps lock is off</li>
-                <li>Try resetting your password</li>
-                <li>Contact your administrator if issues persist</li>
-            </ul>
+            <div class="feature-highlight">
+                <h4>❓ Navigation & Performance</h4>
+                <p><strong>Q: Why do I only see 20 items per page?</strong></p>
+                <p>A: The system uses pagination to ensure fast loading times, especially when you have hundreds or thousands of cases, messages, or documents. This prevents slow page loads and improves overall performance.</p>
+                
+                <p><strong>Q: How do I see more items at once?</strong></p>
+                <p>A: Use the Previous/Next buttons or page numbers to navigate through all your items. The system shows exactly which items you're viewing (e.g., "Showing 1-20 of 150").</p>
+                
+                <p><strong>Q: What happens when I search?</strong></p>
+                <p>A: Searching automatically resets to page 1 and shows results across all your data, not just the current page. This ensures you find what you're looking for even if it would normally be on a different page.</p>
+            </div>
 
-            <h4>File upload problems</h4>
-            <ul>
-                <li>Check file size (max 10MB)</li>
-                <li>Ensure file format is supported</li>
-                <li>Try a different browser</li>
-                <li>Check your internet connection</li>
-            </ul>
+            <div class="feature-highlight">
+                <h4>📁 Case Management</h4>
+                <p><strong>Q: Why can't I see my closed cases?</strong></p>
+                <p>A: The Cases page defaults to showing "Active Cases" only. Click "Closed" or "All" in the filter options to see your closed cases.</p>
+                
+                <p><strong>Q: How do I view detailed case information?</strong></p>
+                <p>A: Click on any case in the list to open a large detailed view showing timeline, documents, messages, and payments all in one place.</p>
+                
+                <p><strong>Q: Can I search for cases that are closed?</strong></p>
+                <p>A: Yes! The search function automatically searches across all cases, regardless of your current filter setting. You'll find both active and closed cases in search results.</p>
+            </div>
 
-            <h4>Missing cases or data</h4>
-            <ul>
-                <li>Check if filters are applied</li>
-                <li>Ensure you're in the correct organisation</li>
-                <li>Try refreshing the page</li>
-                <li>Contact support if data is missing</li>
-            </ul>
+            <div class="feature-highlight">
+                <h4>📄 Documents & Files</h4>
+                <p><strong>Q: How are my documents organised?</strong></p>
+                <p>A: Documents are grouped by case and displayed 20 per page. Each document shows the case it belongs to, upload date, file size, and type.</p>
+                
+                <p><strong>Q: What file types can I upload?</strong></p>
+                <p>A: PDF, DOC, DOCX, TXT, JPG, JPEG, PNG, GIF, XLSX, XLS, CSV files up to 10MB each.</p>
+                
+                <p><strong>Q: Can I download documents?</strong></p>
+                <p>A: Yes, click the download button next to any document. All downloads are secure and tracked for your organisation.</p>
+            </div>
 
-            <h4>Performance issues</h4>
-            <ul>
-                <li>Close unnecessary browser tabs</li>
-                <li>Clear your browser cache</li>
-                <li>Try using a different browser</li>
-                <li>Check your internet connection speed</li>
-            </ul>
+            <h3>Common Issues & Solutions</h3>
+            <div class="feature-card">
+                <div class="feature-icon">🔐</div>
+                <h4>Login Problems</h4>
+                <p><strong>Issue:</strong> Unable to log in</p>
+                <p><strong>Solution:</strong> Check your credentials, clear browser cache, or contact your administrator for password reset</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📄</div>
+                <h4>Document Upload Issues</h4>
+                <p><strong>Issue:</strong> Documents won't upload</p>
+                <p><strong>Solution:</strong> Check file size (max 10MB), ensure supported format, and verify stable internet connection</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h4>Search Not Working</h4>
+                <p><strong>Issue:</strong> Search returns no results</p>
+                <p><strong>Solution:</strong> Try different keywords, check spelling, or use partial terms. Remember search looks across all data, not just current page</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h4>Page Loading Slowly</h4>
+                <p><strong>Issue:</strong> System seems slow</p>
+                <p><strong>Solution:</strong> Pagination helps, but also try refreshing your browser, checking internet speed, or clearing browser cache</p>
+            </div>
 
             <h3>Browser Support</h3>
             <p>The portal works best with:</p>
@@ -731,24 +927,17 @@
                 <li>Edge</li>
             </ul>
 
-            <h3>Getting Help</h3>
-            <div class="step">
-                <span class="step-number">1</span>
-                <strong>Use the messaging system:</strong> Send a message to your support team
-            </div>
-            
-            <div class="step">
-                <span class="step-number">2</span>
-                <strong>Provide details:</strong> Include screenshots and error messages
-            </div>
-            
-            <div class="step">
-                <span class="step-number">3</span>
-                <strong>Check response:</strong> Monitor your messages for replies
-            </div>
+            <h3>Getting Additional Support</h3>
+            <p>If you need further assistance:</p>
+            <ul>
+                <li><strong>Administrator Contact:</strong> For account issues, password resets, or access permissions</li>
+                <li><strong>Message System:</strong> Send messages to your recovery team through the portal</li>
+                <li><strong>Technical Support:</strong> Contact IT support for system-related issues</li>
+                <li><strong>User Guide:</strong> Refer back to this guide for step-by-step instructions</li>
+            </ul>
 
             <div class="tip">
-                <strong>Help tip:</strong> When reporting issues, include your browser type, operating system, and a detailed description of what you were doing when the problem occurred.
+                <strong>Support tip:</strong> When reporting issues, include your account email, browser type, specific page where the issue occurs, and steps you took before the problem appeared.
             </div>
         </div>
     </div>
