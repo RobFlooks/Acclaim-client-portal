@@ -34,11 +34,17 @@ export default function AuthPage() {
     }
 
     try {
-      await loginMutation.mutateAsync({
+      const userData = await loginMutation.mutateAsync({
         email: email,
         password: password,
       });
-      navigate("/");
+      
+      // Check if user needs to change password
+      if (userData.mustChangePassword) {
+        navigate("/change-password");
+      } else {
+        navigate("/");
+      }
     } catch (error: any) {
       setError(error.message || "Login failed");
     }
