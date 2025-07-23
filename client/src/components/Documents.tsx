@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Download, Search, Upload, Calendar, User, Trash2, X } from "lucide-react";
+import { FileText, Download, Search, Upload, Calendar, User, Trash2, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,6 +21,8 @@ export default function Documents() {
   const [selectedCaseId, setSelectedCaseId] = useState<string>("");
   const [selectedCase, setSelectedCase] = useState<any>(null);
   const [caseDetailsOpen, setCaseDetailsOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const documentsPerPage = 20;
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -82,6 +84,21 @@ export default function Documents() {
       (caseDetails && caseDetails.caseName && caseDetails.caseName.toLowerCase().includes(searchLower))
     );
   }) || [];
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredDocuments.length / documentsPerPage);
+  const startIndex = (currentPage - 1) * documentsPerPage;
+  const endIndex = startIndex + documentsPerPage;
+  const paginatedDocuments = filteredDocuments.slice(startIndex, endIndex);
+
+  // Reset pagination when search changes
+  const resetPagination = () => {
+    setCurrentPage(1);
+  };
+
+  useEffect(() => {
+    resetPagination();
+  }, [searchTerm]);
 
   const uploadDocumentMutation = useMutation({
     mutationFn: async ({ file, caseId }: { file: File; caseId: string }) => {
@@ -244,7 +261,7 @@ export default function Documents() {
     return grouped;
   };
 
-  const groupedDocuments = groupDocumentsByCase(filteredDocuments);
+  const groupedDocuments = groupDocumentsByCase(paginatedDocuments);
 
   return (
     <div className="space-y-6">
@@ -328,7 +345,10 @@ export default function Documents() {
               type="text"
               placeholder="Search documents by name, type, account number, or debtor name..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                resetPagination();
+              }}
               className="pl-10"
             />
           </div>
@@ -406,7 +426,16 @@ export default function Documents() {
       {/* Documents List */}
       <Card>
         <CardHeader>
-          <CardTitle>All Documents ({filteredDocuments.length})</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>
+              All Documents ({filteredDocuments.length})
+              {filteredDocuments.length > documentsPerPage && (
+                <span className="text-sm text-gray-500 font-normal ml-2">
+                  Page {currentPage} of {totalPages} (showing {paginatedDocuments.length} of {filteredDocuments.length})
+                </span>
+              )}
+            </CardTitle>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -531,6 +560,38 @@ export default function Documents() {
           )}
         </CardContent>
       </Card>
+
+      {/* Pagination Controls */}
+      {filteredDocuments.length > documentsPerPage && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-500">
+            Showing {startIndex + 1} to {Math.min(endIndex, filteredDocuments.length)} of {filteredDocuments.length} documents
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+            <span className="text-sm text-gray-600">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Case Details Popup */}
       {selectedCase && (
