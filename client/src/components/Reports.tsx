@@ -92,7 +92,7 @@ export default function Reports() {
 
 
   const getStageBreakdown = () => {
-    if (!cases || !Array.isArray(cases)) return { preLegal: 0, claim: 0, judgment: 0, enforcement: 0, paid: 0 };
+    if (!cases || !Array.isArray(cases)) return { preLegal: 0, claim: 0, judgment: 0, enforcement: 0 };
     
     return cases.reduce((acc: any, case_: any) => {
       const stage = case_.stage?.toLowerCase();
@@ -104,11 +104,9 @@ export default function Reports() {
         acc.judgment++;
       } else if (stage === 'enforcement') {
         acc.enforcement++;
-      } else if (stage === 'paid') {
-        acc.paid++;
       }
       return acc;
-    }, { preLegal: 0, claim: 0, judgment: 0, enforcement: 0, paid: 0 });
+    }, { preLegal: 0, claim: 0, judgment: 0, enforcement: 0 });
   };
 
   const getRecoveryAnalysis = () => {
@@ -242,15 +240,6 @@ export default function Reports() {
                 </div>
                 <Badge variant="secondary" className="bg-red-100 text-red-800">
                   {stageBreakdown.enforcement}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600">Paid</span>
-                </div>
-                <Badge variant="secondary" className="bg-green-100 text-green-800">
-                  {stageBreakdown.paid}
                 </Badge>
               </div>
             </div>
