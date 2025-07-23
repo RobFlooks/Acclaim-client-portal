@@ -1,0 +1,66 @@
+<svg width="1200" height="600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="#f8fafc"/>
+  
+  <!-- Header -->
+  <rect x="0" y="0" width="1200" height="80" fill="#006B5B"/>
+  <text x="40" y="50" fill="white" font-size="24" font-family="Arial, sans-serif" font-weight="bold">Messages</text>
+  <rect x="1000" y="25" width="160" height="30" fill="#10b981" rx="6"/>
+  <text x="1080" y="45" text-anchor="middle" fill="white" font-size="14" font-family="Arial, sans-serif" font-weight="bold">+ New Message</text>
+  
+  <!-- Search bar -->
+  <rect x="40" y="100" width="300" height="35" fill="white" stroke="#d1d5db" stroke-width="1" rx="6"/>
+  <text x="60" y="122" fill="#9ca3af" font-size="14" font-family="Arial, sans-serif">Search messages...</text>
+  
+  <!-- Stats -->
+  <text x="400" y="122" fill="#6b7280" font-size="14" font-family="Arial, sans-serif">12 total messages • 3 unread</text>
+  
+  <!-- Message list header -->
+  <rect x="40" y="150" width="1120" height="40" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="60" y="175" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">From</text>
+  <text x="250" y="175" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Subject</text>
+  <text x="600" y="175" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Case</text>
+  <text x="800" y="175" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Date</text>
+  <text x="1000" y="175" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Status</text>
+  
+  <!-- Unread message -->
+  <rect x="40" y="190" width="1120" height="50" fill="#eff6ff" stroke="#3b82f6" stroke-width="1"/>
+  <circle cx="60" cy="215" r="4" fill="#3b82f6"/>
+  <text x="80" y="210" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Recovery Team</text>
+  <text x="80" y="225" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">team@acclaimcredit.com</text>
+  <text x="250" y="210" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Payment Plan Update</text>
+  <text x="250" y="225" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">New payment plan options available</text>
+  <text x="600" y="215" fill="#374151" font-size="14" font-family="Arial, sans-serif">CLS00003-028</text>
+  <text x="800" y="215" fill="#374151" font-size="14" font-family="Arial, sans-serif">2 hours ago</text>
+  <rect x="1000" y="205" width="50" height="20" fill="#3b82f6" rx="10"/>
+  <text x="1025" y="217" text-anchor="middle" fill="white" font-size="12" font-family="Arial, sans-serif">New</text>
+  
+  <!-- Read message -->
+  <rect x="40" y="240" width="1120" height="50" fill="white" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="80" y="260" fill="#374151" font-size="14" font-family="Arial, sans-serif">You</text>
+  <text x="80" y="275" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">danhirst@chadlaw.co.uk</text>
+  <text x="250" y="260" fill="#374151" font-size="14" font-family="Arial, sans-serif">Payment Confirmation</text>
+  <text x="250" y="275" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">Confirming £500 payment received</text>
+  <text x="600" y="265" fill="#374151" font-size="14" font-family="Arial, sans-serif">CLS00003-028</text>
+  <text x="800" y="265" fill="#6b7280" font-size="14" font-family="Arial, sans-serif">4 hours ago</text>
+  <rect x="1000" y="255" width="50" height="20" fill="#6b7280" rx="10"/>
+  <text x="1025" y="267" text-anchor="middle" fill="white" font-size="12" font-family="Arial, sans-serif">Sent</text>
+  
+  <!-- Another read message -->
+  <rect x="40" y="290" width="1120" height="50" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="80" y="310" fill="#374151" font-size="14" font-family="Arial, sans-serif">Recovery Team</text>
+  <text x="80" y="325" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">team@acclaimcredit.com</text>
+  <text x="250" y="310" fill="#374151" font-size="14" font-family="Arial, sans-serif">Initial Contact Letter</text>
+  <text x="250" y="325" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">Letter sent to debtor - copy attached</text>
+  <text x="600" y="315" fill="#374151" font-size="14" font-family="Arial, sans-serif">CLS00003-029</text>
+  <text x="800" y="315" fill="#6b7280" font-size="14" font-family="Arial, sans-serif">1 day ago</text>
+  <rect x="1000" y="305" width="50" height="20" fill="#6b7280" rx="10"/>
+  <text x="1025" y="317" text-anchor="middle" fill="white" font-size="12" font-family="Arial, sans-serif">Read</text>
+  
+  <!-- Pagination -->
+  <text x="60" y="530" fill="#6b7280" font-size="14" font-family="Arial, sans-serif">Showing 1-20 of 12 messages</text>
+  <rect x="1000" y="510" width="80" height="35" fill="#e5e7eb" rx="6"/>
+  <text x="1040" y="532" text-anchor="middle" fill="#9ca3af" font-size="14" font-family="Arial, sans-serif">Previous</text>
+  <rect x="1090" y="510" width="70" height="35" fill="#e5e7eb" rx="6"/>
+  <text x="1125" y="532" text-anchor="middle" fill="#9ca3af" font-size="14" font-family="Arial, sans-serif">Next</text>
+</svg>

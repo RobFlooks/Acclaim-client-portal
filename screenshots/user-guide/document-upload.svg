@@ -1,0 +1,39 @@
+<svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="#ffffff" stroke="#e5e7eb" stroke-width="2" rx="8"/>
+  
+  <!-- Header -->
+  <rect x="0" y="0" width="600" height="60" fill="#006B5B" rx="8"/>
+  <rect x="0" y="52" width="600" height="8" fill="#006B5B"/>
+  <text x="30" y="40" fill="white" font-size="18" font-family="Arial, sans-serif" font-weight="bold">Upload Document</text>
+  <text x="550" y="40" text-anchor="middle" fill="white" font-size="20" font-family="Arial, sans-serif">✕</text>
+  
+  <!-- Form fields -->
+  <text x="30" y="90" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Select Case:</text>
+  <rect x="30" y="100" width="540" height="35" fill="white" stroke="#d1d5db" stroke-width="1" rx="6"/>
+  <text x="45" y="122" fill="#374151" font-size="14" font-family="Arial, sans-serif">CLS00003-028 - John Smith (£2,500.00)</text>
+  <text x="540" y="122" fill="#9ca3af" font-size="14" font-family="Arial, sans-serif">⌄</text>
+  
+  <text x="30" y="165" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Document Type:</text>
+  <rect x="30" y="175" width="540" height="35" fill="white" stroke="#d1d5db" stroke-width="1" rx="6"/>
+  <text x="45" y="197" fill="#374151" font-size="14" font-family="Arial, sans-serif">Agreement</text>
+  <text x="540" y="197" fill="#9ca3af" font-size="14" font-family="Arial, sans-serif">⌄</text>
+  
+  <!-- File picker -->
+  <text x="30" y="240" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Choose File:</text>
+  <rect x="30" y="250" width="540" height="60" fill="#f9fafb" stroke="#d1d5db" stroke-width="2" stroke-dasharray="5,5" rx="6"/>
+  <text x="300" y="270" text-anchor="middle" fill="#6b7280" font-size="16" font-family="Arial, sans-serif">📁</text>
+  <text x="300" y="290" text-anchor="middle" fill="#6b7280" font-size="14" font-family="Arial, sans-serif">Drag & drop files here or click to browse</text>
+  <text x="300" y="305" text-anchor="middle" fill="#9ca3af" font-size="12" font-family="Arial, sans-serif">Supported: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (Max 10MB)</text>
+  
+  <text x="30" y="340" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Description (optional):</text>
+  <rect x="30" y="350" width="540" height="35" fill="white" stroke="#d1d5db" stroke-width="1" rx="6"/>
+  <text x="45" y="372" fill="#9ca3af" font-size="14" font-family="Arial, sans-serif">Brief description of the document...</text>
+  
+  <!-- Buttons -->
+  <rect x="450" y="360" width="60" height="30" fill="#e5e7eb" stroke="#d1d5db" stroke-width="1" rx="6"/>
+  <text x="480" y="380" text-anchor="middle" fill="#6b7280" font-size="14" font-family="Arial, sans-serif">Cancel</text>
+  
+  <rect x="520" y="360" width="50" height="30" fill="#006B5B" rx="6"/>
+  <text x="545" y="380" text-anchor="middle" fill="white" font-size="14" font-family="Arial, sans-serif">Upload</text>
+</svg>

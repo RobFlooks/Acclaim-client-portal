@@ -1,0 +1,29 @@
+<svg width="1200" height="140" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="#f8fafc"/>
+  
+  <!-- Stats Cards -->
+  <rect x="40" y="10" width="270" height="120" fill="white" stroke="#e5e7eb" stroke-width="1" rx="8"/>
+  <rect x="20" y="20" width="30" height="30" fill="#006B5B" rx="4"/>
+  <text x="70" y="35" fill="#374151" font-size="14" font-family="Arial, sans-serif">Active Cases</text>
+  <text x="70" y="55" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">Currently being worked on</text>
+  <text x="250" y="90" text-anchor="end" fill="#006B5B" font-size="36" font-family="Arial, sans-serif" font-weight="bold">5</text>
+  
+  <rect x="330" y="10" width="270" height="120" fill="white" stroke="#e5e7eb" stroke-width="1" rx="8"/>
+  <rect x="350" y="20" width="30" height="30" fill="#10b981" rx="4"/>
+  <text x="390" y="35" fill="#374151" font-size="14" font-family="Arial, sans-serif">Closed Cases</text>
+  <text x="390" y="55" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">Successfully resolved</text>
+  <text x="570" y="90" text-anchor="end" fill="#10b981" font-size="36" font-family="Arial, sans-serif" font-weight="bold">3</text>
+  
+  <rect x="620" y="10" width="270" height="120" fill="white" stroke="#e5e7eb" stroke-width="1" rx="8"/>
+  <rect x="640" y="20" width="30" height="30" fill="#3b82f6" rx="4"/>
+  <text x="680" y="35" fill="#374151" font-size="14" font-family="Arial, sans-serif">Messages</text>
+  <text x="680" y="55" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">Communication threads</text>
+  <text x="860" y="90" text-anchor="end" fill="#3b82f6" font-size="36" font-family="Arial, sans-serif" font-weight="bold">12</text>
+  
+  <rect x="910" y="10" width="270" height="120" fill="white" stroke="#e5e7eb" stroke-width="1" rx="8"/>
+  <rect x="930" y="20" width="30" height="30" fill="#f59e0b" rx="4"/>
+  <text x="970" y="35" fill="#374151" font-size="14" font-family="Arial, sans-serif">Documents</text>
+  <text x="970" y="55" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">Files and attachments</text>
+  <text x="1150" y="90" text-anchor="end" fill="#f59e0b" font-size="36" font-family="Arial, sans-serif" font-weight="bold">8</text>
+</svg>

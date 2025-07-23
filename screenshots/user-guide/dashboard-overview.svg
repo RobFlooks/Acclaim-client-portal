@@ -1,0 +1,43 @@
+<svg width="1200" height="600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="#f8fafc"/>
+  
+  <!-- Header -->
+  <rect x="0" y="0" width="1200" height="80" fill="#006B5B"/>
+  <text x="40" y="50" fill="white" font-size="24" font-family="Arial, sans-serif" font-weight="bold">Dashboard</text>
+  
+  <!-- Stats Cards -->
+  <rect x="40" y="100" width="270" height="120" fill="white" stroke="#e5e7eb" stroke-width="1" rx="8"/>
+  <text x="175" y="130" text-anchor="middle" fill="#374151" font-size="16" font-family="Arial, sans-serif">Active Cases</text>
+  <text x="175" y="180" text-anchor="middle" fill="#006B5B" font-size="48" font-family="Arial, sans-serif" font-weight="bold">5</text>
+  
+  <rect x="330" y="100" width="270" height="120" fill="white" stroke="#e5e7eb" stroke-width="1" rx="8"/>
+  <text x="465" y="130" text-anchor="middle" fill="#374151" font-size="16" font-family="Arial, sans-serif">Closed Cases</text>
+  <text x="465" y="180" text-anchor="middle" fill="#10b981" font-size="48" font-family="Arial, sans-serif" font-weight="bold">3</text>
+  
+  <rect x="620" y="100" width="270" height="120" fill="white" stroke="#e5e7eb" stroke-width="1" rx="8"/>
+  <text x="755" y="130" text-anchor="middle" fill="#374151" font-size="16" font-family="Arial, sans-serif">Messages</text>
+  <text x="755" y="180" text-anchor="middle" fill="#3b82f6" font-size="48" font-family="Arial, sans-serif" font-weight="bold">12</text>
+  
+  <rect x="910" y="100" width="270" height="120" fill="white" stroke="#e5e7eb" stroke-width="1" rx="8"/>
+  <text x="1045" y="130" text-anchor="middle" fill="#374151" font-size="16" font-family="Arial, sans-serif">Documents</text>
+  <text x="1045" y="180" text-anchor="middle" fill="#f59e0b" font-size="48" font-family="Arial, sans-serif" font-weight="bold">8</text>
+  
+  <!-- Recent Activity Section -->
+  <rect x="40" y="240" width="1120" height="340" fill="white" stroke="#e5e7eb" stroke-width="1" rx="8"/>
+  <text x="60" y="270" fill="#374151" font-size="20" font-family="Arial, sans-serif" font-weight="bold">Recent Activity</text>
+  
+  <!-- Activity items -->
+  <line x1="60" y1="290" x2="1140" y2="290" stroke="#e5e7eb" stroke-width="1"/>
+  <circle cx="80" cy="320" r="4" fill="#10b981"/>
+  <text x="100" y="325" fill="#374151" font-size="14" font-family="Arial, sans-serif">Payment received for case CLS00003-028</text>
+  <text x="1100" y="325" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">2 hours ago</text>
+  
+  <circle cx="80" cy="350" r="4" fill="#3b82f6"/>
+  <text x="100" y="355" fill="#374151" font-size="14" font-family="Arial, sans-serif">New message from recovery team</text>
+  <text x="1100" y="355" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">4 hours ago</text>
+  
+  <circle cx="80" cy="380" r="4" fill="#f59e0b"/>
+  <text x="100" y="385" fill="#374151" font-size="14" font-family="Arial, sans-serif">Document uploaded to case CLS00003-029</text>
+  <text x="1100" y="385" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">1 day ago</text>
+</svg>

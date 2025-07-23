@@ -1,0 +1,69 @@
+<svg width="1200" height="600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="#f8fafc"/>
+  
+  <!-- Header -->
+  <rect x="0" y="0" width="1200" height="80" fill="#006B5B"/>
+  <text x="40" y="50" fill="white" font-size="24" font-family="Arial, sans-serif" font-weight="bold">Documents</text>
+  <rect x="1000" y="25" width="160" height="30" fill="#10b981" rx="6"/>
+  <text x="1080" y="45" text-anchor="middle" fill="white" font-size="14" font-family="Arial, sans-serif" font-weight="bold">+ Upload File</text>
+  
+  <!-- Stats and search -->
+  <rect x="40" y="100" width="300" height="35" fill="white" stroke="#d1d5db" stroke-width="1" rx="6"/>
+  <text x="60" y="122" fill="#9ca3af" font-size="14" font-family="Arial, sans-serif">Search documents...</text>
+  
+  <text x="400" y="122" fill="#6b7280" font-size="14" font-family="Arial, sans-serif">8 total files • 45.2 MB used</text>
+  
+  <!-- Document list header -->
+  <rect x="40" y="150" width="1120" height="40" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="60" y="175" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Name</text>
+  <text x="400" y="175" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Case</text>
+  <text x="600" y="175" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Type</text>
+  <text x="750" y="175" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Size</text>
+  <text x="900" y="175" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Uploaded</text>
+  <text x="1080" y="175" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Actions</text>
+  
+  <!-- Document rows -->
+  <rect x="40" y="190" width="1120" height="50" fill="white" stroke="#e5e7eb" stroke-width="1"/>
+  <rect x="60" y="205" width="20" height="20" fill="#ef4444" rx="2"/>
+  <text x="70" y="217" text-anchor="middle" fill="white" font-size="10" font-family="Arial, sans-serif" font-weight="bold">PDF</text>
+  <text x="90" y="210" fill="#374151" font-size="14" font-family="Arial, sans-serif">Payment_Agreement_Smith.pdf</text>
+  <text x="90" y="225" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">Payment agreement document</text>
+  <text x="400" y="215" fill="#374151" font-size="14" font-family="Arial, sans-serif">CLS00003-028</text>
+  <text x="600" y="215" fill="#374151" font-size="14" font-family="Arial, sans-serif">Agreement</text>
+  <text x="750" y="215" fill="#6b7280" font-size="14" font-family="Arial, sans-serif">245 KB</text>
+  <text x="900" y="215" fill="#6b7280" font-size="14" font-family="Arial, sans-serif">2 hours ago</text>
+  <rect x="1080" y="205" width="60" height="20" fill="#3b82f6" rx="4"/>
+  <text x="1110" y="217" text-anchor="middle" fill="white" font-size="12" font-family="Arial, sans-serif">Download</text>
+  
+  <rect x="40" y="240" width="1120" height="50" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1"/>
+  <rect x="60" y="255" width="20" height="20" fill="#10b981" rx="2"/>
+  <text x="70" y="267" text-anchor="middle" fill="white" font-size="10" font-family="Arial, sans-serif" font-weight="bold">XLS</text>
+  <text x="90" y="260" fill="#374151" font-size="14" font-family="Arial, sans-serif">Account_Statement_Jan2025.xlsx</text>
+  <text x="90" y="275" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">Monthly account statement</text>
+  <text x="400" y="265" fill="#374151" font-size="14" font-family="Arial, sans-serif">CLS00003-029</text>
+  <text x="600" y="265" fill="#374151" font-size="14" font-family="Arial, sans-serif">Statement</text>
+  <text x="750" y="265" fill="#6b7280" font-size="14" font-family="Arial, sans-serif">89 KB</text>
+  <text x="900" y="265" fill="#6b7280" font-size="14" font-family="Arial, sans-serif">1 day ago</text>
+  <rect x="1080" y="255" width="60" height="20" fill="#3b82f6" rx="4"/>
+  <text x="1110" y="267" text-anchor="middle" fill="white" font-size="12" font-family="Arial, sans-serif">Download</text>
+  
+  <rect x="40" y="290" width="1120" height="50" fill="white" stroke="#e5e7eb" stroke-width="1"/>
+  <rect x="60" y="305" width="20" height="20" fill="#8b5cf6" rx="2"/>
+  <text x="70" y="317" text-anchor="middle" fill="white" font-size="10" font-family="Arial, sans-serif" font-weight="bold">DOC</text>
+  <text x="90" y="310" fill="#374151" font-size="14" font-family="Arial, sans-serif">Initial_Demand_Letter.docx</text>
+  <text x="90" y="325" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">First contact letter to debtor</text>
+  <text x="400" y="315" fill="#374151" font-size="14" font-family="Arial, sans-serif">CLS00003-029</text>
+  <text x="600" y="315" fill="#374151" font-size="14" font-family="Arial, sans-serif">Letter</text>
+  <text x="750" y="315" fill="#6b7280" font-size="14" font-family="Arial, sans-serif">156 KB</text>
+  <text x="900" y="315" fill="#6b7280" font-size="14" font-family="Arial, sans-serif">2 days ago</text>
+  <rect x="1080" y="305" width="60" height="20" fill="#3b82f6" rx="4"/>
+  <text x="1110" y="317" text-anchor="middle" fill="white" font-size="12" font-family="Arial, sans-serif">Download</text>
+  
+  <!-- Pagination -->
+  <text x="60" y="530" fill="#6b7280" font-size="14" font-family="Arial, sans-serif">Showing 1-20 of 8 documents</text>
+  <rect x="1000" y="510" width="80" height="35" fill="#e5e7eb" rx="6"/>
+  <text x="1040" y="532" text-anchor="middle" fill="#9ca3af" font-size="14" font-family="Arial, sans-serif">Previous</text>
+  <rect x="1090" y="510" width="70" height="35" fill="#e5e7eb" rx="6"/>
+  <text x="1125" y="532" text-anchor="middle" fill="#9ca3af" font-size="14" font-family="Arial, sans-serif">Next</text>
+</svg>

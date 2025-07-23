@@ -1,0 +1,59 @@
+<svg width="1200" height="600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="#f8fafc"/>
+  
+  <!-- Header -->
+  <rect x="0" y="0" width="1200" height="80" fill="#006B5B"/>
+  <text x="40" y="50" fill="white" font-size="24" font-family="Arial, sans-serif" font-weight="bold">Cases</text>
+  
+  <!-- Filter tabs -->
+  <rect x="40" y="100" width="80" height="40" fill="#006B5B" rx="6"/>
+  <text x="80" y="125" text-anchor="middle" fill="white" font-size="14" font-family="Arial, sans-serif">Active</text>
+  
+  <rect x="130" y="100" width="80" height="40" fill="#e5e7eb" rx="6"/>
+  <text x="170" y="125" text-anchor="middle" fill="#374151" font-size="14" font-family="Arial, sans-serif">Closed</text>
+  
+  <rect x="220" y="100" width="60" height="40" fill="#e5e7eb" rx="6"/>
+  <text x="250" y="125" text-anchor="middle" fill="#374151" font-size="14" font-family="Arial, sans-serif">All</text>
+  
+  <!-- Search bar -->
+  <rect x="900" y="105" width="260" height="30" fill="white" stroke="#d1d5db" stroke-width="1" rx="6"/>
+  <text x="920" y="125" fill="#9ca3af" font-size="14" font-family="Arial, sans-serif">Search cases...</text>
+  
+  <!-- Case list header -->
+  <rect x="40" y="160" width="1120" height="40" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="60" y="185" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Account</text>
+  <text x="220" y="185" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Name</text>
+  <text x="420" y="185" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Amount</text>
+  <text x="580" y="185" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Status</text>
+  <text x="750" y="185" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Stage</text>
+  <text x="950" y="185" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Last Activity</text>
+  
+  <!-- Case rows -->
+  <rect x="40" y="200" width="1120" height="50" fill="white" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="60" y="230" fill="#374151" font-size="14" font-family="Arial, sans-serif">CLS00003-028</text>
+  <text x="220" y="230" fill="#374151" font-size="14" font-family="Arial, sans-serif">John Smith</text>
+  <text x="420" y="230" fill="#374151" font-size="14" font-family="Arial, sans-serif">£2,500.00</text>
+  <rect x="580" y="215" width="60" height="20" fill="#10b981" rx="10"/>
+  <text x="610" y="227" text-anchor="middle" fill="white" font-size="12" font-family="Arial, sans-serif">Active</text>
+  <rect x="750" y="215" width="80" height="20" fill="#3b82f6" rx="10"/>
+  <text x="790" y="227" text-anchor="middle" fill="white" font-size="12" font-family="Arial, sans-serif">Pre-Legal</text>
+  <text x="950" y="230" fill="#6b7280" font-size="14" font-family="Arial, sans-serif">2 hours ago</text>
+  
+  <rect x="40" y="250" width="1120" height="50" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1"/>
+  <text x="60" y="280" fill="#374151" font-size="14" font-family="Arial, sans-serif">CLS00003-029</text>
+  <text x="220" y="280" fill="#374151" font-size="14" font-family="Arial, sans-serif">ABC Trading Ltd</text>
+  <text x="420" y="280" fill="#374151" font-size="14" font-family="Arial, sans-serif">£5,750.00</text>
+  <rect x="580" y="265" width="60" height="20" fill="#10b981" rx="10"/>
+  <text x="610" y="277" text-anchor="middle" fill="white" font-size="12" font-family="Arial, sans-serif">Active</text>
+  <rect x="750" y="265" width="80" height="20" fill="#f59e0b" rx="10"/>
+  <text x="790" y="277" text-anchor="middle" fill="white" font-size="12" font-family="Arial, sans-serif">Claim</text>
+  <text x="950" y="280" fill="#6b7280" font-size="14" font-family="Arial, sans-serif">1 day ago</text>
+  
+  <!-- Pagination -->
+  <text x="60" y="540" fill="#6b7280" font-size="14" font-family="Arial, sans-serif">Showing 1-20 of 5 cases</text>
+  <rect x="1000" y="520" width="80" height="35" fill="#e5e7eb" rx="6"/>
+  <text x="1040" y="542" text-anchor="middle" fill="#9ca3af" font-size="14" font-family="Arial, sans-serif">Previous</text>
+  <rect x="1090" y="520" width="70" height="35" fill="#e5e7eb" rx="6"/>
+  <text x="1125" y="542" text-anchor="middle" fill="#9ca3af" font-size="14" font-family="Arial, sans-serif">Next</text>
+</svg>

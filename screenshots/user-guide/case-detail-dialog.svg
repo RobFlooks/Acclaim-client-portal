@@ -1,0 +1,75 @@
+<svg width="900" height="600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="#ffffff" stroke="#e5e7eb" stroke-width="2" rx="8"/>
+  
+  <!-- Header -->
+  <rect x="0" y="0" width="900" height="80" fill="#006B5B" rx="8"/>
+  <rect x="0" y="72" width="900" height="8" fill="#006B5B"/>
+  <text x="30" y="35" fill="white" font-size="20" font-family="Arial, sans-serif" font-weight="bold">Case Details - CLS00003-028</text>
+  <text x="30" y="55" fill="#e0f2f1" font-size="14" font-family="Arial, sans-serif">John Smith • £2,500.00 • Active</text>
+  <text x="850" y="50" text-anchor="middle" fill="white" font-size="24" font-family="Arial, sans-serif">✕</text>
+  
+  <!-- Tabs -->
+  <rect x="30" y="100" width="80" height="35" fill="#006B5B" rx="6"/>
+  <text x="70" y="122" text-anchor="middle" fill="white" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Timeline</text>
+  
+  <rect x="120" y="100" width="80" height="35" fill="#f3f4f6" rx="6"/>
+  <text x="160" y="122" text-anchor="middle" fill="#6b7280" font-size="14" font-family="Arial, sans-serif">Documents</text>
+  
+  <rect x="210" y="100" width="80" height="35" fill="#f3f4f6" rx="6"/>
+  <text x="250" y="122" text-anchor="middle" fill="#6b7280" font-size="14" font-family="Arial, sans-serif">Messages</text>
+  
+  <rect x="300" y="100" width="80" height="35" fill="#f3f4f6" rx="6"/>
+  <text x="340" y="122" text-anchor="middle" fill="#6b7280" font-size="14" font-family="Arial, sans-serif">Payments</text>
+  
+  <!-- Timeline content -->
+  <text x="30" y="170" fill="#374151" font-size="16" font-family="Arial, sans-serif" font-weight="bold">Case Timeline</text>
+  
+  <!-- Timeline items -->
+  <line x1="50" y1="190" x2="50" y2="500" stroke="#e5e7eb" stroke-width="2"/>
+  
+  <circle cx="50" cy="200" r="6" fill="#10b981"/>
+  <text x="70" y="195" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Payment Received</text>
+  <text x="70" y="210" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">£500.00 payment received via bank transfer</text>
+  <text x="750" y="205" fill="#9ca3af" font-size="12" font-family="Arial, sans-serif">2 hours ago</text>
+  
+  <circle cx="50" cy="250" r="6" fill="#3b82f6"/>
+  <text x="70" y="245" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Payment Plan Agreement</text>
+  <text x="70" y="260" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">Debtor agreed to monthly payment plan of £250</text>
+  <text x="750" y="255" fill="#9ca3af" font-size="12" font-family="Arial, sans-serif">1 day ago</text>
+  
+  <circle cx="50" cy="300" r="6" fill="#f59e0b"/>
+  <text x="70" y="295" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Initial Contact</text>
+  <text x="70" y="310" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">First demand letter sent to debtor</text>
+  <text x="750" y="305" fill="#9ca3af" font-size="12" font-family="Arial, sans-serif">5 days ago</text>
+  
+  <circle cx="50" cy="350" r="6" fill="#6b7280"/>
+  <text x="70" y="345" fill="#374151" font-size="14" font-family="Arial, sans-serif" font-weight="bold">Case Created</text>
+  <text x="70" y="360" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">Case opened and assigned to recovery team</text>
+  <text x="750" y="355" fill="#9ca3af" font-size="12" font-family="Arial, sans-serif">1 week ago</text>
+  
+  <!-- Summary box -->
+  <rect x="500" y="180" width="350" height="200" fill="#f8fafc" stroke="#e5e7eb" stroke-width="1" rx="6"/>
+  <text x="520" y="205" fill="#374151" font-size="16" font-family="Arial, sans-serif" font-weight="bold">Case Summary</text>
+  
+  <text x="520" y="230" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">Original Amount:</text>
+  <text x="780" y="230" text-anchor="end" fill="#374151" font-size="12" font-family="Arial, sans-serif" font-weight="bold">£2,500.00</text>
+  
+  <text x="520" y="250" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">Amount Paid:</text>
+  <text x="780" y="250" text-anchor="end" fill="#10b981" font-size="12" font-family="Arial, sans-serif" font-weight="bold">£500.00</text>
+  
+  <text x="520" y="270" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">Outstanding:</text>
+  <text x="780" y="270" text-anchor="end" fill="#ef4444" font-size="12" font-family="Arial, sans-serif" font-weight="bold">£2,000.00</text>
+  
+  <line x1="520" y1="285" x2="830" y2="285" stroke="#e5e7eb" stroke-width="1"/>
+  
+  <text x="520" y="305" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">Current Stage:</text>
+  <rect x="650" y="295" width="80" height="18" fill="#3b82f6" rx="9"/>
+  <text x="690" y="306" text-anchor="middle" fill="white" font-size="10" font-family="Arial, sans-serif" font-weight="bold">Pre-Legal</text>
+  
+  <text x="520" y="330" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">Next Payment Due:</text>
+  <text x="780" y="330" text-anchor="end" fill="#374151" font-size="12" font-family="Arial, sans-serif" font-weight="bold">Feb 15, 2025</text>
+  
+  <text x="520" y="350" fill="#6b7280" font-size="12" font-family="Arial, sans-serif">Recovery Team:</text>
+  <text x="780" y="350" text-anchor="end" fill="#374151" font-size="12" font-family="Arial, sans-serif" font-weight="bold">Sarah Johnson</text>
+</svg>
