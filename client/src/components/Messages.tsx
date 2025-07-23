@@ -34,6 +34,10 @@ export default function Messages() {
   const [searchSender, setSearchSender] = useState("");
   const [searchCaseId, setSearchCaseId] = useState("");
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const messagesPerPage = 20; // Show 20 messages per page
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -305,6 +309,17 @@ export default function Messages() {
     });
   }, [messages, searchTerm, searchDateFrom, searchDateTo, searchSender, searchCaseId, cases]);
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredMessages.length / messagesPerPage);
+  const startIndex = (currentPage - 1) * messagesPerPage;
+  const endIndex = startIndex + messagesPerPage;
+  const paginatedMessages = filteredMessages.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  const resetPagination = () => {
+    setCurrentPage(1);
+  };
+
   // Clear all search filters
   const clearAllFilters = () => {
     setSearchTerm("");
@@ -312,6 +327,7 @@ export default function Messages() {
     setSearchDateTo("");
     setSearchSender("");
     setSearchCaseId("");
+    resetPagination();
   };
 
   return (
@@ -411,7 +427,10 @@ export default function Messages() {
                 <Input
                   placeholder="Search messages by subject or content..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    resetPagination();
+                  }}
                   className="pl-10"
                 />
               </div>
@@ -437,7 +456,10 @@ export default function Messages() {
                     id="dateFrom"
                     type="date"
                     value={searchDateFrom}
-                    onChange={(e) => setSearchDateFrom(e.target.value)}
+                    onChange={(e) => {
+                      setSearchDateFrom(e.target.value);
+                      resetPagination();
+                    }}
                     className="mt-1"
                   />
                 </div>
@@ -447,7 +469,10 @@ export default function Messages() {
                     id="dateTo"
                     type="date"
                     value={searchDateTo}
-                    onChange={(e) => setSearchDateTo(e.target.value)}
+                    onChange={(e) => {
+                      setSearchDateTo(e.target.value);
+                      resetPagination();
+                    }}
                     className="mt-1"
                   />
                 </div>
@@ -457,7 +482,10 @@ export default function Messages() {
                     id="sender"
                     placeholder="Search by sender name/email..."
                     value={searchSender}
-                    onChange={(e) => setSearchSender(e.target.value)}
+                    onChange={(e) => {
+                      setSearchSender(e.target.value);
+                      resetPagination();
+                    }}
                     className="mt-1"
                   />
                 </div>
@@ -467,21 +495,25 @@ export default function Messages() {
                     id="caseSearch"
                     placeholder="Search by case number/name..."
                     value={searchCaseId}
-                    onChange={(e) => setSearchCaseId(e.target.value)}
+                    onChange={(e) => {
+                      setSearchCaseId(e.target.value);
+                      resetPagination();
+                    }}
                     className="mt-1"
                   />
                 </div>
               </div>
             )}
 
-            {/* Search Results Summary */}
+            {/* Search Results Summary with Pagination Info */}
             <div className="flex items-center justify-between text-sm text-gray-600">
               <span>
-                Showing {filteredMessages.length} of {totalMessages} messages
+                Showing {startIndex + 1}-{Math.min(endIndex, filteredMessages.length)} of {filteredMessages.length} messages
+                {filteredMessages.length !== totalMessages && ` (filtered from ${totalMessages})`}
               </span>
-              {filteredMessages.length !== totalMessages && (
+              {totalPages > 1 && (
                 <span className="text-accent-foreground">
-                  (filtered)
+                  Page {currentPage} of {totalPages}
                 </span>
               )}
             </div>
@@ -626,9 +658,9 @@ export default function Messages() {
                 </div>
               ))}
             </div>
-          ) : filteredMessages && filteredMessages.length > 0 ? (
+          ) : paginatedMessages && paginatedMessages.length > 0 ? (
             <div className="space-y-4">
-              {filteredMessages.map((message: any) => (
+              {paginatedMessages.map((message: any) => (
                 <div
                   key={message.id}
                   className="p-4 rounded-lg border transition-colors cursor-pointer hover:shadow-md bg-gray-50 border-gray-200 hover:bg-gray-100"
@@ -703,6 +735,69 @@ export default function Messages() {
             </div>
           )}
         </CardContent>
+        
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t bg-gray-50">
+            <div className="flex items-center space-x-2">
+              <p className="text-sm text-gray-700">
+                Showing {startIndex + 1} to {Math.min(endIndex, filteredMessages.length)} of {filteredMessages.length} messages
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="text-acclaim-teal border-acclaim-teal hover:bg-acclaim-teal hover:text-white"
+              >
+                Previous
+              </Button>
+              
+              {/* Page numbers */}
+              <div className="flex items-center space-x-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, index) => {
+                  let pageNumber;
+                  if (totalPages <= 5) {
+                    pageNumber = index + 1;
+                  } else if (currentPage <= 3) {
+                    pageNumber = index + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNumber = totalPages - 4 + index;
+                  } else {
+                    pageNumber = currentPage - 2 + index;
+                  }
+                  
+                  return (
+                    <Button
+                      key={pageNumber}
+                      variant={currentPage === pageNumber ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(pageNumber)}
+                      className={currentPage === pageNumber 
+                        ? "bg-acclaim-teal hover:bg-acclaim-teal/90 text-white" 
+                        : "text-acclaim-teal border-acclaim-teal hover:bg-acclaim-teal hover:text-white"
+                      }
+                    >
+                      {pageNumber}
+                    </Button>
+                  );
+                })}
+              </div>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="text-acclaim-teal border-acclaim-teal hover:bg-acclaim-teal hover:text-white"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
 
       {/* Case Detail Dialog */}
