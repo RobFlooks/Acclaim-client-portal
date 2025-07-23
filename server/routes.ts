@@ -376,6 +376,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
             recipientId = case_.organisationId.toString();
           }
         }
+      } else {
+        // General message (not case-specific)
+        if (user.isAdmin) {
+          // Admin sending general message to all organisations or specific recipient
+          // If no recipient specified, send to the user's own organisation as fallback
+          if (!recipientId && user.organisationId) {
+            recipientType = 'organisation';
+            recipientId = user.organisationId.toString();
+          }
+        } else {
+          // User sending general message to admin - find an admin user
+          const adminUsers = await storage.getAllUsers();
+          const adminUser = adminUsers.find(u => u.isAdmin);
+          if (adminUser) {
+            recipientType = 'user';
+            recipientId = adminUser.id;
+          } else {
+            // Fallback - send to user's organisation if no admin found
+            if (user.organisationId) {
+              recipientType = 'organisation';
+              recipientId = user.organisationId.toString();
+            } else {
+              return res.status(400).json({ message: "No valid recipient found" });
+            }
+          }
+        }
       }
       
       const messageData = insertMessageSchema.parse({

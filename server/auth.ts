@@ -123,6 +123,7 @@ export function setupAuth(app: Express) {
 
       req.login(user, (err) => {
         if (err) return next(err);
+        
         res.json({
           id: user.id,
           firstName: user.firstName,
