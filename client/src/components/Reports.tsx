@@ -91,24 +91,28 @@ export default function Reports() {
 
 
 
-  const getStatusBreakdown = () => {
-    if (!cases) return { active: 0, closed: 0, newMatter: 0 };
+  const getStageBreakdown = () => {
+    if (!cases || !Array.isArray(cases)) return { preLegal: 0, claim: 0, judgment: 0, enforcement: 0, paid: 0 };
     
     return cases.reduce((acc: any, case_: any) => {
-      const status = case_.status?.toLowerCase();
-      if (status === 'closed') {
-        acc.closed++;
-      } else if (status === 'new matter') {
-        acc.newMatter++;
-      } else {
-        acc.active++;
+      const stage = case_.stage?.toLowerCase();
+      if (stage === 'pre-legal') {
+        acc.preLegal++;
+      } else if (stage === 'claim') {
+        acc.claim++;
+      } else if (stage === 'judgment') {
+        acc.judgment++;
+      } else if (stage === 'enforcement') {
+        acc.enforcement++;
+      } else if (stage === 'paid') {
+        acc.paid++;
       }
       return acc;
-    }, { active: 0, closed: 0, newMatter: 0 });
+    }, { preLegal: 0, claim: 0, judgment: 0, enforcement: 0, paid: 0 });
   };
 
   const getRecoveryAnalysis = () => {
-    if (!cases) return { totalOriginal: 0, totalRecovered: 0, totalOutstanding: 0 };
+    if (!cases || !Array.isArray(cases)) return { totalOriginal: 0, totalRecovered: 0, totalOutstanding: 0 };
     
     return cases.reduce((acc: any, case_: any) => {
       const original = parseFloat(case_.originalAmount);
@@ -125,7 +129,7 @@ export default function Reports() {
 
   // Get active cases only for Report Summary
   const getActiveCasesAnalysis = () => {
-    if (!cases) return { totalCases: 0, totalRecovered: 0, totalOutstanding: 0 };
+    if (!cases || !Array.isArray(cases)) return { totalCases: 0, totalRecovered: 0, totalOutstanding: 0 };
     
     const activeCases = cases.filter((case_: any) => case_.status?.toLowerCase() !== 'closed');
     
@@ -141,7 +145,7 @@ export default function Reports() {
     }, { totalCases: activeCases.length, totalRecovered: 0, totalOutstanding: 0 });
   };
 
-  const statusBreakdown = getStatusBreakdown();
+  const stageBreakdown = getStageBreakdown();
   const recoveryAnalysis = getRecoveryAnalysis();
   const activeCasesAnalysis = getActiveCasesAnalysis();
 
@@ -196,39 +200,57 @@ export default function Reports() {
           </div>
         </CardContent>
       </Card>
-      {/* Case Status Breakdown */}
+      {/* Case Stage Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Case Status Breakdown</CardTitle>
+            <CardTitle>Case Stage Breakdown</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600">Active Cases</span>
+                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  <span className="text-sm text-gray-600">Pre-Legal</span>
                 </div>
-                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                  {statusBreakdown.active}
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                  {stageBreakdown.preLegal}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600">New Matter</span>
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                  <span className="text-sm text-gray-600">Claim</span>
                 </div>
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  {statusBreakdown.newMatter}
+                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                  {stageBreakdown.claim}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                  <span className="text-sm text-gray-600">Judgment</span>
+                </div>
+                <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                  {stageBreakdown.judgment}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <span className="text-sm text-gray-600">Enforcement</span>
+                </div>
+                <Badge variant="secondary" className="bg-red-100 text-red-800">
+                  {stageBreakdown.enforcement}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600">Closed Cases</span>
+                  <span className="text-sm text-gray-600">Paid</span>
                 </div>
                 <Badge variant="secondary" className="bg-green-100 text-green-800">
-                  {statusBreakdown.closed}
+                  {stageBreakdown.paid}
                 </Badge>
               </div>
             </div>
