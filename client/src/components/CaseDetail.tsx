@@ -1485,11 +1485,6 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
                           <p className="font-medium text-sm">{message.subject}</p>
-                          {!message.isRead && message.senderId !== user?.id && (
-                            <Badge variant="secondary" className="bg-red-100 text-red-800 text-xs">
-                              New
-                            </Badge>
-                          )}
                         </div>
                         <div className="flex items-center space-x-2">
                           <p className="text-xs text-gray-500">{formatDate(message.createdAt)}</p>
