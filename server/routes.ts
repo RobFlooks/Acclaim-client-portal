@@ -2731,31 +2731,428 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       docx.createP().addLineBreak();
       
-      // Add placeholder sections for remaining content
-      const remainingSections = [
-        'Messaging System',
-        'Document Management', 
-        'Reports & Analytics',
-        'User Profile & Settings',
-        'Troubleshooting'
+      // Case Filtering and Search
+      const filteringHeader = docx.createP();
+      filteringHeader.addText('Case Filtering and Search', { 
+        font_size: 14, 
+        bold: true 
+      });
+      
+      const filteringText = docx.createP();
+      filteringText.addText('Use the filtering options at the top of the Cases page:', { font_size: 12 });
+      
+      const filterOptions = [
+        'Active - Shows only active cases currently being worked on',
+        'Closed - Shows only resolved cases',
+        'All - Shows all cases regardless of status',
+        'Search - Type keywords to find specific cases by name or account number'
       ];
       
-      remainingSections.forEach((section, index) => {
-        const sectionHeader = docx.createP();
-        sectionHeader.addText(`${index + 4}. ${section}`, { 
-          font_size: 18, 
-          bold: true, 
-          color: '006B5B' 
+      filterOptions.forEach(option => {
+        const optionP = docx.createP();
+        optionP.addText(`• ${option}`, { font_size: 12 });
+      });
+      
+      const smartSearchNote = docx.createP();
+      smartSearchNote.addText('Smart Search: The search automatically expands to search all cases, even when viewing filtered results.', { 
+        font_size: 12, 
+        italic: true,
+        color: '0066CC'
+      });
+      
+      docx.createP().addLineBreak();
+      
+      // Case Details
+      const detailsHeader = docx.createP();
+      detailsHeader.addText('Viewing Case Details', { 
+        font_size: 14, 
+        bold: true 
+      });
+      
+      const detailsText = docx.createP();
+      detailsText.addText('Click on any case to view comprehensive details in an expanded dialog:', { font_size: 12 });
+      
+      const detailsTabs = [
+        'Timeline - Complete history of case activities and progress',
+        'Documents - All files and attachments related to the case',
+        'Messages - Communication history specific to this case',
+        'Payments - Payment history and outstanding amounts'
+      ];
+      
+      detailsTabs.forEach(tab => {
+        const tabP = docx.createP();
+        tabP.addText(`• ${tab}`, { font_size: 12 });
+      });
+      
+      const screenshotPlaceholder1 = docx.createP();
+      screenshotPlaceholder1.addText('[INSERT SCREENSHOT: Case detail dialog showing timeline tab with case activities]', { 
+        font_size: 12, 
+        italic: true,
+        color: '0066CC'
+      });
+      
+      docx.createP().addLineBreak();
+      
+      // Messaging System Section
+      const messagingHeader = docx.createP();
+      messagingHeader.addText('4. Messaging System', { 
+        font_size: 18, 
+        bold: true, 
+        color: '006B5B' 
+      });
+      
+      const messagingIntro = docx.createP();
+      messagingIntro.addText('The messaging system allows you to communicate directly with your recovery team about cases and general enquiries.', { font_size: 12 });
+      
+      const sendingHeader = docx.createP();
+      sendingHeader.addText('Sending Messages', { 
+        font_size: 14, 
+        bold: true 
+      });
+      
+      const sendingSteps = [
+        'Navigate to Messages: Click "Messages" in the main navigation',
+        'Click "New Message": Use the green "New Message" button',
+        'Select recipient: Choose "Recovery Team" from the dropdown',
+        'Link to case (optional): Select a case to associate the message with',
+        'Write your message: Include all relevant details',
+        'Attach files (optional): Use the "Attach File" button if needed',
+        'Send: Click the "Send" button to deliver your message'
+      ];
+      
+      sendingSteps.forEach((step, index) => {
+        const stepP = docx.createP();
+        stepP.addText(`${index + 1}. ${step}`, { font_size: 12 });
+      });
+      
+      const messagingTip = docx.createP();
+      messagingTip.addText('Communication tip: Be specific about your case when sending messages. Include account numbers or case names for faster responses.', { 
+        font_size: 12, 
+        italic: true,
+        color: '0066CC'
+      });
+      
+      const screenshotPlaceholder2 = docx.createP();
+      screenshotPlaceholder2.addText('[INSERT SCREENSHOT: New message composition form showing case selection and file attachment options]', { 
+        font_size: 12, 
+        italic: true,
+        color: '0066CC'
+      });
+      
+      docx.createP().addLineBreak();
+      
+      // Reading Messages
+      const readingHeader = docx.createP();
+      readingHeader.addText('Reading Messages', { 
+        font_size: 14, 
+        bold: true 
+      });
+      
+      const readingText = docx.createP();
+      readingText.addText('Your inbox shows all messages with status indicators:', { font_size: 12 });
+      
+      const statusIndicators = [
+        'New - Unread messages (highlighted in blue)',
+        'Read - Previously opened messages',
+        'Sent - Messages you have sent to the team'
+      ];
+      
+      statusIndicators.forEach(indicator => {
+        const indicatorP = docx.createP();
+        indicatorP.addText(`• ${indicator}`, { font_size: 12 });
+      });
+      
+      docx.createP().addLineBreak();
+      
+      // Document Management Section
+      const documentsHeader = docx.createP();
+      documentsHeader.addText('5. Document Management', { 
+        font_size: 18, 
+        bold: true, 
+        color: '006B5B' 
+      });
+      
+      const documentsIntro = docx.createP();
+      documentsIntro.addText('The document management system allows you to upload, organise, and download files related to your cases.', { font_size: 12 });
+      
+      const uploadingHeader = docx.createP();
+      uploadingHeader.addText('Uploading Documents', { 
+        font_size: 14, 
+        bold: true 
+      });
+      
+      const uploadingSteps = [
+        'Navigate to Documents: Click "Documents" in the main navigation',
+        'Click "Upload File": Use the green "Upload File" button',
+        'Select case: Choose which case this document relates to',
+        'Choose file: Browse and select your file (max 10MB)',
+        'Add description: Provide a brief description of the document'
+      ];
+      
+      uploadingSteps.forEach((step, index) => {
+        const stepP = docx.createP();
+        stepP.addText(`${index + 1}. ${step}`, { font_size: 12 });
+      });
+      
+      const supportedFormats = docx.createP();
+      supportedFormats.addText('Supported file formats: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (Maximum file size: 10MB)', { 
+        font_size: 12, 
+        italic: true,
+        color: '666666'
+      });
+      
+      const screenshotPlaceholder3 = docx.createP();
+      screenshotPlaceholder3.addText('[INSERT SCREENSHOT: Document upload form showing case selection and file picker]', { 
+        font_size: 12, 
+        italic: true,
+        color: '0066CC'
+      });
+      
+      docx.createP().addLineBreak();
+      
+      // Document Organisation
+      const organisationHeader = docx.createP();
+      organisationHeader.addText('Document Organisation & Pagination', { 
+        font_size: 14, 
+        bold: true 
+      });
+      
+      const organisationText = docx.createP();
+      organisationText.addText('Documents are automatically organised and displayed with pagination for optimal performance:', { font_size: 12 });
+      
+      const organisationFeatures = [
+        'Chronological order - Most recent uploads first',
+        'Case association - Documents are linked to specific cases',
+        'Pagination - 20 documents per page for fast loading',
+        'Search functionality - Find documents quickly by name or description',
+        'File type indicators - Visual icons show document types'
+      ];
+      
+      organisationFeatures.forEach(feature => {
+        const featureP = docx.createP();
+        featureP.addText(`• ${feature}`, { font_size: 12 });
+      });
+      
+      const paginationNote = docx.createP();
+      paginationNote.addText('Pagination Benefits: Limiting to 20 items per page ensures fast loading even with thousands of documents. Use the Previous/Next buttons to navigate between pages.', { 
+        font_size: 12, 
+        italic: true,
+        color: '0066CC'
+      });
+      
+      docx.createP().addLineBreak();
+      
+      // Downloading Documents
+      const downloadingHeader = docx.createP();
+      downloadingHeader.addText('Downloading Documents', { 
+        font_size: 14, 
+        bold: true 
+      });
+      
+      const downloadingText = docx.createP();
+      downloadingText.addText('You can download documents at any time by:', { font_size: 12 });
+      
+      const downloadingSteps = [
+        'Finding the document in your document list',
+        'Clicking the "Download" button next to the file',
+        'The file will be saved to your device\'s Downloads folder'
+      ];
+      
+      downloadingSteps.forEach((step, index) => {
+        const stepP = docx.createP();
+        stepP.addText(`${index + 1}. ${step}`, { font_size: 12 });
+      });
+      
+      docx.createP().addLineBreak();
+      
+      // Reports & Analytics Section
+      const reportsHeader = docx.createP();
+      reportsHeader.addText('6. Reports & Analytics', { 
+        font_size: 18, 
+        bold: true, 
+        color: '006B5B' 
+      });
+      
+      const reportsIntro = docx.createP();
+      reportsIntro.addText('The Reports section provides detailed analytics and insights into your debt recovery performance.', { font_size: 12 });
+      
+      const availableReports = [
+        'Case Summary Report - Overview of all cases with current status and amounts',
+        'Recovery Analysis Report - Detailed analysis of recovery performance and trends', 
+        'Activity Report - Timeline of all case activities and progress',
+        'Payment Report - Comprehensive payment history and analysis'
+      ];
+      
+      const reportsListHeader = docx.createP();
+      reportsListHeader.addText('Available Reports', { 
+        font_size: 14, 
+        bold: true 
+      });
+      
+      availableReports.forEach(report => {
+        const reportP = docx.createP();
+        reportP.addText(`• ${report}`, { font_size: 12 });
+      });
+      
+      const exportNote = docx.createP();
+      exportNote.addText('Export Options: All reports can be exported to Excel format for further analysis and record-keeping.', { 
+        font_size: 12, 
+        italic: true,
+        color: '0066CC'
+      });
+      
+      docx.createP().addLineBreak();
+      
+      // User Profile & Settings Section
+      const profileHeader = docx.createP();
+      profileHeader.addText('7. User Profile & Settings', { 
+        font_size: 18, 
+        bold: true, 
+        color: '006B5B' 
+      });
+      
+      const profileIntro = docx.createP();
+      profileIntro.addText('Access your user profile and account settings through the user menu in the top-right corner.', { font_size: 12 });
+      
+      const profileFeatures = [
+        'View profile information - See your name, email, and organisation details',
+        'Change password - Update your login password for security',
+        'Account settings - Manage your account preferences',
+        'Logout - Securely sign out of the system'
+      ];
+      
+      const profileFeaturesHeader = docx.createP();
+      profileFeaturesHeader.addText('Profile Features', { 
+        font_size: 14, 
+        bold: true 
+      });
+      
+      profileFeatures.forEach(feature => {
+        const featureP = docx.createP();
+        featureP.addText(`• ${feature}`, { font_size: 12 });
+      });
+      
+      const securityNote = docx.createP();
+      securityNote.addText('Security: Always log out when using shared computers and change your password regularly for account security.', { 
+        font_size: 12, 
+        italic: true,
+        color: '0066CC'
+      });
+      
+      docx.createP().addLineBreak();
+      
+      // Troubleshooting Section
+      const troubleshootingHeader = docx.createP();
+      troubleshootingHeader.addText('8. Troubleshooting & FAQ', { 
+        font_size: 18, 
+        bold: true, 
+        color: '006B5B' 
+      });
+      
+      const faqHeader = docx.createP();
+      faqHeader.addText('Frequently Asked Questions', { 
+        font_size: 14, 
+        bold: true 
+      });
+      
+      // FAQ items
+      const faqItems = [
+        {
+          question: 'Why can I only see 20 items per page?',
+          answer: 'Pagination improves system performance by loading pages quickly, even with thousands of records. Use the navigation controls to browse through pages.'
+        },
+        {
+          question: 'How do I search across all cases when I have a filter applied?',
+          answer: 'The search function automatically expands to search all cases regardless of your current filter selection.'
+        },
+        {
+          question: 'What file types can I upload?',
+          answer: 'Supported formats include PDF, DOC, DOCX, XLS, XLSX, JPG, and PNG files up to 10MB in size.'
+        },
+        {
+          question: 'Why can\'t I see certain menu options?',
+          answer: 'Menu visibility depends on your user permissions. Contact your administrator if you need access to additional features.'
+        },
+        {
+          question: 'How do I reset my password?',
+          answer: 'Contact your system administrator to reset your password. They can provide you with temporary credentials.'
+        }
+      ];
+      
+      faqItems.forEach(item => {
+        const questionP = docx.createP();
+        questionP.addText(`Q: ${item.question}`, { 
+          font_size: 12, 
+          bold: true 
         });
         
-        const placeholder = docx.createP();
-        placeholder.addText(`[Content for ${section} section - detailed instructions and screenshots to be added]`, { 
-          font_size: 12, 
-          italic: true,
-          color: '999999'
-        });
+        const answerP = docx.createP();
+        answerP.addText(`A: ${item.answer}`, { font_size: 12 });
         
         docx.createP().addLineBreak();
+      });
+      
+      // Browser Compatibility
+      const browserHeader = docx.createP();
+      browserHeader.addText('Browser Compatibility', { 
+        font_size: 14, 
+        bold: true 
+      });
+      
+      const browserText = docx.createP();
+      browserText.addText('For the best experience, use:', { font_size: 12 });
+      
+      const browsers = [
+        'Google Chrome (recommended)',
+        'Mozilla Firefox',
+        'Microsoft Edge',
+        'Safari (Mac users)'
+      ];
+      
+      browsers.forEach(browser => {
+        const browserP = docx.createP();
+        browserP.addText(`• ${browser}`, { font_size: 12 });
+      });
+      
+      docx.createP().addLineBreak();
+      
+      // Getting Help
+      const helpHeader = docx.createP();
+      helpHeader.addText('Getting Help', { 
+        font_size: 14, 
+        bold: true 
+      });
+      
+      const helpText = docx.createP();
+      helpText.addText('If you need assistance:', { font_size: 12 });
+      
+      const helpOptions = [
+        'Use the messaging system to contact your recovery team',
+        'Contact your system administrator for technical issues',
+        'Refer to this user guide for step-by-step instructions',
+        'Check the FAQ section for common questions'
+      ];
+      
+      helpOptions.forEach((option, index) => {
+        const optionP = docx.createP();
+        optionP.addText(`${index + 1}. ${option}`, { font_size: 12 });
+      });
+      
+      docx.createP().addLineBreak();
+      
+      // Footer
+      const footerP = docx.createP();
+      footerP.addText('Acclaim Credit Management & Recovery Portal - User Guide', { 
+        font_size: 10, 
+        italic: true,
+        color: '666666'
+      });
+      
+      const dateP = docx.createP();
+      dateP.addText(`Document generated: ${new Date().toLocaleDateString('en-GB')}`, { 
+        font_size: 10, 
+        italic: true,
+        color: '666666'
       });
       
       // Set response headers
