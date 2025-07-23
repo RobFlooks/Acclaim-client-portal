@@ -5,28 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 export default function AuthPage() {
   const [, navigate] = useLocation();
-  const { user, loginMutation, registerMutation } = useAuth();
+  const { user, loginMutation } = useAuth();
   
   // Login form state
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  const [showLoginPassword, setShowLoginPassword] = useState(false);
-  
-  // Register form state
-  const [registerFirstName, setRegisterFirstName] = useState("");
-  const [registerLastName, setRegisterLastName] = useState("");
-  const [registerEmail, setRegisterEmail] = useState("");
-  const [registerPassword, setRegisterPassword] = useState("");
-  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
-  const [confirmPassword, setConfirmPassword] = useState("");
-  
-  const [activeTab, setActiveTab] = useState("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
   // Redirect if already logged in
@@ -39,51 +28,19 @@ export default function AuthPage() {
     e.preventDefault();
     setError("");
     
-    if (!loginEmail || !loginPassword) {
+    if (!email || !password) {
       setError("Please fill in all fields");
       return;
     }
 
     try {
       await loginMutation.mutateAsync({
-        email: loginEmail,
-        password: loginPassword,
+        email: email,
+        password: password,
       });
       navigate("/");
     } catch (error: any) {
       setError(error.message || "Login failed");
-    }
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    
-    if (!registerFirstName || !registerLastName || !registerEmail || !registerPassword) {
-      setError("Please fill in all fields");
-      return;
-    }
-
-    if (registerPassword !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    if (registerPassword.length < 8) {
-      setError("Password must be at least 8 characters long");
-      return;
-    }
-
-    try {
-      await registerMutation.mutateAsync({
-        firstName: registerFirstName,
-        lastName: registerLastName,
-        email: registerEmail,
-        password: registerPassword,
-      });
-      navigate("/");
-    } catch (error: any) {
-      setError(error.message || "Registration failed");
     }
   };
 
@@ -99,183 +56,77 @@ export default function AuthPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Access Your Account</CardTitle>
+              <CardTitle>Sign In</CardTitle>
               <CardDescription>
-                Sign in to your existing account or create a new one
+                Access your account with your credentials
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="login">Sign In</TabsTrigger>
-                  <TabsTrigger value="register">Create Account</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="login" className="space-y-4">
-                  <form onSubmit={handleLogin} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="loginEmail">Email</Label>
-                      <Input
-                        id="loginEmail"
-                        type="email"
-                        value={loginEmail}
-                        onChange={(e) => setLoginEmail(e.target.value)}
-                        placeholder="your.email@company.com"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="loginPassword">Password</Label>
-                      <div className="relative">
-                        <Input
-                          id="loginPassword"
-                          type={showLoginPassword ? "text" : "password"}
-                          value={loginPassword}
-                          onChange={(e) => setLoginPassword(e.target.value)}
-                          placeholder="Enter your password"
-                          required
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                          onClick={() => setShowLoginPassword(!showLoginPassword)}
-                        >
-                          {showLoginPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-
-                    {error && (
-                      <Alert variant="destructive">
-                        <AlertDescription>{error}</AlertDescription>
-                      </Alert>
-                    )}
-
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-acclaim-teal hover:bg-acclaim-teal/90"
-                      disabled={loginMutation.isPending}
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="your.email@company.com"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
                     >
-                      {loginMutation.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Signing In...
-                        </>
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
                       ) : (
-                        "Sign In"
+                        <Eye className="h-4 w-4" />
                       )}
                     </Button>
-                  </form>
-                </TabsContent>
+                  </div>
+                </div>
 
-                <TabsContent value="register" className="space-y-4">
-                  <form onSubmit={handleRegister} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="registerFirstName">First Name</Label>
-                        <Input
-                          id="registerFirstName"
-                          type="text"
-                          value={registerFirstName}
-                          onChange={(e) => setRegisterFirstName(e.target.value)}
-                          placeholder="John"
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="registerLastName">Last Name</Label>
-                        <Input
-                          id="registerLastName"
-                          type="text"
-                          value={registerLastName}
-                          onChange={(e) => setRegisterLastName(e.target.value)}
-                          placeholder="Smith"
-                          required
-                        />
-                      </div>
-                    </div>
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
 
-                    <div className="space-y-2">
-                      <Label htmlFor="registerEmail">Email</Label>
-                      <Input
-                        id="registerEmail"
-                        type="email"
-                        value={registerEmail}
-                        onChange={(e) => setRegisterEmail(e.target.value)}
-                        placeholder="your.email@company.com"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="registerPassword">Password</Label>
-                      <div className="relative">
-                        <Input
-                          id="registerPassword"
-                          type={showRegisterPassword ? "text" : "password"}
-                          value={registerPassword}
-                          onChange={(e) => setRegisterPassword(e.target.value)}
-                          placeholder="Create a strong password"
-                          required
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                          onClick={() => setShowRegisterPassword(!showRegisterPassword)}
-                        >
-                          {showRegisterPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">Confirm Password</Label>
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="Confirm your password"
-                        required
-                      />
-                    </div>
-
-                    {error && (
-                      <Alert variant="destructive">
-                        <AlertDescription>{error}</AlertDescription>
-                      </Alert>
-                    )}
-
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-acclaim-teal hover:bg-acclaim-teal/90"
-                      disabled={registerMutation.isPending}
-                    >
-                      {registerMutation.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Creating Account...
-                        </>
-                      ) : (
-                        "Create Account"
-                      )}
-                    </Button>
-                  </form>
-                </TabsContent>
-              </Tabs>
+                <Button 
+                  type="submit" 
+                  className="w-full bg-acclaim-teal hover:bg-acclaim-teal/90"
+                  disabled={loginMutation.isPending}
+                >
+                  {loginMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Signing In...
+                    </>
+                  ) : (
+                    "Sign In"
+                  )}
+                </Button>
+              </form>
+              
+              <div className="mt-4 text-center text-sm text-muted-foreground">
+                Don't have an account? Contact your administrator to create one for you.
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -298,19 +149,19 @@ export default function AuthPage() {
           <div className="space-y-4 text-left">
             <div className="flex items-center space-x-3">
               <div className="w-2 h-2 bg-white rounded-full"></div>
-              <span>Track cases from initial contact to resolution</span>
+              <span>Comprehensive case tracking</span>
             </div>
             <div className="flex items-center space-x-3">
               <div className="w-2 h-2 bg-white rounded-full"></div>
-              <span>Secure document management and storage</span>
+              <span>Secure document management</span>
             </div>
             <div className="flex items-center space-x-3">
               <div className="w-2 h-2 bg-white rounded-full"></div>
-              <span>Real-time communication with recovery team</span>
+              <span>Real-time progress updates</span>
             </div>
             <div className="flex items-center space-x-3">
               <div className="w-2 h-2 bg-white rounded-full"></div>
-              <span>Comprehensive reporting and analytics</span>
+              <span>Professional communication tools</span>
             </div>
           </div>
         </div>

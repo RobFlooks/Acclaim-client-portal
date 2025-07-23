@@ -93,53 +93,11 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/register", async (req, res, next) => {
-    try {
-      const { firstName, lastName, email, password, organisationId } = req.body;
-
-      if (!firstName || !lastName || !email || !password) {
-        return res.status(400).json({ 
-          message: "First name, last name, email, and password are required" 
-        });
-      }
-
-      const existingUser = await storage.getUserByEmail(email);
-      if (existingUser) {
-        return res.status(400).json({ message: "User with this email already exists" });
-      }
-
-      const hashedPassword = await hashPassword(password);
-      
-      const userData = {
-        id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        firstName,
-        lastName,
-        email,
-        hashedPassword,
-        organisationId: organisationId ? organisationId.toString() : null,
-        mustChangePassword: false,
-        isAdmin: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      const user = await storage.createUser(userData);
-
-      req.login(user, (err) => {
-        if (err) return next(err);
-        res.status(201).json({
-          id: user.id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          organisationId: user.organisationId,
-          isAdmin: user.isAdmin,
-        });
-      });
-    } catch (error) {
-      console.error("Registration error:", error);
-      res.status(500).json({ message: "Failed to register user" });
-    }
+  // Registration endpoint disabled - users are created by administrators only
+  app.post("/api/register", (req, res) => {
+    res.status(403).json({ 
+      message: "Registration is disabled. Please contact your administrator to create an account." 
+    });
   });
 
   app.post("/api/login", (req, res, next) => {
