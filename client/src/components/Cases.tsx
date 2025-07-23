@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, User, Building, Factory, Clock, Check, AlertTriangle, Eye, UserCog, Users, Store, UserCheck, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import CaseDetail from "./CaseDetail";
 import RefreshIndicator from "./RefreshIndicator";
 

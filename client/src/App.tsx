@@ -3,9 +3,10 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useAuth } from "@/hooks/useAuth";
+import { AuthProvider } from "@/hooks/use-auth";
+import { ProtectedRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
-import Landing from "@/pages/Landing";
+import AuthPage from "@/pages/auth-page";
 import Home from "@/pages/Home";
 import SubmitCase from "@/pages/SubmitCase";
 import AdminEnhanced from "@/pages/AdminEnhanced";
@@ -19,28 +20,21 @@ import AdminPaymentPerformanceReport from "@/pages/AdminPaymentPerformanceReport
 import AdvancedReports from "@/pages/AdvancedReports";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
-
   return (
     <Switch>
-      {isLoading || !isAuthenticated ? (
-        <Route path="/" component={Landing} />
-      ) : (
-        <>
-          <Route path="/" component={Home} />
-          <Route path="/submit-case" component={SubmitCase} />
-          <Route path="/admin" component={AdminEnhanced} />
-          <Route path="/admin-enhanced" component={AdminEnhanced} />
-          <Route path="/profile" component={UserProfile} />
-          <Route path="/system-monitoring" component={SystemMonitoring} />
-          <Route path="/advanced-reports" component={AdvancedReports} />
-          <Route path="/case-summary-report" component={CaseSummaryReport} />
-          <Route path="/recovery-analysis-report" component={RecoveryAnalysisReport} />
-          <Route path="/monthly-statement-report" component={MonthlyStatementReport} />
-          <Route path="/payment-performance-report" component={PaymentPerformanceReport} />
-          <Route path="/admin-payment-performance-report" component={AdminPaymentPerformanceReport} />
-        </>
-      )}
+      <ProtectedRoute path="/" component={Home} />
+      <ProtectedRoute path="/submit-case" component={SubmitCase} />
+      <ProtectedRoute path="/admin" component={AdminEnhanced} />
+      <ProtectedRoute path="/admin-enhanced" component={AdminEnhanced} />
+      <ProtectedRoute path="/profile" component={UserProfile} />
+      <ProtectedRoute path="/system-monitoring" component={SystemMonitoring} />
+      <ProtectedRoute path="/advanced-reports" component={AdvancedReports} />
+      <ProtectedRoute path="/case-summary-report" component={CaseSummaryReport} />
+      <ProtectedRoute path="/recovery-analysis-report" component={RecoveryAnalysisReport} />
+      <ProtectedRoute path="/monthly-statement-report" component={MonthlyStatementReport} />
+      <ProtectedRoute path="/payment-performance-report" component={PaymentPerformanceReport} />
+      <ProtectedRoute path="/admin-payment-performance-report" component={AdminPaymentPerformanceReport} />
+      <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -49,10 +43,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

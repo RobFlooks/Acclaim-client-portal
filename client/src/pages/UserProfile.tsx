@@ -11,7 +11,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 import { useQueryClient } from "@tanstack/react-query";
 import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { updateUserSchema, changePasswordSchema } from "@shared/schema";
 import { z } from "zod";
 import { Link } from "wouter";

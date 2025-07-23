@@ -37,11 +37,17 @@ import { db } from "./db";
 import { eq, and, desc, sql, or, isNull } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
+import session from "express-session";
+import connectPg from "connect-pg-simple";
 
 export interface IStorage {
-  // User operations (mandatory for Replit Auth)
+  sessionStore: session.SessionStore;
+
+  // User operations 
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(userData: any): Promise<User>;
   getUserByExternalRef(externalRef: string): Promise<User | undefined>;
   createUserWithExternalRef(userData: any): Promise<{ user: User; tempPassword: string }>;
   
@@ -222,6 +228,26 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  sessionStore: session.SessionStore;
+
+  constructor() {
+    const PostgresSessionStore = connectPg(session);
+    this.sessionStore = new PostgresSessionStore({
+      conString: process.env.DATABASE_URL,
+      createTableIfMissing: true,
+    });
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async createUser(userData: any): Promise<User> {
+    const [user] = await db.insert(users).values(userData).returning();
+    return user;
+  }
+
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;

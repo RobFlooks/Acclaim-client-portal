@@ -36,7 +36,7 @@ export const users = pgTable("users", {
   organisationId: integer("organisation_id").references(() => organisations.id),
   isAdmin: boolean("is_admin").default(false),
   phone: varchar("phone"),
-  passwordHash: varchar("password_hash"),
+  hashedPassword: varchar("hashed_password"),
   tempPassword: varchar("temp_password"),
   mustChangePassword: boolean("must_change_password").default(false),
   externalRef: varchar("external_ref", { length: 100 }).unique(), // For external system integration

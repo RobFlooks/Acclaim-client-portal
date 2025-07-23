@@ -1,7 +1,7 @@
 import { Scale, Home, FolderOpen, MessageSquare, BarChart3, FileText, User, LogOut, Settings, Shield, UserCog } from "lucide-react";
 import logoImage from "@assets/cl-bg_1752271318153.png";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 
@@ -11,11 +11,11 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activeSection, setActiveSection }: SidebarProps) {
-  const { user } = useAuth();
+  const { user, logoutMutation } = useAuth();
   const [, setLocation] = useLocation();
 
   const handleLogout = () => {
-    window.location.href = "/api/logout";
+    logoutMutation.mutate();
   };
 
   // Fetch messages to get unread count

@@ -5,7 +5,7 @@ import roseLogoPath from "@assets/Acclaim rose.Cur_1752277774829.png";
 
 export default function Landing() {
   const handleLogin = () => {
-    window.location.href = "/api/login";
+    window.location.href = "/auth";
   };
 
   return (

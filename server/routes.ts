@@ -1,7 +1,7 @@
 import express, { type Express, type RequestHandler } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated, isAdmin as authIsAdmin } from "./auth";
 import { 
   insertCaseSchema, 
   insertMessageSchema, 
@@ -31,7 +31,7 @@ const upload = multer({
 // Admin middleware - checks if user is an admin
 const isAdmin: RequestHandler = async (req, res, next) => {
   try {
-    const userId = (req as any).user?.claims?.sub;
+    const userId = (req as any).user?.id;
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -58,7 +58,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
@@ -70,7 +70,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard/Statistics routes
   app.get('/api/dashboard/stats', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -99,7 +99,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Cases routes
   app.get('/api/cases', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -127,7 +127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/cases/:id', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -161,7 +161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/cases', isAuthenticated, upload.array('files'), async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       if (!user || !user.organisationId) {
@@ -228,7 +228,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Case activities routes
   app.get('/api/cases/:id/activities', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -281,7 +281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Messages routes
   app.get('/api/messages', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const messages = await storage.getMessagesForUser(userId);
       res.json(messages);
     } catch (error) {
@@ -292,7 +292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/cases/:id/messages', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -327,7 +327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/messages', isAuthenticated, upload.single('attachment'), async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -400,7 +400,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/messages/:id/read', isAuthenticated, async (req: any, res) => {
     try {
       const messageId = parseInt(req.params.id);
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       
       // Verify the user has access to this message before marking as read
       const userMessages = await storage.getMessagesForUser(userId);
@@ -421,7 +421,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/messages/:id/download', isAuthenticated, async (req: any, res) => {
     try {
       const messageId = parseInt(req.params.id);
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       
       // Use the secure getMessagesForUser function which already includes proper organisation access control
       const userMessages = await storage.getMessagesForUser(userId);
@@ -447,7 +447,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Documents routes
   app.get('/api/documents', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       if (!user || !user.organisationId) {
@@ -464,7 +464,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/documents/upload', isAuthenticated, upload.single('file'), async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       if (!user || !user.organisationId) {
@@ -505,7 +505,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/documents/:id/download', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       if (!user || !user.organisationId) {
@@ -534,7 +534,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/cases/:id/documents', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -569,7 +569,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/cases/:id/documents', isAuthenticated, upload.single('file'), async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       if (!user || !user.organisationId) {
@@ -615,7 +615,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Payment routes
   app.get('/api/payments', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -653,7 +653,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/cases/:id/payments', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -688,7 +688,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/cases/:id/payments', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       if (!user || !user.organisationId) {
@@ -726,7 +726,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/documents/:id/download', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       if (!user || !user.organisationId) {
@@ -778,7 +778,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin routes
   app.get('/api/admin/users', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const currentUser = await storage.getUser(userId);
       
       // For now, allow any authenticated user to access admin
@@ -797,7 +797,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/admin/organisations', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const currentUser = await storage.getUser(userId);
       
       if (!currentUser) {
@@ -814,7 +814,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/admin/organisations', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const currentUser = await storage.getUser(userId);
       
       if (!currentUser) {
@@ -839,7 +839,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/admin/users/:userId/assign', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const currentUserId = req.user.claims.sub;
+      const currentUserId = req.user.id;
       const currentUser = await storage.getUser(currentUserId);
       
       if (!currentUser) {
@@ -1035,7 +1035,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update own profile
   app.put('/api/user/profile', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const userData = updateUserSchema.parse(req.body);
 
       const user = await storage.updateUser(userId, userData);
@@ -1053,7 +1053,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Change own password
   app.post('/api/user/change-password', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const passwordData = changePasswordSchema.parse(req.body);
 
       const success = await storage.changeUserPassword(
@@ -1076,7 +1076,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set new password (for first-time login or after reset)
   app.post('/api/user/set-password', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const passwordData = resetPasswordSchema.parse(req.body);
 
       // Check if user must change password
@@ -1100,7 +1100,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Check if password change is required
   app.get('/api/user/password-status', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const mustChange = await storage.checkMustChangePassword(userId);
       res.json({ mustChangePassword: mustChange });
     } catch (error) {
@@ -2315,7 +2315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/admin/cases/:id/archive", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const caseId = parseInt(req.params.id);
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       
       const archivedCase = await storage.archiveCase(caseId, userId);
       
@@ -2332,7 +2332,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/admin/cases/:id/unarchive", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const caseId = parseInt(req.params.id);
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       
       const unarchivedCase = await storage.unarchiveCase(caseId, userId);
       
@@ -2423,7 +2423,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // External API credentials management
   app.post('/api/admin/external-credentials', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { organisationId, username, password, description } = req.body;
       
       if (!organisationId || !username || !password) {
