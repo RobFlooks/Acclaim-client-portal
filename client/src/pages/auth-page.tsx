@@ -88,13 +88,13 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex items-center justify-center p-4 lg:p-8">
         <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-acclaim-navy">Welcome to Acclaim Portal</h1>
-            <p className="text-muted-foreground mt-2">Debt Recovery Case Management</p>
+          <div className="text-center mb-6 lg:mb-8">
+            <h1 className="text-2xl lg:text-3xl font-bold text-acclaim-navy">Welcome to Acclaim Portal</h1>
+            <p className="text-muted-foreground mt-2 text-sm lg:text-base">Debt Recovery Case Management</p>
           </div>
 
           <Card>
@@ -282,16 +282,16 @@ export default function AuthPage() {
       </div>
 
       {/* Right side - Hero section */}
-      <div className="flex-1 bg-gradient-to-br from-acclaim-navy to-acclaim-teal flex items-center justify-center p-8">
-        <div className="text-center text-white space-y-6 max-w-md">
+      <div className="flex-1 bg-gradient-to-br from-acclaim-navy to-acclaim-teal flex items-center justify-center p-4 lg:p-8 order-first lg:order-last">
+        <div className="text-center text-white space-y-4 lg:space-y-6 max-w-md">
           <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-8">
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
               <span className="text-2xl font-bold text-acclaim-navy">A</span>
             </div>
           </div>
           
-          <h2 className="text-3xl font-bold">Professional Debt Recovery</h2>
-          <p className="text-xl text-white/90">
+          <h2 className="text-xl lg:text-3xl font-bold">Professional Debt Recovery</h2>
+          <p className="text-base lg:text-xl text-white/90">
             Streamlined case management for efficient debt recovery operations
           </p>
           

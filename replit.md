@@ -29,7 +29,7 @@ Language preference: British English (organisation not organization, colour not 
 - **Password Security**: bcrypt for password hashing with salt rounds
 
 ### Authentication & Authorization
-- **Provider**: Replit Auth using OpenID Connect
+- **Provider**: Local username/password authentication with Passport.js
 - **Session Storage**: PostgreSQL-backed sessions with 1-week TTL
 - **Security**: HTTP-only cookies, secure flags, CSRF protection
 - **Enhanced Security**: Password management with temporary passwords, force password change on first login
@@ -143,6 +143,7 @@ Language preference: British English (organisation not organization, colour not 
 - **Enhanced User Guide with Visual References**: Completely updated USER_GUIDE.html with comprehensive screenshot placeholders, detailed FAQ section covering pagination and navigation features, enhanced troubleshooting with visual callouts, and step-by-step instructions with visual context. Added explanations for all recent system enhancements including pagination, filtering, and enhanced case detail dialogs
 - **Complete Word Document User Guide**: Enhanced the Word document download with comprehensive content covering all 8 sections (Getting Started, Dashboard, Case Management, Messaging, Documents, Reports, User Profile, Troubleshooting) with detailed step-by-step instructions, FAQ section, browser compatibility guide, and professional Acclaim branding. Document includes screenshot placeholders for customisation and covers all recent system features including pagination, filtering, and enhanced navigation
 - **Enhanced Access Control Security**: Strengthened security for messages and documents to ensure users can only access content linked to cases within their organisation. Updated message download and mark-as-read functions to verify user access through proper organisation-based filtering. All message and document access now goes through secure getMessagesForUser and getDocumentsForOrganisation functions that enforce strict organisation boundaries
+- **Local Authentication Migration**: Successfully migrated from Replit Auth to local username/password authentication system using Passport.js and bcrypt. Users no longer need Replit accounts - they can register directly through the application or be created by administrators. System includes secure session management with PostgreSQL storage, password hashing, and comprehensive login/registration forms with proper validation and responsive design
 
 ### Scaling Considerations
 - Database uses connection pooling for efficiency
