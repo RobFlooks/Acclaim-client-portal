@@ -424,7 +424,6 @@ export default function MonthlyStatementReport() {
                     <th className="border border-gray-200 px-4 py-2 text-left">Amount</th>
                     <th className="border border-gray-200 px-4 py-2 text-left">Date</th>
                     <th className="border border-gray-200 px-4 py-2 text-left">Method</th>
-                    <th className="border border-gray-200 px-4 py-2 text-left">Reference</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -446,9 +445,6 @@ export default function MonthlyStatementReport() {
                         <Badge variant="outline">
                           {payment.paymentMethod || 'N/A'}
                         </Badge>
-                      </td>
-                      <td className="border border-gray-200 px-4 py-2">
-                        {payment.reference || 'N/A'}
                       </td>
                     </tr>
                   ))}
