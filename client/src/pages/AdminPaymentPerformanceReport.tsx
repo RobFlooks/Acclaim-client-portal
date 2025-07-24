@@ -348,7 +348,9 @@ export default function AdminPaymentPerformanceReport() {
                 <th>Total Amount</th>
                 <th>Average Amount</th>
               </tr>
-              ${Object.entries(methodBreakdown).map(([method, data]) => `
+              ${Object.entries(methodBreakdown)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([method, data]) => `
                 <tr>
                   <td>${method}</td>
                   <td>${data.count}</td>
@@ -539,7 +541,9 @@ export default function AdminPaymentPerformanceReport() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {Object.entries(methodBreakdown).map(([method, data]) => (
+            {Object.entries(methodBreakdown)
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([method, data]) => (
               <div key={method} className="flex items-center justify-between p-4 border rounded-lg">
                 <div>
                   <div className="font-medium">{method}</div>

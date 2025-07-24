@@ -160,7 +160,9 @@ export default function PaymentPerformanceReport() {
       ];
 
       // Method breakdown sheet
-      const methodData = Object.entries(metrics?.methodBreakdown || {}).map(([method, amount]) => [
+      const methodData = Object.entries(metrics?.methodBreakdown || {})
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([method, amount]) => [
         method,
         formatCurrency(amount as number),
       ]);
@@ -232,7 +234,9 @@ export default function PaymentPerformanceReport() {
       const currentDate = formatDate(new Date().toISOString());
       
       // Generate method breakdown table
-      const methodRows = Object.entries(metrics?.methodBreakdown || {}).map(([method, amount]) => `
+      const methodRows = Object.entries(metrics?.methodBreakdown || {})
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([method, amount]) => `
         <tr>
           <td>${method}</td>
           <td class="currency">${formatCurrency(amount as number)}</td>
@@ -549,7 +553,9 @@ export default function PaymentPerformanceReport() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Object.entries(metrics?.methodBreakdown || {}).map(([method, amount]) => (
+            {Object.entries(metrics?.methodBreakdown || {})
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([method, amount]) => (
               <div key={method} className="p-4 border rounded-lg">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">{method}</span>
