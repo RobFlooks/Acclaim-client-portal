@@ -9,6 +9,7 @@ import {
   userActivityLogs,
   loginAttempts,
   systemMetrics,
+  auditLog,
   externalApiCredentials,
   type User,
   type UpsertUser,
@@ -30,6 +31,8 @@ import {
   type InsertLoginAttempt,
   type SystemMetric,
   type InsertSystemMetric,
+  type AuditLog,
+  type InsertAuditLog,
   type ExternalApiCredential,
   type InsertExternalApiCredential,
 } from "@shared/schema";
@@ -166,6 +169,24 @@ export interface IStorage {
   
   recordSystemMetric(metric: InsertSystemMetric): Promise<SystemMetric>;
   getSystemMetrics(metricName?: string, limit?: number): Promise<SystemMetric[]>;
+  
+  // Comprehensive audit functionality
+  logAuditEvent(auditData: InsertAuditLog): Promise<AuditLog>;
+  getAuditLogs(filters?: {
+    tableName?: string;
+    recordId?: string;
+    operation?: string;
+    userId?: string;
+    startDate?: Date;
+    endDate?: Date;
+    limit?: number;
+  }): Promise<AuditLog[]>;
+  getAuditSummary(): Promise<{
+    totalChanges: number;
+    recentChanges: number;
+    topUsers: { userId: string; userEmail: string; changeCount: number }[];
+    topTables: { tableName: string; changeCount: number }[];
+  }>;
   
   getSystemAnalytics(): Promise<{
     totalUsers: number;
@@ -1708,6 +1729,206 @@ export class DatabaseStorage implements IStorage {
 
   async deleteExternalApiCredential(id: number): Promise<void> {
     await db.delete(externalApiCredentials).where(eq(externalApiCredentials.id, id));
+  }
+
+  // Comprehensive audit functionality
+  async logAuditEvent(auditData: InsertAuditLog): Promise<AuditLog> {
+    const [result] = await db.insert(auditLog).values(auditData).returning();
+    return result;
+  }
+
+  async getAuditLogs(filters?: {
+    tableName?: string;
+    recordId?: string;
+    operation?: string;
+    userId?: string;
+    startDate?: Date;
+    endDate?: Date;
+    limit?: number;
+  }): Promise<AuditLog[]> {
+    let query = db.select().from(auditLog);
+    
+    const conditions = [];
+    
+    if (filters?.tableName) {
+      conditions.push(eq(auditLog.tableName, filters.tableName));
+    }
+    
+    if (filters?.recordId) {
+      conditions.push(eq(auditLog.recordId, filters.recordId));
+    }
+    
+    if (filters?.operation) {
+      conditions.push(eq(auditLog.operation, filters.operation));
+    }
+    
+    if (filters?.userId) {
+      conditions.push(eq(auditLog.userId, filters.userId));
+    }
+    
+    if (filters?.startDate) {
+      conditions.push(sql`${auditLog.timestamp} >= ${filters.startDate}`);
+    }
+    
+    if (filters?.endDate) {
+      conditions.push(sql`${auditLog.timestamp} <= ${filters.endDate}`);
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+    
+    query = query.orderBy(desc(auditLog.timestamp));
+    
+    if (filters?.limit) {
+      query = query.limit(filters.limit);
+    }
+    
+    return await query;
+  }
+
+  async getAuditSummary(): Promise<{
+    totalChanges: number;
+    recentChanges: number;
+    topUsers: { userId: string; userEmail: string; changeCount: number }[];
+    topTables: { tableName: string; changeCount: number }[];
+  }> {
+    // Get total changes
+    const [totalChanges] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(auditLog);
+
+    // Get recent changes (last 24 hours)
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const [recentChanges] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(auditLog)
+      .where(sql`${auditLog.timestamp} >= ${yesterday}`);
+
+    // Get top users by change count
+    const topUsers = await db
+      .select({
+        userId: auditLog.userId,
+        userEmail: auditLog.userEmail,
+        changeCount: sql<number>`count(*)`,
+      })
+      .from(auditLog)
+      .where(sql`${auditLog.userId} IS NOT NULL`)
+      .groupBy(auditLog.userId, auditLog.userEmail)
+      .orderBy(sql`count(*) DESC`)
+      .limit(10);
+
+    // Get top tables by change count
+    const topTables = await db
+      .select({
+        tableName: auditLog.tableName,
+        changeCount: sql<number>`count(*)`,
+      })
+      .from(auditLog)
+      .groupBy(auditLog.tableName)
+      .orderBy(sql`count(*) DESC`)
+      .limit(10);
+
+    return {
+      totalChanges: totalChanges.count,
+      recentChanges: recentChanges.count,
+      topUsers: topUsers.map(user => ({
+        userId: user.userId || 'Unknown',
+        userEmail: user.userEmail || 'Unknown',
+        changeCount: user.changeCount,
+      })),
+      topTables: topTables.map(table => ({
+        tableName: table.tableName,
+        changeCount: table.changeCount,
+      })),
+    };
+  }
+
+  // Helper method to create audit records for database changes
+  async auditChange(
+    tableName: string,
+    recordId: string,
+    operation: 'INSERT' | 'UPDATE' | 'DELETE',
+    oldData: any = null,
+    newData: any = null,
+    userId?: string,
+    userEmail?: string,
+    ipAddress?: string,
+    userAgent?: string,
+    organisationId?: number,
+    description?: string
+  ): Promise<void> {
+    try {
+      if (operation === 'UPDATE' && oldData && newData) {
+        // For updates, log individual field changes
+        const changes = this.getFieldChanges(oldData, newData);
+        
+        for (const change of changes) {
+          await this.logAuditEvent({
+            tableName,
+            recordId,
+            operation,
+            fieldName: change.field,
+            oldValue: change.oldValue,
+            newValue: change.newValue,
+            userId,
+            userEmail,
+            ipAddress,
+            userAgent,
+            organisationId,
+            description: description || `Updated ${change.field}`,
+          });
+        }
+      } else {
+        // For INSERT/DELETE, log the entire operation
+        await this.logAuditEvent({
+          tableName,
+          recordId,
+          operation,
+          oldValue: oldData ? JSON.stringify(oldData) : null,
+          newValue: newData ? JSON.stringify(newData) : null,
+          userId,
+          userEmail,
+          ipAddress,
+          userAgent,
+          organisationId,
+          description: description || `${operation} operation on ${tableName}`,
+        });
+      }
+    } catch (error) {
+      // Don't throw errors for audit logging to avoid disrupting main operations
+      console.error('Audit logging failed:', error);
+    }
+  }
+
+  private getFieldChanges(oldData: any, newData: any): { field: string; oldValue: string; newValue: string }[] {
+    const changes = [];
+    
+    // Compare all fields
+    const allKeys = new Set([...Object.keys(oldData), ...Object.keys(newData)]);
+    
+    for (const key of allKeys) {
+      const oldValue = oldData[key];
+      const newValue = newData[key];
+      
+      // Skip system fields that change automatically
+      if (['updatedAt', 'lastModified'].includes(key)) {
+        continue;
+      }
+      
+      // Compare values (handle null/undefined)
+      if (oldValue !== newValue) {
+        changes.push({
+          field: key,
+          oldValue: oldValue !== null && oldValue !== undefined ? String(oldValue) : null,
+          newValue: newValue !== null && newValue !== undefined ? String(newValue) : null,
+        });
+      }
+    }
+    
+    return changes;
   }
 }
 

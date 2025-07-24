@@ -19,6 +19,7 @@ import MonthlyStatementReport from "@/pages/MonthlyStatementReport";
 import PaymentPerformanceReport from "@/pages/PaymentPerformanceReport";
 import AdminPaymentPerformanceReport from "@/pages/AdminPaymentPerformanceReport";
 import AdvancedReports from "@/pages/AdvancedReports";
+import AuditManagement from "@/pages/AuditManagement";
 
 function Router() {
   return (
@@ -30,6 +31,7 @@ function Router() {
       <ProtectedRoute path="/profile" component={UserProfile} />
       <ProtectedRoute path="/system-monitoring" component={SystemMonitoring} />
       <ProtectedRoute path="/advanced-reports" component={AdvancedReports} />
+      <ProtectedRoute path="/audit-management" component={AuditManagement} />
       <ProtectedRoute path="/case-summary-report" component={CaseSummaryReport} />
       <ProtectedRoute path="/recovery-analysis-report" component={RecoveryAnalysisReport} />
       <ProtectedRoute path="/monthly-statement-report" component={MonthlyStatementReport} />

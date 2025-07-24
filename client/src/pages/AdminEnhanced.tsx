@@ -769,6 +769,12 @@ export default function AdminEnhanced() {
               Advanced Reports
             </Button>
           </Link>
+          <Link href="/audit-management">
+            <Button variant="outline" size="sm">
+              <Shield className="h-4 w-4 mr-2" />
+              Audit Management
+            </Button>
+          </Link>
         </div>
       </div>
 

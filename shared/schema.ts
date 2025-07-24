@@ -162,6 +162,24 @@ export const systemMetrics = pgTable("system_metrics", {
   recordedAt: timestamp("recorded_at").defaultNow(),
 });
 
+// Comprehensive audit trail table
+export const auditLog = pgTable("audit_log", {
+  id: serial("id").primaryKey(),
+  tableName: varchar("table_name", { length: 100 }).notNull(),
+  recordId: varchar("record_id", { length: 100 }).notNull(),
+  operation: varchar("operation", { length: 20 }).notNull(), // 'INSERT', 'UPDATE', 'DELETE'
+  fieldName: varchar("field_name", { length: 100 }),
+  oldValue: text("old_value"),
+  newValue: text("new_value"),
+  userId: varchar("user_id").references(() => users.id),
+  userEmail: varchar("user_email"),
+  ipAddress: varchar("ip_address", { length: 45 }),
+  userAgent: text("user_agent"),
+  organisationId: integer("organisation_id").references(() => organisations.id),
+  timestamp: timestamp("timestamp").defaultNow(),
+  description: text("description"),
+});
+
 // External API credentials table for case management integration
 export const externalApiCredentials = pgTable("external_api_credentials", {
   id: serial("id").primaryKey(),
@@ -298,6 +316,9 @@ export type InsertLoginAttempt = typeof loginAttempts.$inferInsert;
 
 export type SystemMetric = typeof systemMetrics.$inferSelect;
 export type InsertSystemMetric = typeof systemMetrics.$inferInsert;
+
+export type AuditLog = typeof auditLog.$inferSelect;
+export type InsertAuditLog = typeof auditLog.$inferInsert;
 
 export type ExternalApiCredential = typeof externalApiCredentials.$inferSelect;
 export type InsertExternalApiCredential = typeof externalApiCredentials.$inferInsert;

@@ -1304,6 +1304,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Comprehensive audit endpoints
+  app.get("/api/admin/audit/logs", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { tableName, recordId, operation, userId, startDate, endDate, limit } = req.query;
+      
+      const filters: any = {};
+      if (tableName) filters.tableName = tableName as string;
+      if (recordId) filters.recordId = recordId as string;
+      if (operation) filters.operation = operation as string;
+      if (userId) filters.userId = userId as string;
+      if (startDate) filters.startDate = new Date(startDate as string);
+      if (endDate) filters.endDate = new Date(endDate as string);
+      if (limit) filters.limit = parseInt(limit as string);
+      
+      const logs = await storage.getAuditLogs(filters);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching audit logs:", error);
+      res.status(500).json({ message: "Failed to fetch audit logs" });
+    }
+  });
+
+  app.get("/api/admin/audit/summary", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const summary = await storage.getAuditSummary();
+      res.json(summary);
+    } catch (error) {
+      console.error("Error fetching audit summary:", error);
+      res.status(500).json({ message: "Failed to fetch audit summary" });
+    }
+  });
+
   // Advanced reporting endpoints
   app.get("/api/admin/reports/cross-organisation", isAuthenticated, isAdmin, async (req, res) => {
     try {
@@ -2330,6 +2362,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let updatedCase = case_;
       if (Object.keys(updates).length > 0) {
         updatedCase = await storage.updateCase(case_.id, updates);
+        
+        // Audit the case update from external system
+        await storage.auditChange(
+          'cases',
+          case_.id.toString(),
+          'UPDATE',
+          case_,
+          updatedCase,
+          undefined, // External system update
+          'External System',
+          req.ip,
+          req.get('User-Agent'),
+          case_.organisationId,
+          `Case updated via external API by ${username}`
+        );
         
         // Case activities are now only created via dedicated API endpoint
         // No automatic activity generation - handled manually via PAI push
