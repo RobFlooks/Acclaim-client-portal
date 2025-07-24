@@ -153,6 +153,7 @@ Language preference: British English (organisation not organization, colour not 
 - **Azure Migration Readiness**: Application is fully prepared for Azure cloud deployment with comprehensive migration guide created. System architecture is perfectly compatible with Azure App Service, Azure Database for PostgreSQL, and Azure Storage. No code modifications required for cloud migration (July 23, 2025)
 - **Enhanced Email Notification System**: Implemented comprehensive bidirectional email notifications supporting both user-to-admin and admin-to-user messaging. System works without SMTP configuration using detailed console logging fallback for production monitoring. Supports organisation-wide notifications and case-specific messaging with professional HTML email templates (July 24, 2025)
 - **Database Schema Cleanup**: Removed unused debtor contact fields (debtorEmail, debtorPhone, debtorAddress) from cases table as they're no longer needed. Database now focuses on essential case management data with cleaner schema structure (July 24, 2025)
+- **Mobile Responsive Admin Panel**: Completely redesigned admin panel for mobile devices to eliminate horizontal scrolling. Implemented responsive navigation with abbreviated labels, mobile-friendly card layouts for tables, flexible header navigation, responsive forms with stacked layouts, and optimised button arrangements. Admin panel now provides excellent user experience on all device sizes (July 24, 2025)
 
 ### Scaling Considerations
 - Database uses connection pooling for efficiency

@@ -208,87 +208,168 @@ function CaseManagementTab() {
 
   return (
     <div className="space-y-4">
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-gray-600 px-1">
         Total Cases: {cases.length} | Archived: {cases.filter((c: Case) => c.isArchived).length} | Active: {cases.filter((c: Case) => !c.isArchived).length}
       </div>
       
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Account Number</TableHead>
-            <TableHead>Case Name</TableHead>
-            <TableHead>Organisation</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Stage</TableHead>
-            <TableHead>Outstanding</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {cases.map((case_: Case) => (
-            <TableRow key={case_.id} className={case_.isArchived ? 'bg-gray-50' : ''}>
-              <TableCell className="font-medium">{case_.accountNumber}</TableCell>
-              <TableCell>{case_.caseName}</TableCell>
-              <TableCell>{case_.organisationName || 'N/A'}</TableCell>
-              <TableCell>
-                <Badge variant={case_.status === 'active' ? 'default' : 'secondary'}>
-                  {case_.status}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <Badge variant="outline">{case_.stage}</Badge>
-              </TableCell>
-              <TableCell>£{case_.outstandingAmount}</TableCell>
-              <TableCell>
+      {/* Mobile Card Layout */}
+      <div className="block sm:hidden space-y-4">
+        {cases.map((case_: Case) => (
+          <div key={case_.id} className={`rounded-lg p-4 space-y-3 ${case_.isArchived ? 'bg-gray-50 border' : 'border'}`}>
+            <div className="flex justify-between items-start">
+              <div>
+                <div className="font-medium text-sm">{case_.accountNumber}</div>
+                <div className="text-sm text-gray-700">{case_.caseName}</div>
+                <div className="text-xs text-gray-500">{case_.organisationName || 'N/A'}</div>
+              </div>
+              <div className="flex flex-col gap-1">
                 {case_.isArchived ? (
-                  <Badge variant="secondary">
+                  <Badge variant="secondary" className="text-xs">
                     <Archive className="h-3 w-3 mr-1" />
                     Archived
                   </Badge>
                 ) : (
-                  <Badge variant="default">Active</Badge>
+                  <Badge variant="default" className="text-xs">Active</Badge>
                 )}
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center space-x-2">
-                  {case_.isArchived ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => unarchiveCaseMutation.mutate(case_.id)}
-                      disabled={unarchiveCaseMutation.isPending}
-                      title="Unarchive case"
-                    >
-                      <ArchiveRestore className="h-3 w-3" />
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setArchiveConfirmCase(case_)}
-                      disabled={archiveCaseMutation.isPending}
-                      title="Archive case"
-                    >
-                      <Archive className="h-3 w-3" />
-                    </Button>
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setDeleteConfirmCase(case_)}
-                    disabled={deleteCaseMutation.isPending}
-                    className="text-red-600 hover:text-red-700"
-                    title="Permanently delete case"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              </TableCell>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Status:</span>
+                <Badge variant={case_.status === 'active' ? 'default' : 'secondary'} className="text-xs">
+                  {case_.status}
+                </Badge>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Stage:</span>
+                <Badge variant="outline" className="text-xs">{case_.stage}</Badge>
+              </div>
+              <div className="flex justify-between col-span-2">
+                <span className="text-gray-600">Outstanding:</span>
+                <span className="font-medium">£{case_.outstandingAmount}</span>
+              </div>
+            </div>
+            
+            <div className="flex gap-2 pt-2">
+              {case_.isArchived ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => unarchiveCaseMutation.mutate(case_.id)}
+                  disabled={unarchiveCaseMutation.isPending}
+                >
+                  <ArchiveRestore className="h-3 w-3 mr-1" />
+                  Unarchive
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => setArchiveConfirmCase(case_)}
+                  disabled={archiveCaseMutation.isPending}
+                >
+                  <Archive className="h-3 w-3 mr-1" />
+                  Archive
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDeleteConfirmCase(case_)}
+                disabled={deleteCaseMutation.isPending}
+                className="text-red-600 hover:text-red-700"
+              >
+                <Trash2 className="h-3 w-3 mr-1" />
+                Delete
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Table Layout */}
+      <div className="hidden sm:block overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Account Number</TableHead>
+              <TableHead>Case Name</TableHead>
+              <TableHead>Organisation</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Stage</TableHead>
+              <TableHead>Outstanding</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {cases.map((case_: Case) => (
+              <TableRow key={case_.id} className={case_.isArchived ? 'bg-gray-50' : ''}>
+                <TableCell className="font-medium">{case_.accountNumber}</TableCell>
+                <TableCell>{case_.caseName}</TableCell>
+                <TableCell>{case_.organisationName || 'N/A'}</TableCell>
+                <TableCell>
+                  <Badge variant={case_.status === 'active' ? 'default' : 'secondary'}>
+                    {case_.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline">{case_.stage}</Badge>
+                </TableCell>
+                <TableCell>£{case_.outstandingAmount}</TableCell>
+                <TableCell>
+                  {case_.isArchived ? (
+                    <Badge variant="secondary">
+                      <Archive className="h-3 w-3 mr-1" />
+                      Archived
+                    </Badge>
+                  ) : (
+                    <Badge variant="default">Active</Badge>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center space-x-2">
+                    {case_.isArchived ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => unarchiveCaseMutation.mutate(case_.id)}
+                        disabled={unarchiveCaseMutation.isPending}
+                        title="Unarchive case"
+                      >
+                        <ArchiveRestore className="h-3 w-3" />
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setArchiveConfirmCase(case_)}
+                        disabled={archiveCaseMutation.isPending}
+                        title="Archive case"
+                      >
+                        <Archive className="h-3 w-3" />
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDeleteConfirmCase(case_)}
+                      disabled={deleteCaseMutation.isPending}
+                      className="text-red-600 hover:text-red-700"
+                      title="Permanently delete case"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!deleteConfirmCase} onOpenChange={() => setDeleteConfirmCase(null)}>
@@ -735,44 +816,48 @@ export default function AdminEnhanced() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <Link href="/">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="w-fit">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Home
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold">Admin Panel</h1>
-            <p className="text-gray-600">Comprehensive user and organisation management</p>
+            <h1 className="text-xl sm:text-2xl font-bold">Admin Panel</h1>
+            <p className="text-gray-600 text-sm sm:text-base">Comprehensive user and organisation management</p>
           </div>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:items-center sm:space-x-2">
           <Link href="/system-monitoring">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
               <Activity className="h-4 w-4 mr-2" />
-              System Monitoring
+              <span className="hidden sm:inline">System Monitoring</span>
+              <span className="sm:hidden">System</span>
             </Button>
           </Link>
           <Link href="/admin-payment-performance-report">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
               <CreditCard className="h-4 w-4 mr-2" />
-              Payment Performance
+              <span className="hidden sm:inline">Payment Performance</span>
+              <span className="sm:hidden">Payments</span>
             </Button>
           </Link>
           <Link href="/advanced-reports">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
               <FileText className="h-4 w-4 mr-2" />
-              Advanced Reports
+              <span className="hidden sm:inline">Advanced Reports</span>
+              <span className="sm:hidden">Reports</span>
             </Button>
           </Link>
           <Link href="/audit-management">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
               <Shield className="h-4 w-4 mr-2" />
-              Audit Management
+              <span className="hidden sm:inline">Audit Management</span>
+              <span className="sm:hidden">Audit</span>
             </Button>
           </Link>
         </div>
@@ -831,14 +916,34 @@ export default function AdminEnhanced() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="users" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="users">User Management</TabsTrigger>
-          <TabsTrigger value="organisations">Organisations</TabsTrigger>
-          <TabsTrigger value="cases">Case Management</TabsTrigger>
-          <TabsTrigger value="api-guide">API Integration</TabsTrigger>
-          <TabsTrigger value="case-management">Case Management Integration</TabsTrigger>
-          <TabsTrigger value="user-guide">User Guide</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto">
+          <TabsList className="flex w-full min-w-max sm:w-full sm:min-w-0">
+            <TabsTrigger value="users" className="flex-1 text-xs sm:text-sm">
+              <span className="hidden sm:inline">User Management</span>
+              <span className="sm:hidden">Users</span>
+            </TabsTrigger>
+            <TabsTrigger value="organisations" className="flex-1 text-xs sm:text-sm">
+              <span className="hidden sm:inline">Organisations</span>
+              <span className="sm:hidden">Orgs</span>
+            </TabsTrigger>
+            <TabsTrigger value="cases" className="flex-1 text-xs sm:text-sm">
+              <span className="hidden sm:inline">Case Management</span>
+              <span className="sm:hidden">Cases</span>
+            </TabsTrigger>
+            <TabsTrigger value="api-guide" className="flex-1 text-xs sm:text-sm">
+              <span className="hidden sm:inline">API Integration</span>
+              <span className="sm:hidden">API</span>
+            </TabsTrigger>
+            <TabsTrigger value="case-management" className="flex-1 text-xs sm:text-sm">
+              <span className="hidden sm:inline">Case Management Integration</span>
+              <span className="sm:hidden">CM Int</span>
+            </TabsTrigger>
+            <TabsTrigger value="user-guide" className="flex-1 text-xs sm:text-sm">
+              <span className="hidden sm:inline">User Guide</span>
+              <span className="sm:hidden">Guide</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* User Management Tab */}
         <TabsContent value="users" className="space-y-4">
@@ -864,7 +969,7 @@ export default function AdminEnhanced() {
                       </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="firstName">First Name</Label>
                           <Input
@@ -949,14 +1054,14 @@ export default function AdminEnhanced() {
                         </div>
                       )}
                     </div>
-                    <div className="flex justify-end space-x-2">
-                      <Button variant="outline" onClick={() => setShowCreateUser(false)}>
+                    <div className="flex flex-col sm:flex-row justify-end gap-2 sm:space-x-2">
+                      <Button variant="outline" onClick={() => setShowCreateUser(false)} className="order-2 sm:order-1">
                         Cancel
                       </Button>
                       <Button
                         onClick={() => createUserMutation.mutate(userFormData)}
                         disabled={createUserMutation.isPending}
-                        className="bg-acclaim-teal hover:bg-acclaim-teal/90"
+                        className="bg-acclaim-teal hover:bg-acclaim-teal/90 order-1 sm:order-2"
                       >
                         {createUserMutation.isPending ? "Creating..." : "Create User"}
                       </Button>
@@ -966,104 +1071,208 @@ export default function AdminEnhanced() {
               </div>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>User</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Organisation</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users?.map((user: User) => (
-                    <TableRow key={user.id}>
-                      <TableCell>
+              {/* Mobile Card Layout */}
+              <div className="block sm:hidden space-y-4">
+                {users?.map((user: User) => (
+                  <div key={user.id} className="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
                         <div className="font-medium">{user.firstName} {user.lastName}</div>
                         <div className="text-sm text-gray-500">{user.id}</div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <span>{user.email}</span>
+                      </div>
+                      <div className="flex gap-1">
+                        {user.isAdmin && (
+                          <Badge variant="default" className="bg-blue-100 text-blue-800 text-xs">
+                            Admin
+                          </Badge>
+                        )}
+                        <Badge variant="outline" className="text-xs">Active</Badge>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Email:</span>
+                        <div className="flex items-center space-x-1">
+                          <span className="text-right">{user.email}</span>
                           {user.email?.endsWith('@chadlaw.co.uk') && (
                             <Shield className="h-3 w-3 text-blue-600" />
                           )}
                         </div>
-                      </TableCell>
-                      <TableCell>{user.phone || "-"}</TableCell>
-                      <TableCell>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Phone:</span>
+                        <span>{user.phone || "-"}</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Organisation:</span>
                         {user.organisationName ? (
                           <Badge variant="outline">{user.organisationName}</Badge>
                         ) : (
                           <Badge variant="secondary">Unassigned</Badge>
                         )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          {user.isAdmin && (
-                            <Badge variant="default" className="bg-blue-100 text-blue-800">
-                              Admin
-                            </Badge>
-                          )}
-                          <Badge variant="outline">Active</Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setShowAssignUser(true);
-                            }}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => resetPasswordMutation.mutate(user.id)}
-                            disabled={resetPasswordMutation.isPending}
-                          >
-                            <Key className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              // Check if trying to grant admin to non-chadlaw email
-                              if (!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk')) {
-                                alert('Admin privileges can only be granted to @chadlaw.co.uk email addresses.');
-                                return;
-                              }
-                              
-                              const action = user.isAdmin ? 'remove admin privileges from' : 'grant admin privileges to';
-                              const confirmation = confirm(`Are you sure you want to ${action} ${user.firstName} ${user.lastName}?`);
-                              if (confirmation) {
-                                toggleAdminMutation.mutate({
-                                  userId: user.id,
-                                  makeAdmin: !user.isAdmin
-                                });
-                              }
-                            }}
-                            disabled={toggleAdminMutation.isPending || (!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk'))}
-                            className={(!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk')) ? 'opacity-50 cursor-not-allowed' : ''}
-                          >
-                            {user.isAdmin ? (
-                              <ShieldCheck className="h-3 w-3 text-blue-600" />
-                            ) : (
-                              <Shield className="h-3 w-3" />
-                            )}
-                          </Button>
-                        </div>
-                      </TableCell>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setShowAssignUser(true);
+                        }}
+                      >
+                        <Edit className="h-3 w-3 mr-1" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => resetPasswordMutation.mutate(user.id)}
+                        disabled={resetPasswordMutation.isPending}
+                      >
+                        <Key className="h-3 w-3 mr-1" />
+                        Reset
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          // Check if trying to grant admin to non-chadlaw email
+                          if (!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk')) {
+                            alert('Admin privileges can only be granted to @chadlaw.co.uk email addresses.');
+                            return;
+                          }
+                          
+                          const action = user.isAdmin ? 'remove admin privileges from' : 'grant admin privileges to';
+                          const confirmation = confirm(`Are you sure you want to ${action} ${user.firstName} ${user.lastName}?`);
+                          if (confirmation) {
+                            toggleAdminMutation.mutate({
+                              userId: user.id,
+                              makeAdmin: !user.isAdmin
+                            });
+                          }
+                        }}
+                        disabled={toggleAdminMutation.isPending || (!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk'))}
+                        className={(!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk')) ? 'opacity-50 cursor-not-allowed' : ''}
+                      >
+                        {user.isAdmin ? (
+                          <ShieldCheck className="h-3 w-3 text-blue-600" />
+                        ) : (
+                          <Shield className="h-3 w-3" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Table Layout */}
+              <div className="hidden sm:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead>Organisation</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {users?.map((user: User) => (
+                      <TableRow key={user.id}>
+                        <TableCell>
+                          <div className="font-medium">{user.firstName} {user.lastName}</div>
+                          <div className="text-sm text-gray-500">{user.id}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <span>{user.email}</span>
+                            {user.email?.endsWith('@chadlaw.co.uk') && (
+                              <Shield className="h-3 w-3 text-blue-600" />
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{user.phone || "-"}</TableCell>
+                        <TableCell>
+                          {user.organisationName ? (
+                            <Badge variant="outline">{user.organisationName}</Badge>
+                          ) : (
+                            <Badge variant="secondary">Unassigned</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            {user.isAdmin && (
+                              <Badge variant="default" className="bg-blue-100 text-blue-800">
+                                Admin
+                              </Badge>
+                            )}
+                            <Badge variant="outline">Active</Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setShowAssignUser(true);
+                              }}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => resetPasswordMutation.mutate(user.id)}
+                              disabled={resetPasswordMutation.isPending}
+                            >
+                              <Key className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                // Check if trying to grant admin to non-chadlaw email
+                                if (!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk')) {
+                                  alert('Admin privileges can only be granted to @chadlaw.co.uk email addresses.');
+                                  return;
+                                }
+                                
+                                const action = user.isAdmin ? 'remove admin privileges from' : 'grant admin privileges to';
+                                const confirmation = confirm(`Are you sure you want to ${action} ${user.firstName} ${user.lastName}?`);
+                                if (confirmation) {
+                                  toggleAdminMutation.mutate({
+                                    userId: user.id,
+                                    makeAdmin: !user.isAdmin
+                                  });
+                                }
+                              }}
+                              disabled={toggleAdminMutation.isPending || (!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk'))}
+                              className={(!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk')) ? 'opacity-50 cursor-not-allowed' : ''}
+                            >
+                              {user.isAdmin ? (
+                                <ShieldCheck className="h-3 w-3 text-blue-600" />
+                              ) : (
+                                <Shield className="h-3 w-3" />
+                              )}
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
