@@ -57,7 +57,7 @@ interface CustomReportConfig {
 }
 
 export default function AdvancedReports() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const { toast } = useToast();
   const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
   const [customConfig, setCustomConfig] = useState<CustomReportConfig>({
@@ -68,20 +68,16 @@ export default function AdvancedReports() {
   const [customReportData, setCustomReportData] = useState<any[]>([]);
   const [isGeneratingCustomReport, setIsGeneratingCustomReport] = useState(false);
 
-  // Check admin access
+  // Check admin access - only redirect if definitely not authenticated
   useEffect(() => {
-    if (!isLoading && (!isAuthenticated || !user?.isAdmin)) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
+    if (!isLoading && !user) {
+      // Only redirect if we're absolutely sure user is not authenticated
       setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
+        window.location.href = "/auth";
+      }, 1000);
       return;
     }
-  }, [isAuthenticated, isLoading, user, toast]);
+  }, [isLoading, user]);
 
   // Cross-organisation performance query
   const { data: crossOrgData = [], isLoading: isLoadingCrossOrg } = useQuery({
@@ -112,22 +108,11 @@ export default function AdvancedReports() {
         description: "Custom report generated successfully",
       });
     } catch (error) {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to generate custom report",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error",
+        description: "Failed to generate custom report",
+        variant: "destructive",
+      });
     } finally {
       setIsGeneratingCustomReport(false);
     }
@@ -174,7 +159,7 @@ export default function AdvancedReports() {
     }
   };
 
-  if (isLoading || !isAuthenticated || !user?.isAdmin) {
+  if (isLoading || !user?.isAdmin) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -353,7 +338,7 @@ export default function AdvancedReports() {
                           </TableCell>
                           <TableCell>{user.actionCount}</TableCell>
                           <TableCell>{user.casesCreated}</TableCell>
-                          <TableCell>{user.messageseSent}</TableCell>
+                          <TableCell>{user.messagesSent}</TableCell>
                           <TableCell>{user.documentsUploaded}</TableCell>
                         </TableRow>
                       ))}
