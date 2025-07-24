@@ -200,7 +200,7 @@ export default function AuthPage() {
               </div>
               <div>
                 <h3 className="font-semibold mb-1">Enterprise Security</h3>
-                <p className="text-sm opacity-90">Bank-level security with role-based access control and complete data protection.</p>
+                <p className="text-sm opacity-90">High-level security with role-based access control and complete data protection.</p>
               </div>
             </div>
           </div>
