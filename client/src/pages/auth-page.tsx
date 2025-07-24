@@ -180,7 +180,7 @@ export default function AuthPage() {
               </div>
               <div>
                 <h3 className="font-semibold mb-1">Secure Communications</h3>
-                <p className="text-sm opacity-90">Integrated messaging system and document management with full audit trails for compliance.</p>
+                <p className="text-sm opacity-90">Integrated messaging system and document management.</p>
               </div>
             </div>
 
