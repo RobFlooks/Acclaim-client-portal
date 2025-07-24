@@ -2124,8 +2124,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const activities: string[] = [];
       
       if (balance !== undefined) {
-        updates.totalOwed = parseFloat(balance.toString());
-        activities.push(`balance updated to £${balance}`);
+        updates.originalAmount = parseFloat(balance.toString());
+        activities.push(`original amount updated to £${balance}`);
       }
       
       if (outstanding_amount !== undefined) {
