@@ -53,9 +53,9 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-gray-50">
+    <div className="min-h-screen flex flex-col md:flex-row bg-gray-50">
       {/* Left side - Form */}
-      <div className="flex-1 flex items-center justify-center p-4 lg:p-8">
+      <div className="flex-1 flex items-center justify-center p-4 md:p-8">
         <div className="w-full max-w-md">
           {/* Logo and Header */}
           <div className="text-center mb-8">
@@ -157,7 +157,7 @@ export default function AuthPage() {
       </div>
 
       {/* Right side - Feature showcase */}
-      <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-acclaim-teal via-teal-600 to-acclaim-navy items-center justify-center p-8">
+      <div className="hidden md:flex md:flex-1 bg-gradient-to-br from-acclaim-teal via-teal-600 to-acclaim-navy items-center justify-center p-8">
         <div className="max-w-lg text-white">
           <div className="mb-8">
             <h2 className="text-3xl font-bold mb-4">Professional Debt Recovery Platform</h2>
