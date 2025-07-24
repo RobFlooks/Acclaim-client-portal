@@ -1830,7 +1830,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         caseId: case_.id,
         amount,
         paymentDate: parsedPaymentDate,
-        paymentMethod: paymentMethod || 'UNKNOWN',
+        paymentMethod: paymentMethod || null, // Allow null if no payment method specified
         reference,
         notes,
         organisationId: case_.organisationId,
