@@ -37,7 +37,7 @@ interface UserActivity {
   lastLogin: Date;
   actionCount: number;
   casesCreated: number;
-  messageseSent: number;
+  messagesSent: number;
   documentsUploaded: number;
 }
 
@@ -84,66 +84,28 @@ export default function AdvancedReports() {
   }, [isAuthenticated, isLoading, user, toast]);
 
   // Cross-organisation performance query
-  const { data: crossOrgData, isLoading: isLoadingCrossOrg } = useQuery({
+  const { data: crossOrgData = [], isLoading: isLoadingCrossOrg } = useQuery({
     queryKey: ['/api/admin/reports/cross-organisation'],
-    retry: false,
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-      }
-    }
+    retry: false
   });
 
   // User activity report query
-  const { data: userActivityData, isLoading: isLoadingUserActivity } = useQuery({
+  const { data: userActivityData = [], isLoading: isLoadingUserActivity } = useQuery({
     queryKey: ['/api/admin/reports/user-activity', dateRange],
-    retry: false,
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-      }
-    }
+    retry: false
   });
 
   // System health metrics query
-  const { data: systemHealthData, isLoading: isLoadingSystemHealth } = useQuery({
+  const { data: systemHealthData = [], isLoading: isLoadingSystemHealth } = useQuery({
     queryKey: ['/api/admin/reports/system-health'],
-    retry: false,
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-      }
-    }
+    retry: false
   });
 
   const generateCustomReport = async () => {
     setIsGeneratingCustomReport(true);
     try {
-      const data = await apiRequest('/api/admin/reports/custom', {
-        method: 'POST',
-        body: customConfig
-      });
+      const response = await apiRequest('POST', '/api/admin/reports/custom', customConfig);
+      const data = await response.json();
       setCustomReportData(data);
       toast({
         title: "Success",

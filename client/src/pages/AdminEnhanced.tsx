@@ -39,6 +39,7 @@ interface Organisation {
   name: string;
   createdAt: string;
   userCount: number;
+  externalRef?: string;
 }
 
 type CreateUserForm = z.infer<typeof createUserSchema>;
@@ -511,13 +512,13 @@ export default function AdminEnhanced() {
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
 
   // Fetch users
-  const { data: users, isLoading: usersLoading, error: usersError } = useQuery({
+  const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery({
     queryKey: ["/api/admin/users"],
     retry: false,
   });
 
   // Fetch organisations
-  const { data: organisations, isLoading: orgsLoading, error: orgsError } = useQuery({
+  const { data: organisations = [], isLoading: orgsLoading, error: orgsError } = useQuery({
     queryKey: ["/api/admin/organisations"],
     retry: false,
   });
@@ -1538,7 +1539,7 @@ export default function AdminEnhanced() {
               Please provide this temporary password to the user. They will be required to change it on first login.
             </DialogDescription>
           </DialogHeader>
-          {console.log("Dialog tempPassword state:", tempPassword)}
+
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label>Temporary Password</Label>
