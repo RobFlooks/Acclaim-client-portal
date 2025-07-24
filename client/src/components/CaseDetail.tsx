@@ -459,6 +459,14 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
     });
   };
 
+  const formatDateOnly = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-GB', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
   const handleDownload = (documentId: number) => {
     window.open(`/api/documents/${documentId}/download`, '_blank');
   };
@@ -1635,7 +1643,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                           return (
                             <TableRow key={payment.id}>
                               <TableCell className="font-medium">
-                                {formatDate(payment.paymentDate)}
+                                {formatDateOnly(payment.paymentDate)}
                               </TableCell>
                               <TableCell>
                                 <span className="text-green-600 font-semibold">
