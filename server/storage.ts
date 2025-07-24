@@ -68,6 +68,7 @@ export interface IStorage {
   
   // Case operations
   getCasesForOrganisation(organisationId: number): Promise<Case[]>;
+  getCasesForUser(userId: string): Promise<Case[]>; // Returns all cases for user (admin gets all, regular user gets org-filtered)
   getAllCases(): Promise<Case[]>; // Admin only - get all cases across all organizations
   getAllCasesIncludingArchived(): Promise<Case[]>; // Admin only - get all cases including archived ones
   getCase(id: number, organisationId: number): Promise<Case | undefined>;
@@ -93,6 +94,7 @@ export interface IStorage {
   // Document operations
   getDocumentsForCase(caseId: number): Promise<Document[]>;
   getDocumentsForOrganisation(organisationId: number): Promise<Document[]>;
+  getDocumentsForUser(userId: string): Promise<Document[]>; // Returns all documents for user (admin gets all, regular user gets org-filtered)
   createDocument(document: InsertDocument): Promise<Document>;
   deleteDocument(id: number, organisationId: number): Promise<void>;
   deleteDocumentById(id: number): Promise<void>; // Admin only - delete document by ID without org restriction
@@ -374,6 +376,28 @@ export class DatabaseStorage implements IStorage {
       totalOutstanding: totalOutstanding.toFixed(2),
       totalRecovered: totalRecovered.toFixed(2),
     };
+  }
+
+  async getCasesForUser(userId: string): Promise<Case[]> {
+    // Get the user to check their organization and admin status
+    const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    if (user.length === 0) {
+      return [];
+    }
+
+    const userRecord = user[0];
+
+    // If user is admin, return all cases (no organisation filtering)
+    if (userRecord.isAdmin) {
+      return await this.getAllCases();
+    }
+
+    // For non-admin users, filter by their organisation
+    if (!userRecord.organisationId) {
+      return [];
+    }
+
+    return await this.getCasesForOrganisation(userRecord.organisationId);
   }
 
   async getCasesForOrganisation(organisationId: number): Promise<Case[]> {
@@ -670,7 +694,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getMessagesForUser(userId: string): Promise<any[]> {
-    // Get the user to check their organization
+    // Get the user to check their organization and admin status
     const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
     if (user.length === 0) {
       return [];
@@ -679,6 +703,42 @@ export class DatabaseStorage implements IStorage {
     const userRecord = user[0];
     const userOrgId = userRecord.organisationId;
 
+    // If user is admin, return all messages (no organisation filtering)
+    if (userRecord.isAdmin) {
+      return await db
+        .select({
+          id: messages.id,
+          senderId: messages.senderId,
+          recipientType: messages.recipientType,
+          recipientId: messages.recipientId,
+          caseId: messages.caseId,
+          subject: messages.subject,
+          content: messages.content,
+          isRead: messages.isRead,
+          attachmentFileName: messages.attachmentFileName,
+          attachmentFilePath: messages.attachmentFilePath,
+          attachmentFileSize: messages.attachmentFileSize,
+          attachmentFileType: messages.attachmentFileType,
+          createdAt: messages.createdAt,
+          senderName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
+          senderEmail: users.email,
+          senderIsAdmin: users.isAdmin,
+          senderOrganisationName: organisations.name,
+        })
+        .from(messages)
+        .leftJoin(users, eq(messages.senderId, users.id))
+        .leftJoin(organisations, eq(users.organisationId, organisations.id))
+        .leftJoin(cases, eq(messages.caseId, cases.id))
+        .where(
+          or(
+            isNull(messages.caseId), // General messages not tied to a case
+            eq(cases.isArchived, false) // Messages for non-archived cases only
+          )
+        )
+        .orderBy(desc(messages.createdAt));
+    }
+
+    // For non-admin users, filter by organisation
     return await db
       .select({
         id: messages.id,
@@ -792,6 +852,50 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(documents.createdAt));
     
     return results;
+  }
+
+  async getDocumentsForUser(userId: string): Promise<Document[]> {
+    // Get the user to check their organization and admin status
+    const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    if (user.length === 0) {
+      return [];
+    }
+
+    const userRecord = user[0];
+
+    // If user is admin, return all documents (no organisation filtering)
+    if (userRecord.isAdmin) {
+      const results = await db
+        .select({
+          id: documents.id,
+          caseId: documents.caseId,
+          fileName: documents.fileName,
+          fileSize: documents.fileSize,
+          fileType: documents.fileType,
+          filePath: documents.filePath,
+          uploadedBy: documents.uploadedBy,
+          organisationId: documents.organisationId,
+          createdAt: documents.createdAt,
+        })
+        .from(documents)
+        .leftJoin(cases, eq(documents.caseId, cases.id))
+        .where(
+          or(
+            isNull(documents.caseId), // General documents not tied to a case
+            eq(cases.isArchived, false) // Documents for non-archived cases only
+          )
+        )
+        .orderBy(desc(documents.createdAt));
+      
+      return results;
+    }
+
+    // For non-admin users, filter by their organisation
+    if (!userRecord.organisationId) {
+      return [];
+    }
+
+    return await this.getDocumentsForOrganisation(userRecord.organisationId);
   }
 
   async getDocumentsForOrganisation(organisationId: number): Promise<Document[]> {

@@ -101,24 +101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/cases', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const user = await storage.getUser(userId);
-      
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      let cases;
-      if (user.isAdmin) {
-        // Admin sees all cases across all organisations
-        cases = await storage.getAllCases();
-      } else {
-        // Regular users see only their organisation's cases
-        if (!user.organisationId) {
-          return res.status(404).json({ message: "User organisation not found" });
-        }
-        cases = await storage.getCasesForOrganisation(user.organisationId);
-      }
-
+      const cases = await storage.getCasesForUser(userId);
       res.json(cases);
     } catch (error) {
       console.error("Error fetching cases:", error);
@@ -520,17 +503,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/documents', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const user = await storage.getUser(userId);
-      
-      if (!user || !user.organisationId) {
-        return res.status(404).json({ message: "User organisation not found" });
-      }
-
-      const documents = await storage.getDocumentsForOrganisation(user.organisationId);
+      const documents = await storage.getDocumentsForUser(userId);
       res.json(documents);
     } catch (error) {
-      console.error("Error fetching organisation documents:", error);
-      res.status(500).json({ message: "Failed to fetch organisation documents" });
+      console.error("Error fetching documents:", error);
+      res.status(500).json({ message: "Failed to fetch documents" });
     }
   });
 
