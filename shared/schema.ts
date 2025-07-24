@@ -56,14 +56,11 @@ export const organisations = pgTable("organisations", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Cases table
+// Cases table  
 export const cases = pgTable("cases", {
   id: serial("id").primaryKey(),
   accountNumber: varchar("account_number", { length: 50 }).notNull().unique(),
   caseName: varchar("case_name", { length: 255 }).notNull(),
-  debtorEmail: varchar("debtor_email"),
-  debtorPhone: varchar("debtor_phone"),
-  debtorAddress: text("debtor_address"),
   debtorType: varchar("debtor_type", { length: 50 }).notNull().default("individual"), // 'individual', 'company', 'sole_trader', 'company_and_individual'
   originalAmount: decimal("original_amount", { precision: 10, scale: 2 }).notNull(),
   outstandingAmount: decimal("outstanding_amount", { precision: 10, scale: 2 }).notNull(),
