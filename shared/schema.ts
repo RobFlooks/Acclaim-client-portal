@@ -142,7 +142,7 @@ export const userActivityLogs = pgTable("user_activity_logs", {
   details: text("details"),
   ipAddress: varchar("ip_address", { length: 45 }),
   userAgent: text("user_agent"),
-  timestamp: timestamp("timestamp").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const loginAttempts = pgTable("login_attempts", {
@@ -152,7 +152,7 @@ export const loginAttempts = pgTable("login_attempts", {
   ipAddress: varchar("ip_address", { length: 45 }),
   userAgent: text("user_agent"),
   failureReason: varchar("failure_reason", { length: 100 }),
-  timestamp: timestamp("timestamp").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const systemMetrics = pgTable("system_metrics", {

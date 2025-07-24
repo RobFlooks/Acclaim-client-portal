@@ -1400,15 +1400,15 @@ export class DatabaseStorage implements IStorage {
       db.select({ count: sql<number>`count(*)` }).from(cases)
         .where(and(eq(cases.isArchived, false), or(eq(cases.status, "new"), eq(cases.status, "in_progress")))),
       db.select({ count: sql<number>`count(*)` }).from(userActivityLogs)
-        .where(sql`timestamp > NOW() - INTERVAL '24 hours'`),
+        .where(sql`${userActivityLogs.createdAt} > NOW() - INTERVAL '24 hours'`),
       db.select({ count: sql<number>`count(*)` }).from(loginAttempts)
-        .where(and(eq(loginAttempts.success, false), sql`timestamp > NOW() - INTERVAL '24 hours'`)),
+        .where(and(eq(loginAttempts.success, false), sql`${loginAttempts.createdAt} > NOW() - INTERVAL '24 hours'`)),
     ]);
 
     // Calculate active users (users who have activity in the last 30 days)
     const [activeUsers] = await db.select({ count: sql<number>`count(DISTINCT user_id)` })
       .from(userActivityLogs)
-      .where(sql`timestamp > NOW() - INTERVAL '30 days'`);
+      .where(sql`${userActivityLogs.createdAt} > NOW() - INTERVAL '30 days'`);
 
     // Determine system health based on failed logins and activity
     let systemHealth = "healthy";
