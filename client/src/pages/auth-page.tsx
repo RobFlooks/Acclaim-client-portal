@@ -155,12 +155,11 @@ export default function AuthPage() {
           </Card>
         </div>
       </div>
-
       {/* Right side - Feature showcase */}
       <div className="hidden md:flex md:flex-1 bg-gradient-to-br from-teal-700 via-teal-600 to-slate-800 items-center justify-center p-8">
         <div className="max-w-lg text-white">
           <div className="mb-8">
-            <h2 className="text-3xl font-bold mb-4">Professional Debt Recovery Platform</h2>
+            <h2 className="text-3xl font-bold mb-4 text-center">Acclaim Credit Management & Recovery</h2>
             <p className="text-lg opacity-90 leading-relaxed">
               Streamline your debt recovery operations with our comprehensive case management system designed for legal professionals.
             </p>
