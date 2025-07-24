@@ -2163,14 +2163,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (Object.keys(updates).length > 0) {
         updatedCase = await storage.updateCase(case_.id, updates);
         
-        // Add case activity
-        const description = `Case ${activities.join(', ')} via external system${notes ? `. Notes: ${notes}` : ''}`;
-        await storage.addCaseActivity({
-          caseId: case_.id,
-          activityType: balance !== undefined ? "balance_updated" : "status_updated",
-          description,
-          performedBy: 'SYSTEM',
-        });
+        // Case activities are now only created via dedicated API endpoint
+        // No automatic activity generation - handled manually via PAI push
       }
       
       // Return success response with case ID (matching your workflow expectation)
