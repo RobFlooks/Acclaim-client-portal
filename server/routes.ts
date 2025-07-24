@@ -401,8 +401,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const newMessage = await storage.createMessage(messageData);
       
-      // Send email notification to admin if a non-admin user sends a message
+      // Send email notifications
       if (!user.isAdmin) {
+        // User-to-admin notification (existing functionality)
         try {
           // Get the main admin user
           const adminUser = await storage.getUser("admin_1753292574.014698");
@@ -441,7 +442,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         } catch (emailError) {
           // Log email error but don't fail the message creation
-          console.error("Failed to send email notification:", emailError);
+          console.error("Failed to send user-to-admin email notification:", emailError);
+        }
+      } else {
+        // Admin-to-user notification (new functionality)
+        try {
+          // If admin is sending to a specific user, notify them
+          if (recipientType === 'user') {
+            const recipientUser = await storage.getUser(recipientId);
+            if (recipientUser && recipientUser.email && !recipientUser.isAdmin) {
+              // Get organisation name
+              let organisationName = "Unknown Organisation";
+              if (recipientUser.organisationId) {
+                const organisation = await storage.getOrganisation(recipientUser.organisationId);
+                if (organisation) {
+                  organisationName = organisation.name;
+                }
+              }
+
+              // Get case reference if this is a case-specific message
+              let caseReference = undefined;
+              if (messageData.caseId) {
+                const messageCase = await storage.getCaseById(messageData.caseId);
+                if (messageCase) {
+                  caseReference = messageCase.accountNumber;
+                }
+              }
+
+              // Send admin-to-user notification
+              await emailService.sendAdminToUserNotification({
+                adminName: `${user.firstName} ${user.lastName}`.trim() || user.email,
+                adminEmail: user.email,
+                userEmail: recipientUser.email,
+                userName: `${recipientUser.firstName} ${recipientUser.lastName}`.trim() || recipientUser.email,
+                messageSubject: messageData.subject,
+                messageContent: messageData.content,
+                caseReference,
+                organisationName,
+              });
+            }
+          } else if (recipientType === 'organisation') {
+            // Admin sending to organisation - notify all non-admin users in that organisation
+            const orgUsers = await storage.getAllUsers();
+            const organisationUsers = orgUsers.filter(u => 
+              u.organisationId?.toString() === recipientId && !u.isAdmin && u.email
+            );
+
+            if (organisationUsers.length > 0) {
+              // Get organisation name
+              let organisationName = "Unknown Organisation";
+              const organisation = await storage.getOrganisation(parseInt(recipientId));
+              if (organisation) {
+                organisationName = organisation.name;
+              }
+
+              // Get case reference if this is a case-specific message
+              let caseReference = undefined;
+              if (messageData.caseId) {
+                const messageCase = await storage.getCaseById(messageData.caseId);
+                if (messageCase) {
+                  caseReference = messageCase.accountNumber;
+                }
+              }
+
+              // Send notification to each user in the organisation
+              for (const orgUser of organisationUsers) {
+                await emailService.sendAdminToUserNotification({
+                  adminName: `${user.firstName} ${user.lastName}`.trim() || user.email,
+                  adminEmail: user.email,
+                  userEmail: orgUser.email,
+                  userName: `${orgUser.firstName} ${orgUser.lastName}`.trim() || orgUser.email,
+                  messageSubject: messageData.subject,
+                  messageContent: messageData.content,
+                  caseReference,
+                  organisationName,
+                });
+              }
+            }
+          }
+        } catch (emailError) {
+          // Log email error but don't fail the message creation
+          console.error("Failed to send admin-to-user email notification:", emailError);
         }
       }
       
