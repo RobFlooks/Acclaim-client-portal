@@ -206,9 +206,7 @@ export default function AuthPage() {
           </div>
 
           <div className="mt-8 pt-6 border-t border-white/20">
-            <p className="text-sm opacity-75">
-              Trusted by legal professionals across the UK for efficient and compliant debt recovery operations.
-            </p>
+            <p className="text-sm opacity-75 text-center">Part of Chadwick Lawrence LLP</p>
           </div>
         </div>
       </div>
