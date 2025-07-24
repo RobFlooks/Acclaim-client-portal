@@ -66,7 +66,7 @@ export default function AuthPage() {
                 className="h-16 w-16 mr-3"
               />
               <div className="text-left">
-                <h1 className="text-2xl font-bold text-acclaim-navy">Acclaim</h1>
+                <h1 className="text-2xl font-bold text-slate-800">Acclaim</h1>
                 <p className="text-sm text-muted-foreground">Credit Management & Recovery</p>
               </div>
             </div>
@@ -157,7 +157,7 @@ export default function AuthPage() {
       </div>
 
       {/* Right side - Feature showcase */}
-      <div className="hidden md:flex md:flex-1 bg-gradient-to-br from-acclaim-teal via-teal-600 to-acclaim-navy items-center justify-center p-8">
+      <div className="hidden md:flex md:flex-1 bg-gradient-to-br from-teal-700 via-teal-600 to-slate-800 items-center justify-center p-8">
         <div className="max-w-lg text-white">
           <div className="mb-8">
             <h2 className="text-3xl font-bold mb-4">Professional Debt Recovery Platform</h2>
