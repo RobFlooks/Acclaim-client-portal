@@ -2092,7 +2092,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         contentType: req.get('Content-Type')
       });
       
-      const { organisation_id, username, password, external_case_ref, balance, outstanding_amount, status, stage, notes, costs_added, interest_added, fees_added } = req.body;
+      const { organisation_id, username, password, external_case_ref, balance, original_amount, outstanding_amount, status, stage, notes, costs_added, interest_added, fees_added } = req.body;
       
       if (!organisation_id || !username || !password || !external_case_ref) {
         return res.status(400).json({ 
@@ -2123,9 +2123,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updates: any = {};
       const activities: string[] = [];
       
-      if (balance !== undefined) {
-        updates.originalAmount = parseFloat(balance.toString());
-        activities.push(`original amount updated to £${balance}`);
+      if (balance !== undefined || original_amount !== undefined) {
+        const amount = balance || original_amount;
+        updates.originalAmount = parseFloat(amount.toString());
+        activities.push(`original amount updated to £${amount}`);
       }
       
       if (outstanding_amount !== undefined) {
