@@ -20,7 +20,6 @@ class EmailService {
   private async initializeTransporter() {
     try {
       // For development, use Ethereal Email (test account)
-      // In production, you'd configure with real SMTP settings
       if (process.env.NODE_ENV === 'development') {
         const testAccount = await nodemailer.createTestAccount();
         
@@ -33,21 +32,30 @@ class EmailService {
             pass: testAccount.pass,
           },
         });
+        this.initialized = true;
       } else {
-        // Production configuration - you can set these via environment variables
-        this.transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST || 'smtp.gmail.com',
-          port: parseInt(process.env.SMTP_PORT || '587'),
-          secure: process.env.SMTP_SECURE === 'true',
-          auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASSWORD,
-          },
-        });
+        // Production: Only initialize if SMTP credentials are provided
+        if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
+          this.transporter = nodemailer.createTransporter({
+            host: process.env.SMTP_HOST,
+            port: parseInt(process.env.SMTP_PORT || '587'),
+            secure: process.env.SMTP_SECURE === 'true',
+            auth: {
+              user: process.env.SMTP_USER,
+              pass: process.env.SMTP_PASSWORD,
+            },
+          });
+          this.initialized = true;
+        } else {
+          // No SMTP configured - use console logging instead
+          this.initialized = false;
+          console.log('Email service: No SMTP credentials provided, using console logging for notifications');
+        }
       }
       
-      this.initialized = true;
-      console.log('Email service initialized successfully');
+      if (this.initialized) {
+        console.log('Email service initialized successfully');
+      }
     } catch (error) {
       console.error('Failed to initialize email service:', error);
       this.initialized = false;
@@ -56,16 +64,22 @@ class EmailService {
 
   async sendMessageNotification(data: EmailNotificationData, adminEmail: string): Promise<boolean> {
     if (!this.initialized || !this.transporter) {
-      console.log('Email service not initialized, logging notification instead:');
-      console.log(`NEW MESSAGE NOTIFICATION:
-        From: ${data.userName} (${data.userEmail})
-        Organisation: ${data.organisationName}
-        ${data.caseReference ? `Case: ${data.caseReference}` : ''}
-        Subject: ${data.messageSubject || 'New Message'}
-        Content: ${data.messageContent.substring(0, 100)}${data.messageContent.length > 100 ? '...' : ''}
-        Admin to notify: ${adminEmail}
-      `);
-      return true; // Consider logging as successful for development
+      // Enhanced console logging for production monitoring
+      console.log('\n================== NEW MESSAGE NOTIFICATION ==================');
+      console.log(`📧 Email would be sent to: ${adminEmail}`);
+      console.log(`👤 From: ${data.userName} (${data.userEmail})`);
+      console.log(`🏢 Organisation: ${data.organisationName}`);
+      if (data.caseReference) {
+        console.log(`📋 Case: ${data.caseReference}`);
+      }
+      console.log(`📝 Subject: ${data.messageSubject || 'New Message'}`);
+      console.log(`💬 Message: ${data.messageContent}`);
+      console.log(`⏰ Time: ${new Date().toLocaleString('en-GB')}`);
+      console.log('===========================================================\n');
+      
+      // Log to show this was handled by fallback system
+      console.log('ℹ️  Note: SMTP not configured, notification logged to console');
+      return true;
     }
 
     try {
