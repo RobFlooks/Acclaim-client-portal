@@ -57,6 +57,57 @@ organisation_id=119&username=acclaimdebt.orgadmin@lavatech.ltd.uk&password=Your_
 - `404`: Organisation or case not found
 - `500`: Server error
 
+## Payment Management
+
+### Create Payment Endpoint
+
+**POST /api/external/payments**
+
+Create a new payment record for a case:
+
+```
+POST /api/external/payments
+Content-Type: application/x-www-form-urlencoded
+
+caseExternalRef=CLS00003-028&amount=500.00&paymentDate=23/01/2025&paymentMethod=Bank Transfer&reference=PAY123&notes=Payment from client&externalRef=PAY-EXT-123
+```
+
+**Parameters**:
+- `caseExternalRef` (required): External case reference
+- `amount` (required): Payment amount
+- `paymentDate` (required): DD/MM/YYYY format
+- `paymentMethod` (optional): Free text payment method
+- `reference` (optional): Payment reference
+- `notes` (optional): Additional notes
+- `externalRef` (required): Unique external payment reference
+
+### Update Payment Endpoint
+
+**PUT /api/external/payments/update**
+
+Update an existing payment record:
+
+```
+PUT /api/external/payments/update
+Content-Type: application/x-www-form-urlencoded
+
+paymentExternalRef=PAY-EXT-123&amount=600.00&paymentDate=24/01/2025&paymentMethod=Card Payment&reference=PAY124&notes=Updated payment amount
+```
+
+**Parameters**:
+- `paymentExternalRef` (required): External payment reference
+- `amount` (optional): New payment amount
+- `paymentDate` (optional): New payment date (DD/MM/YYYY)
+- `paymentMethod` (optional): New payment method
+- `reference` (optional): New payment reference
+- `notes` (optional): New payment notes
+
+**Note**: Only include fields you want to update. Missing fields will remain unchanged.
+
+**Response Formats**:
+- JSON (default): Detailed response with payment data
+- Plain text: Add `?format=text` for SOS compatibility
+
 ## Integration with Your Workflow
 
 ### Updating Your SOS Script
@@ -64,16 +115,16 @@ Replace the HttpWebRequest section in your workflow with:
 
 ```
 HttpWebRequest HttpWebRequest14
-	Initializations
-		url="https://your-acclaim-portal.replit.app/api/external/case/update"
-		method='POST'
-		postvariables="organisation_id,username,password,external_case_ref,balance"
-		ContentType='application/x-www-form-urlencoded'
-		IgnoreCertificateErrors=TRUE
-	CardPosX 530
-	CardPosY 350
-	GOTO DoNothing15 WHEN html.contains("id")
-	GOTO Message14
+        Initializations
+                url="https://your-acclaim-portal.replit.app/api/external/case/update"
+                method='POST'
+                postvariables="organisation_id,username,password,external_case_ref,balance"
+                ContentType='application/x-www-form-urlencoded'
+                IgnoreCertificateErrors=TRUE
+        CardPosX 530
+        CardPosY 350
+        GOTO DoNothing15 WHEN html.contains("id")
+        GOTO Message14
 ```
 
 ### Success Detection

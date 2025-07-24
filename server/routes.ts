@@ -1865,6 +1865,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update existing payment
+  app.put('/api/external/payments/update', async (req: any, res) => {
+    try {
+      // Support both JSON and form data
+      let paymentExternalRef, amount, paymentDate, paymentMethod, reference, notes;
+      
+      if (req.headers['content-type']?.includes('application/json')) {
+        // JSON format
+        ({ paymentExternalRef, amount, paymentDate, paymentMethod, reference, notes } = req.body);
+      } else {
+        // Form data format (for SOS systems)
+        paymentExternalRef = req.body.paymentExternalRef;
+        amount = req.body.amount;
+        paymentDate = req.body.paymentDate;
+        paymentMethod = req.body.paymentMethod;
+        reference = req.body.reference;
+        notes = req.body.notes;
+      }
+      
+      if (!paymentExternalRef) {
+        return res.status(400).json({ 
+          message: "paymentExternalRef is required" 
+        });
+      }
+      
+      // Find payment by external reference
+      const payment = await storage.getPaymentByExternalRef(paymentExternalRef);
+      if (!payment) {
+        return res.status(404).json({ message: "Payment not found" });
+      }
+      
+      // Parse and validate payment date if provided
+      let parsedPaymentDate;
+      if (paymentDate) {
+        try {
+          // Handle DD/MM/YYYY format specifically
+          if (paymentDate.includes('/')) {
+            const parts = paymentDate.split('/');
+            if (parts.length === 3) {
+              const day = parseInt(parts[0], 10);
+              const month = parseInt(parts[1], 10) - 1; // JavaScript months are 0-based  
+              const year = parseInt(parts[2], 10);
+              
+              // Create date object and validate
+              parsedPaymentDate = new Date(year, month, day, 12, 0, 0, 0); // Set to noon to avoid timezone issues
+              
+              // Double check by comparing parts
+              if (parsedPaymentDate.getDate() !== day || 
+                  parsedPaymentDate.getMonth() !== month || 
+                  parsedPaymentDate.getFullYear() !== year) {
+                throw new Error('Date validation failed - invalid day/month/year combination');
+              }
+            } else {
+              throw new Error('Invalid DD/MM/YYYY format - expected 3 parts');
+            }
+          } else if (paymentDate.includes('T') || paymentDate.includes('Z')) {
+            // ISO format
+            parsedPaymentDate = new Date(paymentDate);
+          } else if (paymentDate.includes('-')) {
+            // YYYY-MM-DD format
+            parsedPaymentDate = new Date(paymentDate + 'T12:00:00Z');
+          } else {
+            throw new Error('Unrecognised date format');
+          }
+          
+          // Final validation
+          if (!parsedPaymentDate || isNaN(parsedPaymentDate.getTime())) {
+            throw new Error('Invalid date format - could not create valid date object');
+          }
+        } catch (dateError) {
+          return res.status(400).json({ 
+            message: `Invalid paymentDate format: ${dateError.message}. Use DD/MM/YYYY format (e.g., 21/01/2025)` 
+          });
+        }
+      }
+      
+      // Build update object with only provided fields
+      const updateData: any = {};
+      if (amount !== undefined) updateData.amount = amount;
+      if (parsedPaymentDate) updateData.paymentDate = parsedPaymentDate;
+      if (paymentMethod !== undefined) updateData.paymentMethod = paymentMethod || 'UNKNOWN';
+      if (reference !== undefined) updateData.reference = reference;
+      if (notes !== undefined) updateData.notes = notes;
+      
+      // Update payment
+      const updatedPayment = await storage.updatePayment(payment.id, updateData);
+      
+      // Case activities are now only created via dedicated API endpoint
+      // No automatic activity generation
+      
+      // Check if plain text response is requested via query parameter
+      if (req.query.format === 'text') {
+        // Plain text response for SOS compatibility
+        res.status(200).send('Payment updated successfully');
+      } else {
+        // JSON response for other clients
+        res.status(200).json({ 
+          message: "Payment updated successfully", 
+          payment: updatedPayment,
+          timestamp: new Date().toISOString(),
+          refreshRequired: true 
+        });
+      }
+    } catch (error) {
+      console.error("Error updating payment via external API:", error);
+      res.status(500).json({ message: "Failed to update payment" });
+    }
+  });
+
   // SOS-friendly payment endpoints with plain text responses
   app.post('/api/sos/payments', async (req: any, res) => {
     try {
