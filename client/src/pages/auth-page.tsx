@@ -160,9 +160,7 @@ export default function AuthPage() {
         <div className="max-w-lg text-white">
           <div className="mb-8">
             <h2 className="text-3xl font-bold mb-4 text-center">Acclaim Credit Management & Recovery</h2>
-            <p className="text-lg opacity-90 leading-relaxed">
-              Streamline your debt recovery operations with our comprehensive case management system designed for legal professionals.
-            </p>
+            <p className="text-lg opacity-90 leading-relaxed">Streamline your debt recovery cases with our comprehensive case management portal.</p>
           </div>
 
           <div className="space-y-6">
