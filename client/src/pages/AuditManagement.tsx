@@ -65,15 +65,20 @@ export default function AuditManagement() {
 
   // Fetch audit logs with filters
   const { data: auditLogs, isLoading: logsLoading, refetch: refetchLogs } = useQuery<AuditLog[]>({
-    queryKey: [
-      "/api/admin/audit/logs", 
-      { 
-        tableName: tableFilter || undefined,
-        operation: operationFilter || undefined,
-        userId: userFilter || undefined,
-        limit: parseInt(limitResults)
+    queryKey: ["/api/admin/audit/logs", tableFilter, operationFilter, userFilter, limitResults],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (tableFilter && tableFilter !== 'all') params.append('tableName', tableFilter);
+      if (operationFilter && operationFilter !== 'all') params.append('operation', operationFilter);
+      if (userFilter) params.append('userId', userFilter);
+      params.append('limit', limitResults);
+      
+      const response = await fetch(`/api/admin/audit/logs?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch audit logs');
       }
-    ],
+      return response.json();
+    },
     retry: false,
   });
 
@@ -313,7 +318,7 @@ export default function AuditManagement() {
                       <SelectValue placeholder="All Tables" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Tables</SelectItem>
+                      <SelectItem value="all">All Tables</SelectItem>
                       <SelectItem value="users">Users</SelectItem>
                       <SelectItem value="cases">Cases</SelectItem>
                       <SelectItem value="messages">Messages</SelectItem>
@@ -328,7 +333,7 @@ export default function AuditManagement() {
                       <SelectValue placeholder="All Operations" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Operations</SelectItem>
+                      <SelectItem value="all">All Operations</SelectItem>
                       <SelectItem value="INSERT">Create</SelectItem>
                       <SelectItem value="UPDATE">Update</SelectItem>
                       <SelectItem value="DELETE">Delete</SelectItem>
