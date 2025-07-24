@@ -71,9 +71,7 @@ export default function AuthPage() {
               </div>
             </div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Welcome to your Portal</h2>
-            <p className="text-muted-foreground text-sm">
-              Access your professional debt recovery management system
-            </p>
+            <p className="text-muted-foreground text-sm">Access your cases</p>
           </div>
 
           <Card className="shadow-lg border-0">
