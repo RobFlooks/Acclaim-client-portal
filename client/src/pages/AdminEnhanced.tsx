@@ -616,8 +616,16 @@ export default function AdminEnhanced() {
         title: "Success",
         description: "User assigned to organisation successfully",
       });
+      // Invalidate admin queries
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users-with-orgs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/organisations"] });
+      
+      // Invalidate user access queries - access may have changed for any user
+      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/cases"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      
       setSelectedUser(null);
       setSelectedOrgId("");
       setShowAssignUser(false);
@@ -733,8 +741,15 @@ export default function AdminEnhanced() {
         title: "Success",
         description: "User added to organisation successfully",
       });
+      // Invalidate admin queries
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users-with-orgs"] });
       queryClient.refetchQueries({ queryKey: ["/api/admin/users-with-orgs"] });
+      
+      // Invalidate user access queries - access may have changed for any user
+      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/cases"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
     },
     onError: (error) => {
       toast({
@@ -755,8 +770,15 @@ export default function AdminEnhanced() {
         title: "Success", 
         description: "User removed from organisation successfully",
       });
+      // Invalidate admin queries
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users-with-orgs"] });
       queryClient.refetchQueries({ queryKey: ["/api/admin/users-with-orgs"] });
+      
+      // Invalidate user access queries - access may have changed for any user
+      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/cases"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
     },
     onError: (error) => {
       const errorMessage = error.message || "Failed to remove user from organisation";
