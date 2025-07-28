@@ -3512,8 +3512,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      await storage.removeUserFromOrganisation(userId, parseInt(organisationId));
-      res.status(200).json({ message: "User removed from organisation successfully" });
+      // Check if we need to remove from legacy organisation field or junction table
+      const user = await storage.getUser(userId);
+      const userOrgs = await storage.getUserOrganisations(userId);
+      const isLegacyOrg = user?.organisationId === parseInt(organisationId);
+      const isJunctionOrg = userOrgs.some(uo => uo.organisationId === parseInt(organisationId));
+      
+      if (isLegacyOrg && !isJunctionOrg) {
+        // This is a legacy organisation - need to change the user's primary organisation
+        // For now, we'll clear it (set to null) or set to another org if they have one
+        const otherOrgs = userOrgs.filter(uo => uo.organisationId !== parseInt(organisationId));
+        const newPrimaryOrgId = otherOrgs.length > 0 ? otherOrgs[0].organisationId : null;
+        
+        await storage.updateUserOrganisation(userId, newPrimaryOrgId);
+        res.status(200).json({ message: "User removed from organisation successfully (legacy org updated)" });
+      } else if (isJunctionOrg) {
+        // Remove from junction table
+        await storage.removeUserFromOrganisation(userId, parseInt(organisationId));
+        res.status(200).json({ message: "User removed from organisation successfully" });
+      } else {
+        res.status(404).json({ message: "User is not assigned to this organisation" });
+      }
     } catch (error) {
       console.error("Error removing user from organisation:", error);
       if (error.message?.includes('duplicate key') || error.message?.includes('already exists')) {
