@@ -56,6 +56,17 @@ export const organisations = pgTable("organisations", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// User-Organisation junction table for many-to-many relationships
+export const userOrganisations = pgTable("user_organisations", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  organisationId: integer("organisation_id").notNull().references(() => organisations.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_user_organisations_user_id").on(table.userId),
+  index("idx_user_organisations_org_id").on(table.organisationId),
+]);
+
 // Cases table  
 export const cases = pgTable("cases", {
   id: serial("id").primaryKey(),
@@ -322,6 +333,9 @@ export type InsertAuditLog = typeof auditLog.$inferInsert;
 
 export type ExternalApiCredential = typeof externalApiCredentials.$inferSelect;
 export type InsertExternalApiCredential = typeof externalApiCredentials.$inferInsert;
+
+export type UserOrganisation = typeof userOrganisations.$inferSelect;
+export type InsertUserOrganisation = typeof userOrganisations.$inferInsert;
 
 // Schemas
 export const insertOrganisationSchema = createInsertSchema(organisations);

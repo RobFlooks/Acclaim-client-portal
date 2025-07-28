@@ -11,6 +11,7 @@ import {
   systemMetrics,
   auditLog,
   externalApiCredentials,
+  userOrganisations,
   type User,
   type UpsertUser,
   type Organization,
@@ -35,6 +36,8 @@ import {
   type InsertAuditLog,
   type ExternalApiCredential,
   type InsertExternalApiCredential,
+  type UserOrganisation,
+  type InsertUserOrganisation,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, sql, or, isNull } from "drizzle-orm";
@@ -71,7 +74,11 @@ export interface IStorage {
   
   // Case operations
   getCasesForOrganisation(organisationId: number): Promise<Case[]>;
-  getCasesForUser(userId: string): Promise<Case[]>; // Returns all cases for user (admin gets all, regular user gets org-filtered)
+  getCasesForUser(userId: string): Promise<Case[]>;
+  getUserOrganisations(userId: string): Promise<UserOrganisation[]>;
+  addUserToOrganisation(userId: string, organisationId: number): Promise<UserOrganisation>;
+  removeUserFromOrganisation(userId: string, organisationId: number): Promise<void>;
+  getUsersWithOrganisations(): Promise<(User & { organisations: Organization[] })[]>; // Returns all cases for user (admin gets all, regular user gets org-filtered)
   getAllCases(): Promise<Case[]>; // Admin only - get all cases across all organizations
   getAllCasesIncludingArchived(): Promise<Case[]>; // Admin only - get all cases including archived ones
   getCase(id: number, organisationId: number): Promise<Case | undefined>;
@@ -413,12 +420,89 @@ export class DatabaseStorage implements IStorage {
       return await this.getAllCases();
     }
 
-    // For non-admin users, filter by their organisation
-    if (!userRecord.organisationId) {
+    // For non-admin users, get all their organisation cases
+    const userOrgs = await this.getUserOrganisations(userId);
+    if (userOrgs.length === 0 && !userRecord.organisationId) {
       return [];
     }
 
-    return await this.getCasesForOrganisation(userRecord.organisationId);
+    // Collect all organisation IDs (including legacy organisationId)
+    const orgIds = new Set<number>();
+    if (userRecord.organisationId) {
+      orgIds.add(userRecord.organisationId);
+    }
+    userOrgs.forEach(uo => orgIds.add(uo.organisationId));
+
+    // Get cases from all user's organisations
+    const allCases: Case[] = [];
+    for (const orgId of orgIds) {
+      const orgCases = await this.getCasesForOrganisation(orgId);
+      allCases.push(...orgCases);
+    }
+
+    return allCases;
+  }
+
+  async getUserOrganisations(userId: string): Promise<UserOrganisation[]> {
+    return await db.select().from(userOrganisations).where(eq(userOrganisations.userId, userId));
+  }
+
+  async addUserToOrganisation(userId: string, organisationId: number): Promise<UserOrganisation> {
+    const [userOrg] = await db.insert(userOrganisations).values({
+      userId,
+      organisationId,
+    }).returning();
+    return userOrg;
+  }
+
+  async removeUserFromOrganisation(userId: string, organisationId: number): Promise<void> {
+    await db.delete(userOrganisations).where(
+      and(
+        eq(userOrganisations.userId, userId),
+        eq(userOrganisations.organisationId, organisationId)
+      )
+    );
+  }
+
+  async getUsersWithOrganisations(): Promise<(User & { organisations: Organization[] })[]> {
+    const allUsers = await db.select().from(users);
+    
+    const usersWithOrgs = await Promise.all(
+      allUsers.map(async (user) => {
+        // Get user's assigned organisations from junction table
+        const userOrgs = await db
+          .select({ organisation: organisations })
+          .from(userOrganisations)
+          .leftJoin(organisations, eq(userOrganisations.organisationId, organisations.id))
+          .where(eq(userOrganisations.userId, user.id));
+
+        // Also get legacy organisation if exists
+        const legacyOrg = user.organisationId ? 
+          await db.select().from(organisations).where(eq(organisations.id, user.organisationId)).limit(1) : [];
+
+        // Combine organisations (avoid duplicates)
+        const orgMap = new Map<number, Organization>();
+        
+        // Add legacy organisation
+        if (legacyOrg.length > 0) {
+          orgMap.set(legacyOrg[0].id, legacyOrg[0]);
+        }
+        
+        // Add junction table organisations
+        userOrgs.forEach(uo => {
+          if (uo.organisation) {
+            orgMap.set(uo.organisation.id, uo.organisation);
+          }
+        });
+
+        return {
+          ...user,
+          organisations: Array.from(orgMap.values())
+        };
+      })
+    );
+
+    return usersWithOrgs;
   }
 
   async getCasesForOrganisation(organisationId: number): Promise<Case[]> {
