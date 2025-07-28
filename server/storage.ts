@@ -40,7 +40,7 @@ import {
   type InsertUserOrganisation,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, sql, or, isNull, inArray } from "drizzle-orm";
+import { eq, and, desc, sql, or, isNull, isNotNull, inArray } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
 import session from "express-session";
@@ -895,9 +895,9 @@ export class DatabaseStorage implements IStorage {
             inArray(messages.recipientId, orgIdArray.map(id => id.toString()))
           ), // Messages sent to any of user's organisations
           and(
-            eq(messages.recipientType, 'case'),
-            inArray(cases.organisationId, orgIdArray)
-          ) // Messages sent to cases in any of user's organisations
+            isNotNull(messages.caseId), // Message is tied to a case
+            inArray(cases.organisationId, orgIdArray) // Case belongs to one of user's organisations
+          )
         ),
         or(
           isNull(messages.caseId), // General messages not tied to a case
