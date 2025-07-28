@@ -511,9 +511,9 @@ export default function AdminEnhanced() {
   const [tempPassword, setTempPassword] = useState("");
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
 
-  // Fetch users
+  // Fetch users with their organisations
   const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery({
-    queryKey: ["/api/admin/users"],
+    queryKey: ["/api/admin/users-with-orgs"],
     retry: false,
   });
 
@@ -616,7 +616,7 @@ export default function AdminEnhanced() {
         title: "Success",
         description: "User assigned to organisation successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users-with-orgs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/organisations"] });
       setSelectedUser(null);
       setSelectedOrgId("");
@@ -654,7 +654,7 @@ export default function AdminEnhanced() {
         title: "Success",
         description: "User created successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users-with-orgs"] });
       setUserFormData({
         firstName: "",
         lastName: "",
@@ -722,6 +722,49 @@ export default function AdminEnhanced() {
     },
   });
 
+  // Multi-organisation management mutations
+  const addUserToOrgMutation = useMutation({
+    mutationFn: async ({ userId, organisationId }: { userId: string; organisationId: number }) => {
+      const response = await apiRequest("POST", `/api/admin/users/${userId}/organisations`, { organisationId });
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "User added to organisation successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users-with-orgs"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add user to organisation",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const removeUserFromOrgMutation = useMutation({
+    mutationFn: async ({ userId, organisationId }: { userId: string; organisationId: number }) => {
+      const response = await apiRequest("DELETE", `/api/admin/users/${userId}/organisations/${organisationId}`);
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success", 
+        description: "User removed from organisation successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users-with-orgs"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove user from organisation",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Toggle admin status mutation
   const toggleAdminMutation = useMutation({
     mutationFn: async ({ userId, makeAdmin }: { userId: string; makeAdmin: boolean }) => {
@@ -734,7 +777,7 @@ export default function AdminEnhanced() {
         title: "Success",
         description: data.message,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users-with-orgs"] });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -1085,13 +1128,48 @@ export default function AdminEnhanced() {
                         <span>{user.phone || "-"}</span>
                       </div>
                       
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Organisation:</span>
-                        {user.organisationName ? (
-                          <Badge variant="outline">{user.organisationName}</Badge>
-                        ) : (
-                          <Badge variant="secondary">Unassigned</Badge>
-                        )}
+                      <div className="space-y-1">
+                        <span className="text-gray-600">Organisations:</span>
+                        <div className="space-y-1">
+                          {/* Legacy organisation (from organisationId field) */}
+                          {user.organisationName && (
+                            <div className="flex items-center gap-1">
+                              <Badge variant="outline" className="text-xs">
+                                {user.organisationName}
+                              </Badge>
+                              <span className="text-xs text-gray-500">(legacy)</span>
+                            </div>
+                          )}
+                          {/* Additional organisations (from junction table) */}
+                          {(user as any).organisations?.map((org: Organisation) => (
+                            <div key={org.id} className="flex items-center gap-1">
+                              <Badge variant="outline" className="text-xs">
+                                {org.name}
+                              </Badge>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-3 w-3 p-0 text-red-500 hover:text-red-700"
+                                onClick={() => {
+                                  const confirmation = confirm(`Remove ${user.firstName} ${user.lastName} from ${org.name}?`);
+                                  if (confirmation) {
+                                    removeUserFromOrgMutation.mutate({
+                                      userId: user.id,
+                                      organisationId: org.id
+                                    });
+                                  }
+                                }}
+                                disabled={removeUserFromOrgMutation.isPending}
+                                title={`Remove from ${org.name}`}
+                              >
+                                ×
+                              </Button>
+                            </div>
+                          ))}
+                          {!user.organisationName && !(user as any).organisations?.length && (
+                            <Badge variant="secondary" className="text-xs">Unassigned</Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
                     
@@ -1105,8 +1183,8 @@ export default function AdminEnhanced() {
                           setShowAssignUser(true);
                         }}
                       >
-                        <Edit className="h-3 w-3 mr-1" />
-                        Edit
+                        <UserPlus className="h-3 w-3 mr-1" />
+                        Assign
                       </Button>
                       <Button
                         variant="outline"
@@ -1181,11 +1259,43 @@ export default function AdminEnhanced() {
                         </TableCell>
                         <TableCell>{user.phone || "-"}</TableCell>
                         <TableCell>
-                          {user.organisationName ? (
-                            <Badge variant="outline">{user.organisationName}</Badge>
-                          ) : (
-                            <Badge variant="secondary">Unassigned</Badge>
-                          )}
+                          <div className="space-y-1">
+                            {/* Legacy organisation (from organisationId field) */}
+                            {user.organisationName && (
+                              <Badge variant="outline" className="mr-1 mb-1">
+                                {user.organisationName}
+                              </Badge>
+                            )}
+                            {/* Additional organisations (from junction table) */}
+                            {(user as any).organisations?.map((org: Organisation) => (
+                              <div key={org.id} className="flex items-center gap-1 mb-1">
+                                <Badge variant="outline" className="mr-1">
+                                  {org.name}
+                                </Badge>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-4 w-4 p-0 text-red-500 hover:text-red-700"
+                                  onClick={() => {
+                                    const confirmation = confirm(`Remove ${user.firstName} ${user.lastName} from ${org.name}?`);
+                                    if (confirmation) {
+                                      removeUserFromOrgMutation.mutate({
+                                        userId: user.id,
+                                        organisationId: org.id
+                                      });
+                                    }
+                                  }}
+                                  disabled={removeUserFromOrgMutation.isPending}
+                                  title={`Remove from ${org.name}`}
+                                >
+                                  ×
+                                </Button>
+                              </div>
+                            ))}
+                            {!user.organisationName && !(user as any).organisations?.length && (
+                              <Badge variant="secondary">Unassigned</Badge>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">
@@ -1206,8 +1316,9 @@ export default function AdminEnhanced() {
                                 setSelectedUser(user);
                                 setShowAssignUser(true);
                               }}
+                              title="Assign to organisation"
                             >
-                              <Edit className="h-3 w-3" />
+                              <UserPlus className="h-3 w-3" />
                             </Button>
                             <Button
                               variant="outline"
@@ -1449,25 +1560,79 @@ export default function AdminEnhanced() {
         </DialogContent>
       </Dialog>
 
-      {/* User Assignment Dialog */}
+      {/* User Assignment Dialog - Multi-Organisation Management */}
       <Dialog open={showAssignUser} onOpenChange={setShowAssignUser}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Assign User to Organisation</DialogTitle>
+            <DialogTitle>Manage Organisation Assignments</DialogTitle>
             <DialogDescription>
-              Select an organisation for {selectedUser?.firstName} {selectedUser?.lastName}
+              Manage {selectedUser?.firstName} {selectedUser?.lastName}'s organisation assignments
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            {/* Show current assignments */}
             <div className="space-y-2">
-              <Label htmlFor="organisation">Organisation</Label>
+              <Label className="text-sm font-medium">Current Assignments:</Label>
+              <div className="space-y-2">
+                {/* Legacy organisation (from organisationId field) */}
+                {selectedUser?.organisationName && (
+                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                    <Badge variant="outline" className="mr-2">
+                      {selectedUser.organisationName} (legacy)
+                    </Badge>
+                    <span className="text-xs text-gray-500">Primary organisation</span>
+                  </div>
+                )}
+                {/* Additional organisations (from junction table) */}
+                {(selectedUser as any)?.organisations?.map((org: Organisation) => (
+                  <div key={org.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{org.name}</Badge>
+                      {org.externalRef && (
+                        <span className="text-xs text-gray-500">Ref: {org.externalRef}</span>
+                      )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-500 hover:text-red-700"
+                      onClick={() => {
+                        const confirmation = confirm(`Remove ${selectedUser?.firstName} ${selectedUser?.lastName} from ${org.name}?`);
+                        if (confirmation) {
+                          removeUserFromOrgMutation.mutate({
+                            userId: selectedUser!.id,
+                            organisationId: org.id
+                          });
+                        }
+                      }}
+                      disabled={removeUserFromOrgMutation.isPending}
+                      title={`Remove from ${org.name}`}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+                {!selectedUser?.organisationName && !(selectedUser as any)?.organisations?.length && (
+                  <div className="p-2 bg-gray-50 rounded text-center text-gray-500">
+                    No organisation assignments
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Add to new organisation */}
+            <div className="space-y-2">
+              <Label htmlFor="newOrganisation" className="text-sm font-medium">Add to Organisation:</Label>
               <Select value={selectedOrgId} onValueChange={setSelectedOrgId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select organisation" />
+                  <SelectValue placeholder="Select organisation to add" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Select organisation</SelectItem>
-                  {organisations?.map((org: Organisation) => (
+                  {organisations?.filter((org: Organisation) => {
+                    // Filter out already assigned organisations
+                    const currentOrgIds = (selectedUser as any)?.organisations?.map((o: Organisation) => o.id) || [];
+                    return !currentOrgIds.includes(org.id) && org.id !== selectedUser?.organisationId;
+                  }).map((org: Organisation) => (
                     <SelectItem key={org.id} value={org.id.toString()}>
                       <div className="flex flex-col">
                         <span className="font-medium">{org.name}</span>
@@ -1482,27 +1647,35 @@ export default function AdminEnhanced() {
             </div>
           </div>
           <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setShowAssignUser(false)}>
-              Cancel
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowAssignUser(false);
+                setSelectedOrgId("");
+              }}
+              disabled={addUserToOrgMutation.isPending || removeUserFromOrgMutation.isPending}
+            >
+              Close
             </Button>
             <Button
               onClick={() => {
-                if (selectedUser && selectedOrgId && selectedOrgId !== "none") {
+                if (selectedUser && selectedOrgId) {
                   const selectedOrg = organisations?.find(org => org.id.toString() === selectedOrgId);
-                  const confirmMessage = `Are you sure you want to assign ${selectedUser.firstName} ${selectedUser.lastName} to ${selectedOrg?.name}${selectedOrg?.externalRef ? ` (Ref: ${selectedOrg.externalRef})` : ''}?`;
+                  const confirmMessage = `Add ${selectedUser.firstName} ${selectedUser.lastName} to ${selectedOrg?.name}${selectedOrg?.externalRef ? ` (Ref: ${selectedOrg.externalRef})` : ''}?`;
                   
                   if (confirm(confirmMessage)) {
-                    assignUserMutation.mutate({
+                    addUserToOrgMutation.mutate({
                       userId: selectedUser.id,
-                      organisationId: parseInt(selectedOrgId)
+                      organisationId: parseInt(selectedOrgId),
                     });
+                    setSelectedOrgId("");
                   }
                 }
               }}
-              disabled={assignUserMutation.isPending}
+              disabled={addUserToOrgMutation.isPending || !selectedOrgId}
               className="bg-acclaim-teal hover:bg-acclaim-teal/90"
             >
-              {assignUserMutation.isPending ? "Assigning..." : "Assign"}
+              {addUserToOrgMutation.isPending ? "Adding..." : "Add to Organisation"}
             </Button>
           </div>
         </DialogContent>

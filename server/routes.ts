@@ -3441,6 +3441,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Multi-organisation management endpoints
+  
+  // Get users with their organisations (enhanced admin endpoint)
+  app.get('/api/admin/users-with-orgs', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const users = await storage.getUsersWithOrganisations();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users with organisations:", error);
+      res.status(500).json({ message: "Failed to fetch users with organisations" });
+    }
+  });
+
+  // Add user to organisation
+  app.post('/api/admin/users/:userId/organisations', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { organisationId } = req.body;
+
+      if (!organisationId) {
+        return res.status(400).json({ message: "Organisation ID is required" });
+      }
+
+      const userOrg = await storage.addUserToOrganisation(userId, organisationId);
+      res.status(201).json(userOrg);
+    } catch (error) {
+      console.error("Error adding user to organisation:", error);
+      res.status(500).json({ message: "Failed to add user to organisation" });
+    }
+  });
+
+  // Remove user from organisation
+  app.delete('/api/admin/users/:userId/organisations/:organisationId', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { userId, organisationId } = req.params;
+      await storage.removeUserFromOrganisation(userId, parseInt(organisationId));
+      res.status(200).json({ message: "User removed from organisation successfully" });
+    } catch (error) {
+      console.error("Error removing user from organisation:", error);
+      res.status(500).json({ message: "Failed to remove user from organisation" });
+    }
+  });
+
+  // Get user's organisations
+  app.get('/api/admin/users/:userId/organisations', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const userOrgs = await storage.getUserOrganisations(userId);
+      res.json(userOrgs);
+    } catch (error) {
+      console.error("Error fetching user organisations:", error);
+      res.status(500).json({ message: "Failed to fetch user organisations" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
