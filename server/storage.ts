@@ -807,7 +807,18 @@ export class DatabaseStorage implements IStorage {
     }
 
     const userRecord = user[0];
-    const userOrgId = userRecord.organisationId;
+    
+    // Get all organisation IDs the user has access to (both legacy and junction table)
+    const userOrgs = await this.getUserOrganisations(userId);
+    const allUserOrgIds = new Set<number>();
+    
+    // Add legacy organisation if exists
+    if (userRecord.organisationId) {
+      allUserOrgIds.add(userRecord.organisationId);
+    }
+    
+    // Add junction table organisations
+    userOrgs.forEach(uo => allUserOrgIds.add(uo.organisationId));
 
     // If user is admin, return all messages (no organisation filtering)
     if (userRecord.isAdmin) {
@@ -844,7 +855,13 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(messages.createdAt));
     }
 
-    // For non-admin users, filter by organisation
+    // For non-admin users, filter by all assigned organisations
+    if (allUserOrgIds.size === 0) {
+      return []; // User has no organisation assignments
+    }
+
+    const orgIdArray = Array.from(allUserOrgIds);
+    
     return await db
       .select({
         id: messages.id,
@@ -875,12 +892,12 @@ export class DatabaseStorage implements IStorage {
           eq(messages.recipientId, userId), // Messages sent directly to this user
           and(
             eq(messages.recipientType, 'organization'),
-            eq(messages.recipientId, userOrgId?.toString() || '')
-          ), // Messages sent to user's organization
+            sql`${messages.recipientId} = ANY(ARRAY[${orgIdArray.map(id => `'${id}'`).join(',')}])`
+          ), // Messages sent to any of user's organisations
           and(
             eq(messages.recipientType, 'case'),
-            eq(cases.organisationId, userOrgId || 0)
-          ) // Messages sent to cases in user's organization
+            sql`${cases.organisationId} = ANY(ARRAY[${orgIdArray.join(',')}])`
+          ) // Messages sent to cases in any of user's organisations
         ),
         or(
           isNull(messages.caseId), // General messages not tied to a case
@@ -996,12 +1013,49 @@ export class DatabaseStorage implements IStorage {
       return results;
     }
 
-    // For non-admin users, filter by their organisation
-    if (!userRecord.organisationId) {
-      return [];
+    // Get all organisation IDs the user has access to (both legacy and junction table)
+    const userOrgs = await this.getUserOrganisations(userId);
+    const allUserOrgIds = new Set<number>();
+    
+    // Add legacy organisation if exists
+    if (userRecord.organisationId) {
+      allUserOrgIds.add(userRecord.organisationId);
+    }
+    
+    // Add junction table organisations
+    userOrgs.forEach(uo => allUserOrgIds.add(uo.organisationId));
+
+    // For non-admin users, filter by all assigned organisations
+    if (allUserOrgIds.size === 0) {
+      return []; // User has no organisation assignments
     }
 
-    return await this.getDocumentsForOrganisation(userRecord.organisationId);
+    const orgIdArray = Array.from(allUserOrgIds);
+    
+    const results = await db
+      .select({
+        id: documents.id,
+        caseId: documents.caseId,
+        fileName: documents.fileName,
+        fileSize: documents.fileSize,
+        fileType: documents.fileType,
+        filePath: documents.filePath,
+        uploadedBy: documents.uploadedBy,
+        organisationId: documents.organisationId,
+        createdAt: documents.createdAt,
+      })
+      .from(documents)
+      .leftJoin(cases, eq(documents.caseId, cases.id))
+      .where(and(
+        sql`${documents.organisationId} = ANY(ARRAY[${orgIdArray.join(',')}])`, // Documents from any of user's organisations
+        or(
+          isNull(documents.caseId), // General documents not tied to a case
+          eq(cases.isArchived, false) // Documents for non-archived cases only
+        )
+      ))
+      .orderBy(desc(documents.createdAt));
+    
+    return results;
   }
 
   async getDocumentsForOrganisation(organisationId: number): Promise<Document[]> {
