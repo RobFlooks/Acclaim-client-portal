@@ -40,7 +40,7 @@ import {
   type InsertUserOrganisation,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, sql, or, isNull } from "drizzle-orm";
+import { eq, and, desc, sql, or, isNull, inArray } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
 import session from "express-session";
@@ -892,11 +892,11 @@ export class DatabaseStorage implements IStorage {
           eq(messages.recipientId, userId), // Messages sent directly to this user
           and(
             eq(messages.recipientType, 'organization'),
-            sql`${messages.recipientId} = ANY(ARRAY[${orgIdArray.map(id => `'${id}'`).join(',')}])`
+            inArray(messages.recipientId, orgIdArray.map(id => id.toString()))
           ), // Messages sent to any of user's organisations
           and(
             eq(messages.recipientType, 'case'),
-            sql`${cases.organisationId} = ANY(ARRAY[${orgIdArray.join(',')}])`
+            inArray(cases.organisationId, orgIdArray)
           ) // Messages sent to cases in any of user's organisations
         ),
         or(
@@ -1047,7 +1047,7 @@ export class DatabaseStorage implements IStorage {
       .from(documents)
       .leftJoin(cases, eq(documents.caseId, cases.id))
       .where(and(
-        sql`${documents.organisationId} = ANY(ARRAY[${orgIdArray.join(',')}])`, // Documents from any of user's organisations
+        inArray(documents.organisationId, orgIdArray), // Documents from any of user's organisations
         or(
           isNull(documents.caseId), // General documents not tied to a case
           eq(cases.isArchived, false) // Documents for non-archived cases only
