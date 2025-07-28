@@ -757,11 +757,20 @@ export default function AdminEnhanced() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users-with-orgs"] });
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to remove user from organisation",
-        variant: "destructive",
-      });
+      const errorMessage = error.message || "Failed to remove user from organisation";
+      if (errorMessage.includes("Cannot remove yourself from your last organisation")) {
+        toast({
+          title: "Cannot Remove Organisation",
+          description: "You cannot remove yourself from your last organisation. Please assign yourself to another organisation first.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
     },
   });
 
