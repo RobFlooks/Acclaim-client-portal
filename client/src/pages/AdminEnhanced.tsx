@@ -734,6 +734,7 @@ export default function AdminEnhanced() {
         description: "User added to organisation successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users-with-orgs"] });
+      queryClient.refetchQueries({ queryKey: ["/api/admin/users-with-orgs"] });
     },
     onError: (error) => {
       toast({
@@ -755,6 +756,7 @@ export default function AdminEnhanced() {
         description: "User removed from organisation successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users-with-orgs"] });
+      queryClient.refetchQueries({ queryKey: ["/api/admin/users-with-orgs"] });
     },
     onError: (error) => {
       const errorMessage = error.message || "Failed to remove user from organisation";

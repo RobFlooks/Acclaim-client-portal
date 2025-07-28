@@ -3447,6 +3447,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/admin/users-with-orgs', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const users = await storage.getUsersWithOrganisations();
+      // Prevent caching to ensure fresh data after organisation changes
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
       res.json(users);
     } catch (error) {
       console.error("Error fetching users with organisations:", error);
