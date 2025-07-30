@@ -1617,21 +1617,9 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
         <TabsContent value="payments" className="space-y-4" data-tab="payments">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <PoundSterling className="h-5 w-5 mr-2" />
-                  Payment History
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => refetchPayments()}
-                  disabled={paymentsLoading}
-                  className="ml-2"
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${paymentsLoading ? 'animate-spin' : ''}`} />
-                  Refresh
-                </Button>
+              <CardTitle className="flex items-center">
+                <PoundSterling className="h-5 w-5 mr-2" />
+                Payment History
               </CardTitle>
             </CardHeader>
             <CardContent>
