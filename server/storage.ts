@@ -132,6 +132,13 @@ export interface IStorage {
     totalOutstanding: string;
     totalRecovery: string;
   }>; // Admin only - get stats across all organizations
+  
+  getCombinedCaseStats(organisationIds: number[]): Promise<{
+    activeCases: number;
+    closedCases: number;
+    totalOutstanding: string;
+    totalRecovery: string;
+  }>; // Get combined stats from multiple organizations
 
   // Admin operations
   getAllUsers(): Promise<User[]>;
@@ -1234,6 +1241,46 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(cases, eq(payments.caseId, cases.id))
       .where(and(
         eq(cases.isArchived, false),
+        sql`LOWER(${cases.status}) != 'closed'`
+      ));
+
+    return {
+      activeCases: stats.activeCases,
+      closedCases: stats.closedCases,
+      totalOutstanding: stats.totalOutstanding.toString(),
+      totalRecovery: recoveryStats.totalRecovery.toString(),
+    };
+  }
+
+  async getCombinedCaseStats(organisationIds: number[]): Promise<{
+    activeCases: number;
+    closedCases: number;
+    totalOutstanding: string;
+    totalRecovery: string;
+  }> {
+    // Get combined stats from multiple organizations (excluding archived cases)
+    const [stats] = await db
+      .select({
+        activeCases: sql<number>`COUNT(CASE WHEN LOWER(status) != 'closed' THEN 1 END)`,
+        closedCases: sql<number>`COUNT(CASE WHEN LOWER(status) = 'closed' THEN 1 END)`,
+        totalOutstanding: sql<string>`COALESCE(SUM(CASE WHEN LOWER(status) != 'closed' THEN outstanding_amount ELSE 0 END), 0)`,
+      })
+      .from(cases)
+      .where(and(
+        eq(cases.isArchived, false),
+        inArray(cases.organisationId, organisationIds)
+      ));
+
+    // Calculate total recovery from payments for cases in specified organizations (excluding archived cases)
+    const [recoveryStats] = await db
+      .select({
+        totalRecovery: sql<string>`COALESCE(SUM(${payments.amount}), 0)`,
+      })
+      .from(payments)
+      .leftJoin(cases, eq(payments.caseId, cases.id))
+      .where(and(
+        eq(cases.isArchived, false),
+        inArray(cases.organisationId, organisationIds),
         sql`LOWER(${cases.status}) != 'closed'`
       ));
 

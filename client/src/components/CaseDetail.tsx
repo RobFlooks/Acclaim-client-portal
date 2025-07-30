@@ -18,7 +18,8 @@ import {
   Calendar,
   PoundSterling,
   Printer,
-  Trash2
+  Trash2,
+  RefreshCw
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
@@ -144,9 +145,14 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
 
 
 
-  const { data: payments, isLoading: paymentsLoading } = useQuery({
+  const { data: payments, isLoading: paymentsLoading, refetch: refetchPayments } = useQuery({
     queryKey: ["/api/cases", caseData.id, "payments"],
     enabled: !!caseData.id,
+    // Faster refresh for real-time payment updates
+    staleTime: 30 * 1000, // 30 seconds - data is considered fresh for only 30 seconds
+    cacheTime: 60 * 1000, // 1 minute cache time
+    refetchInterval: 30 * 1000, // Auto-refresh every 30 seconds
+    refetchIntervalInBackground: true, // Continue refreshing even when tab is not active
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
@@ -1611,9 +1617,21 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
         <TabsContent value="payments" className="space-y-4" data-tab="payments">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <PoundSterling className="h-5 w-5 mr-2" />
-                Payment History
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <PoundSterling className="h-5 w-5 mr-2" />
+                  Payment History
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refetchPayments()}
+                  disabled={paymentsLoading}
+                  className="ml-2"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${paymentsLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent>

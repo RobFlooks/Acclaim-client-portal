@@ -83,11 +83,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Admin sees global stats across all organisations
         stats = await storage.getGlobalCaseStats();
       } else {
-        // Regular users see only their organisation's stats
-        if (!user.organisationId) {
+        // Regular users see stats from all their assigned organisations
+        const userOrgs = await storage.getUserOrganisations(userId);
+        const orgIds = new Set<number>();
+        
+        // Add legacy organisation if exists
+        if (user.organisationId) {
+          orgIds.add(user.organisationId);
+        }
+        
+        // Add junction table organisations
+        userOrgs.forEach(uo => orgIds.add(uo.organisationId));
+        
+        if (orgIds.size === 0) {
           return res.status(404).json({ message: "User organisation not found" });
         }
-        stats = await storage.getCaseStats(user.organisationId);
+        
+        // Get combined stats from all user's organisations
+        stats = await storage.getCombinedCaseStats(Array.from(orgIds));
       }
 
       res.json(stats);
