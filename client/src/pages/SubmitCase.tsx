@@ -123,9 +123,9 @@ export default function SubmitCase() {
       clientEmail: user?.email || "",
       clientPhone: user?.phone || "",
 
-      debtorType: "",
+      debtorType: undefined as any,
       caseName: "",
-      individualType: "",
+      individualType: undefined as any,
       tradingName: "",
       organisationName: "",
       organisationTradingName: "",
@@ -145,10 +145,10 @@ export default function SubmitCase() {
       debtDetails: "",
       totalDebtAmount: 0,
       currency: "GBP",
-      paymentTermsType: "",
+      paymentTermsType: undefined as any,
       paymentTermsDays: 30,
       paymentTermsOther: "",
-      singleInvoice: "",
+      singleInvoice: undefined as any,
       firstOverdueDate: "",
       lastOverdueDate: "",
       additionalInfo: "",
@@ -380,7 +380,7 @@ export default function SubmitCase() {
                           // Clear all fields when switching debtor type
                           if (value === "organisation") {
                             // Clear individual fields
-                            form.setValue("individualType", "");
+                            form.setValue("individualType", undefined as any);
                             form.setValue("tradingName", "");
                             form.setValue("principalSalutation", "");
                             form.setValue("principalFirstName", "");
