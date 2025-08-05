@@ -157,6 +157,7 @@ export default function SubmitCase() {
 
   const submitCaseMutation = useMutation({
     mutationFn: async (data: SubmitCaseForm) => {
+      console.log("Mutation function called with:", data);
       const debtorAddress = `${data.addressLine1}${data.addressLine2 ? ', ' + data.addressLine2 : ''}, ${data.city}, ${data.county}, ${data.postcode}`;
       
       let paymentTerms = "";
@@ -252,6 +253,8 @@ export default function SubmitCase() {
   });
 
   const onSubmit = (data: SubmitCaseForm) => {
+    console.log("Form submitted with data:", data);
+    console.log("Form validation errors:", form.formState.errors);
     submitCaseMutation.mutate(data);
   };
 
