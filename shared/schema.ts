@@ -381,6 +381,8 @@ export type InsertUserOrganisation = typeof userOrganisations.$inferInsert;
 export const insertOrganisationSchema = createInsertSchema(organisations);
 export const insertCaseSubmissionSchema = createInsertSchema(caseSubmissions).extend({
   debtorType: z.enum(['individual', 'company', 'sole_trader', 'company_and_individual']).default('individual'),
+  originalAmount: z.union([z.string(), z.number()]).transform((val) => Number(val)),
+  outstandingAmount: z.union([z.string(), z.number()]).transform((val) => Number(val)),
 }).omit({ 
   id: true, 
   submittedAt: true, 
