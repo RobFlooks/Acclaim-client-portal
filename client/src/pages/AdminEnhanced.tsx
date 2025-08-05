@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore } from "lucide-react";
+import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrganisationSchema } from "@shared/schema";
@@ -71,6 +71,89 @@ function CaseManagementTab() {
   const queryClient = useQueryClient();
   const [deleteConfirmCase, setDeleteConfirmCase] = useState<Case | null>(null);
   const [archiveConfirmCase, setArchiveConfirmCase] = useState<Case | null>(null);
+  const [showNewCaseDialog, setShowNewCaseDialog] = useState(false);
+  const [newCaseForm, setNewCaseForm] = useState({
+    accountNumber: '',
+    caseName: '',
+    debtorEmail: '',
+    debtorPhone: '',
+    debtorAddress: '',
+    debtorType: 'individual',
+    originalAmount: '',
+    outstandingAmount: '',
+    status: 'new',
+    stage: 'initial_contact',
+    organisationId: '',
+    externalRef: ''
+  });
+
+  // CSV Export functionality
+  const exportCasesToCSV = () => {
+    if (!cases || cases.length === 0) {
+      toast({
+        title: "No Data",
+        description: "No cases available to export.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Define CSV headers
+    const headers = [
+      'Account Number',
+      'Case Name',
+      'Debtor Email',
+      'Debtor Phone',
+      'Original Amount',
+      'Outstanding Amount',
+      'Status',
+      'Stage',
+      'Organisation',
+      'Created Date',
+      'Updated Date',
+      'Archived',
+      'Archived Date'
+    ];
+
+    // Convert cases to CSV rows
+    const csvRows = [
+      headers.join(','), // Header row
+      ...cases.map((case_: Case) => [
+        `"${case_.accountNumber || ''}"`,
+        `"${case_.caseName || ''}"`,
+        `"${case_.debtorEmail || ''}"`,
+        `"${case_.debtorPhone || ''}"`,
+        `"${case_.originalAmount || ''}"`,
+        `"${case_.outstandingAmount || ''}"`,
+        `"${case_.status || ''}"`,
+        `"${case_.stage || ''}"`,
+        `"${case_.organisationName || ''}"`,
+        `"${new Date(case_.createdAt).toLocaleDateString('en-GB')}"`,
+        `"${new Date(case_.updatedAt).toLocaleDateString('en-GB')}"`,
+        `"${case_.isArchived ? 'Yes' : 'No'}"`,
+        `"${case_.archivedAt ? new Date(case_.archivedAt).toLocaleDateString('en-GB') : ''}"`
+      ].join(','))
+    ];
+
+    // Create and download CSV file
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `cases-export-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Export Complete",
+      description: `Successfully exported ${cases.length} cases to CSV.`,
+    });
+  };
   
   // Fetch all cases (including archived ones for admin)
   const { data: cases = [], isLoading, error } = useQuery({
@@ -82,6 +165,91 @@ function CaseManagementTab() {
     },
     retry: false,
   });
+
+  // Fetch organisations for the new case form
+  const { data: organisations = [] } = useQuery({
+    queryKey: ['/api/admin/organisations'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/admin/organisations');
+      return await response.json();
+    },
+    retry: false,
+  });
+
+  // Create new case mutation
+  const createCaseMutation = useMutation({
+    mutationFn: async (caseData: any) => {
+      const response = await apiRequest('POST', '/api/external/cases', caseData);
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Case Created",
+        description: "New case has been successfully created.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/cases/all'] });
+      setShowNewCaseDialog(false);
+      setNewCaseForm({
+        accountNumber: '',
+        caseName: '',
+        debtorEmail: '',
+        debtorPhone: '',
+        debtorAddress: '',
+        debtorType: 'individual',
+        originalAmount: '',
+        outstandingAmount: '',
+        status: 'new',
+        stage: 'initial_contact',
+        organisationId: '',
+        externalRef: ''
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "Session expired. Please refresh and try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to create case. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmitNewCase = () => {
+    if (!newCaseForm.accountNumber || !newCaseForm.caseName || !newCaseForm.organisationId) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields (Account Number, Case Name, Organisation).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const organisation = organisations.find((org: Organisation) => org.id === parseInt(newCaseForm.organisationId));
+    if (!organisation) {
+      toast({
+        title: "Invalid Organisation",
+        description: "Please select a valid organisation.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const caseData = {
+      ...newCaseForm,
+      organisationExternalRef: organisation.externalRef || organisation.name,
+      assignedTo: 'Admin',
+      externalRef: newCaseForm.externalRef || `ADMIN-${Date.now()}`
+    };
+
+    createCaseMutation.mutate(caseData);
+  };
 
   // Handle unauthorized errors
   useEffect(() => {
@@ -209,8 +377,30 @@ function CaseManagementTab() {
 
   return (
     <div className="space-y-4">
-      <div className="text-sm text-gray-600 px-1">
-        Total Cases: {cases.length} | Archived: {cases.filter((c: Case) => c.isArchived).length} | Active: {cases.filter((c: Case) => !c.isArchived).length}
+      <div className="flex justify-between items-center">
+        <div className="text-sm text-gray-600 px-1">
+          Total Cases: {cases.length} | Archived: {cases.filter((c: Case) => c.isArchived).length} | Active: {cases.filter((c: Case) => !c.isArchived).length}
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setShowNewCaseDialog(true)}
+            variant="default"
+            size="sm"
+            className="gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Submit New Case
+          </Button>
+          <Button
+            onClick={exportCasesToCSV}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
+        </div>
       </div>
       
       {/* Mobile Card Layout */}
@@ -472,6 +662,165 @@ function CaseManagementTab() {
               className="bg-orange-600 hover:bg-orange-700 text-white"
             >
               {archiveCaseMutation.isPending ? "Archiving..." : "Archive Case"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Case Dialog */}
+      <Dialog open={showNewCaseDialog} onOpenChange={setShowNewCaseDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5" />
+              Submit New Case
+            </DialogTitle>
+            <DialogDescription>
+              Create a new case that can be exported to CSV for upload to your external case management system.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+            <div>
+              <Label htmlFor="accountNumber">Account Number *</Label>
+              <Input
+                id="accountNumber"
+                value={newCaseForm.accountNumber}
+                onChange={(e) => setNewCaseForm({ ...newCaseForm, accountNumber: e.target.value })}
+                placeholder="e.g., ACC-001"
+              />
+            </div>
+            <div>
+              <Label htmlFor="caseName">Case Name *</Label>
+              <Input
+                id="caseName"
+                value={newCaseForm.caseName}
+                onChange={(e) => setNewCaseForm({ ...newCaseForm, caseName: e.target.value })}
+                placeholder="e.g., John Smith vs ABC Ltd"
+              />
+            </div>
+            <div>
+              <Label htmlFor="debtorEmail">Debtor Email</Label>
+              <Input
+                id="debtorEmail"
+                type="email"
+                value={newCaseForm.debtorEmail}
+                onChange={(e) => setNewCaseForm({ ...newCaseForm, debtorEmail: e.target.value })}
+                placeholder="debtor@example.com"
+              />
+            </div>
+            <div>
+              <Label htmlFor="debtorPhone">Debtor Phone</Label>
+              <Input
+                id="debtorPhone"
+                value={newCaseForm.debtorPhone}
+                onChange={(e) => setNewCaseForm({ ...newCaseForm, debtorPhone: e.target.value })}
+                placeholder="+44 20 1234 5678"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <Label htmlFor="debtorAddress">Debtor Address</Label>
+              <Input
+                id="debtorAddress"
+                value={newCaseForm.debtorAddress}
+                onChange={(e) => setNewCaseForm({ ...newCaseForm, debtorAddress: e.target.value })}
+                placeholder="Full address"
+              />
+            </div>
+            <div>
+              <Label htmlFor="debtorType">Debtor Type</Label>
+              <Select value={newCaseForm.debtorType} onValueChange={(value) => setNewCaseForm({ ...newCaseForm, debtorType: value })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="individual">Individual</SelectItem>
+                  <SelectItem value="company">Company</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="organisationId">Organisation *</Label>
+              <Select value={newCaseForm.organisationId} onValueChange={(value) => setNewCaseForm({ ...newCaseForm, organisationId: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select organisation" />
+                </SelectTrigger>
+                <SelectContent>
+                  {organisations.map((org: Organisation) => (
+                    <SelectItem key={org.id} value={org.id.toString()}>
+                      {org.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="originalAmount">Original Amount (£)</Label>
+              <Input
+                id="originalAmount"
+                type="number"
+                step="0.01"
+                value={newCaseForm.originalAmount}
+                onChange={(e) => setNewCaseForm({ ...newCaseForm, originalAmount: e.target.value })}
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <Label htmlFor="outstandingAmount">Outstanding Amount (£)</Label>
+              <Input
+                id="outstandingAmount"
+                type="number"
+                step="0.01"
+                value={newCaseForm.outstandingAmount}
+                onChange={(e) => setNewCaseForm({ ...newCaseForm, outstandingAmount: e.target.value })}
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <Label htmlFor="status">Status</Label>
+              <Select value={newCaseForm.status} onValueChange={(value) => setNewCaseForm({ ...newCaseForm, status: value })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="new">New</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="on_hold">On Hold</SelectItem>
+                  <SelectItem value="closed">Closed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="stage">Stage</Label>
+              <Select value={newCaseForm.stage} onValueChange={(value) => setNewCaseForm({ ...newCaseForm, stage: value })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="initial_contact">Initial Contact</SelectItem>
+                  <SelectItem value="investigation">Investigation</SelectItem>
+                  <SelectItem value="negotiation">Negotiation</SelectItem>
+                  <SelectItem value="legal_action">Legal Action</SelectItem>
+                  <SelectItem value="recovery">Recovery</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:col-span-2">
+              <Label htmlFor="externalRef">External Reference</Label>
+              <Input
+                id="externalRef"
+                value={newCaseForm.externalRef}
+                onChange={(e) => setNewCaseForm({ ...newCaseForm, externalRef: e.target.value })}
+                placeholder="Leave blank for auto-generation"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={() => setShowNewCaseDialog(false)} disabled={createCaseMutation.isPending}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmitNewCase} disabled={createCaseMutation.isPending}>
+              {createCaseMutation.isPending ? "Creating..." : "Create Case"}
             </Button>
           </div>
         </DialogContent>
