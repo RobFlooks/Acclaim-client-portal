@@ -174,7 +174,7 @@ export default function SubmitCase() {
       // Build case name based on type
       let caseName = "";
       if (data.debtorType === "organisation") {
-        caseName = data.organisationName;
+        caseName = data.organisationName || "";
       } else {
         // Individual/Sole Trader
         if (data.individualType === "business") {
@@ -185,64 +185,46 @@ export default function SubmitCase() {
         }
       }
 
-      const caseData = {
+      // Build comprehensive notes with all form data
+      const notes = [
+        `Client: ${data.clientName} (${data.clientEmail}, ${data.clientPhone})`,
+        `Creditor: ${data.creditorName}`,
+        data.debtorType === "individual" && data.individualType ? `Individual Type: ${data.individualType}` : null,
+        data.tradingName ? `Trading Name: ${data.tradingName}` : null,
+        data.organisationName ? `Organisation: ${data.organisationName}` : null,
+        data.organisationTradingName ? `Organisation Trading Name: ${data.organisationTradingName}` : null,
+        data.companyNumber ? `Company Number: ${data.companyNumber}` : null,
+        data.principalSalutation ? `Principal Salutation: ${data.principalSalutation}` : null,
+        data.principalFirstName ? `Principal First Name: ${data.principalFirstName}` : null,
+        data.principalLastName ? `Principal Last Name: ${data.principalLastName}` : null,
+        data.mainPhone ? `Main Phone: ${data.mainPhone}` : null,
+        data.altPhone ? `Alt Phone: ${data.altPhone}` : null,
+        data.mainEmail ? `Main Email: ${data.mainEmail}` : null,
+        data.altEmail ? `Alt Email: ${data.altEmail}` : null,
+        `Debt Details: ${data.debtDetails}`,
+        `Currency: ${data.currency}`,
+        `Payment Terms: ${paymentTerms}`,
+        `Single Invoice: ${data.singleInvoice}`,
+        `First Overdue: ${data.firstOverdueDate}`,
+        `Last Overdue: ${data.lastOverdueDate}`,
+        data.additionalInfo ? `Additional Info: ${data.additionalInfo}` : null,
+      ].filter(Boolean).join('\n');
+
+      const submissionData = {
+        accountNumber: `TEMP-${Date.now()}`, // Temporary account number
         caseName,
-        debtorEmail: data.mainEmail,
-        debtorPhone: data.mainPhone,
+        debtorType: data.debtorType,
+        debtorEmail: data.mainEmail || "",
+        debtorPhone: data.mainPhone || "",
         debtorAddress,
         originalAmount: data.totalDebtAmount,
         outstandingAmount: data.totalDebtAmount,
-        status: "active",
-        stage: "new",
-        debtDetails: data.debtDetails,
-        paymentTerms,
-        clientDetails: {
-          name: data.clientName,
-          email: data.clientEmail,
-          phone: data.clientPhone,
-        },
-        debtorType: data.debtorType,
-        individualType: data.individualType,
-        tradingName: data.tradingName,
-        organisationName: data.organisationName,
-        organisationTradingName: data.organisationTradingName,
-        companyNumber: data.companyNumber,
-        principalDetails: {
-          salutation: data.principalSalutation,
-          firstName: data.principalFirstName,
-          lastName: data.principalLastName,
-        },
-        altPhone: data.altPhone,
-        altEmail: data.altEmail,
-        creditorName: data.creditorName,
-        currency: data.currency,
-        singleInvoice: data.singleInvoice,
-        firstOverdueDate: data.firstOverdueDate,
-        lastOverdueDate: data.lastOverdueDate,
-        additionalInfo: data.additionalInfo,
+        stage: "initial_contact",
+        organisationId: user?.organisationId || 1, // Use user's org or default
+        notes,
       };
 
-      // Create FormData for file upload
-      const formData = new FormData();
-      
-      // Add case data
-      formData.append("caseData", JSON.stringify(caseData));
-      
-      // Add files
-      uploadedFiles.forEach((file) => {
-        formData.append("files", file);
-      });
-      
-      // Use fetch directly for file upload
-      const response = await fetch("/api/cases", {
-        method: "POST",
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
+      const response = await apiRequest("POST", "/api/case-submissions", submissionData);
       return response.json();
     },
     onSuccess: () => {
