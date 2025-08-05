@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check } from "lucide-react";
+import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrganisationSchema } from "@shared/schema";
@@ -855,6 +855,8 @@ function CaseSubmissionsTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [selectedSubmission, setSelectedSubmission] = useState<CaseSubmission | null>(null);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
 
   // Fetch case submissions
   const { data: submissions = [], isLoading, error } = useQuery({
@@ -924,20 +926,47 @@ function CaseSubmissionsTab() {
       return;
     }
 
-    // Define CSV headers
+    // Define comprehensive CSV headers to capture all form data
     const headers = [
       'Account Number',
       'Case Name',
-      'Debtor Email',
-      'Debtor Phone',
-      'Debtor Address',
+      'Client Name',
+      'Client Email', 
+      'Client Phone',
+      'Creditor Name',
       'Debtor Type',
+      'Individual Type',
+      'Trading Name',
+      'Organisation Name',
+      'Organisation Trading Name',
+      'Company Number',
+      'Principal Salutation',
+      'Principal First Name',
+      'Principal Last Name',
+      'Address Line 1',
+      'Address Line 2',
+      'City',
+      'County',
+      'Postcode',
+      'Main Phone',
+      'Alt Phone',
+      'Main Email',
+      'Alt Email',
+      'Debt Details',
+      'Total Debt Amount',
+      'Currency',
+      'Payment Terms Type',
+      'Payment Terms Days',
+      'Payment Terms Other',
+      'Single Invoice',
+      'First Overdue Date',
+      'Last Overdue Date',
+      'Additional Info',
       'Original Amount',
       'Outstanding Amount',
       'Stage',
       'Organisation',
       'External Reference',
-      'Notes',
       'Status',
       'Submitted By',
       'Submitted Date',
@@ -945,28 +974,65 @@ function CaseSubmissionsTab() {
       'Processed Date'
     ];
 
-    // Convert submissions to CSV rows
+    // Convert submissions to CSV rows with comprehensive data
     const csvRows = [
       headers.join(','), // Header row
-      ...submissions.map((submission: CaseSubmission) => [
-        `"${submission.accountNumber || ''}"`,
-        `"${submission.caseName || ''}"`,
-        `"${submission.debtorEmail || ''}"`,
-        `"${submission.debtorPhone || ''}"`,
-        `"${submission.debtorAddress || ''}"`,
-        `"${submission.debtorType || ''}"`,
-        `"${submission.originalAmount || ''}"`,
-        `"${submission.outstandingAmount || ''}"`,
-        `"${submission.stage || ''}"`,
-        `"${submission.organisationName || ''}"`,
-        `"${submission.externalRef || ''}"`,
-        `"${submission.notes || ''}"`,
-        `"${submission.status || ''}"`,
-        `"${submission.submittedBy || ''}"`,
-        `"${new Date(submission.submittedAt).toLocaleDateString('en-GB')}"`,
-        `"${submission.processedBy || ''}"`,
-        `"${submission.processedAt ? new Date(submission.processedAt).toLocaleDateString('en-GB') : ''}"`
-      ].join(','))
+      ...submissions.map((submission: CaseSubmission) => {
+        // Parse notes to extract comprehensive form data
+        const notes = submission.notes || '';
+        const parseField = (fieldName: string) => {
+          const regex = new RegExp(`${fieldName}:\\s*([^\\n]+)`, 'i');
+          const match = notes.match(regex);
+          return match ? match[1].trim() : '';
+        };
+
+        return [
+          `"${submission.accountNumber || ''}"`,
+          `"${submission.caseName || ''}"`,
+          `"${parseField('Client') || ''}"`,
+          `"${parseField('Client Email') || parseField('Client') ? parseField('Client').match(/\(([^,]+),/) ? parseField('Client').match(/\(([^,]+),/)[1] : '' : ''}"`,
+          `"${parseField('Client Phone') || parseField('Client') ? parseField('Client').match(/,\s*([^)]+)\)/) ? parseField('Client').match(/,\s*([^)]+)\)/)[1] : '' : ''}"`,
+          `"${parseField('Creditor') || ''}"`,
+          `"${submission.debtorType || ''}"`,
+          `"${parseField('Individual Type') || ''}"`,
+          `"${parseField('Trading Name') || ''}"`,
+          `"${parseField('Organisation') || ''}"`,
+          `"${parseField('Organisation Trading Name') || ''}"`,
+          `"${parseField('Company Number') || ''}"`,
+          `"${parseField('Principal Salutation') || ''}"`,
+          `"${parseField('Principal First Name') || ''}"`,
+          `"${parseField('Principal Last Name') || ''}"`,
+          `"${submission.debtorAddress ? submission.debtorAddress.split(',')[0] || '' : ''}"`,
+          `"${submission.debtorAddress ? submission.debtorAddress.split(',')[1] || '' : ''}"`,
+          `"${submission.debtorAddress ? submission.debtorAddress.split(',')[2] || '' : ''}"`,
+          `"${submission.debtorAddress ? submission.debtorAddress.split(',')[3] || '' : ''}"`,
+          `"${submission.debtorAddress ? submission.debtorAddress.split(',')[4] || '' : ''}"`,
+          `"${submission.debtorPhone || parseField('Main Phone') || ''}"`,
+          `"${parseField('Alt Phone') || ''}"`,
+          `"${submission.debtorEmail || parseField('Main Email') || ''}"`,
+          `"${parseField('Alt Email') || ''}"`,
+          `"${parseField('Debt Details') || ''}"`,
+          `"${submission.originalAmount || ''}"`,
+          `"${parseField('Currency') || 'GBP'}"`,
+          `"${parseField('Payment Terms') ? parseField('Payment Terms').includes('days from invoice') ? 'days_from_invoice' : parseField('Payment Terms').includes('days from end') ? 'days_from_month_end' : 'other' : ''}"`,
+          `"${parseField('Payment Terms') ? parseField('Payment Terms').match(/(\d+)\s*days/) ? parseField('Payment Terms').match(/(\d+)\s*days/)[1] : '' : ''}"`,
+          `"${parseField('Payment Terms') && !parseField('Payment Terms').includes('days from') ? parseField('Payment Terms') : ''}"`,
+          `"${parseField('Single Invoice') || ''}"`,
+          `"${parseField('First Overdue') || ''}"`,
+          `"${parseField('Last Overdue') || ''}"`,
+          `"${parseField('Additional Info') || ''}"`,
+          `"${submission.originalAmount || ''}"`,
+          `"${submission.outstandingAmount || ''}"`,
+          `"${submission.stage || ''}"`,
+          `"${submission.organisationName || ''}"`,
+          `"${submission.externalRef || ''}"`,
+          `"${submission.status || ''}"`,
+          `"${submission.submittedBy || ''}"`,
+          `"${new Date(submission.submittedAt).toLocaleDateString('en-GB')}"`,
+          `"${submission.processedBy || ''}"`,
+          `"${submission.processedAt ? new Date(submission.processedAt).toLocaleDateString('en-GB') : ''}"`
+        ].join(',');
+      })
     ];
 
     // Create and download CSV file
@@ -1099,6 +1165,17 @@ function CaseSubmissionsTab() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedSubmission(submission);
+                          setShowDetailsDialog(true);
+                        }}
+                        className="text-blue-600 hover:text-blue-700"
+                      >
+                        <Eye className="h-3 w-3" />
+                      </Button>
                       {submission.status === 'pending' && (
                         <>
                           <Button
@@ -1142,6 +1219,194 @@ function CaseSubmissionsTab() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Comprehensive Details Dialog */}
+      <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
+        <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Case Submission Details
+            </DialogTitle>
+            <DialogDescription>
+              Complete information from the comprehensive case submission form
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedSubmission && (
+            <div className="space-y-6">
+              {/* Basic Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Basic Information</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="font-semibold">Account Number</Label>
+                    <p className="text-sm">{selectedSubmission.accountNumber}</p>
+                  </div>
+                  <div>
+                    <Label className="font-semibold">Case Name</Label>
+                    <p className="text-sm">{selectedSubmission.caseName}</p>
+                  </div>
+                  <div>
+                    <Label className="font-semibold">Status</Label>
+                    <Badge className={getStatusBadgeColor(selectedSubmission.status)}>
+                      {selectedSubmission.status}
+                    </Badge>
+                  </div>
+                  <div>
+                    <Label className="font-semibold">Organisation</Label>
+                    <p className="text-sm">{selectedSubmission.organisationName}</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Comprehensive Form Data */}
+              {selectedSubmission.notes && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Comprehensive Form Data</CardTitle>
+                    <CardDescription>All details captured from the submission form</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {selectedSubmission.notes.split('\n').map((line, index) => {
+                        if (!line.trim() || !line.includes(':')) return null;
+                        const [label, ...valueParts] = line.split(':');
+                        const value = valueParts.join(':').trim();
+                        
+                        return (
+                          <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-2 border-b pb-2">
+                            <Label className="font-semibold text-sm">{label.trim()}</Label>
+                            <p className="text-sm md:col-span-2">{value}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Contact and Address Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Contact & Address</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="font-semibold">Debtor Email</Label>
+                    <p className="text-sm">{selectedSubmission.debtorEmail || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <Label className="font-semibold">Debtor Phone</Label>
+                    <p className="text-sm">{selectedSubmission.debtorPhone || 'Not provided'}</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label className="font-semibold">Debtor Address</Label>
+                    <p className="text-sm">{selectedSubmission.debtorAddress || 'Not provided'}</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Financial Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Financial Details</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="font-semibold">Original Amount</Label>
+                    <p className="text-sm">{formatCurrency(selectedSubmission.originalAmount)}</p>
+                  </div>
+                  <div>
+                    <Label className="font-semibold">Outstanding Amount</Label>
+                    <p className="text-sm">{formatCurrency(selectedSubmission.outstandingAmount)}</p>
+                  </div>
+                  <div>
+                    <Label className="font-semibold">Debtor Type</Label>
+                    <p className="text-sm">{selectedSubmission.debtorType}</p>
+                  </div>
+                  <div>
+                    <Label className="font-semibold">Stage</Label>
+                    <p className="text-sm">{selectedSubmission.stage}</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Submission Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Submission Information</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="font-semibold">Submitted By</Label>
+                    <p className="text-sm">{selectedSubmission.submittedBy}</p>
+                  </div>
+                  <div>
+                    <Label className="font-semibold">Submitted Date</Label>
+                    <p className="text-sm">{new Date(selectedSubmission.submittedAt).toLocaleDateString('en-GB')}</p>
+                  </div>
+                  {selectedSubmission.processedBy && (
+                    <>
+                      <div>
+                        <Label className="font-semibold">Processed By</Label>
+                        <p className="text-sm">{selectedSubmission.processedBy}</p>
+                      </div>
+                      <div>
+                        <Label className="font-semibold">Processed Date</Label>
+                        <p className="text-sm">{selectedSubmission.processedAt ? new Date(selectedSubmission.processedAt).toLocaleDateString('en-GB') : 'N/A'}</p>
+                      </div>
+                    </>
+                  )}
+                  {selectedSubmission.externalRef && (
+                    <div className="md:col-span-2">
+                      <Label className="font-semibold">External Reference</Label>
+                      <p className="text-sm">{selectedSubmission.externalRef}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Actions */}
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                {selectedSubmission.status === 'pending' && (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        updateStatusMutation.mutate({ id: selectedSubmission.id, status: 'processed' });
+                        setShowDetailsDialog(false);
+                      }}
+                      disabled={updateStatusMutation.isPending}
+                      className="text-green-600 hover:text-green-700"
+                    >
+                      <Check className="h-4 w-4 mr-2" />
+                      Mark as Processed
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        updateStatusMutation.mutate({ id: selectedSubmission.id, status: 'rejected' });
+                        setShowDetailsDialog(false);
+                      }}
+                      disabled={updateStatusMutation.isPending}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <AlertTriangle className="h-4 w-4 mr-2" />
+                      Mark as Rejected
+                    </Button>
+                  </>
+                )}
+                <Button variant="outline" onClick={() => setShowDetailsDialog(false)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
