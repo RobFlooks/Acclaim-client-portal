@@ -22,10 +22,7 @@ const submitCaseSchema = z.object({
   // Client details (pre-populated)
   clientName: z.string().min(1, "Name is required"),
   clientEmail: z.string().email("Invalid email address"),
-  clientPhone: z.string().min(1, "Phone number is required"),
-  
-  // Creditor details
-  creditorName: z.string().min(1, "Creditor name is required"),
+  clientPhone: z.string().optional(),
   
   // Debtor details
   debtorType: z.enum(["individual", "organisation"], {
@@ -187,8 +184,7 @@ export default function SubmitCase() {
 
       // Build comprehensive notes with all form data
       const notes = [
-        `Client: ${data.clientName} (${data.clientEmail}, ${data.clientPhone})`,
-        `Creditor: ${data.creditorName}`,
+        `Client: ${data.clientName} (${data.clientEmail}, ${data.clientPhone || 'N/A'})`,
         data.debtorType === "individual" && data.individualType ? `Individual Type: ${data.individualType}` : null,
         data.tradingName ? `Trading Name: ${data.tradingName}` : null,
         data.organisationName ? `Organisation: ${data.organisationName}` : null,
@@ -349,7 +345,7 @@ export default function SubmitCase() {
                 name="clientPhone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Your Contact Number</FormLabel>
+                    <FormLabel>Your Contact Number (Optional)</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="Enter your phone number" />
                     </FormControl>
