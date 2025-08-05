@@ -253,8 +253,19 @@ export default function SubmitCase() {
   });
 
   const onSubmit = (data: SubmitCaseForm) => {
+    console.log("=== FORM SUBMISSION DEBUG ===");
     console.log("Form submitted with data:", data);
     console.log("Form validation errors:", form.formState.errors);
+    console.log("Form is valid:", form.formState.isValid);
+    console.log("Form is submitting:", form.formState.isSubmitting);
+    console.log("Mutation pending:", submitCaseMutation.isPending);
+    
+    // Check if required fields are filled
+    console.log("Client name:", data.clientName);
+    console.log("Client email:", data.clientEmail);
+    console.log("Debtor type:", data.debtorType);
+    console.log("Case name:", data.caseName);
+    
     submitCaseMutation.mutate(data);
   };
 
@@ -1060,6 +1071,10 @@ export default function SubmitCase() {
                   type="submit"
                   className="bg-acclaim-teal hover:bg-acclaim-teal/90"
                   disabled={submitCaseMutation.isPending}
+                  onClick={(e) => {
+                    console.log("Submit button clicked!");
+                    console.log("Form state:", form.formState);
+                  }}
                 >
                   {submitCaseMutation.isPending ? "Submitting..." : "Submit Case"}
                 </Button>
