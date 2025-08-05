@@ -74,33 +74,6 @@ const submitCaseSchema = z.object({
   
   // Additional information
   additionalInfo: z.string().optional(),
-}).refine((data) => {
-  // If Individual/Sole Trader is selected, individual type is required
-  if (data.debtorType === "individual") {
-    return data.individualType;
-  }
-  return true;
-}, {
-  message: "Please specify if this is an individual or business",
-  path: ["individualType"],
-}).refine((data) => {
-  // If Individual/Sole Trader and business type, trading name is required
-  if (data.debtorType === "individual" && data.individualType === "business") {
-    return data.tradingName && data.tradingName.length > 0;
-  }
-  return true;
-}, {
-  message: "Trading name is required for business",
-  path: ["tradingName"],
-}).refine((data) => {
-  // If Individual/Sole Trader is selected, principal details are required
-  if (data.debtorType === "individual") {
-    return data.principalSalutation && data.principalFirstName && data.principalLastName;
-  }
-  return true;
-}, {
-  message: "Principal of Business details are required for Individual/Sole Trader",
-  path: ["principalFirstName"],
 });
 
 type SubmitCaseForm = z.infer<typeof submitCaseSchema>;
@@ -221,7 +194,14 @@ export default function SubmitCase() {
         notes,
       };
 
+      console.log("Sending to API:", submissionData);
       const response = await apiRequest("POST", "/api/case-submissions", submissionData);
+      console.log("API Response:", response.status, response.statusText);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API Error:", errorText);
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
+      }
       return response.json();
     },
     onSuccess: () => {
