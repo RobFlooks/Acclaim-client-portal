@@ -67,6 +67,28 @@ export const userOrganisations = pgTable("user_organisations", {
   index("idx_user_organisations_org_id").on(table.organisationId),
 ]);
 
+// Case submissions table (for capturing submissions before they become actual cases)
+export const caseSubmissions = pgTable("case_submissions", {
+  id: serial("id").primaryKey(),
+  submittedBy: varchar("submitted_by", { length: 255 }).notNull().references(() => users.id),
+  accountNumber: varchar("account_number", { length: 50 }).notNull(),
+  caseName: varchar("case_name", { length: 255 }).notNull(),
+  debtorType: varchar("debtor_type", { length: 50 }).notNull().default("individual"),
+  debtorEmail: varchar("debtor_email", { length: 255 }),
+  debtorPhone: varchar("debtor_phone", { length: 50 }),
+  debtorAddress: text("debtor_address"),
+  originalAmount: decimal("original_amount", { precision: 12, scale: 2 }),
+  outstandingAmount: decimal("outstanding_amount", { precision: 12, scale: 2 }),
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // 'pending', 'processed', 'rejected'
+  stage: varchar("stage", { length: 50 }).notNull().default("initial_contact"),
+  organisationId: integer("organisation_id").notNull().references(() => organisations.id),
+  externalRef: varchar("external_ref", { length: 100 }),
+  notes: text("notes"),
+  submittedAt: timestamp("submitted_at").defaultNow(),
+  processedAt: timestamp("processed_at"),
+  processedBy: varchar("processed_by", { length: 255 }).references(() => users.id),
+});
+
 // Cases table  
 export const cases = pgTable("cases", {
   id: serial("id").primaryKey(),
@@ -220,6 +242,21 @@ export const organisationsRelations = relations(organisations, ({ many }) => ({
   documents: many(documents),
 }));
 
+export const caseSubmissionsRelations = relations(caseSubmissions, ({ one }) => ({
+  submittedByUser: one(users, {
+    fields: [caseSubmissions.submittedBy],
+    references: [users.id],
+  }),
+  processedByUser: one(users, {
+    fields: [caseSubmissions.processedBy],
+    references: [users.id],
+  }),
+  organisation: one(organisations, {
+    fields: [caseSubmissions.organisationId],
+    references: [organisations.id],
+  }),
+}));
+
 export const casesRelations = relations(cases, ({ one, many }) => ({
   organisation: one(organisations, {
     fields: [cases.organisationId],
@@ -304,6 +341,9 @@ export type User = typeof users.$inferSelect;
 export type Organization = typeof organisations.$inferSelect;
 export type InsertOrganization = typeof organisations.$inferInsert;
 
+export type CaseSubmission = typeof caseSubmissions.$inferSelect;
+export type InsertCaseSubmission = typeof caseSubmissions.$inferInsert;
+
 export type Case = typeof cases.$inferSelect;
 export type InsertCase = typeof cases.$inferInsert;
 
@@ -339,6 +379,14 @@ export type InsertUserOrganisation = typeof userOrganisations.$inferInsert;
 
 // Schemas
 export const insertOrganisationSchema = createInsertSchema(organisations);
+export const insertCaseSubmissionSchema = createInsertSchema(caseSubmissions).extend({
+  debtorType: z.enum(['individual', 'company', 'sole_trader', 'company_and_individual']).default('individual'),
+}).omit({ 
+  id: true, 
+  submittedAt: true, 
+  processedAt: true, 
+  processedBy: true 
+});
 export const insertCaseSchema = createInsertSchema(cases).extend({
   debtorType: z.enum(['individual', 'company', 'sole_trader', 'company_and_individual']).default('individual'),
 });

@@ -2,6 +2,7 @@ import {
   users,
   organisations,
   cases,
+  caseSubmissions,
   caseActivities,
   messages,
   documents,
@@ -18,6 +19,8 @@ import {
   type InsertOrganization,
   type Case,
   type InsertCase,
+  type CaseSubmission,
+  type InsertCaseSubmission,
   type CaseActivity,
   type InsertCaseActivity,
   type Message,
@@ -89,6 +92,13 @@ export interface IStorage {
   archiveCase(id: number, userId: string): Promise<Case>; // Admin only - archive case
   unarchiveCase(id: number, userId: string): Promise<Case>; // Admin only - unarchive case
   deleteCase(id: number): Promise<void>; // Admin only - permanently delete case and all related data
+  
+  // Case submission operations
+  createCaseSubmission(submission: InsertCaseSubmission): Promise<CaseSubmission>;
+  getCaseSubmissions(): Promise<CaseSubmission[]>; // Admin only - get all pending submissions
+  getCaseSubmissionsByStatus(status: string): Promise<CaseSubmission[]>; // Admin only - get submissions by status
+  updateCaseSubmissionStatus(id: number, status: string, processedBy: string): Promise<CaseSubmission>;
+  deleteCaseSubmission(id: number): Promise<void>; // Admin only - delete submission
   
   // Case activity operations
   getCaseActivities(caseId: number): Promise<CaseActivity[]>;
@@ -787,6 +797,64 @@ export class DatabaseStorage implements IStorage {
     
     // 5. Finally delete the case
     await db.delete(cases).where(eq(cases.id, id));
+  }
+
+  // Case submission operations
+  async createCaseSubmission(submission: InsertCaseSubmission): Promise<CaseSubmission> {
+    const [newSubmission] = await db.insert(caseSubmissions).values(submission).returning();
+    return newSubmission;
+  }
+
+  async getCaseSubmissions(): Promise<CaseSubmission[]> {
+    // Admin only - get all submissions with user and organisation details
+    const submissions = await db
+      .select({
+        ...caseSubmissions,
+        submittedByName: sql<string>`${users.firstName} || ' ' || ${users.lastName}`.as('submittedByName'),
+        organisationName: organisations.name,
+      })
+      .from(caseSubmissions)
+      .leftJoin(users, eq(caseSubmissions.submittedBy, users.id))
+      .leftJoin(organisations, eq(caseSubmissions.organisationId, organisations.id))
+      .orderBy(desc(caseSubmissions.submittedAt));
+    
+    return submissions;
+  }
+
+  async getCaseSubmissionsByStatus(status: string): Promise<CaseSubmission[]> {
+    // Admin only - get submissions by status with user and organisation details
+    const submissions = await db
+      .select({
+        ...caseSubmissions,
+        submittedByName: sql<string>`${users.firstName} || ' ' || ${users.lastName}`.as('submittedByName'),
+        organisationName: organisations.name,
+      })
+      .from(caseSubmissions)
+      .leftJoin(users, eq(caseSubmissions.submittedBy, users.id))
+      .leftJoin(organisations, eq(caseSubmissions.organisationId, organisations.id))
+      .where(eq(caseSubmissions.status, status))
+      .orderBy(desc(caseSubmissions.submittedAt));
+    
+    return submissions;
+  }
+
+  async updateCaseSubmissionStatus(id: number, status: string, processedBy: string): Promise<CaseSubmission> {
+    const [updatedSubmission] = await db
+      .update(caseSubmissions)
+      .set({ 
+        status, 
+        processedBy, 
+        processedAt: new Date() 
+      })
+      .where(eq(caseSubmissions.id, id))
+      .returning();
+    
+    return updatedSubmission;
+  }
+
+  async deleteCaseSubmission(id: number): Promise<void> {
+    // Admin only - delete submission
+    await db.delete(caseSubmissions).where(eq(caseSubmissions.id, id));
   }
 
   async getCaseActivities(caseId: number): Promise<CaseActivity[]> {

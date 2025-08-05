@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download } from "lucide-react";
+import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrganisationSchema } from "@shared/schema";
@@ -64,6 +64,28 @@ interface Case {
   isArchived: boolean;
   archivedAt?: string;
   archivedBy?: string;
+}
+
+interface CaseSubmission {
+  id: number;
+  accountNumber: string;
+  caseName: string;
+  debtorEmail?: string;
+  debtorPhone?: string;
+  debtorAddress?: string;
+  debtorType: string;
+  originalAmount?: number;
+  outstandingAmount?: number;
+  stage: string;
+  organisationId: number;
+  organisationName?: string;
+  externalRef?: string;
+  notes?: string;
+  status: string;
+  submittedBy: string;
+  submittedAt: string;
+  processedBy?: string;
+  processedAt?: string;
 }
 
 function CaseManagementTab() {
@@ -829,6 +851,301 @@ function CaseManagementTab() {
   );
 }
 
+function CaseSubmissionsTab() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+
+  // Fetch case submissions
+  const { data: submissions = [], isLoading, error } = useQuery({
+    queryKey: selectedStatus === "all" ? ["/api/admin/case-submissions"] : ["/api/admin/case-submissions", selectedStatus],
+    queryFn: async () => {
+      const endpoint = selectedStatus === "all" 
+        ? "/api/admin/case-submissions" 
+        : `/api/admin/case-submissions/${selectedStatus}`;
+      const response = await apiRequest("GET", endpoint);
+      return await response.json();
+    },
+    retry: false,
+  });
+
+  // Update submission status mutation
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: number; status: string }) => {
+      const response = await apiRequest("PATCH", `/api/admin/case-submissions/${id}/status`, { status });
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Submission status updated successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/case-submissions"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update submission status",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete submission mutation
+  const deleteSubmissionMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest("DELETE", `/api/admin/case-submissions/${id}`);
+      return response;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Submission deleted successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/case-submissions"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete submission",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // CSV Export functionality for submissions
+  const exportSubmissionsToCSV = () => {
+    if (!submissions || submissions.length === 0) {
+      toast({
+        title: "No Data",
+        description: "No case submissions available to export.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Define CSV headers
+    const headers = [
+      'Account Number',
+      'Case Name',
+      'Debtor Email',
+      'Debtor Phone',
+      'Debtor Address',
+      'Debtor Type',
+      'Original Amount',
+      'Outstanding Amount',
+      'Stage',
+      'Organisation',
+      'External Reference',
+      'Notes',
+      'Status',
+      'Submitted By',
+      'Submitted Date',
+      'Processed By',
+      'Processed Date'
+    ];
+
+    // Convert submissions to CSV rows
+    const csvRows = [
+      headers.join(','), // Header row
+      ...submissions.map((submission: CaseSubmission) => [
+        `"${submission.accountNumber || ''}"`,
+        `"${submission.caseName || ''}"`,
+        `"${submission.debtorEmail || ''}"`,
+        `"${submission.debtorPhone || ''}"`,
+        `"${submission.debtorAddress || ''}"`,
+        `"${submission.debtorType || ''}"`,
+        `"${submission.originalAmount || ''}"`,
+        `"${submission.outstandingAmount || ''}"`,
+        `"${submission.stage || ''}"`,
+        `"${submission.organisationName || ''}"`,
+        `"${submission.externalRef || ''}"`,
+        `"${submission.notes || ''}"`,
+        `"${submission.status || ''}"`,
+        `"${submission.submittedBy || ''}"`,
+        `"${new Date(submission.submittedAt).toLocaleDateString('en-GB')}"`,
+        `"${submission.processedBy || ''}"`,
+        `"${submission.processedAt ? new Date(submission.processedAt).toLocaleDateString('en-GB') : ''}"`
+      ].join(','))
+    ];
+
+    // Create and download CSV file
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `case-submissions-export-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Export Complete",
+      description: `Successfully exported ${submissions.length} case submissions to CSV.`,
+    });
+  };
+
+  const getStatusBadgeColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'processed':
+        return 'bg-green-100 text-green-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const formatCurrency = (amount: number | undefined) => {
+    if (!amount) return '-';
+    return new Intl.NumberFormat('en-GB', {
+      style: 'currency',
+      currency: 'GBP',
+    }).format(amount);
+  };
+
+  if (isLoading) return <div>Loading case submissions...</div>;
+  if (error) return <div>Error loading case submissions</div>;
+
+  return (
+    <div className="space-y-4">
+      {/* Header with filters and export */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-4">
+          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Submissions</SelectItem>
+              <SelectItem value="pending">Pending Review</SelectItem>
+              <SelectItem value="processed">Processed</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
+            </SelectContent>
+          </Select>
+          <Badge variant="outline" className="text-sm">
+            {submissions.length} submission{submissions.length !== 1 ? 's' : ''}
+          </Badge>
+        </div>
+        <Button onClick={exportSubmissionsToCSV} variant="outline" size="sm">
+          <Download className="h-4 w-4 mr-2" />
+          Export CSV
+        </Button>
+      </div>
+
+      {/* Submissions Table */}
+      <div className="border rounded-lg">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Account Number</TableHead>
+              <TableHead>Case Name</TableHead>
+              <TableHead>Organisation</TableHead>
+              <TableHead>Amount</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Submitted</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {submissions.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8">
+                  <div className="flex flex-col items-center gap-2">
+                    <FileText className="h-8 w-8 text-gray-400" />
+                    <p className="text-gray-500">No case submissions found</p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              submissions.map((submission: CaseSubmission) => (
+                <TableRow key={submission.id}>
+                  <TableCell className="font-medium">
+                    {submission.accountNumber}
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{submission.caseName}</div>
+                      {submission.debtorEmail && (
+                        <div className="text-sm text-gray-500">{submission.debtorEmail}</div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{submission.organisationName}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      <div>Original: {formatCurrency(submission.originalAmount)}</div>
+                      <div>Outstanding: {formatCurrency(submission.outstandingAmount)}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={getStatusBadgeColor(submission.status)}>
+                      {submission.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      <div>{new Date(submission.submittedAt).toLocaleDateString('en-GB')}</div>
+                      <div className="text-gray-500">by {submission.submittedBy}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {submission.status === 'pending' && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateStatusMutation.mutate({ id: submission.id, status: 'processed' })}
+                            disabled={updateStatusMutation.isPending}
+                            className="text-green-600 hover:text-green-700"
+                          >
+                            <Check className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateStatusMutation.mutate({ id: submission.id, status: 'rejected' })}
+                            disabled={updateStatusMutation.isPending}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <AlertTriangle className="h-3 w-3" />
+                          </Button>
+                        </>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          if (confirm('Are you sure you want to delete this submission?')) {
+                            deleteSubmissionMutation.mutate(submission.id);
+                          }
+                        }}
+                        disabled={deleteSubmissionMutation.isPending}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminEnhanced() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -1333,6 +1650,10 @@ export default function AdminEnhanced() {
             <TabsTrigger value="cases" className="flex-1 text-xs sm:text-sm">
               <span className="hidden sm:inline">Case Management</span>
               <span className="sm:hidden">Cases</span>
+            </TabsTrigger>
+            <TabsTrigger value="case-submissions" className="flex-1 text-xs sm:text-sm">
+              <span className="hidden sm:inline">Case Submissions</span>
+              <span className="sm:hidden">Submits</span>
             </TabsTrigger>
             <TabsTrigger value="api-guide" className="flex-1 text-xs sm:text-sm">
               <span className="hidden sm:inline">API Integration</span>
@@ -1871,6 +2192,23 @@ export default function AdminEnhanced() {
             </CardHeader>
             <CardContent>
               <CaseManagementTab />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Case Submissions Tab */}
+        <TabsContent value="case-submissions">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Case Submissions</CardTitle>
+                  <CardDescription>Review and manage case submissions from users</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <CaseSubmissionsTab />
             </CardContent>
           </Card>
         </TabsContent>

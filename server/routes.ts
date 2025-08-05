@@ -3,7 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin as authIsAdmin } from "./auth";
 import { 
-  insertCaseSchema, 
+  insertCaseSchema,
+  insertCaseSubmissionSchema,
   insertMessageSchema, 
   insertDocumentSchema,
   createUserSchema,
@@ -217,6 +218,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating case:", error);
       res.status(500).json({ message: "Failed to create case" });
+    }
+  });
+
+  // Case submission routes
+  app.post('/api/case-submissions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Get user's organisation IDs for validation
+      const userOrgs = await storage.getUserOrganisations(userId);
+      const allUserOrgIds = new Set<number>();
+      
+      // Add legacy organisation if exists
+      if (user.organisationId) {
+        allUserOrgIds.add(user.organisationId);
+      }
+      
+      // Add junction table organisations
+      userOrgs.forEach(uo => allUserOrgIds.add(uo.organisationId));
+
+      const validatedData = insertCaseSubmissionSchema.parse({
+        ...req.body,
+        submittedBy: userId,
+      });
+
+      // Ensure user can submit to the specified organisation
+      if (!allUserOrgIds.has(validatedData.organisationId)) {
+        return res.status(403).json({ message: "You don't have access to this organisation" });
+      }
+
+      const submission = await storage.createCaseSubmission(validatedData);
+      res.status(201).json(submission);
+    } catch (error: any) {
+      console.error("Error creating case submission:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          message: "Validation failed", 
+          errors: error.errors 
+        });
+      }
+      res.status(500).json({ message: "Failed to create case submission" });
+    }
+  });
+
+  // Admin-only case submission routes
+  app.get('/api/admin/case-submissions', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const submissions = await storage.getCaseSubmissions();
+      res.json(submissions);
+    } catch (error) {
+      console.error("Error fetching case submissions:", error);
+      res.status(500).json({ message: "Failed to fetch case submissions" });
+    }
+  });
+
+  app.get('/api/admin/case-submissions/:status', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const status = req.params.status;
+      const submissions = await storage.getCaseSubmissionsByStatus(status);
+      res.json(submissions);
+    } catch (error) {
+      console.error("Error fetching case submissions by status:", error);
+      res.status(500).json({ message: "Failed to fetch case submissions" });
+    }
+  });
+
+  app.patch('/api/admin/case-submissions/:id/status', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const submissionId = parseInt(req.params.id);
+      const { status } = req.body;
+      const userId = req.user.id;
+
+      if (isNaN(submissionId)) {
+        return res.status(400).json({ message: "Invalid submission ID" });
+      }
+
+      if (!['pending', 'processed', 'rejected'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status. Must be pending, processed, or rejected" });
+      }
+
+      const updatedSubmission = await storage.updateCaseSubmissionStatus(submissionId, status, userId);
+      res.json(updatedSubmission);
+    } catch (error) {
+      console.error("Error updating case submission status:", error);
+      res.status(500).json({ message: "Failed to update case submission status" });
+    }
+  });
+
+  app.delete('/api/admin/case-submissions/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const submissionId = parseInt(req.params.id);
+
+      if (isNaN(submissionId)) {
+        return res.status(400).json({ message: "Invalid submission ID" });
+      }
+
+      await storage.deleteCaseSubmission(submissionId);
+      res.json({ message: "Case submission deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting case submission:", error);
+      res.status(500).json({ message: "Failed to delete case submission" });
     }
   });
 

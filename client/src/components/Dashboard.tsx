@@ -10,6 +10,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation } from "wouter";
 import CaseDetail from "./CaseDetail";
 import RefreshIndicator from "./RefreshIndicator";
+import { SubmitCaseForm } from "./SubmitCaseForm";
 
 interface DashboardProps {
   setActiveSection?: (section: string) => void;
@@ -22,6 +23,7 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
   const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+  const [submitCaseFormOpen, setSubmitCaseFormOpen] = useState(false);
 
   const { data: stats, isLoading: statsLoading, isFetching: statsIsFetching, dataUpdatedAt: statsDataUpdatedAt } = useQuery({
     queryKey: ["/api/dashboard/stats"],
@@ -219,7 +221,7 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
         </div>
         <Button 
           className="bg-acclaim-teal hover:bg-acclaim-teal/90 text-white"
-          onClick={() => setLocation('/submit-case')}
+          onClick={() => setSubmitCaseFormOpen(true)}
         >
           <Plus className="h-4 w-4 mr-2" />
           Submit New Case
@@ -519,6 +521,12 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Submit Case Form Dialog */}
+      <SubmitCaseForm 
+        isOpen={submitCaseFormOpen} 
+        onClose={() => setSubmitCaseFormOpen(false)} 
+      />
     </div>
   );
 }
