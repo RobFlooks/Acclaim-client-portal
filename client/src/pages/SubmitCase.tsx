@@ -28,7 +28,6 @@ const submitCaseSchema = z.object({
   debtorType: z.enum(["individual", "organisation"], {
     required_error: "Please select debtor type",
   }),
-  caseName: z.string().min(1, "Case name is required"),
   
   // Individual/Sole Trader specific fields
   individualType: z.enum(["individual", "business"]).optional(),
@@ -97,7 +96,6 @@ export default function SubmitCase() {
       clientPhone: user?.phone || "",
 
       debtorType: undefined as any,
-      caseName: "",
       individualType: undefined as any,
       tradingName: "",
       organisationName: "",
@@ -187,7 +185,7 @@ export default function SubmitCase() {
         clientPhone: data.clientPhone || '',
         
         // Case identification
-        caseName: data.caseName,
+        caseName: caseName,
         
         // Debtor type and details
         debtorType: data.debtorType,
@@ -318,7 +316,6 @@ export default function SubmitCase() {
     console.log("Client name:", data.clientName);
     console.log("Client email:", data.clientEmail);
     console.log("Debtor type:", data.debtorType);
-    console.log("Case name:", data.caseName);
     
     submitCaseMutation.mutate(data);
   };
@@ -1135,9 +1132,28 @@ export default function SubmitCase() {
                     const errors = form.formState.errors;
                     if (Object.keys(errors).length > 0) {
                       console.log("Form validation errors found:", errors);
+                      
+                      // List specific missing fields
+                      const missingFields = Object.keys(errors).map(field => {
+                        const fieldLabels: Record<string, string> = {
+                          debtorType: "Debtor Type", 
+                          addressLine1: "Address Line 1",
+                          city: "City",
+                          county: "County", 
+                          postcode: "Postcode",
+                          debtDetails: "Debt Details",
+                          totalDebtAmount: "Total Debt Amount",
+                          paymentTermsType: "Payment Terms",
+                          singleInvoice: "Single Invoice",
+                          firstOverdueDate: "First Overdue Date",
+                          lastOverdueDate: "Last Overdue Date"
+                        };
+                        return fieldLabels[field] || field;
+                      });
+                      
                       toast({
-                        title: "Form Validation Errors",
-                        description: "Please fill in all required fields before submitting.",
+                        title: "Missing Required Fields",
+                        description: `Please fill in: ${missingFields.join(", ")}`,
                         variant: "destructive",
                       });
                     }
