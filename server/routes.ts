@@ -247,7 +247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const parsedBody = {
         ...req.body,
         organisationId: parseInt(req.body.organisationId),
-        totalDebtAmount: parseFloat(req.body.totalDebtAmount),
+        totalDebtAmount: req.body.totalDebtAmount, // Keep as string for decimal field
         paymentTermsDays: req.body.paymentTermsDays ? parseInt(req.body.paymentTermsDays) : undefined,
       };
 
