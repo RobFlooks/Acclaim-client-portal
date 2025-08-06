@@ -401,9 +401,7 @@ export default function UserProfile() {
                     disabled
                     className="bg-gray-50"
                   />
-                  <p className="text-sm text-gray-500">
-                    Email address cannot be changed. Contact your administrator if you need to update this.
-                  </p>
+                  <p className="text-sm text-gray-500">Email address cannot be changed. Please contact us if you need to update this.</p>
                 </div>
                 <div className="flex justify-end">
                   <Button
