@@ -96,7 +96,7 @@ export default function Home() {
       case "dashboard":
         return `Welcome, ${user?.firstName ? `${user.firstName}` : 'User'}`;
       case "cases":
-        return "View and manage all your active cases";
+        return "View and manage all your cases";
       case "messages":
         return "Secure communication with our team";
       case "reports":
