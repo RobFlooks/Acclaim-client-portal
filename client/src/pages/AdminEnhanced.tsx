@@ -1156,10 +1156,14 @@ function CaseSubmissionsTab() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Account Number</TableHead>
               <TableHead>Case Name</TableHead>
-              <TableHead>Organisation</TableHead>
-              <TableHead>Amount</TableHead>
+              <TableHead>Client</TableHead>
+              <TableHead>Debtor Type</TableHead>
+              <TableHead>Debtor Details</TableHead>
+              <TableHead>Address</TableHead>
+              <TableHead>Contact</TableHead>
+              <TableHead>Debt Amount</TableHead>
+              <TableHead>Payment Terms</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Submitted</TableHead>
               <TableHead>Actions</TableHead>
@@ -1168,7 +1172,7 @@ function CaseSubmissionsTab() {
           <TableBody>
             {submissions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
+                <TableCell colSpan={11} className="text-center py-8">
                   <div className="flex flex-col items-center gap-2">
                     <FileText className="h-8 w-8 text-gray-400" />
                     <p className="text-gray-500">No case submissions found</p>
@@ -1179,23 +1183,94 @@ function CaseSubmissionsTab() {
               submissions.map((submission: CaseSubmission) => (
                 <TableRow key={submission.id}>
                   <TableCell className="font-medium">
-                    {submission.accountNumber}
+                    <div className="max-w-[150px]">
+                      <div className="font-medium truncate">{submission.caseName}</div>
+                      <div className="text-xs text-gray-500">ID: {submission.id}</div>
+                    </div>
                   </TableCell>
                   <TableCell>
-                    <div>
-                      <div className="font-medium">{submission.caseName}</div>
-                      {submission.debtorEmail && (
-                        <div className="text-sm text-gray-500">{submission.debtorEmail}</div>
+                    <div className="text-sm max-w-[120px]">
+                      <div className="font-medium truncate">{submission.clientName}</div>
+                      <div className="text-gray-500 truncate">{submission.clientEmail}</div>
+                      {submission.clientPhone && <div className="text-gray-500 truncate">{submission.clientPhone}</div>}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      <Badge variant="outline" className="text-xs">
+                        {submission.debtorType === 'individual' ? 'Individual' : 'Organisation'}
+                      </Badge>
+                      {submission.individualType && (
+                        <div className="text-xs text-gray-500 mt-1">{submission.individualType}</div>
                       )}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{submission.organisationName}</Badge>
+                    <div className="text-sm max-w-[150px]">
+                      {submission.debtorType === 'organisation' ? (
+                        <div>
+                          <div className="font-medium truncate">{submission.organisationName}</div>
+                          {submission.organisationTradingName && (
+                            <div className="text-gray-500 truncate">Trading: {submission.organisationTradingName}</div>
+                          )}
+                          {submission.companyNumber && (
+                            <div className="text-gray-500 truncate">Co: {submission.companyNumber}</div>
+                          )}
+                        </div>
+                      ) : (
+                        <div>
+                          {submission.tradingName ? (
+                            <div className="font-medium truncate">{submission.tradingName}</div>
+                          ) : (
+                            <div className="font-medium truncate">
+                              {submission.principalSalutation} {submission.principalFirstName} {submission.principalLastName}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm max-w-[120px]">
+                      <div className="truncate">{submission.addressLine1}</div>
+                      {submission.addressLine2 && <div className="truncate text-gray-500">{submission.addressLine2}</div>}
+                      <div className="truncate">{submission.city}, {submission.county}</div>
+                      <div className="truncate font-medium">{submission.postcode}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm max-w-[120px]">
+                      {submission.mainPhone && <div className="truncate">{submission.mainPhone}</div>}
+                      {submission.altPhone && <div className="truncate text-gray-500">{submission.altPhone}</div>}
+                      {submission.mainEmail && <div className="truncate">{submission.mainEmail}</div>}
+                      {submission.altEmail && <div className="truncate text-gray-500">{submission.altEmail}</div>}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">
-                      <div>Original: {formatCurrency(submission.originalAmount)}</div>
-                      <div>Outstanding: {formatCurrency(submission.outstandingAmount)}</div>
+                      <div className="font-medium">£{submission.totalDebtAmount?.toLocaleString()}</div>
+                      <div className="text-gray-500">{submission.currency || 'GBP'}</div>
+                      {submission.singleInvoice && (
+                        <div className="text-xs text-gray-500">Single: {submission.singleInvoice}</div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm max-w-[100px]">
+                      {submission.paymentTermsType && (
+                        <div className="truncate">
+                          {submission.paymentTermsDays && `${submission.paymentTermsDays} days`}
+                          {submission.paymentTermsType === 'days_from_invoice' && ' from invoice'}
+                          {submission.paymentTermsType === 'days_from_month_end' && ' from month end'}
+                          {submission.paymentTermsType === 'other' && submission.paymentTermsOther}
+                        </div>
+                      )}
+                      {submission.firstOverdueDate && (
+                        <div className="text-xs text-gray-500">First: {submission.firstOverdueDate}</div>
+                      )}
+                      {submission.lastOverdueDate && (
+                        <div className="text-xs text-gray-500">Last: {submission.lastOverdueDate}</div>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -1210,7 +1285,7 @@ function CaseSubmissionsTab() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       <Button
                         size="sm"
                         variant="outline"
