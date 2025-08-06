@@ -43,7 +43,7 @@ interface LoginAttempt {
   ipAddress: string;
   userAgent: string;
   failureReason?: string;
-  timestamp: string;
+  createdAt: string;
 }
 
 interface SystemMetric {
@@ -140,6 +140,17 @@ export default function SystemMonitoring() {
         return 'bg-red-500';
       default:
         return 'bg-gray-500';
+    }
+  };
+
+  const formatDateTime = (dateValue: string | Date | null | undefined): string => {
+    if (!dateValue) return 'No timestamp';
+    try {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return 'Invalid date';
+      return format(date, 'MMM d, yyyy HH:mm:ss');
+    } catch (error) {
+      return 'Invalid date';
     }
   };
 
@@ -296,7 +307,7 @@ export default function SystemMonitoring() {
                         <div className="flex-1">
                           <p className="text-sm font-medium">Failed login attempt</p>
                           <p className="text-xs text-gray-600 dark:text-gray-400">
-                            {attempt.email} from {attempt.ipAddress} • {format(new Date(attempt.timestamp), 'MMM d, HH:mm')}
+                            {attempt.email} from {attempt.ipAddress} • {formatDateTime(attempt.createdAt).split(' ').slice(0, 3).join(' ')}
                           </p>
                         </div>
                       </div>
@@ -466,7 +477,7 @@ export default function SystemMonitoring() {
                                 </Badge>
                               </TableCell>
                               <TableCell className="font-mono text-sm">{attempt.ipAddress}</TableCell>
-                              <TableCell>{format(new Date(attempt.timestamp), 'MMM d, yyyy HH:mm:ss')}</TableCell>
+                              <TableCell>{formatDateTime(attempt.createdAt)}</TableCell>
                             </TableRow>
                           ))
                         )}
@@ -527,7 +538,7 @@ export default function SystemMonitoring() {
                                 </Badge>
                               </TableCell>
                               <TableCell className="font-mono text-sm">{attempt.ipAddress}</TableCell>
-                              <TableCell>{format(new Date(attempt.timestamp), 'MMM d, yyyy HH:mm:ss')}</TableCell>
+                              <TableCell>{formatDateTime(attempt.createdAt)}</TableCell>
                             </TableRow>
                           ))
                         )}
