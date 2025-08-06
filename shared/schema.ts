@@ -71,19 +71,66 @@ export const userOrganisations = pgTable("user_organisations", {
 export const caseSubmissions = pgTable("case_submissions", {
   id: serial("id").primaryKey(),
   submittedBy: varchar("submitted_by", { length: 255 }).notNull().references(() => users.id),
-  accountNumber: varchar("account_number", { length: 50 }).notNull(),
+  
+  // Client details (person who submitted)
+  clientName: varchar("client_name", { length: 255 }).notNull(),
+  clientEmail: varchar("client_email", { length: 255 }).notNull(),
+  clientPhone: varchar("client_phone", { length: 50 }),
+  
+  // Case identification
   caseName: varchar("case_name", { length: 255 }).notNull(),
-  debtorType: varchar("debtor_type", { length: 50 }).notNull().default("individual"),
-  debtorEmail: varchar("debtor_email", { length: 255 }),
-  debtorPhone: varchar("debtor_phone", { length: 50 }),
-  debtorAddress: text("debtor_address"),
-  originalAmount: decimal("original_amount", { precision: 12, scale: 2 }),
-  outstandingAmount: decimal("outstanding_amount", { precision: 12, scale: 2 }),
+  
+  // Debtor type and details
+  debtorType: varchar("debtor_type", { length: 50 }).notNull().default("individual"), // 'individual', 'organisation'
+  
+  // Individual/Sole Trader specific fields
+  individualType: varchar("individual_type", { length: 50 }), // 'individual', 'business'
+  tradingName: varchar("trading_name", { length: 255 }),
+  
+  // Organisation specific fields
+  organisationName: varchar("organisation_name", { length: 255 }),
+  organisationTradingName: varchar("organisation_trading_name", { length: 255 }),
+  companyNumber: varchar("company_number", { length: 50 }),
+  
+  // Principal of Business details (for Individual/Sole Trader)
+  principalSalutation: varchar("principal_salutation", { length: 20 }),
+  principalFirstName: varchar("principal_first_name", { length: 100 }),
+  principalLastName: varchar("principal_last_name", { length: 100 }),
+  
+  // Address details
+  addressLine1: varchar("address_line_1", { length: 255 }),
+  addressLine2: varchar("address_line_2", { length: 255 }),
+  city: varchar("city", { length: 100 }),
+  county: varchar("county", { length: 100 }),
+  postcode: varchar("postcode", { length: 20 }),
+  
+  // Contact details
+  mainPhone: varchar("main_phone", { length: 50 }),
+  altPhone: varchar("alt_phone", { length: 50 }),
+  mainEmail: varchar("main_email", { length: 255 }),
+  altEmail: varchar("alt_email", { length: 255 }),
+  
+  // Debt details
+  debtDetails: text("debt_details"),
+  totalDebtAmount: decimal("total_debt_amount", { precision: 12, scale: 2 }),
+  currency: varchar("currency", { length: 10 }).default("GBP"),
+  
+  // Payment terms
+  paymentTermsType: varchar("payment_terms_type", { length: 50 }), // 'days_from_invoice', 'days_from_month_end', 'other'
+  paymentTermsDays: integer("payment_terms_days"),
+  paymentTermsOther: text("payment_terms_other"),
+  
+  // Invoice details
+  singleInvoice: varchar("single_invoice", { length: 10 }), // 'yes', 'no'
+  firstOverdueDate: varchar("first_overdue_date", { length: 20 }),
+  lastOverdueDate: varchar("last_overdue_date", { length: 20 }),
+  
+  // Additional information
+  additionalInfo: text("additional_info"),
+  
+  // System fields
   status: varchar("status", { length: 50 }).notNull().default("pending"), // 'pending', 'processed', 'rejected'
-  stage: varchar("stage", { length: 50 }).notNull().default("initial_contact"),
   organisationId: integer("organisation_id").notNull().references(() => organisations.id),
-  externalRef: varchar("external_ref", { length: 100 }),
-  notes: text("notes"),
   submittedAt: timestamp("submitted_at").defaultNow(),
   processedAt: timestamp("processed_at"),
   processedBy: varchar("processed_by", { length: 255 }).references(() => users.id),
@@ -380,9 +427,12 @@ export type InsertUserOrganisation = typeof userOrganisations.$inferInsert;
 // Schemas
 export const insertOrganisationSchema = createInsertSchema(organisations);
 export const insertCaseSubmissionSchema = createInsertSchema(caseSubmissions).extend({
-  debtorType: z.enum(['individual', 'company', 'sole_trader', 'company_and_individual']).default('individual'),
-  originalAmount: z.union([z.string(), z.number()]).transform((val) => Number(val)),
-  outstandingAmount: z.union([z.string(), z.number()]).transform((val) => Number(val)),
+  debtorType: z.enum(['individual', 'organisation']).default('individual'),
+  individualType: z.enum(['individual', 'business']).optional(),
+  paymentTermsType: z.enum(['days_from_invoice', 'days_from_month_end', 'other']).optional(),
+  singleInvoice: z.enum(['yes', 'no']).optional(),
+  totalDebtAmount: z.union([z.string(), z.number()]).transform((val) => Number(val)),
+  paymentTermsDays: z.union([z.string(), z.number()]).transform((val) => Number(val)).optional(),
 }).omit({ 
   id: true, 
   submittedAt: true, 

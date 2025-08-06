@@ -68,24 +68,70 @@ interface Case {
 
 interface CaseSubmission {
   id: number;
-  accountNumber: string;
-  caseName: string;
-  debtorEmail?: string;
-  debtorPhone?: string;
-  debtorAddress?: string;
-  debtorType: string;
-  originalAmount?: number;
-  outstandingAmount?: number;
-  stage: string;
-  organisationId: number;
-  organisationName?: string;
-  externalRef?: string;
-  notes?: string;
-  status: string;
   submittedBy: string;
+  
+  // Client details (person who submitted)
+  clientName: string;
+  clientEmail: string;
+  clientPhone?: string;
+  
+  // Case identification
+  caseName: string;
+  
+  // Debtor type and details
+  debtorType: string;
+  
+  // Individual/Sole Trader specific fields
+  individualType?: string;
+  tradingName?: string;
+  
+  // Organisation specific fields
+  organisationName?: string;
+  organisationTradingName?: string;
+  companyNumber?: string;
+  
+  // Principal of Business details (for Individual/Sole Trader)
+  principalSalutation?: string;
+  principalFirstName?: string;
+  principalLastName?: string;
+  
+  // Address details
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  county?: string;
+  postcode?: string;
+  
+  // Contact details
+  mainPhone?: string;
+  altPhone?: string;
+  mainEmail?: string;
+  altEmail?: string;
+  
+  // Debt details
+  debtDetails?: string;
+  totalDebtAmount?: number;
+  currency?: string;
+  
+  // Payment terms
+  paymentTermsType?: string;
+  paymentTermsDays?: number;
+  paymentTermsOther?: string;
+  
+  // Invoice details
+  singleInvoice?: string;
+  firstOverdueDate?: string;
+  lastOverdueDate?: string;
+  
+  // Additional information
+  additionalInfo?: string;
+  
+  // System fields
+  status: string;
+  organisationId: number;
   submittedAt: string;
-  processedBy?: string;
   processedAt?: string;
+  processedBy?: string;
 }
 
 function CaseManagementTab() {

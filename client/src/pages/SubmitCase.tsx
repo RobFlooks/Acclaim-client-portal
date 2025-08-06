@@ -181,17 +181,64 @@ export default function SubmitCase() {
       ].filter(Boolean).join('\n');
 
       const submissionData = {
-        accountNumber: `TEMP-${Date.now()}`, // Temporary account number
-        caseName,
+        // Client details (person who submitted)
+        clientName: data.clientName,
+        clientEmail: data.clientEmail,
+        clientPhone: data.clientPhone || '',
+        
+        // Case identification
+        caseName: data.caseName,
+        
+        // Debtor type and details
         debtorType: data.debtorType,
-        debtorEmail: data.mainEmail || "",
-        debtorPhone: data.mainPhone || "",
-        debtorAddress,
-        originalAmount: data.totalDebtAmount,
-        outstandingAmount: data.totalDebtAmount,
-        stage: "initial_contact",
+        
+        // Individual/Sole Trader specific fields
+        individualType: data.individualType,
+        tradingName: data.tradingName || '',
+        
+        // Organisation specific fields
+        organisationName: data.organisationName || '',
+        organisationTradingName: data.organisationTradingName || '',
+        companyNumber: data.companyNumber || '',
+        
+        // Principal of Business details (for Individual/Sole Trader)
+        principalSalutation: data.principalSalutation || '',
+        principalFirstName: data.principalFirstName || '',
+        principalLastName: data.principalLastName || '',
+        
+        // Address details
+        addressLine1: data.addressLine1,
+        addressLine2: data.addressLine2 || '',
+        city: data.city,
+        county: data.county,
+        postcode: data.postcode,
+        
+        // Contact details
+        mainPhone: data.mainPhone || '',
+        altPhone: data.altPhone || '',
+        mainEmail: data.mainEmail || '',
+        altEmail: data.altEmail || '',
+        
+        // Debt details
+        debtDetails: data.debtDetails,
+        totalDebtAmount: data.totalDebtAmount,
+        currency: data.currency || 'GBP',
+        
+        // Payment terms
+        paymentTermsType: data.paymentTermsType,
+        paymentTermsDays: data.paymentTermsDays,
+        paymentTermsOther: data.paymentTermsOther || '',
+        
+        // Invoice details
+        singleInvoice: data.singleInvoice,
+        firstOverdueDate: data.firstOverdueDate,
+        lastOverdueDate: data.lastOverdueDate,
+        
+        // Additional information
+        additionalInfo: data.additionalInfo || '',
+        
+        // System fields
         organisationId: user?.organisationId || 1, // Use user's org or default
-        notes,
       };
 
       console.log("Sending to API:", submissionData);
