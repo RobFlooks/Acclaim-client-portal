@@ -1,0 +1,10 @@
+Test Document for Case Submission
+
+This is a sample document to test the document upload functionality in the case submission system.
+
+Document Details:
+- File Type: Text Document
+- Purpose: Testing document upload and storage
+- Content: Sample text for testing purposes
+
+This document should be captured and stored properly with the case submission.
