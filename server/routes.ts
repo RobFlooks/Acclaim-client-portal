@@ -243,8 +243,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add junction table organisations
       userOrgs.forEach(uo => allUserOrgIds.add(uo.organisationId));
 
-      const validatedData = insertCaseSubmissionSchema.parse({
+      // Parse numeric fields that come as strings from FormData
+      const parsedBody = {
         ...req.body,
+        organisationId: parseInt(req.body.organisationId),
+        totalDebtAmount: parseFloat(req.body.totalDebtAmount),
+        paymentTermsDays: req.body.paymentTermsDays ? parseInt(req.body.paymentTermsDays) : undefined,
+      };
+
+      const validatedData = insertCaseSubmissionSchema.parse({
+        ...parsedBody,
         submittedBy: userId,
       });
 
