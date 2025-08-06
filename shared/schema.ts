@@ -136,6 +136,17 @@ export const caseSubmissions = pgTable("case_submissions", {
   processedBy: varchar("processed_by", { length: 255 }).references(() => users.id),
 });
 
+// Case submission documents table
+export const caseSubmissionDocuments = pgTable("case_submission_documents", {
+  id: serial("id").primaryKey(),
+  caseSubmissionId: integer("case_submission_id").notNull().references(() => caseSubmissions.id, { onDelete: "cascade" }),
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  filePath: varchar("file_path", { length: 500 }).notNull(),
+  fileSize: integer("file_size").notNull(),
+  fileType: varchar("file_type", { length: 100 }).notNull(),
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+});
+
 // Cases table  
 export const cases = pgTable("cases", {
   id: serial("id").primaryKey(),

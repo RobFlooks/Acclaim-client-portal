@@ -3,6 +3,7 @@ import {
   organisations,
   cases,
   caseSubmissions,
+  caseSubmissionDocuments,
   caseActivities,
   messages,
   documents,
@@ -2239,10 +2240,13 @@ export class DatabaseStorage implements IStorage {
     fileSize: number;
     fileType: string;
   }): Promise<void> {
-    await db.raw(`
-      INSERT INTO case_submission_documents (case_submission_id, file_name, file_path, file_size, file_type)
-      VALUES (?, ?, ?, ?, ?)
-    `, [doc.caseSubmissionId, doc.fileName, doc.filePath, doc.fileSize, doc.fileType]);
+    await db.insert(caseSubmissionDocuments).values({
+      caseSubmissionId: doc.caseSubmissionId,
+      fileName: doc.fileName,
+      filePath: doc.filePath,
+      fileSize: doc.fileSize,
+      fileType: doc.fileType,
+    });
   }
 
   async getCaseSubmissionDocuments(caseSubmissionId: number): Promise<Array<{
@@ -2253,19 +2257,22 @@ export class DatabaseStorage implements IStorage {
     fileType: string;
     uploadedAt: Date;
   }>> {
-    const results = await db.raw(`
-      SELECT id, file_name as fileName, file_path as filePath, file_size as fileSize, 
-             file_type as fileType, uploaded_at as uploadedAt
-      FROM case_submission_documents 
-      WHERE case_submission_id = ?
-      ORDER BY uploaded_at DESC
-    `, [caseSubmissionId]);
+    const results = await db.select().from(caseSubmissionDocuments)
+      .where(eq(caseSubmissionDocuments.caseSubmissionId, caseSubmissionId))
+      .orderBy(desc(caseSubmissionDocuments.uploadedAt));
     
-    return results.rows || [];
+    return results.map(doc => ({
+      id: doc.id,
+      fileName: doc.fileName,
+      filePath: doc.filePath,
+      fileSize: doc.fileSize,
+      fileType: doc.fileType,
+      uploadedAt: doc.uploadedAt,
+    }));
   }
 
   async deleteCaseSubmissionDocument(id: number): Promise<void> {
-    await db.raw(`DELETE FROM case_submission_documents WHERE id = ?`, [id]);
+    await db.delete(caseSubmissionDocuments).where(eq(caseSubmissionDocuments.id, id));
   }
 }
 
