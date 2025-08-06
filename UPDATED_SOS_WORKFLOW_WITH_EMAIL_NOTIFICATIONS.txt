@@ -1,0 +1,63 @@
+# SOSFLOW 1.4 - Updated with Email Notifications
+#Hash f5f0a07b3aed910b65b7ef614e27b59b
+#ModifiedBy CHADLAW\Matt.Perry on vm-uks-sh-10
+#LastSave 06/08/2025 14:50:41
+DoNothing DoNothing2
+	CardPosX 10
+	CardPosY -170
+	GOTO SetVariables1 WHEN matter.custom.MYACLM.MAISREG=True
+	GOTO DoNothing3
+
+SetVariables SetVariables1
+	Initializations
+		#For subsequent workflows (runscriptfile)
+		FROMWORKFLOW=TRUE
+		
+		#Authentication
+		organisation_id =3
+		username = 'acclaim.orgadmin@acclaim.law'
+		password ='Chadw1ck816!!'
+		
+		external_case_ref = 'Ref ' + ConnectApp.System.Firmsname + ":" + matter.entitytype + ":" + matter.entityref
+		# URL encode spaces in external_case_ref
+		external_case_ref_encoded=replace(external_case_ref," ","_")
+		external_case_ref=external_case_ref_encoded
+		#external_case_ref_encoded = external_case_ref.replace(' ', '%20')
+		url='https://cb46d52f-84a8-405f-910d-210c6969a262-00-3p04s4dzuvkyp.spock.replit.dev/api/external/cases/'+external_case_ref_encoded+'/messages'
+		# Add balance calculation
+		
+		subject=repstyle
+		message=nnote
+		senderName=session.user.name
+		messageType='case_update'
+		sendNotifications='true'
+	CardPosX 0
+	CardPosY 0
+	GOTO HttpWebRequest1
+
+HttpWebRequest HttpWebRequest1
+	Initializations
+		method='POST'
+		postvariables='subject,message,senderName,messageType,sendNotifications'
+		ContentType='application/x-www-form-urlencoded'
+		IgnoreCertificateErrors=TRUE
+	CardPosX 230
+	CardPosY 10
+	GOTO Message2 WHEN html.contains("id")
+	GOTO DoNothing1
+
+DoNothing DoNothing1
+	CardPosX 310
+	CardPosY 130
+
+Message Message2
+	Message The timeline on the Portal has been updated
+	Centred True
+	Location system_tray
+	MessageType Information
+	CardPosX 510
+	CardPosY 70
+
+DoNothing DoNothing3
+	CardPosX 270
+	CardPosY -170
