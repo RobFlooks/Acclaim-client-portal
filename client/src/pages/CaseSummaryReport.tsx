@@ -85,12 +85,8 @@ export default function CaseSummaryReport() {
 
   // Calculate total payments based on the difference between total debt and outstanding amount
   const getTotalPayments = (caseItem: any) => {
-    const totalDebt = parseFloat(caseItem.originalAmount || 0) + 
-                     parseFloat(caseItem.costsAdded || 0) + 
-                     parseFloat(caseItem.interestAdded || 0) + 
-                     parseFloat(caseItem.feesAdded || 0);
-    const outstanding = parseFloat(caseItem.outstandingAmount || 0);
-    return Math.max(0, totalDebt - outstanding);
+    // Use actual payments received, not calculated debt reduction
+    return parseFloat(caseItem.totalPayments || 0);
   };
 
   const getTotalOriginalAmount = () => {
@@ -284,7 +280,7 @@ export default function CaseSummaryReport() {
                                    parseFloat(caseItem.interestAdded || 0) + 
                                    parseFloat(caseItem.feesAdded || 0);
                   const outstanding = parseFloat(caseItem.outstandingAmount || 0);
-                  const payments = totalDebt - outstanding;
+                  const payments = parseFloat(caseItem.totalPayments || 0);
                   
                   return `
                     <tr>
