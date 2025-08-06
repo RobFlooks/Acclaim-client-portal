@@ -2253,14 +2253,7 @@ export default function AdminEnhanced() {
               <span className="hidden sm:inline">Case Submissions</span>
               <span className="sm:hidden">Submits</span>
             </TabsTrigger>
-            <TabsTrigger value="api-guide" className="flex-1 text-xs sm:text-sm">
-              <span className="hidden sm:inline">API Integration</span>
-              <span className="sm:hidden">API</span>
-            </TabsTrigger>
-            <TabsTrigger value="case-management" className="flex-1 text-xs sm:text-sm">
-              <span className="hidden sm:inline">Case Management Integration</span>
-              <span className="sm:hidden">CM Int</span>
-            </TabsTrigger>
+
             <TabsTrigger value="user-guide" className="flex-1 text-xs sm:text-sm">
               <span className="hidden sm:inline">User Guide</span>
               <span className="sm:hidden">Guide</span>
@@ -2840,19 +2833,7 @@ export default function AdminEnhanced() {
           </Card>
         </TabsContent>
 
-        {/* API Integration Tab */}
-        <TabsContent value="api-guide">
-          <div className="flex justify-center">
-            <ApiGuideDownload />
-          </div>
-        </TabsContent>
 
-        {/* Case Management Integration Tab */}
-        <TabsContent value="case-management">
-          <div className="flex justify-center">
-            <CaseManagementGuideDownload />
-          </div>
-        </TabsContent>
 
         {/* User Guide Tab */}
         <TabsContent value="user-guide">
