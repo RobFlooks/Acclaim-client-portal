@@ -50,7 +50,7 @@ const baseSubmitCaseSchema = z.object({
   addressLine1: z.string().min(1, "Address line 1 is required"),
   addressLine2: z.string().optional(),
   city: z.string().min(1, "City is required"),
-  county: z.string().min(1, "County is required"),
+  county: z.string().optional(),
   postcode: z.string().min(1, "Postcode is required"),
   mainPhone: z.string().optional(),
   altPhone: z.string().optional(),
@@ -113,6 +113,50 @@ const createSubmitCaseSchema = (organisationsCount: number) => {
     }, {
       message: "Please select an organisation",
       path: ["organisationId"]
+    })
+    .refine((data) => {
+      // If debtor type is individual and individual type is individual, salutation is required
+      if (data.debtorType === "individual" && data.individualType === "individual" && 
+          (!data.principalSalutation || data.principalSalutation.trim() === "")) {
+        return false;
+      }
+      return true;
+    }, {
+      message: "Salutation is required for individual debtors",
+      path: ["principalSalutation"]
+    })
+    .refine((data) => {
+      // If debtor type is individual and individual type is individual, first name is required
+      if (data.debtorType === "individual" && data.individualType === "individual" && 
+          (!data.principalFirstName || data.principalFirstName.trim() === "")) {
+        return false;
+      }
+      return true;
+    }, {
+      message: "First name is required for individual debtors",
+      path: ["principalFirstName"]
+    })
+    .refine((data) => {
+      // If debtor type is individual and individual type is individual, last name is required
+      if (data.debtorType === "individual" && data.individualType === "individual" && 
+          (!data.principalLastName || data.principalLastName.trim() === "")) {
+        return false;
+      }
+      return true;
+    }, {
+      message: "Last name is required for individual debtors",
+      path: ["principalLastName"]
+    })
+    .refine((data) => {
+      // If debtor type is individual and individual type is business, trading name is required
+      if (data.debtorType === "individual" && data.individualType === "business" && 
+          (!data.tradingName || data.tradingName.trim() === "")) {
+        return false;
+      }
+      return true;
+    }, {
+      message: "Trading name is required for sole trader businesses",
+      path: ["tradingName"]
     });
 };
 
@@ -722,7 +766,7 @@ export default function SubmitCase() {
                       name="tradingName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Trading Name</FormLabel>
+                          <FormLabel>Trading Name <span className="text-red-500">*</span></FormLabel>
                           <FormControl>
                             <Input {...field} placeholder="Enter the business trading name" />
                           </FormControl>
@@ -748,7 +792,7 @@ export default function SubmitCase() {
                       name="principalSalutation"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Salutation</FormLabel>
+                          <FormLabel>Salutation <span className="text-red-500">*</span></FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
@@ -774,7 +818,7 @@ export default function SubmitCase() {
                       name="principalFirstName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>First Name</FormLabel>
+                          <FormLabel>First Name <span className="text-red-500">*</span></FormLabel>
                           <FormControl>
                             <Input {...field} placeholder="Enter first name" />
                           </FormControl>
@@ -788,7 +832,7 @@ export default function SubmitCase() {
                       name="principalLastName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Last Name</FormLabel>
+                          <FormLabel>Last Name <span className="text-red-500">*</span></FormLabel>
                           <FormControl>
                             <Input {...field} placeholder="Enter last name" />
                           </FormControl>
@@ -848,7 +892,7 @@ export default function SubmitCase() {
                   name="county"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>County <span className="text-red-500">*</span></FormLabel>
+                      <FormLabel>County (Optional)</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Enter county" />
                       </FormControl>
