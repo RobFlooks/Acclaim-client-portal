@@ -22,6 +22,110 @@ import UserGuideDownload from "@/components/UserGuideDownload";
 import UserGuideWordDownload from "@/components/UserGuideWordDownload";
 import CaseManagementGuideDownload from "@/components/CaseManagementGuideDownload";
 
+// Documents List Component
+function DocumentsList({ submissionId }: { submissionId: number }) {
+  const { data: documents, isLoading, error } = useQuery({
+    queryKey: ['/api/admin/case-submissions', submissionId, 'documents'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/admin/case-submissions/${submissionId}/documents`);
+      return response.json();
+    },
+  });
+
+  if (isLoading) {
+    return <div className="text-sm text-gray-500">Loading documents...</div>;
+  }
+
+  if (error) {
+    return <div className="text-sm text-red-500">Error loading documents</div>;
+  }
+
+  if (!documents || documents.length === 0) {
+    return (
+      <div className="text-center py-4">
+        <FileText className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+        <p className="text-sm text-gray-500">No documents uploaded with this submission</p>
+      </div>
+    );
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  return (
+    <div className="space-y-3">
+      {documents.map((doc: any) => (
+        <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
+          <div className="flex items-center gap-3">
+            <FileText className="h-5 w-5 text-blue-500" />
+            <div>
+              <p className="font-medium text-sm">{doc.fileName}</p>
+              <p className="text-xs text-gray-500">
+                {formatFileSize(doc.fileSize)} • {doc.fileType} • Uploaded {new Date(doc.uploadedAt).toLocaleDateString('en-GB')}
+              </p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              window.open(`/api/admin/case-submissions/documents/${doc.id}`, '_blank');
+            }}
+          >
+            <Download className="h-3 w-3 mr-1" />
+            Download
+          </Button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Documents Cell Component for table display
+function DocumentsCell({ submissionId }: { submissionId: number }) {
+  const { data: documents, isLoading } = useQuery({
+    queryKey: ['/api/admin/case-submissions', submissionId, 'documents'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/admin/case-submissions/${submissionId}/documents`);
+      return response.json();
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="text-sm">
+        <div className="flex items-center gap-1">
+          <FileText className="h-3 w-3 text-gray-400" />
+          <span className="text-xs text-gray-500">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  const documentCount = documents?.length || 0;
+
+  return (
+    <div className="text-sm">
+      <div className="flex items-center gap-1">
+        <FileText className="h-3 w-3 text-gray-400" />
+        <span className="text-xs text-gray-500">
+          {documentCount} {documentCount === 1 ? 'document' : 'documents'}
+        </span>
+      </div>
+      {documentCount > 0 && (
+        <div className="text-xs text-blue-500 mt-1">
+          View in details
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface User {
   id: string;
   email: string;
@@ -1275,17 +1379,7 @@ function CaseSubmissionsTab() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm">
-                      <div className="flex items-center gap-1">
-                        <FileText className="h-3 w-3 text-gray-400" />
-                        <span className="text-xs text-gray-500">
-                          Documents Available
-                        </span>
-                      </div>
-                      <div className="text-xs text-gray-400 mt-1">
-                        Check details for files
-                      </div>
-                    </div>
+                    <DocumentsCell submissionId={submission.id} />
                   </TableCell>
                   <TableCell>
                     <Badge className={getStatusBadgeColor(submission.status)}>
@@ -1466,6 +1560,20 @@ function CaseSubmissionsTab() {
                     <Label className="font-semibold">Stage</Label>
                     <p className="text-sm">{selectedSubmission.stage}</p>
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* Documents Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Supporting Documents
+                  </CardTitle>
+                  <CardDescription>Files uploaded with this case submission</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <DocumentsList submissionId={selectedSubmission.id} />
                 </CardContent>
               </Card>
 
