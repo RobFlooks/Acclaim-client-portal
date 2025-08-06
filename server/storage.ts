@@ -202,6 +202,8 @@ export interface IStorage {
   verifyUserPassword(userId: string, password: string): Promise<boolean>;
   
   checkMustChangePassword(userId: string): Promise<boolean>;
+  
+  deleteUser(userId: string): Promise<void>;
 
   // System monitoring operations
   logUserActivity(activity: InsertUserActivityLog): Promise<UserActivityLog>;
@@ -1602,6 +1604,36 @@ export class DatabaseStorage implements IStorage {
   async checkMustChangePassword(userId: string): Promise<boolean> {
     const [user] = await db.select({ mustChangePassword: users.mustChangePassword }).from(users).where(eq(users.id, userId));
     return user?.mustChangePassword || false;
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    // First delete all related data
+    // Delete from user-organisation junction table
+    await db.delete(userOrganisations).where(eq(userOrganisations.userId, userId));
+    
+    // Delete user activity logs
+    await db.delete(userActivityLogs).where(eq(userActivityLogs.userId, userId));
+    
+    // Delete case activities performed by this user
+    await db.delete(caseActivities).where(eq(caseActivities.performedBy, userId));
+    
+    // Delete documents uploaded by this user
+    await db.delete(documents).where(eq(documents.uploadedBy, userId));
+    
+    // Delete messages sent by this user
+    await db.delete(messages).where(eq(messages.senderId, userId));
+    
+    // Delete payments recorded by this user
+    await db.delete(payments).where(eq(payments.recordedBy, userId));
+    
+    // Delete audit logs related to this user
+    await db.delete(auditLog).where(eq(auditLog.userId, userId));
+    
+    // Delete external API credentials created by this user
+    await db.delete(externalApiCredentials).where(eq(externalApiCredentials.createdBy, userId));
+    
+    // Finally delete the user record
+    await db.delete(users).where(eq(users.id, userId));
   }
 
   // System monitoring operations
