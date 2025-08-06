@@ -83,12 +83,14 @@ export default function CaseSummaryReport() {
     return { activeCases, closedCases };
   }, [filteredCases]);
 
-  // We'll calculate total payments from outstanding amount for now
-  // since we can't use dynamic hooks. In a real scenario, we'd need to restructure this.
+  // Calculate total payments based on the difference between total debt and outstanding amount
   const getTotalPayments = (caseItem: any) => {
-    const original = parseFloat(caseItem.originalAmount);
-    const outstanding = parseFloat(caseItem.outstandingAmount);
-    return Math.max(0, original - outstanding);
+    const totalDebt = parseFloat(caseItem.originalAmount || 0) + 
+                     parseFloat(caseItem.costsAdded || 0) + 
+                     parseFloat(caseItem.interestAdded || 0) + 
+                     parseFloat(caseItem.feesAdded || 0);
+    const outstanding = parseFloat(caseItem.outstandingAmount || 0);
+    return Math.max(0, totalDebt - outstanding);
   };
 
   const getTotalOriginalAmount = () => {
@@ -281,8 +283,8 @@ export default function CaseSummaryReport() {
                                    parseFloat(caseItem.costsAdded || 0) + 
                                    parseFloat(caseItem.interestAdded || 0) + 
                                    parseFloat(caseItem.feesAdded || 0);
-                  const payments = getTotalPayments(caseItem);
-                  const outstanding = totalDebt - payments;
+                  const outstanding = parseFloat(caseItem.outstandingAmount || 0);
+                  const payments = totalDebt - outstanding;
                   
                   return `
                     <tr>
@@ -393,7 +395,7 @@ export default function CaseSummaryReport() {
           totalAdditionalCharges: parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0),
           totalDebt: parseFloat(caseItem.originalAmount) + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0),
           totalPayments: getTotalPayments(caseItem),
-          outstandingAmount: parseFloat(caseItem.originalAmount) + parseFloat(caseItem.costsAdded || 0) + parseFloat(caseItem.interestAdded || 0) + parseFloat(caseItem.feesAdded || 0) - getTotalPayments(caseItem)
+          outstandingAmount: parseFloat(caseItem.outstandingAmount || 0)
         });
 
         // Color code status column (column 3)
@@ -733,13 +735,7 @@ export default function CaseSummaryReport() {
                       {formatCurrency(getTotalPayments(caseItem))}
                     </td>
                     <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-orange-600">
-                      {formatCurrency(
-                        parseFloat(caseItem.originalAmount) + 
-                        parseFloat(caseItem.costsAdded || 0) + 
-                        parseFloat(caseItem.interestAdded || 0) + 
-                        parseFloat(caseItem.feesAdded || 0) - 
-                        getTotalPayments(caseItem)
-                      )}
+                      {formatCurrency(caseItem.outstandingAmount || 0)}
                     </td>
                   </tr>
                 ))}
