@@ -1007,6 +1007,8 @@ function CaseSubmissionsTab() {
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [selectedSubmission, setSelectedSubmission] = useState<CaseSubmission | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [selectedSubmissions, setSelectedSubmissions] = useState<Set<number>>(new Set());
+  const [selectAll, setSelectAll] = useState(false);
 
   // Fetch case submissions
   const { data: submissions = [], isLoading, error } = useQuery({
@@ -1065,12 +1067,40 @@ function CaseSubmissionsTab() {
     },
   });
 
+  // Handle select all checkbox
+  const handleSelectAll = (checked: boolean) => {
+    setSelectAll(checked);
+    if (checked) {
+      setSelectedSubmissions(new Set(submissions.map((s: CaseSubmission) => s.id)));
+    } else {
+      setSelectedSubmissions(new Set());
+    }
+  };
+
+  // Handle individual row selection
+  const handleRowSelect = (submissionId: number, checked: boolean) => {
+    const newSelected = new Set(selectedSubmissions);
+    if (checked) {
+      newSelected.add(submissionId);
+    } else {
+      newSelected.delete(submissionId);
+    }
+    setSelectedSubmissions(newSelected);
+    setSelectAll(newSelected.size === submissions.length);
+  };
+
   // CSV Export functionality for submissions
   const exportSubmissionsToCSV = () => {
-    if (!submissions || submissions.length === 0) {
+    const submissionsToExport = selectedSubmissions.size > 0 
+      ? submissions.filter((s: CaseSubmission) => selectedSubmissions.has(s.id))
+      : submissions;
+
+    if (!submissionsToExport || submissionsToExport.length === 0) {
       toast({
         title: "No Data",
-        description: "No case submissions available to export.",
+        description: selectedSubmissions.size > 0 
+          ? "No case submissions selected for export." 
+          : "No case submissions available to export.",
         variant: "destructive",
       });
       return;
@@ -1122,7 +1152,7 @@ function CaseSubmissionsTab() {
     // Convert submissions to CSV rows using actual database fields
     const csvRows = [
       headers.join(','), // Header row
-      ...submissions.map((submission: CaseSubmission) => {
+      ...submissionsToExport.map((submission: CaseSubmission) => {
         return [
           `"${submission.id || ''}"`,
           `"${submission.caseName || ''}"`,
@@ -1183,7 +1213,7 @@ function CaseSubmissionsTab() {
     
     toast({
       title: "Export Complete",
-      description: `Successfully exported ${submissions.length} case submissions to CSV.`,
+      description: `Successfully exported ${submissionsToExport.length} case submission${submissionsToExport.length === 1 ? '' : 's'} to CSV.`,
     });
   };
 
@@ -1230,10 +1260,31 @@ function CaseSubmissionsTab() {
           <Badge variant="outline" className="text-sm">
             {submissions.length} submission{submissions.length !== 1 ? 's' : ''}
           </Badge>
+          {selectedSubmissions.size > 0 && (
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-sm">
+                {selectedSubmissions.size} selected
+              </Badge>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => {
+                  setSelectedSubmissions(new Set());
+                  setSelectAll(false);
+                }}
+                className="text-xs"
+              >
+                Clear
+              </Button>
+            </div>
+          )}
         </div>
         <Button onClick={exportSubmissionsToCSV} variant="outline" size="sm">
           <Download className="h-4 w-4 mr-2" />
-          Export CSV
+          {selectedSubmissions.size > 0 
+            ? `Export Selected (${selectedSubmissions.size})`
+            : 'Export All'
+          }
         </Button>
       </div>
 
@@ -1242,6 +1293,14 @@ function CaseSubmissionsTab() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[50px]">
+                <input
+                  type="checkbox"
+                  checked={selectAll}
+                  onChange={(e) => handleSelectAll(e.target.checked)}
+                  className="rounded"
+                />
+              </TableHead>
               <TableHead>Case Name</TableHead>
               <TableHead>Client</TableHead>
               <TableHead>Debtor Type</TableHead>
@@ -1269,6 +1328,14 @@ function CaseSubmissionsTab() {
             ) : (
               submissions.map((submission: CaseSubmission) => (
                 <TableRow key={submission.id}>
+                  <TableCell className="w-[50px]">
+                    <input
+                      type="checkbox"
+                      checked={selectedSubmissions.has(submission.id)}
+                      onChange={(e) => handleRowSelect(submission.id, e.target.checked)}
+                      className="rounded"
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">
                     <div className="max-w-[150px]">
                       <div className="font-medium truncate">{submission.caseName}</div>
