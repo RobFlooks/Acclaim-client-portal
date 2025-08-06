@@ -146,8 +146,9 @@ export default function AuthPage() {
                 </Button>
               </form>
               
-              <div className="mt-6 text-center text-xs text-muted-foreground">Need assistance? Please contact us. email@acclaim.law | 01132258811
-</div>
+              <div className="mt-6 text-center text-xs text-muted-foreground">
+                Need assistance? Please contact us at hello@acclaim.law | 0113 225 8811
+              </div>
             </CardContent>
           </Card>
         </div>
