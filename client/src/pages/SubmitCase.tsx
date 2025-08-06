@@ -111,6 +111,8 @@ export default function SubmitCase() {
   const [singleInvoice, setSingleInvoice] = useState("");
   const [organisationNameValue, setOrganisationNameValue] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submissionId, setSubmissionId] = useState<number | null>(null);
 
   const form = useForm<SubmitCaseForm>({
     resolver: zodResolver(submitCaseSchema),
@@ -297,16 +299,12 @@ export default function SubmitCase() {
       }
       return response.json();
     },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Your case and documents have been submitted successfully. We will review them and contact you soon.",
-      });
-      // Clear uploaded files and reset form
+    onSuccess: (response) => {
+      // Set success state and submission ID instead of immediate redirect
+      setIsSubmitted(true);
+      setSubmissionId(response.id);
+      // Clear uploaded files
       setUploadedFiles([]);
-      form.reset();
-      // Redirect to dashboard
-      setLocation('/');
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -350,6 +348,48 @@ export default function SubmitCase() {
       form.setValue("paymentTermsOther", "");
     }
   };
+
+  // Show success screen after submission
+  if (isSubmitted) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <div className="flex justify-center">
+                <div className="rounded-full bg-green-100 p-3">
+                  <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              </div>
+              <h1 className="text-2xl font-bold text-green-900">Case Submitted Successfully!</h1>
+              <div className="space-y-2">
+                <p className="text-green-800">
+                  Your case has been submitted successfully and is now in our review queue.
+                </p>
+                <p className="text-green-700 text-sm">
+                  <strong>Submission ID:</strong> #{submissionId}
+                </p>
+                <p className="text-green-700 text-sm">
+                  Our team will review your submission and documents, then process your case into our case management system. 
+                  This typically takes 1-2 business days. You will receive email notifications about the progress.
+                </p>
+              </div>
+              <div className="pt-4">
+                <Button 
+                  onClick={() => setLocation('/')}
+                  className="bg-acclaim-teal hover:bg-acclaim-teal/90 text-white px-6 py-2"
+                >
+                  Return to Dashboard
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
