@@ -18,7 +18,8 @@ import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation } from "wouter";
 
-const submitCaseSchema = z.object({
+// Base schema without conditional validation
+const baseSubmitCaseSchema = z.object({
   // Client details (pre-populated)
   clientName: z.string().min(1, "Name is required"),
   clientEmail: z.string().email("Invalid email address"),
@@ -69,11 +70,34 @@ const submitCaseSchema = z.object({
     required_error: "Please specify if this relates to a single invoice",
   }),
   firstOverdueDate: z.string().min(1, "First overdue invoice date is required"),
-  lastOverdueDate: z.string().min(1, "Last overdue invoice date is required"),
+  lastOverdueDate: z.string().optional(),
   
   // Additional information
   additionalInfo: z.string().optional(),
 });
+
+// Dynamic schema with conditional validation
+const submitCaseSchema = baseSubmitCaseSchema
+  .refine((data) => {
+    // If not a single invoice, lastOverdueDate is required
+    if (data.singleInvoice === "no" && (!data.lastOverdueDate || data.lastOverdueDate.trim() === "")) {
+      return false;
+    }
+    return true;
+  }, {
+    message: "Last overdue invoice date is required",
+    path: ["lastOverdueDate"]
+  })
+  .refine((data) => {
+    // If debtor type is organisation, organisation name is required
+    if (data.debtorType === "organisation" && (!data.organisationName || data.organisationName.trim() === "")) {
+      return false;
+    }
+    return true;
+  }, {
+    message: "Organisation name is required",
+    path: ["organisationName"]
+  });
 
 type SubmitCaseForm = z.infer<typeof submitCaseSchema>;
 
