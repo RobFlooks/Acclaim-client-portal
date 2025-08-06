@@ -90,9 +90,10 @@ export default function RecoveryAnalysisReport() {
                       }, 0) || 0);
 
       const outstanding = parseFloat(caseItem.outstandingAmount || 0);
-      const recovered = Math.max(0, totalDebt - outstanding);
-      // Calculate recovery rate based on total debt, capped at 100%
-      const recoveryRate = totalDebt > 0 ? Math.min((recovered / totalDebt) * 100, 100) : 0;
+      // Use actual payments received, not calculated debt reduction
+      const recovered = payments;
+      // Calculate recovery rate based on original amount for more accurate representation
+      const recoveryRate = originalAmount > 0 ? Math.min((recovered / originalAmount) * 100, 100) : 0;
 
       acc.totalOriginalAmount += originalAmount;
       acc.totalCostsAdded += costsAdded;
@@ -272,8 +273,9 @@ export default function RecoveryAnalysisReport() {
         const feesAdded = parseFloat(caseItem.feesAdded || 0);
         const totalDebt = originalAmount + costsAdded + interestAdded + feesAdded;
         const outstanding = parseFloat(caseItem.outstandingAmount || 0);
-        const recovered = Math.max(0, totalDebt - outstanding);
-        const recoveryRate = totalDebt > 0 ? Math.min((recovered / totalDebt) * 100, 100) : 0;
+        const payments = parseFloat(caseItem.totalPayments || 0);
+        const recovered = payments;
+        const recoveryRate = originalAmount > 0 ? Math.min((recovered / originalAmount) * 100, 100) : 0;
 
         const row = caseSheet.addRow({
           accountNumber: caseItem.accountNumber,
@@ -572,7 +574,8 @@ export default function RecoveryAnalysisReport() {
                   const feesAdded = parseFloat(caseItem.feesAdded || 0);
                   const totalDebt = originalAmount + costsAdded + interestAdded + feesAdded;
                   const outstanding = parseFloat(caseItem.outstandingAmount || 0);
-                  const recovered = Math.max(0, totalDebt - outstanding);
+                  const payments = parseFloat(caseItem.totalPayments || 0);
+                  const recovered = payments;
                   
                   return `
                     <tr>
@@ -821,7 +824,8 @@ export default function RecoveryAnalysisReport() {
                   const feesAdded = parseFloat(caseItem.feesAdded || 0);
                   const totalDebt = originalAmount + costsAdded + interestAdded + feesAdded;
                   const outstanding = parseFloat(caseItem.outstandingAmount || 0);
-                  const recovered = Math.max(0, totalDebt - outstanding);
+                  const payments = parseFloat(caseItem.totalPayments || 0);
+                  const recovered = payments;
                   
                   return (
                     <tr key={caseItem.id} className="hover:bg-gray-50">

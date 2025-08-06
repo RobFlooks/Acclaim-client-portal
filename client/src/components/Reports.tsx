@@ -114,13 +114,9 @@ export default function Reports() {
     
     return cases.reduce((acc: any, case_: any) => {
       const original = parseFloat(case_.originalAmount || 0);
-      const costsAdded = parseFloat(case_.costsAdded || 0);
-      const interestAdded = parseFloat(case_.interestAdded || 0);
-      const feesAdded = parseFloat(case_.feesAdded || 0);
       const outstanding = parseFloat(case_.outstandingAmount || 0);
-      
-      const totalDebt = original + costsAdded + interestAdded + feesAdded;
-      const recovered = Math.max(0, totalDebt - outstanding);
+      // Use actual payments received, not calculated debt reduction
+      const recovered = parseFloat(case_.totalPayments || 0);
       
       acc.totalOriginal += original;
       acc.totalRecovered += recovered;
@@ -137,14 +133,9 @@ export default function Reports() {
     const activeCases = cases.filter((case_: any) => case_.status?.toLowerCase() !== 'closed');
     
     return activeCases.reduce((acc: any, case_: any) => {
-      const original = parseFloat(case_.originalAmount || 0);
-      const costsAdded = parseFloat(case_.costsAdded || 0);
-      const interestAdded = parseFloat(case_.interestAdded || 0);
-      const feesAdded = parseFloat(case_.feesAdded || 0);
       const outstanding = parseFloat(case_.outstandingAmount || 0);
-      
-      const totalDebt = original + costsAdded + interestAdded + feesAdded;
-      const recovered = Math.max(0, totalDebt - outstanding);
+      // Use actual payments received, not calculated debt reduction
+      const recovered = parseFloat(case_.totalPayments || 0);
       
       acc.totalRecovered += recovered;
       acc.totalOutstanding += outstanding;
