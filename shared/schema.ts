@@ -40,6 +40,8 @@ export const users = pgTable("users", {
   tempPassword: varchar("temp_password"),
   mustChangePassword: boolean("must_change_password").default(false),
   externalRef: varchar("external_ref", { length: 100 }).unique(), // For external system integration
+  emailNotifications: boolean("email_notifications").default(true), // User preference for email notifications
+  pushNotifications: boolean("push_notifications").default(true), // User preference for push notifications
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -473,6 +475,11 @@ export const updateUserSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   phone: z.string().optional(),
+});
+
+export const updateNotificationPreferencesSchema = z.object({
+  emailNotifications: z.boolean(),
+  pushNotifications: z.boolean(),
 });
 
 export const changePasswordSchema = z.object({

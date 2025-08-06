@@ -1480,6 +1480,50 @@ export class DatabaseStorage implements IStorage {
     return user || null;
   }
 
+  async updateNotificationPreferences(userId: string, preferences: {
+    emailNotifications: boolean;
+    pushNotifications: boolean;
+  }): Promise<User | null> {
+    const [user] = await db
+      .update(users)
+      .set({
+        emailNotifications: preferences.emailNotifications,
+        pushNotifications: preferences.pushNotifications,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+
+    return user || null;
+  }
+
+  async getUsersByOrganisationId(organisationId: number): Promise<User[]> {
+    // Get users via legacy organisationId field
+    const legacyUsers = await db.select().from(users).where(eq(users.organisationId, organisationId));
+    
+    // Get users via junction table
+    const junctionUsers = await db
+      .select({ user: users })
+      .from(userOrganisations)
+      .leftJoin(users, eq(userOrganisations.userId, users.id))
+      .where(eq(userOrganisations.organisationId, organisationId));
+    
+    // Combine and deduplicate users
+    const userMap = new Map<string, User>();
+    
+    // Add legacy users
+    legacyUsers.forEach(user => userMap.set(user.id, user));
+    
+    // Add junction users
+    junctionUsers.forEach(ju => {
+      if (ju.user) {
+        userMap.set(ju.user.id, ju.user);
+      }
+    });
+    
+    return Array.from(userMap.values());
+  }
+
   async updateUserPassword(id: string, passwordData: { 
     hashedPassword?: string; 
     tempPassword?: string | null; 

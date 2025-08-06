@@ -9,6 +9,7 @@ import {
   insertDocumentSchema,
   createUserSchema,
   updateUserSchema,
+  updateNotificationPreferencesSchema,
   changePasswordSchema,
   resetPasswordSchema,
   createOrganisationSchema,
@@ -1373,6 +1374,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update notification preferences
+  app.put('/api/user/notifications', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const preferencesData = updateNotificationPreferencesSchema.parse(req.body);
+
+      const user = await storage.updateNotificationPreferences(userId, preferencesData);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating notification preferences:", error);
+      res.status(500).json({ message: "Failed to update notification preferences" });
+    }
+  });
+
   // Change own password
   app.post('/api/user/change-password', isAuthenticated, async (req: any, res) => {
     try {
@@ -1690,15 +1709,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { externalRef } = req.params;
       
       // Support both JSON and form data
-      let message, senderName, messageType, subject;
+      let message, senderName, messageType, subject, sendNotifications;
       
       if (req.headers['content-type']?.includes('application/json')) {
-        ({ message, senderName, messageType, subject } = req.body);
+        ({ message, senderName, messageType, subject, sendNotifications } = req.body);
       } else {
         message = req.body.message;
         senderName = req.body.senderName;
         messageType = req.body.messageType || 'case_update';
         subject = req.body.subject;
+        sendNotifications = req.body.sendNotifications === 'true' || req.body.sendNotifications === true;
       }
       
       if (!message || !senderName) {
@@ -1730,6 +1750,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isRead: false,
         createdAt: new Date(),
       });
+
+      // Handle push notifications if requested
+      let notificationsSent = 0;
+      if (sendNotifications) {
+        try {
+          // Get all users linked to the case's organisation
+          const organisationUsers = await storage.getUsersByOrganisationId(case_.organisationId);
+          
+          for (const user of organisationUsers) {
+            // Check user's push notification preferences
+            if (user.pushNotifications) {
+              // TODO: Implement actual push notification service here
+              // This is where you would integrate with a push notification service like Firebase, OneSignal, etc.
+              console.log(`Push notification would be sent to user ${user.email} for case ${case_.caseName}`);
+              notificationsSent++;
+            }
+          }
+        } catch (notificationError) {
+          console.error("Error sending push notifications:", notificationError);
+        }
+      }
       
       res.status(201).json({ 
         message: "Case message created successfully", 
@@ -1738,6 +1779,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: case_.id,
           accountNumber: case_.accountNumber,
           caseName: case_.caseName
+        },
+        notificationInfo: {
+          requested: !!sendNotifications,
+          sent: notificationsSent
         },
         timestamp: new Date().toISOString(),
         refreshRequired: true 

@@ -6,18 +6,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 import { useQueryClient } from "@tanstack/react-query";
-import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft } from "lucide-react";
+import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft, Bell } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { updateUserSchema, changePasswordSchema } from "@shared/schema";
+import { updateUserSchema, changePasswordSchema, updateNotificationPreferencesSchema } from "@shared/schema";
 import { z } from "zod";
 import { Link } from "wouter";
 
 type UpdateProfileForm = z.infer<typeof updateUserSchema>;
 type ChangePasswordForm = z.infer<typeof changePasswordSchema>;
+type NotificationPreferencesForm = z.infer<typeof updateNotificationPreferencesSchema>;
 
 interface UserData {
   id: string;
@@ -28,6 +30,8 @@ interface UserData {
   organisationId: number | null;
   organisationName?: string;
   isAdmin?: boolean;
+  emailNotifications?: boolean;
+  pushNotifications?: boolean;
   createdAt: string;
 }
 
@@ -49,6 +53,11 @@ export default function UserProfile() {
   });
   
   const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
+  
+  const [notificationData, setNotificationData] = useState<NotificationPreferencesForm>({
+    emailNotifications: true,
+    pushNotifications: true,
+  });
 
   // Fetch user profile data
   const { data: userProfile, isLoading: profileLoading } = useQuery<UserData>({
@@ -69,6 +78,10 @@ export default function UserProfile() {
         firstName: userProfile.firstName || "",
         lastName: userProfile.lastName || "",
         phone: userProfile.phone || "",
+      });
+      setNotificationData({
+        emailNotifications: userProfile.emailNotifications ?? true,
+        pushNotifications: userProfile.pushNotifications ?? true,
       });
     }
   }, [userProfile]);
@@ -101,6 +114,39 @@ export default function UserProfile() {
       toast({
         title: "Error",
         description: error.message || "Failed to update profile",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update notification preferences mutation
+  const updateNotificationsMutation = useMutation({
+    mutationFn: async (data: NotificationPreferencesForm) => {
+      return await apiRequest("PUT", `/api/user/notifications`, data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Notification preferences updated successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      console.error("Notification preferences update error:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update notification preferences",
         variant: "destructive",
       });
     },
@@ -177,6 +223,23 @@ export default function UserProfile() {
           }
         });
         setPasswordErrors(errors);
+      }
+    }
+  };
+
+  // Handle notifications form submission
+  const handleNotificationsSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const validatedData = updateNotificationPreferencesSchema.parse(notificationData);
+      updateNotificationsMutation.mutate(validatedData);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.errors[0]?.message || "Please check your preferences",
+          variant: "destructive",
+        });
       }
     }
   };
@@ -296,6 +359,7 @@ export default function UserProfile() {
         <TabsList>
           <TabsTrigger value="profile">Profile Information</TabsTrigger>
           <TabsTrigger value="security">Security & Password</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
 
         {/* Profile Information Tab */}
@@ -430,6 +494,74 @@ export default function UserProfile() {
                   >
                     {changePasswordMutation.isPending ? "Changing..." : "Change Password"}
                   </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Notification Preferences Tab */}
+        <TabsContent value="notifications">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Bell className="h-5 w-5" />
+                <span>Notification Preferences</span>
+              </CardTitle>
+              <CardDescription>
+                Control how you receive notifications from the case management system.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleNotificationsSubmit} className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between space-x-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="emailNotifications" className="text-base font-medium">
+                        Email Notifications
+                      </Label>
+                      <p className="text-sm text-gray-500">
+                        Receive notifications via email when case updates are posted by your legal team.
+                      </p>
+                    </div>
+                    <Switch
+                      id="emailNotifications"
+                      checked={notificationData.emailNotifications}
+                      onCheckedChange={(checked) => 
+                        setNotificationData({ ...notificationData, emailNotifications: checked })
+                      }
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between space-x-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="pushNotifications" className="text-base font-medium">
+                        Push Notifications
+                      </Label>
+                      <p className="text-sm text-gray-500">
+                        Receive instant push notifications when messages are sent from your case management system.
+                      </p>
+                    </div>
+                    <Switch
+                      id="pushNotifications"
+                      checked={notificationData.pushNotifications}
+                      onCheckedChange={(checked) => 
+                        setNotificationData({ ...notificationData, pushNotifications: checked })
+                      }
+                    />
+                  </div>
+                </div>
+                
+                <div className="pt-4 border-t border-gray-200">
+                  <div className="flex justify-end">
+                    <Button
+                      type="submit"
+                      disabled={updateNotificationsMutation.isPending}
+                      className="bg-acclaim-teal hover:bg-acclaim-teal/90"
+                    >
+                      {updateNotificationsMutation.isPending ? "Saving..." : "Save Preferences"}
+                    </Button>
+                  </div>
                 </div>
               </form>
             </CardContent>
