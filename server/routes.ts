@@ -222,7 +222,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Case submission routes
-  app.post('/api/case-submissions', isAuthenticated, async (req: any, res) => {
+  app.post('/api/case-submissions', isAuthenticated, upload.array('documents'), async (req: any, res) => {
     try {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
@@ -254,6 +254,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const submission = await storage.createCaseSubmission(validatedData);
+
+      // Handle uploaded documents
+      const uploadedFiles = req.files as Express.Multer.File[];
+      if (uploadedFiles && uploadedFiles.length > 0) {
+        for (const file of uploadedFiles) {
+          // Store document info in case submission documents table
+          await storage.createCaseSubmissionDocument({
+            caseSubmissionId: submission.id,
+            fileName: file.originalname,
+            filePath: file.path,
+            fileSize: file.size,
+            fileType: file.mimetype,
+          });
+        }
+      }
+
       res.status(201).json(submission);
     } catch (error: any) {
       console.error("Error creating case submission:", error);
@@ -286,6 +302,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching case submissions by status:", error);
       res.status(500).json({ message: "Failed to fetch case submissions" });
+    }
+  });
+
+  // Get documents for a case submission
+  app.get('/api/admin/case-submissions/:id/documents', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const submissionId = parseInt(req.params.id);
+      const documents = await storage.getCaseSubmissionDocuments(submissionId);
+      res.json(documents);
+    } catch (error) {
+      console.error("Error fetching case submission documents:", error);
+      res.status(500).json({ message: "Failed to fetch documents" });
+    }
+  });
+
+  // Serve case submission document files
+  app.get('/api/admin/case-submissions/documents/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const documentId = parseInt(req.params.id);
+      const submissions = await storage.getCaseSubmissions();
+      
+      // Find the document across all submissions
+      let documentInfo = null;
+      for (const submission of submissions) {
+        const docs = await storage.getCaseSubmissionDocuments(submission.id);
+        documentInfo = docs.find(doc => doc.id === documentId);
+        if (documentInfo) break;
+      }
+      
+      if (!documentInfo) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+
+      // Serve the file
+      res.download(documentInfo.filePath, documentInfo.fileName);
+    } catch (error) {
+      console.error("Error serving document:", error);
+      res.status(500).json({ message: "Failed to serve document" });
     }
   });
 

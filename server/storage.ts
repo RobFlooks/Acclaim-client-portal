@@ -100,6 +100,24 @@ export interface IStorage {
   updateCaseSubmissionStatus(id: number, status: string, processedBy: string): Promise<CaseSubmission>;
   deleteCaseSubmission(id: number): Promise<void>; // Admin only - delete submission
   
+  // Case submission document operations
+  createCaseSubmissionDocument(doc: {
+    caseSubmissionId: number;
+    fileName: string;
+    filePath: string;
+    fileSize: number;
+    fileType: string;
+  }): Promise<void>;
+  getCaseSubmissionDocuments(caseSubmissionId: number): Promise<Array<{
+    id: number;
+    fileName: string;
+    filePath: string;
+    fileSize: number;
+    fileType: string;
+    uploadedAt: Date;
+  }>>;
+  deleteCaseSubmissionDocument(id: number): Promise<void>;
+  
   // Case activity operations
   getCaseActivities(caseId: number): Promise<CaseActivity[]>;
   addCaseActivity(activity: InsertCaseActivity): Promise<CaseActivity>;
@@ -2211,6 +2229,43 @@ export class DatabaseStorage implements IStorage {
     }
     
     return changes;
+  }
+
+  // Case submission document operations
+  async createCaseSubmissionDocument(doc: {
+    caseSubmissionId: number;
+    fileName: string;
+    filePath: string;
+    fileSize: number;
+    fileType: string;
+  }): Promise<void> {
+    await db.raw(`
+      INSERT INTO case_submission_documents (case_submission_id, file_name, file_path, file_size, file_type)
+      VALUES (?, ?, ?, ?, ?)
+    `, [doc.caseSubmissionId, doc.fileName, doc.filePath, doc.fileSize, doc.fileType]);
+  }
+
+  async getCaseSubmissionDocuments(caseSubmissionId: number): Promise<Array<{
+    id: number;
+    fileName: string;
+    filePath: string;
+    fileSize: number;
+    fileType: string;
+    uploadedAt: Date;
+  }>> {
+    const results = await db.raw(`
+      SELECT id, file_name as fileName, file_path as filePath, file_size as fileSize, 
+             file_type as fileType, uploaded_at as uploadedAt
+      FROM case_submission_documents 
+      WHERE case_submission_id = ?
+      ORDER BY uploaded_at DESC
+    `, [caseSubmissionId]);
+    
+    return results.rows || [];
+  }
+
+  async deleteCaseSubmissionDocument(id: number): Promise<void> {
+    await db.raw(`DELETE FROM case_submission_documents WHERE id = ?`, [id]);
   }
 }
 

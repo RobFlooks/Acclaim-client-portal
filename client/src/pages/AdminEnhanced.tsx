@@ -1164,6 +1164,7 @@ function CaseSubmissionsTab() {
               <TableHead>Contact</TableHead>
               <TableHead>Debt Amount</TableHead>
               <TableHead>Payment Terms</TableHead>
+              <TableHead>Documents</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Submitted</TableHead>
               <TableHead>Actions</TableHead>
@@ -1172,7 +1173,7 @@ function CaseSubmissionsTab() {
           <TableBody>
             {submissions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={11} className="text-center py-8">
+                <TableCell colSpan={12} className="text-center py-8">
                   <div className="flex flex-col items-center gap-2">
                     <FileText className="h-8 w-8 text-gray-400" />
                     <p className="text-gray-500">No case submissions found</p>
@@ -1271,6 +1272,19 @@ function CaseSubmissionsTab() {
                       {submission.lastOverdueDate && (
                         <div className="text-xs text-gray-500">Last: {submission.lastOverdueDate}</div>
                       )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      <div className="flex items-center gap-1">
+                        <FileText className="h-3 w-3 text-gray-400" />
+                        <span className="text-xs text-gray-500">
+                          Documents Available
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        Check details for files
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>

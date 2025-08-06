@@ -241,8 +241,32 @@ export default function SubmitCase() {
         organisationId: user?.organisationId || 1, // Use user's org or default
       };
 
-      console.log("Sending to API:", submissionData);
-      const response = await apiRequest("POST", "/api/case-submissions", submissionData);
+      // Create FormData to handle file uploads
+      const formData = new FormData();
+      
+      // Add all form fields to FormData
+      Object.entries(submissionData).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== '') {
+          formData.append(key, String(value));
+        }
+      });
+      
+      // Add uploaded files
+      uploadedFiles.forEach((file) => {
+        formData.append('documents', file);
+      });
+
+      console.log("Sending to API with files:", { 
+        formData: Object.fromEntries(formData.entries()),
+        fileCount: uploadedFiles.length 
+      });
+      
+      const response = await fetch('/api/case-submissions', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      
       console.log("API Response:", response.status, response.statusText);
       if (!response.ok) {
         const errorText = await response.text();
@@ -254,8 +278,11 @@ export default function SubmitCase() {
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Your case has been submitted successfully. We will review it and contact you soon.",
+        description: "Your case and documents have been submitted successfully. We will review them and contact you soon.",
       });
+      // Clear uploaded files and reset form
+      setUploadedFiles([]);
+      form.reset();
       // Redirect to dashboard
       setLocation('/');
     },
