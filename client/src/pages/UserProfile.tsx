@@ -509,9 +509,7 @@ export default function UserProfile() {
                       <Label htmlFor="emailNotifications" className="text-base font-medium">
                         Email Notifications
                       </Label>
-                      <p className="text-sm text-gray-500">
-                        Receive email notifications when messages and case updates are posted by your legal team.
-                      </p>
+                      <p className="text-sm text-gray-500">Receive email notifications when messages are posted by Acclaim.</p>
                     </div>
                     <Switch
                       id="emailNotifications"
