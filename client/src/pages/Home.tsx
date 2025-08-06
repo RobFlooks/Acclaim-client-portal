@@ -94,7 +94,7 @@ export default function Home() {
   const getSectionDescription = () => {
     switch (activeSection) {
       case "dashboard":
-        return `Welcome back, ${user?.firstName ? `${user.firstName}` : 'User'}`;
+        return `Welcome, ${user?.firstName ? `${user.firstName}` : 'User'}`;
       case "cases":
         return "View and manage all your active cases";
       case "messages":
@@ -104,7 +104,7 @@ export default function Home() {
       case "documents":
         return "Manage case documents and files";
       default:
-        return `Welcome back, ${user?.firstName ? `${user.firstName}` : 'User'}`;
+        return `Welcome, ${user?.firstName ? `${user.firstName}` : 'User'}`;
     }
   };
 
