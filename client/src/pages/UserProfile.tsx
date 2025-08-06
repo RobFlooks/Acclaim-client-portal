@@ -272,7 +272,6 @@ export default function UserProfile() {
           </div>
         </div>
       </div>
-
       {/* Password Change Required Alert */}
       {passwordStatus?.mustChangePassword && (
         <Card className="border-amber-200 bg-amber-50">
@@ -289,7 +288,6 @@ export default function UserProfile() {
           </CardContent>
         </Card>
       )}
-
       {/* Profile Overview */}
       <Card>
         <CardHeader>
@@ -353,7 +351,6 @@ export default function UserProfile() {
           )}
         </CardContent>
       </Card>
-
       {/* Main Settings Tabs */}
       <Tabs defaultValue="profile" className="space-y-4">
         <TabsList>
@@ -520,9 +517,7 @@ export default function UserProfile() {
                       <Label htmlFor="emailNotifications" className="text-base font-medium">
                         Email Notifications
                       </Label>
-                      <p className="text-sm text-gray-500">
-                        Receive notifications via email when case updates are posted by your legal team.
-                      </p>
+                      <p className="text-sm text-gray-500">Receive notifications via email when case updates are posted by Acclaim.</p>
                     </div>
                     <Switch
                       id="emailNotifications"
