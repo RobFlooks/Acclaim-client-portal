@@ -491,7 +491,7 @@ export default function SubmitCase() {
                   name="organisationId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Submitting on behalf of claimant</FormLabel>
+                      <FormLabel>Submitting on behalf of claimant <span className="text-red-500">*</span></FormLabel>
                       <Select 
                         onValueChange={(value) => field.onChange(parseInt(value))} 
                         value={field.value && field.value > 0 ? String(field.value) : ""}
@@ -529,7 +529,7 @@ export default function SubmitCase() {
                   name="clientName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Your Name</FormLabel>
+                      <FormLabel>Your Name <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Enter your full name" />
                       </FormControl>
@@ -542,7 +542,7 @@ export default function SubmitCase() {
                   name="clientEmail"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Your Email Address</FormLabel>
+                      <FormLabel>Your Email Address <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Input {...field} type="email" placeholder="Enter your email" />
                       </FormControl>
@@ -582,7 +582,7 @@ export default function SubmitCase() {
                 name="debtorType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Type of Debtor</FormLabel>
+                    <FormLabel>Type of Debtor <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <RadioGroup
                         onValueChange={(value) => {
@@ -641,7 +641,7 @@ export default function SubmitCase() {
                     name="organisationName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Organisation Name</FormLabel>
+                        <FormLabel>Organisation Name <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <Input 
                             key={`org-name-${debtorType}`}
@@ -691,7 +691,7 @@ export default function SubmitCase() {
                     name="individualType"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Is this debtor an individual or business?</FormLabel>
+                        <FormLabel>Is this debtor an individual or business? <span className="text-red-500">*</span></FormLabel>
                         <FormControl>
                           <RadioGroup
                             onValueChange={(value) => {
@@ -806,7 +806,7 @@ export default function SubmitCase() {
                   name="addressLine1"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Address Line 1</FormLabel>
+                      <FormLabel>Address Line 1 <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Enter address line 1" />
                       </FormControl>
@@ -835,7 +835,7 @@ export default function SubmitCase() {
                   name="city"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>City</FormLabel>
+                      <FormLabel>City <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Enter city" />
                       </FormControl>
@@ -848,7 +848,7 @@ export default function SubmitCase() {
                   name="county"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>County</FormLabel>
+                      <FormLabel>County <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Enter county" />
                       </FormControl>
@@ -861,7 +861,7 @@ export default function SubmitCase() {
                   name="postcode"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Postcode</FormLabel>
+                      <FormLabel>Postcode <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Enter postcode" />
                       </FormControl>
@@ -945,7 +945,7 @@ export default function SubmitCase() {
                 name="debtDetails"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Details of Debt</FormLabel>
+                    <FormLabel>Details of Debt <span className="text-red-500">*</span></FormLabel>
                     <FormDescription>
                       What is the debt for? (e.g., goods sold and delivered on credit terms)
                     </FormDescription>
@@ -967,7 +967,7 @@ export default function SubmitCase() {
                   name="totalDebtAmount"
                   render={({ field }) => (
                     <FormItem className="md:col-span-2">
-                      <FormLabel>Total Debt Due to You as of Today</FormLabel>
+                      <FormLabel>Total Debt Due to You as of Today <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <Input 
                           {...field} 
@@ -1011,7 +1011,7 @@ export default function SubmitCase() {
                 name="paymentTermsType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Terms of Payment</FormLabel>
+                    <FormLabel>Terms of Payment <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <RadioGroup
                         onValueChange={(value) => {
@@ -1090,7 +1090,7 @@ export default function SubmitCase() {
                   name="singleInvoice"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Does the debt relate to a single invoice?</FormLabel>
+                      <FormLabel>Does the debt relate to a single invoice? <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
                         <RadioGroup
                           onValueChange={(value) => {
@@ -1128,7 +1128,7 @@ export default function SubmitCase() {
                       name="firstOverdueDate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Invoice Date</FormLabel>
+                          <FormLabel>Invoice Date <span className="text-red-500">*</span></FormLabel>
                           <FormControl>
                             <Input {...field} type="date" />
                           </FormControl>
@@ -1144,7 +1144,7 @@ export default function SubmitCase() {
                       name="firstOverdueDate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>First Overdue Invoice Date</FormLabel>
+                          <FormLabel>First Overdue Invoice Date <span className="text-red-500">*</span></FormLabel>
                           <FormControl>
                             <Input {...field} type="date" />
                           </FormControl>
@@ -1157,7 +1157,7 @@ export default function SubmitCase() {
                       name="lastOverdueDate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Last Overdue Invoice Date</FormLabel>
+                          <FormLabel>Last Overdue Invoice Date <span className="text-red-500">*</span></FormLabel>
                           <FormControl>
                             <Input {...field} type="date" />
                           </FormControl>
