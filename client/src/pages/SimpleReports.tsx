@@ -9,8 +9,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 
 interface CrossOrgPerformance {
-  organisationId: number;
-  organisationName: string;
+  organizationId: number;
+  organizationName: string;
   totalCases: string;
   activeCases: string;
   closedCases: string;
@@ -137,8 +137,8 @@ export default function SimpleReports() {
                     </TableHeader>
                     <TableBody>
                       {crossOrgData.map((org: CrossOrgPerformance) => (
-                        <TableRow key={org.organisationId}>
-                          <TableCell className="font-medium">{org.organisationName}</TableCell>
+                        <TableRow key={org.organizationId}>
+                          <TableCell className="font-medium">{org.organizationName}</TableCell>
                           <TableCell>{org.totalCases}</TableCell>
                           <TableCell>{org.activeCases}</TableCell>
                           <TableCell>{org.closedCases}</TableCell>

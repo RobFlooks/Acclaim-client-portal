@@ -31,6 +31,7 @@ function Router() {
       <ProtectedRoute path="/profile" component={UserProfile} />
       <ProtectedRoute path="/system-monitoring" component={SystemMonitoring} />
       <ProtectedRoute path="/advanced-reports" component={SimpleReports} />
+      <ProtectedRoute path="/reports" component={SimpleReports} />
       <ProtectedRoute path="/audit-management" component={AuditManagement} />
       <ProtectedRoute path="/case-summary-report" component={CaseSummaryReport} />
       <ProtectedRoute path="/recovery-analysis-report" component={RecoveryAnalysisReport} />
