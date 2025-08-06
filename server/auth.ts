@@ -67,7 +67,8 @@ export function setupAuth(app: Express) {
       },
       async (email, password, done) => {
         try {
-          const user = await storage.getUserByEmail(email);
+          // Convert email to lowercase for case-insensitive lookup
+          const user = await storage.getUserByEmail(email.toLowerCase());
           if (!user) {
             return done(null, false, { message: "Invalid email or password" });
           }
