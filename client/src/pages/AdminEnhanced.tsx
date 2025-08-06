@@ -1303,6 +1303,7 @@ function CaseSubmissionsTab() {
               </TableHead>
               <TableHead>Case Name</TableHead>
               <TableHead>Client</TableHead>
+              <TableHead>Organisation</TableHead>
               <TableHead>Debtor Type</TableHead>
               <TableHead>Debtor Details</TableHead>
               <TableHead>Address</TableHead>
@@ -1318,7 +1319,7 @@ function CaseSubmissionsTab() {
           <TableBody>
             {submissions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={12} className="text-center py-8">
+                <TableCell colSpan={13} className="text-center py-8">
                   <div className="flex flex-col items-center gap-2">
                     <FileText className="h-8 w-8 text-gray-400" />
                     <p className="text-gray-500">No case submissions found</p>
@@ -1347,6 +1348,12 @@ function CaseSubmissionsTab() {
                       <div className="font-medium truncate">{submission.clientName}</div>
                       <div className="text-gray-500 truncate">{submission.clientEmail}</div>
                       {submission.clientPhone && <div className="text-gray-500 truncate">{submission.clientPhone}</div>}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm max-w-[120px]">
+                      <div className="font-medium truncate">{(submission as any).organisationName || 'Unknown'}</div>
+                      <div className="text-xs text-gray-500">ID: {submission.organisationId}</div>
                     </div>
                   </TableCell>
                   <TableCell>

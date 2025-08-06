@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
+import type { Organization } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,9 @@ import { useLocation } from "wouter";
 
 // Base schema without conditional validation
 const baseSubmitCaseSchema = z.object({
+  // Organisation selection
+  organisationId: z.number().min(1, "Please select an organisation"),
+  
   // Client details (pre-populated)
   clientName: z.string().min(1, "Name is required"),
   clientEmail: z.string().email("Invalid email address"),
@@ -114,9 +118,16 @@ export default function SubmitCase() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submissionId, setSubmissionId] = useState<number | null>(null);
 
+  // Fetch user's accessible organisations
+  const { data: organisations = [], isLoading: orgsLoading } = useQuery<Organization[]>({
+    queryKey: ["/api/user/organisations"],
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
   const form = useForm<SubmitCaseForm>({
     resolver: zodResolver(submitCaseSchema),
     defaultValues: {
+      organisationId: 0, // Will be set by useEffect
       clientName: user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() : "",
       clientEmail: user?.email || "",
       clientPhone: user?.phone || "",
@@ -151,6 +162,19 @@ export default function SubmitCase() {
       additionalInfo: "",
     },
   });
+
+  // Auto-select organisation if user has only one, or reset if multiple
+  useEffect(() => {
+    if (!orgsLoading && organisations.length > 0) {
+      if (organisations.length === 1) {
+        // Auto-select if user has only one organisation
+        form.setValue("organisationId", organisations[0].id);
+      } else {
+        // Reset to 0 if multiple organisations (user must choose)
+        form.setValue("organisationId", 0);
+      }
+    }
+  }, [organisations, orgsLoading, form]);
 
   const submitCaseMutation = useMutation({
     mutationFn: async (data: SubmitCaseForm) => {
@@ -262,7 +286,7 @@ export default function SubmitCase() {
         additionalInfo: data.additionalInfo || '',
         
         // System fields
-        organisationId: user?.organisationId || 1, // Use user's org or default
+        organisationId: data.organisationId, // Use selected organisation
       };
 
       // Create FormData to handle file uploads
@@ -441,6 +465,45 @@ export default function SubmitCase() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Organisation Selection */}
+              {!orgsLoading && organisations.length > 1 && (
+                <FormField
+                  control={form.control}
+                  name="organisationId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Submitting on behalf of</FormLabel>
+                      <Select 
+                        onValueChange={(value) => field.onChange(parseInt(value))} 
+                        value={field.value > 0 ? String(field.value) : ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Please select an organisation" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {organisations.map((org) => (
+                            <SelectItem key={org.id} value={String(org.id)}>
+                              {org.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              
+              {!orgsLoading && organisations.length === 1 && (
+                <div className="p-3 bg-gray-50 rounded-md border">
+                  <div className="text-sm font-medium text-gray-700">
+                    Submitting on behalf of: <span className="text-gray-900">{organisations[0].name}</span>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}

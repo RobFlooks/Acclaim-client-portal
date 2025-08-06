@@ -1411,6 +1411,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user's accessible organisations
+  app.get('/api/user/organisations', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const organisations = [];
+      const orgIds = new Set<number>();
+      
+      // Add legacy organisation if exists
+      if (user.organisationId) {
+        orgIds.add(user.organisationId);
+      }
+      
+      // Add junction table organisations
+      const userOrgs = await storage.getUserOrganisations(userId);
+      userOrgs.forEach(uo => orgIds.add(uo.organisationId));
+      
+      // Fetch organisation details
+      for (const orgId of orgIds) {
+        const org = await storage.getOrganisation(orgId);
+        if (org) {
+          organisations.push(org);
+        }
+      }
+
+      res.json(organisations);
+    } catch (error) {
+      console.error("Error fetching user organisations:", error);
+      res.status(500).json({ message: "Failed to fetch user organisations" });
+    }
+  });
+
   // System monitoring endpoints
   app.get("/api/admin/system/analytics", isAuthenticated, isAdmin, async (req, res) => {
     try {
