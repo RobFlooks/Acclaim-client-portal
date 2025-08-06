@@ -1078,12 +1078,11 @@ function CaseSubmissionsTab() {
 
     // Define comprehensive CSV headers to capture all form data
     const headers = [
-      'Account Number',
+      'Submission ID',
       'Case Name',
       'Client Name',
       'Client Email', 
       'Client Phone',
-      'Creditor Name',
       'Debtor Type',
       'Individual Type',
       'Trading Name',
@@ -1112,11 +1111,7 @@ function CaseSubmissionsTab() {
       'First Overdue Date',
       'Last Overdue Date',
       'Additional Info',
-      'Original Amount',
-      'Outstanding Amount',
-      'Stage',
-      'Organisation',
-      'External Reference',
+      'Organisation ID',
       'Status',
       'Submitted By',
       'Submitted Date',
@@ -1124,61 +1119,48 @@ function CaseSubmissionsTab() {
       'Processed Date'
     ];
 
-    // Convert submissions to CSV rows with comprehensive data
+    // Convert submissions to CSV rows using actual database fields
     const csvRows = [
       headers.join(','), // Header row
       ...submissions.map((submission: CaseSubmission) => {
-        // Parse notes to extract comprehensive form data
-        const notes = submission.notes || '';
-        const parseField = (fieldName: string) => {
-          const regex = new RegExp(`${fieldName}:\\s*([^\\n]+)`, 'i');
-          const match = notes.match(regex);
-          return match ? match[1].trim() : '';
-        };
-
         return [
-          `"${submission.accountNumber || ''}"`,
+          `"${submission.id || ''}"`,
           `"${submission.caseName || ''}"`,
-          `"${parseField('Client') || ''}"`,
-          `"${parseField('Client Email') || parseField('Client') ? parseField('Client').match(/\(([^,]+),/) ? parseField('Client').match(/\(([^,]+),/)[1] : '' : ''}"`,
-          `"${parseField('Client Phone') || parseField('Client') ? parseField('Client').match(/,\s*([^)]+)\)/) ? parseField('Client').match(/,\s*([^)]+)\)/)[1] : '' : ''}"`,
-          `"${parseField('Creditor') || ''}"`,
+          `"${submission.clientName || ''}"`,
+          `"${submission.clientEmail || ''}"`,
+          `"${submission.clientPhone || ''}"`,
           `"${submission.debtorType || ''}"`,
-          `"${parseField('Individual Type') || ''}"`,
-          `"${parseField('Trading Name') || ''}"`,
-          `"${parseField('Organisation') || ''}"`,
-          `"${parseField('Organisation Trading Name') || ''}"`,
-          `"${parseField('Company Number') || ''}"`,
-          `"${parseField('Principal Salutation') || ''}"`,
-          `"${parseField('Principal First Name') || ''}"`,
-          `"${parseField('Principal Last Name') || ''}"`,
-          `"${submission.debtorAddress ? submission.debtorAddress.split(',')[0] || '' : ''}"`,
-          `"${submission.debtorAddress ? submission.debtorAddress.split(',')[1] || '' : ''}"`,
-          `"${submission.debtorAddress ? submission.debtorAddress.split(',')[2] || '' : ''}"`,
-          `"${submission.debtorAddress ? submission.debtorAddress.split(',')[3] || '' : ''}"`,
-          `"${submission.debtorAddress ? submission.debtorAddress.split(',')[4] || '' : ''}"`,
-          `"${submission.debtorPhone || parseField('Main Phone') || ''}"`,
-          `"${parseField('Alt Phone') || ''}"`,
-          `"${submission.debtorEmail || parseField('Main Email') || ''}"`,
-          `"${parseField('Alt Email') || ''}"`,
-          `"${parseField('Debt Details') || ''}"`,
-          `"${submission.originalAmount || ''}"`,
-          `"${parseField('Currency') || 'GBP'}"`,
-          `"${parseField('Payment Terms') ? parseField('Payment Terms').includes('days from invoice') ? 'days_from_invoice' : parseField('Payment Terms').includes('days from end') ? 'days_from_month_end' : 'other' : ''}"`,
-          `"${parseField('Payment Terms') ? parseField('Payment Terms').match(/(\d+)\s*days/) ? parseField('Payment Terms').match(/(\d+)\s*days/)[1] : '' : ''}"`,
-          `"${parseField('Payment Terms') && !parseField('Payment Terms').includes('days from') ? parseField('Payment Terms') : ''}"`,
-          `"${parseField('Single Invoice') || ''}"`,
-          `"${parseField('First Overdue') || ''}"`,
-          `"${parseField('Last Overdue') || ''}"`,
-          `"${parseField('Additional Info') || ''}"`,
-          `"${submission.originalAmount || ''}"`,
-          `"${submission.outstandingAmount || ''}"`,
-          `"${submission.stage || ''}"`,
+          `"${submission.individualType || ''}"`,
+          `"${submission.tradingName || ''}"`,
           `"${submission.organisationName || ''}"`,
-          `"${submission.externalRef || ''}"`,
+          `"${submission.organisationTradingName || ''}"`,
+          `"${submission.companyNumber || ''}"`,
+          `"${submission.principalSalutation || ''}"`,
+          `"${submission.principalFirstName || ''}"`,
+          `"${submission.principalLastName || ''}"`,
+          `"${submission.addressLine1 || ''}"`,
+          `"${submission.addressLine2 || ''}"`,
+          `"${submission.city || ''}"`,
+          `"${submission.county || ''}"`,
+          `"${submission.postcode || ''}"`,
+          `"${submission.mainPhone || ''}"`,
+          `"${submission.altPhone || ''}"`,
+          `"${submission.mainEmail || ''}"`,
+          `"${submission.altEmail || ''}"`,
+          `"${submission.debtDetails || ''}"`,
+          `"${submission.totalDebtAmount || ''}"`,
+          `"${submission.currency || 'GBP'}"`,
+          `"${submission.paymentTermsType || ''}"`,
+          `"${submission.paymentTermsDays || ''}"`,
+          `"${submission.paymentTermsOther || ''}"`,
+          `"${submission.singleInvoice || ''}"`,
+          `"${submission.firstOverdueDate || ''}"`,
+          `"${submission.lastOverdueDate || ''}"`,
+          `"${submission.additionalInfo || ''}"`,
+          `"${submission.organisationId || ''}"`,
           `"${submission.status || ''}"`,
           `"${submission.submittedBy || ''}"`,
-          `"${new Date(submission.submittedAt).toLocaleDateString('en-GB')}"`,
+          `"${submission.submittedAt ? new Date(submission.submittedAt).toLocaleDateString('en-GB') : ''}"`,
           `"${submission.processedBy || ''}"`,
           `"${submission.processedAt ? new Date(submission.processedAt).toLocaleDateString('en-GB') : ''}"`
         ].join(',');
