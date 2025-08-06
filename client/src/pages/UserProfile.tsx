@@ -497,9 +497,7 @@ export default function UserProfile() {
                 <Bell className="h-5 w-5" />
                 <span>Notification Preferences</span>
               </CardTitle>
-              <CardDescription>
-                Control how you receive email notifications from the case management system.
-              </CardDescription>
+              <CardDescription>Control how you receive email notifications.</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleNotificationsSubmit} className="space-y-6">
