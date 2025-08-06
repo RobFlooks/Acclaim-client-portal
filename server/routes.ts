@@ -936,13 +936,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           payments.push(...casePayments);
         }
       } else {
-        // Regular users can only access payments from their organisation's cases
-        if (!user.organisationId) {
-          return res.status(404).json({ message: "User organisation not found" });
-        }
-        
-        const cases = await storage.getCasesForOrganisation(user.organisationId);
-        for (const case_ of cases) {
+        // Regular users can access payments from cases across all their assigned organisations
+        const userCases = await storage.getCasesForUser(userId);
+        for (const case_ of userCases) {
           const casePayments = await storage.getPaymentsForCase(case_.id);
           payments.push(...casePayments);
         }
