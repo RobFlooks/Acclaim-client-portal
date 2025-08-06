@@ -1,278 +1,387 @@
 # Azure Migration Guide for Acclaim Credit Management System
 
 ## Overview
+This guide will help you migrate your Acclaim Credit Management System from Replit to Microsoft Azure. The system consists of a React frontend, Express.js backend, PostgreSQL database, and file upload functionality.
 
-Your application is well-architected for cloud deployment and will work excellently on Azure. The system is already production-ready with proper database connectivity, session management, and static file serving.
+## Prerequisites
+- Azure subscription
+- Azure CLI installed locally
+- Node.js 18+ installed locally
+- Git repository for your code
 
-## ✅ What Works Out of the Box
+## Architecture on Azure
+- **Frontend**: Azure Static Web Apps
+- **Backend**: Azure App Service
+- **Database**: Azure Database for PostgreSQL
+- **File Storage**: Azure Blob Storage
+- **Email**: SendGrid (already configured)
 
-- **Modern Node.js Architecture**: Uses Express with TypeScript - fully compatible with Azure App Service
-- **PostgreSQL Database**: Works perfectly with Azure Database for PostgreSQL
-- **Static File Serving**: Built-in production static file serving for React frontend
-- **Environment Variable Configuration**: Already uses environment variables for all configuration
-- **Session Management**: PostgreSQL-backed sessions will work seamlessly
-- **File Uploads**: Local file storage works on Azure App Service (with considerations below)
+## Step 1: Prepare Your Code Repository
 
-## Azure Services Required
+### 1.1 Create a Git Repository
+```bash
+# If not already done, initialize git in your project
+git init
+git add .
+git commit -m "Initial commit"
 
-### 1. Azure App Service (Web App)
-- **Service**: App Service with Node.js runtime
-- **SKU**: B1 Basic or higher (supports custom domains, SSL)
-- **Configuration**: 
-  - Runtime: Node.js 20 LTS
-  - Startup Command: `npm start`
-
-### 2. Azure Database for PostgreSQL
-- **Service**: Azure Database for PostgreSQL - Flexible Server
-- **SKU**: B1ms (1 vCore, 2GB RAM) minimum for production
-- **Configuration**: 
-  - PostgreSQL version 14 or higher
-  - SSL enforcement enabled
-
-### 3. Azure Storage Account (Optional but Recommended)
-- **Service**: Azure Blob Storage
-- **Purpose**: Store uploaded documents instead of local filesystem
-- **Benefits**: Better scalability, backup, and CDN integration
-
-## Migration Steps
-
-### Phase 1: Database Migration
-
-1. **Export Current Database**
-   ```bash
-   # Export from current Neon database
-   pg_dump $DATABASE_URL > acclaim_backup.sql
-   ```
-
-2. **Create Azure PostgreSQL Database**
-   - Create Azure Database for PostgreSQL Flexible Server
-   - Configure firewall rules to allow your IP
-   - Create database: `acclaim_credit_management`
-
-3. **Import Data**
-   ```bash
-   # Import to Azure PostgreSQL
-   psql "host=your-server.postgres.database.azure.com port=5432 dbname=acclaim_credit_management user=your-admin@your-server password=your-password sslmode=require" < acclaim_backup.sql
-   ```
-
-### Phase 2: Application Deployment
-
-1. **Prepare Application**
-   - Your build process is already configured: `npm run build`
-   - Production serving is handled by Express: `npm start`
-
-2. **Deploy to Azure App Service**
-   
-   **Option A: GitHub Actions (Recommended)**
-   ```yaml
-   # .github/workflows/azure-deploy.yml
-   name: Deploy to Azure
-   on:
-     push:
-       branches: [main]
-   
-   jobs:
-     deploy:
-       runs-on: ubuntu-latest
-       steps:
-         - uses: actions/checkout@v4
-         - uses: actions/setup-node@v4
-           with:
-             node-version: '20'
-         - run: npm ci
-         - run: npm run build
-         - uses: azure/webapps-deploy@v2
-           with:
-             app-name: 'acclaim-credit-management'
-             publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-   ```
-
-   **Option B: Azure CLI**
-   ```bash
-   # Build the application
-   npm run build
-   
-   # Deploy to Azure
-   az webapp deployment source config-zip \
-     --resource-group acclaim-rg \
-     --name acclaim-credit-management \
-     --src acclaim-app.zip
-   ```
-
-3. **Configure Environment Variables in Azure**
-   ```bash
-   az webapp config appsettings set \
-     --resource-group acclaim-rg \
-     --name acclaim-credit-management \
-     --settings \
-     DATABASE_URL="postgresql://user:password@your-server.postgres.database.azure.com:5432/acclaim_credit_management?sslmode=require" \
-     SESSION_SECRET="your-secure-session-secret" \
-     NODE_ENV="production" \
-     SMTP_HOST="smtp.sendgrid.net" \
-     SMTP_PORT="587" \
-     SMTP_USER="apikey" \
-     SMTP_PASSWORD="your-sendgrid-api-key"
-   ```
-
-## Environment Variables for Azure
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `DATABASE_URL` | Azure PostgreSQL connection string | `postgresql://user:pass@server.postgres.database.azure.com:5432/dbname?sslmode=require` |
-| `SESSION_SECRET` | Session encryption key | `your-secure-random-string` |
-| `NODE_ENV` | Environment | `production` |
-| `PORT` | Server port (Azure sets automatically) | `8080` |
-| `SENDGRID_API_KEY` | SendGrid API key | `SG.xxxxx` |
-| `SMTP_HOST` | SMTP server | `smtp.sendgrid.net` |
-| `SMTP_PORT` | SMTP port | `587` |
-| `SMTP_USER` | SMTP username | `apikey` |
-| `SMTP_PASSWORD` | SMTP password | Your SendGrid API key |
-
-## File Storage Considerations
-
-### Current Setup (Local Filesystem)
-- Files stored in `/uploads` directory
-- Works on Azure App Service but files are ephemeral
-- Files lost during app restarts/deployments
-
-### Recommended: Azure Blob Storage
-```typescript
-// Add to package.json dependencies
-"@azure/storage-blob": "^12.17.0"
-
-// Example blob storage integration
-import { BlobServiceClient } from '@azure/storage-blob';
-
-const blobServiceClient = BlobServiceClient.fromConnectionString(
-  process.env.AZURE_STORAGE_CONNECTION_STRING!
-);
+# Push to GitHub, GitLab, or Azure DevOps
+git remote add origin <your-repository-url>
+git push -u origin main
 ```
 
-## Database Schema Migration
+### 1.2 Update Configuration Files
 
-Your current schema will work perfectly. Run the schema push after connecting to Azure PostgreSQL:
+Create a production configuration file:
 
-```bash
-# Set the DATABASE_URL to your Azure PostgreSQL
-export DATABASE_URL="postgresql://user:pass@server.postgres.database.azure.com:5432/dbname?sslmode=require"
-
-# Push schema to Azure database
-npm run db:push
+**azure-deploy.json**
+```json
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "client/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/server/index.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/client/dist/$1"
+    }
+  ]
+}
 ```
 
-## Production Optimisations
+**package.json** (update scripts):
+```json
+{
+  "scripts": {
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "cd client && npm run build",
+    "build:server": "cd server && tsc",
+    "start": "node server/dist/index.js",
+    "start:dev": "npm run dev"
+  }
+}
+```
 
-### 1. Enable Application Insights
+## Step 2: Set Up Azure Database for PostgreSQL
+
+### 2.1 Create PostgreSQL Server
 ```bash
+# Login to Azure
+az login
+
+# Create resource group
+az group create --name acclaim-rg --location "UK South"
+
+# Create PostgreSQL server
+az postgres server create \
+  --resource-group acclaim-rg \
+  --name acclaim-db-server \
+  --location "UK South" \
+  --admin-user acclaim_admin \
+  --admin-password <secure-password> \
+  --sku-name GP_Gen5_2 \
+  --version 13
+```
+
+### 2.2 Configure Firewall Rules
+```bash
+# Allow Azure services
+az postgres server firewall-rule create \
+  --resource-group acclaim-rg \
+  --server acclaim-db-server \
+  --name AllowAzureServices \
+  --start-ip-address 0.0.0.0 \
+  --end-ip-address 0.0.0.0
+
+# Allow your IP (for setup)
+az postgres server firewall-rule create \
+  --resource-group acclaim-rg \
+  --server acclaim-db-server \
+  --name AllowMyIP \
+  --start-ip-address <your-ip> \
+  --end-ip-address <your-ip>
+```
+
+### 2.3 Create Database
+```bash
+# Create the database
+az postgres db create \
+  --resource-group acclaim-rg \
+  --server-name acclaim-db-server \
+  --name acclaim_db
+```
+
+### 2.4 Migration Script
+Create a migration script to transfer your data:
+
+**migrate-to-azure.sql**
+```sql
+-- Export from your current database and import to Azure
+-- Use pg_dump to export your current database
+-- Then import using psql to Azure PostgreSQL
+```
+
+## Step 3: Set Up Azure App Service (Backend)
+
+### 3.1 Create App Service Plan
+```bash
+az appservice plan create \
+  --name acclaim-plan \
+  --resource-group acclaim-rg \
+  --location "UK South" \
+  --sku B1 \
+  --is-linux
+```
+
+### 3.2 Create Web App
+```bash
+az webapp create \
+  --resource-group acclaim-rg \
+  --plan acclaim-plan \
+  --name acclaim-api \
+  --runtime "NODE|18-lts" \
+  --deployment-local-git
+```
+
+### 3.3 Configure Environment Variables
+```bash
+# Set environment variables
 az webapp config appsettings set \
   --resource-group acclaim-rg \
-  --name acclaim-credit-management \
+  --name acclaim-api \
   --settings \
-  APPINSIGHTS_INSTRUMENTATIONKEY="your-instrumentation-key"
+    NODE_ENV=production \
+    DATABASE_URL="postgresql://acclaim_admin:<password>@acclaim-db-server.postgres.database.azure.com:5432/acclaim_db?sslmode=require" \
+    SESSION_SECRET="<generate-secure-secret>" \
+    SENDGRID_API_KEY="<your-sendgrid-key>" \
+    PORT=8000
 ```
 
-### 2. Configure Custom Domain
+## Step 4: Set Up Azure Static Web Apps (Frontend)
+
+### 4.1 Create Static Web App
 ```bash
-# Add custom domain
-az webapp config hostname add \
+az staticwebapp create \
+  --name acclaim-frontend \
   --resource-group acclaim-rg \
-  --webapp-name acclaim-credit-management \
-  --hostname acclaim.yourdomain.com
-
-# Enable SSL
-az webapp config ssl bind \
-  --resource-group acclaim-rg \
-  --name acclaim-credit-management \
-  --certificate-thumbprint your-cert-thumbprint \
-  --ssl-type SNI
+  --source <your-github-repo-url> \
+  --location "West Europe" \
+  --branch main \
+  --app-location "client" \
+  --api-location "server" \
+  --output-location "dist"
 ```
 
-### 3. Scale Configuration
+### 4.2 Configure Build Settings
+Create **.github/workflows/azure-static-web-apps.yml**:
+```yaml
+name: Azure Static Web Apps CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - main
+
+jobs:
+  build_and_deploy_job:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+    name: Build and Deploy Job
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Build And Deploy
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          app_location: "client"
+          api_location: "server"
+          output_location: "dist"
+```
+
+## Step 5: Set Up Azure Blob Storage (File Uploads)
+
+### 5.1 Create Storage Account
 ```bash
-# Scale up to production tier
-az appservice plan update \
+az storage account create \
+  --name acclaimstorage \
   --resource-group acclaim-rg \
-  --name acclaim-service-plan \
-  --sku P1V2
-
-# Enable auto-scaling
-az monitor autoscale create \
-  --resource-group acclaim-rg \
-  --name acclaim-autoscale \
-  --resource acclaim-credit-management \
-  --resource-type Microsoft.Web/sites \
-  --min-count 1 \
-  --max-count 3 \
-  --count 1
+  --location "UK South" \
+  --sku Standard_LRS
 ```
 
-## Security Considerations
+### 5.2 Create Container
+```bash
+az storage container create \
+  --name uploads \
+  --account-name acclaimstorage \
+  --public-access off
+```
 
-### 1. Network Security
-- Enable Azure App Service virtual network integration
-- Configure Azure Database for PostgreSQL to only allow connections from your App Service
+### 5.3 Update File Upload Code
+You'll need to modify your file upload functionality to use Azure Blob Storage instead of local storage.
 
-### 2. Managed Identity
-- Use Azure Managed Identity for database connections
-- Eliminate password-based authentication
+**server/azure-storage.ts**
+```typescript
+import { BlobServiceClient } from '@azure/storage-blob';
 
-### 3. Key Vault Integration
-- Store sensitive configuration in Azure Key Vault
-- Reference secrets from App Service configuration
+const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
+const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
 
-## Monitoring and Backup
+export async function uploadToBlob(fileName: string, fileBuffer: Buffer) {
+  const containerClient = blobServiceClient.getContainerClient('uploads');
+  const blockBlobClient = containerClient.getBlockBlobClient(fileName);
+  
+  await blockBlobClient.upload(fileBuffer, fileBuffer.length);
+  return blockBlobClient.url;
+}
+```
 
-### 1. Database Backup
-- Azure Database for PostgreSQL provides automatic backups
-- Configure point-in-time restore
-- Set up cross-region backup for disaster recovery
+## Step 6: Configure Domain and SSL
 
-### 2. Application Monitoring
-- Enable Application Insights for performance monitoring
-- Set up alerts for high error rates or slow response times
-- Monitor database connection health
+### 6.1 Custom Domain (Optional)
+```bash
+# Add custom domain to Static Web App
+az staticwebapp hostname set \
+  --name acclaim-frontend \
+  --resource-group acclaim-rg \
+  --hostname yourdomain.co.uk
+```
 
-## Cost Estimation (Monthly)
+### 6.2 SSL Certificate
+Azure automatically provides SSL certificates for custom domains.
 
-| Service | SKU | Estimated Cost |
-|---------|-----|----------------|
-| App Service | B1 Basic | £40 |
-| PostgreSQL | B1ms | £45 |
-| Storage Account | Standard | £5 |
-| Application Insights | Basic | £15 |
-| **Total** | | **£105/month** |
+## Step 7: Environment Variables Setup
 
-## Migration Checklist
+### Frontend Environment Variables
+Create **client/.env.production**:
+```
+VITE_API_URL=https://acclaim-api.azurewebsites.net
+```
 
-- [ ] Export current database
-- [ ] Create Azure resource group
-- [ ] Create Azure Database for PostgreSQL
-- [ ] Import database to Azure
-- [ ] Create Azure App Service
-- [ ] Configure environment variables
-- [ ] Deploy application code
-- [ ] Test database connectivity
-- [ ] Test file uploads
-- [ ] Configure custom domain
-- [ ] Enable SSL certificate
-- [ ] Set up monitoring
-- [ ] Configure backup strategy
-- [ ] Update DNS records
+### Backend Environment Variables
+Set in Azure App Service:
+- `DATABASE_URL`: PostgreSQL connection string
+- `SESSION_SECRET`: Secure random string
+- `SENDGRID_API_KEY`: Your SendGrid API key
+- `AZURE_STORAGE_CONNECTION_STRING`: Blob storage connection string
+- `NODE_ENV`: production
 
-## Support and Troubleshooting
+## Step 8: Database Migration
 
-### Common Issues
+### 8.1 Export Current Database
+```bash
+# On your current system
+pg_dump $DATABASE_URL > acclaim_backup.sql
+```
 
-1. **Database Connection Errors**
-   - Ensure SSL mode is enabled in connection string
-   - Check firewall rules in Azure PostgreSQL
+### 8.2 Import to Azure PostgreSQL
+```bash
+# Connect to Azure PostgreSQL and import
+psql "postgresql://acclaim_admin:<password>@acclaim-db-server.postgres.database.azure.com:5432/acclaim_db?sslmode=require" < acclaim_backup.sql
+```
 
-2. **File Upload Issues**
-   - Verify `/tmp` directory permissions
-   - Consider migrating to Azure Blob Storage
+## Step 9: Deploy and Test
 
-3. **Session Issues**
-   - Ensure SESSION_SECRET is consistent across deployments
-   - Verify PostgreSQL session store connectivity
+### 9.1 Deploy Backend
+```bash
+# Add Azure as remote
+git remote add azure <deployment-url-from-app-service>
 
-Your application is excellently structured for Azure deployment. The main considerations are configuring the Azure services and updating the database connection string. Everything else should work seamlessly!
+# Deploy
+git push azure main
+```
+
+### 9.2 Deploy Frontend
+The frontend will automatically deploy via GitHub Actions when you push to main.
+
+### 9.3 Test Application
+1. Visit your Static Web App URL
+2. Test all functionality:
+   - User authentication
+   - Case management
+   - File uploads
+   - Email notifications
+   - Admin panel
+
+## Step 10: Monitoring and Maintenance
+
+### 10.1 Set Up Application Insights
+```bash
+az monitor app-insights component create \
+  --app acclaim-insights \
+  --location "UK South" \
+  --resource-group acclaim-rg
+```
+
+### 10.2 Configure Backup
+```bash
+# Enable automated backups for PostgreSQL
+az postgres server configuration set \
+  --name log_statement \
+  --resource-group acclaim-rg \
+  --server acclaim-db-server \
+  --value all
+```
+
+## Cost Considerations
+
+### Estimated Monthly Costs (UK South):
+- **App Service B1**: ~£40/month
+- **PostgreSQL GP_Gen5_2**: ~£120/month
+- **Storage Account**: ~£5/month
+- **Static Web Apps**: Free tier available
+- **Application Insights**: ~£10/month
+
+**Total**: ~£175/month
+
+### Cost Optimization:
+- Use Azure Reserved Instances for 1-3 year commitments (30-60% savings)
+- Consider Azure SQL Database instead of PostgreSQL for better integration
+- Use Azure DevTest pricing if applicable
+
+## Security Checklist
+
+- [ ] Enable Azure AD authentication
+- [ ] Configure network security groups
+- [ ] Enable Azure Security Center
+- [ ] Set up Azure Key Vault for secrets
+- [ ] Configure backup and disaster recovery
+- [ ] Enable monitoring and alerting
+- [ ] Review and configure CORS settings
+- [ ] Enable Azure DDoS protection
+
+## Troubleshooting
+
+### Common Issues:
+1. **Database Connection**: Check firewall rules and connection string
+2. **File Uploads**: Verify Azure Storage configuration
+3. **Environment Variables**: Ensure all required variables are set
+4. **CORS Issues**: Configure CORS in App Service
+5. **Build Failures**: Check Node.js version compatibility
+
+### Support Resources:
+- Azure Documentation: https://docs.microsoft.com/azure
+- Azure Support: Create support ticket in Azure Portal
+- Community Forums: Microsoft Q&A
+
+This migration will provide you with a production-ready, scalable infrastructure on Microsoft Azure with proper monitoring, security, and backup capabilities.
