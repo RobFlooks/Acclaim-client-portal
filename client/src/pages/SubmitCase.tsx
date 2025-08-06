@@ -1128,6 +1128,19 @@ export default function SubmitCase() {
                   onClick={(e) => {
                     console.log("Submit button clicked!");
                     console.log("Form state:", form.formState);
+                    console.log("Form errors:", form.formState.errors);
+                    console.log("Form is valid:", form.formState.isValid);
+                    
+                    // Check if form is invalid and show toast
+                    const errors = form.formState.errors;
+                    if (Object.keys(errors).length > 0) {
+                      console.log("Form validation errors found:", errors);
+                      toast({
+                        title: "Form Validation Errors",
+                        description: "Please fill in all required fields before submitting.",
+                        variant: "destructive",
+                      });
+                    }
                   }}
                 >
                   {submitCaseMutation.isPending ? "Submitting..." : "Submit Case"}
