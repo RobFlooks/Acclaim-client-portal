@@ -1687,25 +1687,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserActivityLogs(userId?: string, limit = 100): Promise<UserActivityLog[]> {
-    const query = db.select({
+    let query = db.select({
       id: userActivityLogs.id,
       userId: userActivityLogs.userId,
       action: userActivityLogs.action,
       details: userActivityLogs.details,
       ipAddress: userActivityLogs.ipAddress,
       userAgent: userActivityLogs.userAgent,
-      timestamp: userActivityLogs.timestamp,
+      timestamp: userActivityLogs.createdAt,
       userEmail: users.email,
       userFirstName: users.firstName,
       userLastName: users.lastName,
     })
     .from(userActivityLogs)
     .leftJoin(users, eq(userActivityLogs.userId, users.id))
-    .orderBy(desc(userActivityLogs.timestamp))
+    .orderBy(desc(userActivityLogs.createdAt))
     .limit(limit);
 
     if (userId) {
-      query.where(eq(userActivityLogs.userId, userId));
+      query = query.where(eq(userActivityLogs.userId, userId));
     }
 
     return await query;
@@ -1718,14 +1718,14 @@ export class DatabaseStorage implements IStorage {
 
   async getLoginAttempts(limit = 100): Promise<LoginAttempt[]> {
     return await db.select().from(loginAttempts)
-      .orderBy(desc(loginAttempts.timestamp))
+      .orderBy(desc(loginAttempts.createdAt))
       .limit(limit);
   }
 
   async getFailedLoginAttempts(limit = 100): Promise<LoginAttempt[]> {
     return await db.select().from(loginAttempts)
       .where(eq(loginAttempts.success, false))
-      .orderBy(desc(loginAttempts.timestamp))
+      .orderBy(desc(loginAttempts.createdAt))
       .limit(limit);
   }
 
@@ -1735,12 +1735,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getSystemMetrics(metricName?: string, limit = 100): Promise<SystemMetric[]> {
-    const query = db.select().from(systemMetrics)
+    let query = db.select().from(systemMetrics)
       .orderBy(desc(systemMetrics.recordedAt))
       .limit(limit);
 
     if (metricName) {
-      query.where(eq(systemMetrics.metricName, metricName));
+      query = query.where(eq(systemMetrics.metricName, metricName));
     }
 
     return await query;

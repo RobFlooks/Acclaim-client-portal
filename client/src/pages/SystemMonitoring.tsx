@@ -67,25 +67,66 @@ export default function SystemMonitoring() {
 
   // Fetch activity logs
   const { data: activityLogs, isLoading: activityLoading } = useQuery<ActivityLog[]>({
-    queryKey: ["/api/admin/system/activity-logs", { userId: filterUser || undefined, limit: limitResults }],
+    queryKey: ["/api/admin/system/activity-logs", filterUser, limitResults],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filterUser) params.append('userId', filterUser);
+      params.append('limit', limitResults);
+      
+      const response = await fetch(`/api/admin/system/activity-logs?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch activity logs');
+      }
+      return response.json();
+    },
     retry: false,
   });
 
   // Fetch login attempts
   const { data: loginAttempts, isLoading: loginAttemptsLoading } = useQuery<LoginAttempt[]>({
-    queryKey: ["/api/admin/system/login-attempts", { limit: limitResults }],
+    queryKey: ["/api/admin/system/login-attempts", limitResults],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.append('limit', limitResults);
+      
+      const response = await fetch(`/api/admin/system/login-attempts?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch login attempts');
+      }
+      return response.json();
+    },
     retry: false,
   });
 
   // Fetch failed logins
   const { data: failedLogins, isLoading: failedLoginsLoading } = useQuery<LoginAttempt[]>({
-    queryKey: ["/api/admin/system/failed-logins", { limit: limitResults }],
+    queryKey: ["/api/admin/system/failed-logins", limitResults],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.append('limit', limitResults);
+      
+      const response = await fetch(`/api/admin/system/failed-logins?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch failed logins');
+      }
+      return response.json();
+    },
     retry: false,
   });
 
   // Fetch system metrics
   const { data: systemMetrics, isLoading: metricsLoading } = useQuery<SystemMetric[]>({
-    queryKey: ["/api/admin/system/metrics", { limit: limitResults }],
+    queryKey: ["/api/admin/system/metrics", limitResults],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.append('limit', limitResults);
+      
+      const response = await fetch(`/api/admin/system/metrics?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch system metrics');
+      }
+      return response.json();
+    },
     retry: false,
   });
 
@@ -332,6 +373,12 @@ export default function SystemMonitoring() {
                             Loading activity logs...
                           </TableCell>
                         </TableRow>
+                      ) : filterActivityLogs(activityLogs || []).length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                            No activity logs found
+                          </TableCell>
+                        </TableRow>
                       ) : (
                         filterActivityLogs(activityLogs || []).map((log) => (
                           <TableRow key={log.id}>
@@ -403,6 +450,12 @@ export default function SystemMonitoring() {
                               Loading login attempts...
                             </TableCell>
                           </TableRow>
+                        ) : filterLoginAttempts(loginAttempts || []).length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={4} className="text-center py-8 text-gray-500">
+                              No login attempts found
+                            </TableCell>
+                          </TableRow>
                         ) : (
                           filterLoginAttempts(loginAttempts || []).map((attempt) => (
                             <TableRow key={attempt.id}>
@@ -456,6 +509,12 @@ export default function SystemMonitoring() {
                           <TableRow>
                             <TableCell colSpan={4} className="text-center py-8">
                               Loading failed logins...
+                            </TableCell>
+                          </TableRow>
+                        ) : filterLoginAttempts(failedLogins || []).length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={4} className="text-center py-8 text-gray-500">
+                              No failed login attempts found
                             </TableCell>
                           </TableRow>
                         ) : (
@@ -513,6 +572,12 @@ export default function SystemMonitoring() {
                         <TableRow>
                           <TableCell colSpan={3} className="text-center py-8">
                             Loading system metrics...
+                          </TableCell>
+                        </TableRow>
+                      ) : (systemMetrics || []).length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={3} className="text-center py-8 text-gray-500">
+                            No system metrics found
                           </TableCell>
                         </TableRow>
                       ) : (
