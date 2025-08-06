@@ -21,8 +21,8 @@ import { useLocation } from "wouter";
 
 // Base schema without conditional validation
 const baseSubmitCaseSchema = z.object({
-  // Organisation selection
-  organisationId: z.number().min(1, "Please select an organisation"),
+  // Organisation selection (conditionally required)
+  organisationId: z.number().optional(),
   
   // Client details (pre-populated)
   clientName: z.string().min(1, "Name is required"),
@@ -81,27 +81,42 @@ const baseSubmitCaseSchema = z.object({
 });
 
 // Dynamic schema with conditional validation
-const submitCaseSchema = baseSubmitCaseSchema
-  .refine((data) => {
-    // If not a single invoice, lastOverdueDate is required
-    if (data.singleInvoice === "no" && (!data.lastOverdueDate || data.lastOverdueDate.trim() === "")) {
-      return false;
-    }
-    return true;
-  }, {
-    message: "Last overdue invoice date is required",
-    path: ["lastOverdueDate"]
-  })
-  .refine((data) => {
-    // If debtor type is organisation, organisation name is required
-    if (data.debtorType === "organisation" && (!data.organisationName || data.organisationName.trim() === "")) {
-      return false;
-    }
-    return true;
-  }, {
-    message: "Organisation name is required",
-    path: ["organisationName"]
-  });
+// Function to create schema based on organisations count
+const createSubmitCaseSchema = (organisationsCount: number) => {
+  return baseSubmitCaseSchema
+    .refine((data) => {
+      // If not a single invoice, lastOverdueDate is required
+      if (data.singleInvoice === "no" && (!data.lastOverdueDate || data.lastOverdueDate.trim() === "")) {
+        return false;
+      }
+      return true;
+    }, {
+      message: "Last overdue invoice date is required",
+      path: ["lastOverdueDate"]
+    })
+    .refine((data) => {
+      // If debtor type is organisation, organisation name is required
+      if (data.debtorType === "organisation" && (!data.organisationName || data.organisationName.trim() === "")) {
+        return false;
+      }
+      return true;
+    }, {
+      message: "Organisation name is required",
+      path: ["organisationName"]
+    })
+    .refine((data) => {
+      // If user has multiple organisations, organisation selection is required
+      if (organisationsCount > 1 && (!data.organisationId || data.organisationId <= 0)) {
+        return false;
+      }
+      return true;
+    }, {
+      message: "Please select an organisation",
+      path: ["organisationId"]
+    });
+};
+
+const submitCaseSchema = createSubmitCaseSchema(1); // Default schema
 
 type SubmitCaseForm = z.infer<typeof submitCaseSchema>;
 
@@ -125,7 +140,7 @@ export default function SubmitCase() {
   });
 
   const form = useForm<SubmitCaseForm>({
-    resolver: zodResolver(submitCaseSchema),
+    resolver: zodResolver(createSubmitCaseSchema(organisations.length)),
     defaultValues: {
       organisationId: 0, // Will be set by useEffect
       clientName: user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() : "",
@@ -163,9 +178,13 @@ export default function SubmitCase() {
     },
   });
 
-  // Auto-select organisation if user has only one, or reset if multiple
+  // Update form schema and organisation selection based on organisations data
   useEffect(() => {
     if (!orgsLoading && organisations.length > 0) {
+      // Update the form resolver with the new schema
+      const newSchema = createSubmitCaseSchema(organisations.length);
+      form.clearErrors(); // Clear any existing validation errors
+      
       if (organisations.length === 1) {
         // Auto-select if user has only one organisation
         form.setValue("organisationId", organisations[0].id);
@@ -472,10 +491,10 @@ export default function SubmitCase() {
                   name="organisationId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Submitting on behalf of</FormLabel>
+                      <FormLabel>Submitting on behalf of claimant</FormLabel>
                       <Select 
                         onValueChange={(value) => field.onChange(parseInt(value))} 
-                        value={field.value > 0 ? String(field.value) : ""}
+                        value={field.value && field.value > 0 ? String(field.value) : ""}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -499,7 +518,7 @@ export default function SubmitCase() {
               {!orgsLoading && organisations.length === 1 && (
                 <div className="p-3 bg-gray-50 rounded-md border">
                   <div className="text-sm font-medium text-gray-700">
-                    Submitting on behalf of: <span className="text-gray-900">{organisations[0].name}</span>
+                    Submitting on behalf of claimant: <span className="text-gray-900">{organisations[0].name}</span>
                   </div>
                 </div>
               )}
