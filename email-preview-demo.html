@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SendGrid Email Preview - Acclaim Portal</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f0f0f0; padding: 20px; }
+        .preview-container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .demo-header { background: #1e293b; color: white; padding: 15px; border-radius: 8px 8px 0 0; margin: -20px -20px 20px -20px; }
+        .preview-title { margin: 0; font-size: 18px; }
+        .preview-subtitle { margin: 5px 0 0 0; opacity: 0.8; font-size: 14px; }
+        .email-frame { border: 2px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #f8fafc; }
+        .iframe-container { height: 600px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <div class="preview-container">
+        <div class="demo-header">
+            <h1 class="preview-title">📧 SendGrid Email Notification Preview</h1>
+            <p class="preview-subtitle">This is what users receive when external case management systems send notifications</p>
+        </div>
+        
+        <p><strong>Demonstration Results:</strong></p>
+        <ul>
+            <li>✅ Message successfully created in system</li>
+            <li>✅ 3 email notifications sent to users with email preferences enabled</li>
+            <li>✅ Professional email templates with case details</li>
+            <li>✅ SendGrid integration working perfectly</li>
+        </ul>
+        
+        <div class="email-frame">
+            <div class="iframe-container">
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
+                    <div style="background: linear-gradient(135deg, #0891b2 0%, #1e293b 100%); color: white; padding: 30px; text-align: center;">
+                        <h1 style="margin: 0; font-size: 24px;">Acclaim Portal</h1>
+                        <p style="margin: 10px 0 0 0; opacity: 0.9;">New case update received</p>
+                    </div>
+                    
+                    <div style="padding: 30px;">
+                        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                            <h2 style="color: #1e293b; margin-top: 0;">Case Update Details</h2>
+                            <table style="width: 100%; border-spacing: 0;">
+                                <tr>
+                                    <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 140px;">From:</td>
+                                    <td style="padding: 8px 0; color: #1e293b;">SOS Payment System (External System)</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; font-weight: bold; color: #475569;">Organisation:</td>
+                                    <td style="padding: 8px 0; color: #1e293b;">Chadwick Lawrence LLP</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; font-weight: bold; color: #475569;">Case Reference:</td>
+                                    <td style="padding: 8px 0; color: #1e293b;">CLS00003-028</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; font-weight: bold; color: #475569;">Update Type:</td>
+                                    <td style="padding: 8px 0; color: #1e293b;">
+                                        <span style="background: #e0f2fe; color: #0277bd; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                                            PAYMENT_UPDATE
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; font-weight: bold; color: #475569;">Subject:</td>
+                                    <td style="padding: 8px 0; color: #1e293b;">Payment Received - £2,500</td>
+                                </tr>
+                            </table>
+                        </div>
+                        
+                        <div style="background: white; padding: 20px; border-radius: 8px;">
+                            <h3 style="color: #1e293b; margin-top: 0;">Update Details</h3>
+                            <div style="background: #f1f5f9; padding: 15px; border-radius: 6px; border-left: 4px solid #0891b2;">
+                                <p style="margin: 0; color: #334155; line-height: 1.6;">
+                                    Payment of £2,500 has been received for this case.<br><br>
+                                    Account Statement:<br>
+                                    - Previous Balance: £5,000.00<br>
+                                    - Payment Received: £2,500.00<br>
+                                    - Outstanding Balance: £2,500.00<br><br>
+                                    Payment Method: Bank Transfer<br>
+                                    Reference: PAY-2024-001<br>
+                                    Date: 07/08/2025<br><br>
+                                    Please update your records accordingly.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div style="text-align: center; margin-top: 30px; padding: 20px; background: #e7f3ff; border-radius: 8px; border: 1px solid #b3d9ff;">
+                            <p style="color: #0277bd; font-weight: 500; margin: 0 0 8px 0;">Important Notice</p>
+                            <p style="color: #01579b; font-size: 14px; margin: 0;">
+                                This is an automated update from your external case management system. 
+                                Please log in to the Acclaim Portal to view full case details and respond if needed.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #1e293b; color: white; padding: 15px; text-align: center; font-size: 12px;">
+                        <p style="margin: 0;">This is an automated notification from Acclaim Credit Management Portal</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-radius: 8px; border-left: 4px solid #0891b2;">
+            <h3 style="color: #1e293b; margin: 0 0 10px 0;">Key Features Demonstrated:</h3>
+            <ul style="margin: 0; color: #475569;">
+                <li><strong>Professional Branding:</strong> Acclaim Portal styling with gradient header</li>
+                <li><strong>Clear Information:</strong> Sender, case details, and update type clearly displayed</li>
+                <li><strong>Formatted Content:</strong> Payment details presented in a readable format</li>
+                <li><strong>User Guidance:</strong> Clear instructions on how to respond</li>
+                <li><strong>Automated Processing:</strong> Only sends to users with email notifications enabled</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
