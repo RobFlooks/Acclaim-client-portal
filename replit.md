@@ -35,8 +35,8 @@ Language preference: British English (organisation not organization, colour not 
 - **API Structure**: Organized by domain (e.g., `/api/auth`, `/api/cases`, `/api/admin`, `/api/external/*` for integrations).
 - **Frontend Components**: Dashboard, Case management (list, search, filter, details), Messaging, Document management, Reporting, Enhanced Admin Panel (user/organisation management, password reset, admin privilege management), and User Profile Management.
 - **Data Flow**: Authentication scopes operations to the user's organization(s). Cases progress through stages, all changes are logged as activities, and communication is integrated.
-- **Integration Capabilities**: HTTP API endpoints for external case creation, updates, activity management, message sending, document uploads, and payment updates, designed for compatibility with existing case management systems like SOS.
-- **Email Notifications**: Bidirectional email notification system for user-to-admin and admin-to-user messaging.
+- **Integration Capabilities**: HTTP API endpoints for external case creation, updates, activity management, message sending, document uploads, and payment updates, designed for compatibility with existing case management systems like SOS. Includes complete email notification system for external API messages.
+- **Email Notifications**: Complete bidirectional email notification system using SendGrid for production with user-to-admin messaging, admin-to-user messaging, and external case management API notifications with user-controlled preferences.
 - **Mobile Responsiveness**: Admin panel redesigned for full mobile responsiveness.
 - **Multi-Organisation Support**: Users can be assigned to multiple organisations, accessing relevant data across all assigned entities.
 

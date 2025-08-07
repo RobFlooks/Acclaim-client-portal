@@ -1751,24 +1751,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdAt: new Date(),
       });
 
-      // Handle push notifications if requested
+      // Handle email notifications if requested
       let notificationsSent = 0;
       if (sendNotifications) {
         try {
           // Get all users linked to the case's organisation
           const organisationUsers = await storage.getUsersByOrganisationId(case_.organisationId);
+          const organisation = await storage.getOrganisation(case_.organisationId);
           
           for (const user of organisationUsers) {
-            // Check user's push notification preferences
-            if (user.pushNotifications) {
-              // TODO: Implement actual push notification service here
-              // This is where you would integrate with a push notification service like Firebase, OneSignal, etc.
-              console.log(`Push notification would be sent to user ${user.email} for case ${case_.caseName}`);
-              notificationsSent++;
+            // Check user's email notification preferences
+            if (user.emailNotifications && user.email) {
+              try {
+                // Send email notification to user
+                const emailSent = await emailService.sendExternalMessageNotification({
+                  userEmail: user.email,
+                  userName: `${user.firstName} ${user.lastName}`,
+                  messageSubject: messageSubject,
+                  messageContent: message,
+                  caseReference: case_.accountNumber,
+                  organisationName: organisation?.name || 'Unknown Organisation',
+                  senderName: senderName,
+                  messageType: messageType
+                });
+                
+                if (emailSent) {
+                  notificationsSent++;
+                  console.log(`Email notification sent to ${user.email} for case ${case_.caseName}`);
+                } else {
+                  console.log(`Failed to send email notification to ${user.email}`);
+                }
+              } catch (emailError) {
+                console.error(`Error sending email to ${user.email}:`, emailError);
+              }
             }
           }
         } catch (notificationError) {
-          console.error("Error sending push notifications:", notificationError);
+          console.error("Error sending email notifications:", notificationError);
         }
       }
       
