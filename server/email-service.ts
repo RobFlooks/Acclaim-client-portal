@@ -1,4 +1,9 @@
 import nodemailer from 'nodemailer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 interface EmailNotificationData {
   userEmail: string;
@@ -120,9 +125,11 @@ class EmailService {
       const subject = `New Message: ${data.messageSubject || 'User Enquiry'} - Acclaim Portal`;
       const htmlContent = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background: linear-gradient(135deg, #0891b2 0%, #164e63 100%); color: white; padding: 20px; text-align: center;">
-            <h1 style="margin: 0; font-size: 24px;">New Message Received</h1>
-            <p style="margin: 5px 0 0 0; opacity: 0.9;">Acclaim Credit Management Portal</p>
+          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 20px; text-align: center;">
+            <div style="margin-bottom: 10px;">
+              <img src="cid:logo" alt="Acclaim Credit Management" style="height: 32px; width: auto;" />
+            </div>
+            <h2 style="margin: 0; font-size: 18px;">New Message Received</h2>
           </div>
           
           <div style="padding: 30px; background: #f8fafc; border: 1px solid #e2e8f0;">
@@ -190,11 +197,18 @@ Please log in to the Acclaim Portal to respond to this message.
       `;
 
       const info = await this.transporter.sendMail({
-        from: '"Acclaim Portal" <noreply@acclaim-portal.com>',
+        from: '"Acclaim Credit Management" <noreply@acclaim-portal.com>',
         to: adminEmail,
         subject: subject,
         text: textContent,
         html: htmlContent,
+        attachments: [
+          {
+            filename: 'logo.png',
+            path: path.join(__dirname, '../attached_assets/Acclaim rose.Cur_1752271300769.png'),
+            cid: 'logo'
+          }
+        ]
       });
 
       if (process.env.NODE_ENV === 'development') {
@@ -235,9 +249,11 @@ Please log in to the Acclaim Portal to respond to this message.
       
       const htmlContent = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
-          <div style="background: linear-gradient(135deg, #0891b2 0%, #1e293b 100%); color: white; padding: 30px; text-align: center;">
-            <h1 style="margin: 0; font-size: 24px;">Acclaim Portal</h1>
-            <p style="margin: 10px 0 0 0; opacity: 0.9;">New message from administrator</p>
+          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 30px; text-align: center;">
+            <div style="margin-bottom: 10px;">
+              <img src="cid:logo" alt="Acclaim Credit Management" style="height: 40px; width: auto;" />
+            </div>
+            <p style="margin: 0; opacity: 0.9; font-size: 16px;">New message from administrator</p>
           </div>
           
           <div style="padding: 30px;">
@@ -300,11 +316,18 @@ Please log in to the Acclaim Portal to view and respond to this message.
       `;
 
       const info = await this.transporter.sendMail({
-        from: '"Acclaim Portal" <noreply@acclaim-portal.com>',
+        from: '"Acclaim Credit Management" <noreply@acclaim-portal.com>',
         to: data.userEmail,
         subject: subject,
         text: textContent,
         html: htmlContent,
+        attachments: [
+          {
+            filename: 'logo.png',
+            path: path.join(__dirname, '../attached_assets/Acclaim rose.Cur_1752271300769.png'),
+            cid: 'logo'
+          }
+        ]
       });
 
       if (process.env.NODE_ENV === 'development') {
@@ -342,9 +365,11 @@ Please log in to the Acclaim Portal to view and respond to this message.
       const subject = `${data.messageType}: ${data.messageSubject} - Acclaim Portal`;
       const htmlContent = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
-          <div style="background: linear-gradient(135deg, #0891b2 0%, #1e293b 100%); color: white; padding: 30px; text-align: center;">
-            <h1 style="margin: 0; font-size: 24px;">Acclaim Portal</h1>
-            <p style="margin: 10px 0 0 0; opacity: 0.9;">New case update received</p>
+          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 30px; text-align: center;">
+            <div style="margin-bottom: 10px;">
+              <img src="cid:logo" alt="Acclaim Credit Management" style="height: 40px; width: auto;" />
+            </div>
+            <p style="margin: 0; opacity: 0.9; font-size: 16px;">New case update received</p>
           </div>
           
           <div style="padding: 30px;">
@@ -419,11 +444,18 @@ Please log in to the Acclaim Portal to view full case details and respond if nee
       `;
 
       const info = await this.transporter.sendMail({
-        from: '"Acclaim Portal" <noreply@acclaim-portal.com>',
+        from: '"Acclaim Credit Management" <noreply@acclaim-portal.com>',
         to: data.userEmail,
         subject: subject,
         text: textContent,
         html: htmlContent,
+        attachments: [
+          {
+            filename: 'logo.png',
+            path: path.join(__dirname, '../attached_assets/Acclaim rose.Cur_1752271300769.png'),
+            cid: 'logo'
+          }
+        ]
       });
 
       if (process.env.NODE_ENV === 'development') {
