@@ -156,7 +156,7 @@ Please log in to the Acclaim Portal to view and respond to this message.
       `;
 
       const info = await this.transporter.sendMail({
-        from: '"Acclaim Credit Management" <noreply@acclaim-portal.com>',
+        from: '"Acclaim Credit Management" <email@acclaim.law>',
         to: data.userEmail,
         subject: subject,
         text: textContent,
