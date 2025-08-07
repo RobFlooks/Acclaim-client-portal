@@ -22,6 +22,7 @@ import { fileURLToPath } from "url";
 import officegen from "officegen";
 import bcrypt from "bcrypt";
 import { emailService } from "./email-service";
+import { sendGridEmailService } from "./email-service-sendgrid";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1763,8 +1764,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Check user's email notification preferences
             if (user.emailNotifications && user.email) {
               try {
-                // Send email notification to user
-                const emailSent = await emailService.sendExternalMessageNotification({
+                // Send email notification to user via SendGrid (for real delivery)
+                const emailSent = await sendGridEmailService.sendExternalMessageNotification({
                   userEmail: user.email,
                   userName: `${user.firstName} ${user.lastName}`,
                   messageSubject: messageSubject,
