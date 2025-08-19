@@ -606,7 +606,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
 
             // Send email notification
-            await emailService.sendMessageNotification(
+            await sendGridEmailService.sendMessageNotification(
               {
                 userEmail: user.email || '',
                 userName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || '',
@@ -648,7 +648,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
 
               // Send admin-to-user notification
-              await emailService.sendAdminToUserNotification({
+              await sendGridEmailService.sendAdminToUserNotification({
                 adminName: `${user.firstName} ${user.lastName}`.trim() || user.email,
                 adminEmail: user.email,
                 userEmail: recipientUser.email,
@@ -685,7 +685,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
               // Send notification to each user in the organisation
               for (const orgUser of organisationUsers) {
-                await emailService.sendAdminToUserNotification({
+                await sendGridEmailService.sendAdminToUserNotification({
                   adminName: `${user.firstName} ${user.lastName}`.trim() || user.email,
                   adminEmail: user.email,
                   userEmail: orgUser.email,
