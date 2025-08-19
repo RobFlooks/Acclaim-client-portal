@@ -205,7 +205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             fileName: file.originalname,
             filePath: file.path,
             fileSize: file.size,
-            mimeType: file.mimetype,
+            fileType: file.mimetype,
             caseId: newCase.id,
             organisationId: user.organisationId,
             uploadedBy: userId,
@@ -249,7 +249,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const parsedBody = {
         ...req.body,
         organisationId: parseInt(req.body.organisationId),
-        totalDebtAmount: req.body.totalDebtAmount, // Keep as string for decimal field
+        totalDebtAmount: parseFloat(req.body.totalDebtAmount), // Convert to number for schema
         paymentTermsDays: req.body.paymentTermsDays ? parseInt(req.body.paymentTermsDays) : undefined,
       };
 
@@ -608,9 +608,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Send email notification
             await emailService.sendMessageNotification(
               {
-                userEmail: user.email,
-                userName: `${user.firstName} ${user.lastName}`.trim() || user.email,
-                messageSubject: messageData.subject,
+                userEmail: user.email || '',
+                userName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || '',
+                messageSubject: messageData.subject || '',
                 messageContent: messageData.content,
                 caseReference,
                 organisationName,
@@ -1681,7 +1681,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         activityType,
         description,
         performedBy,
-        activityDate: activityDate ? new Date(activityDate) : new Date(),
+        // activityDate: activityDate ? new Date(activityDate) : new Date(), // Remove non-existent field
       });
       
       res.status(201).json({ 
@@ -1914,7 +1914,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             activityType,
             description,
             performedBy,
-            activityDate: activityDate ? new Date(activityDate) : new Date(),
+            // activityDate: activityDate ? new Date(activityDate) : new Date(), // Remove non-existent field
           });
           
           results.created++;

@@ -47,11 +47,11 @@ import { db } from "./db";
 import { eq, and, desc, sql, or, isNull, isNotNull, inArray } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
-import session from "express-session";
+import session, { SessionStore } from "express-session";
 import connectPg from "connect-pg-simple";
 
 export interface IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: SessionStore;
 
   // User operations 
   getUser(id: string): Promise<User | undefined>;
@@ -298,7 +298,7 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: SessionStore;
 
   constructor() {
     const PostgresSessionStore = connectPg(session);
@@ -360,7 +360,7 @@ export class DatabaseStorage implements IStorage {
       .insert(users)
       .values({
         ...userData,
-        organisationId: userData.organisationId?.toString(),
+        organisationId: userData.organisationId,
         hashedPassword,
         mustChangePassword: true,
         isAdmin: userData.isAdmin || false,
@@ -394,7 +394,7 @@ export class DatabaseStorage implements IStorage {
   async deleteOrganisation(id: number): Promise<void> {
     // First, check if there are any users or cases associated with this organisation
     const [userCount, caseCount] = await Promise.all([
-      db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.organisationId, id.toString())),
+      db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.organisationId, id)),
       db.select({ count: sql<number>`count(*)` }).from(cases).where(eq(cases.organisationId, id))
     ]);
 
@@ -418,7 +418,7 @@ export class DatabaseStorage implements IStorage {
     totalRecovered: string;
   }> {
     const [userCount, caseCount, activeCaseCount] = await Promise.all([
-      db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.organisationId, id.toString())),
+      db.select({ count: sql<number>`count(*)` }).from(users).where(eq(users.organisationId, id)),
       db.select({ count: sql<number>`count(*)` }).from(cases).where(and(eq(cases.organisationId, id), eq(cases.isArchived, false))),
       db.select({ count: sql<number>`count(*)` }).from(cases).where(and(eq(cases.organisationId, id), eq(cases.isArchived, false), or(eq(cases.status, "new"), eq(cases.status, "in_progress"))))
     ]);
