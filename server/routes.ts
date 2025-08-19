@@ -207,7 +207,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             fileSize: file.size,
             fileType: file.mimetype,
             caseId: newCase.id,
-            organisationId: user.organisationId,
+            organisationId: user.organisationId || 0,
             uploadedBy: userId,
           });
         }
@@ -249,7 +249,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const parsedBody = {
         ...req.body,
         organisationId: parseInt(req.body.organisationId),
-        totalDebtAmount: parseFloat(req.body.totalDebtAmount), // Convert to number for schema
+        totalDebtAmount: req.body.totalDebtAmount, // Keep as string for schema
         paymentTermsDays: req.body.paymentTermsDays ? parseInt(req.body.paymentTermsDays) : undefined,
       };
 
@@ -1183,12 +1183,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Return user info and temporary password (in production, this would be sent via email)
       res.status(201).json({
-        user: result.user,
+        user: result,
         tempPassword: result.tempPassword,
         message: "User created successfully. Please provide the temporary password to the user.",
       });
     } catch (error) {
-      console.error("Error creating user:", error);
+      console.error("Error creating user:", error instanceof Error ? error.message : String(error));
       res.status(500).json({ message: "Failed to create user" });
     }
   });
@@ -1324,7 +1324,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting organisation:", error);
-      if (error.message === "Cannot delete organisation with associated users or cases") {
+      if (error instanceof Error && error.message === "Cannot delete organisation with associated users or cases") {
         res.status(400).json({ message: error.message });
       } else {
         res.status(500).json({ message: "Failed to delete organisation" });
@@ -1921,7 +1921,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } catch (error) {
           results.errors.push({ 
             activity, 
-            error: error.message 
+            error: error instanceof Error ? error.message : String(error) 
           });
         }
       }
@@ -2089,7 +2089,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const updated = await storage.updateCase(existing.id, {
           accountNumber,
           caseName,
-          debtorEmail,
+          // debtorEmail, // Remove non-schema field
           debtorPhone,
           debtorAddress,
           debtorType: debtorType || 'individual',
@@ -2120,7 +2120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const newCase = await storage.createCase({
         accountNumber,
         caseName,
-        debtorEmail,
+        // debtorEmail, // Remove non-schema field
         debtorPhone,
         debtorAddress,
         debtorType: debtorType || 'individual',
