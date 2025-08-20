@@ -583,12 +583,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user.isAdmin) {
         // User-to-admin notification (existing functionality)
         try {
-          // Get all admin users to notify
-          const allUsers = await storage.getAllUsers();
-          const adminUsers = allUsers.filter(u => u.isAdmin && u.email);
+          // Get the primary admin user for notifications
+          const adminUser = await storage.getUser("admin_1753292574.014698");
           
-          if (adminUsers.length > 0) {
-            const primaryAdmin = adminUsers.find(u => u.id === "admin_1753292574.014698") || adminUsers[0];
+          if (adminUser && adminUser.email) {
             // Get organisation name
             let organisationName = "Unknown Organisation";
             if (user.organisationId) {
@@ -609,24 +607,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             }
 
-            // Send email notification to all admin users
-            console.log(`📧 Sending email notifications to ${adminUsers.length} admin users:`, adminUsers.map(u => u.email));
-            for (const adminUser of adminUsers) {
-              console.log(`📧 Sending notification to: ${adminUser.email}`);
-              const emailResult = await sendGridEmailService.sendMessageNotification(
-                {
-                  userEmail: user.email || '',
-                  userName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || '',
-                  messageSubject: messageData.subject || '',
-                  messageContent: messageData.content,
-                  caseReference,
-                  caseName,
-                  organisationName,
-                },
-                adminUser.email
-              );
-              console.log(`📧 Email sent to ${adminUser.email}: ${emailResult ? 'Success' : 'Failed'}`);
-            }
+            // Send email notification only to email@acclaim.law
+            console.log(`📧 Sending user message notification to: ${adminUser.email}`);
+            const emailResult = await sendGridEmailService.sendMessageNotification(
+              {
+                userEmail: user.email || '',
+                userName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || '',
+                messageSubject: messageData.subject || '',
+                messageContent: messageData.content,
+                caseReference,
+                caseName,
+                organisationName,
+              },
+              adminUser.email
+            );
+            console.log(`📧 Email sent to ${adminUser.email}: ${emailResult ? 'Success' : 'Failed'}`);
           }
         } catch (emailError) {
           // Log email error but don't fail the message creation
