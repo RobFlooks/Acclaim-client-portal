@@ -288,6 +288,14 @@ Please log in to the Acclaim Portal to view and respond to this message.
       });
 
       console.log('✅ User-to-admin email sent successfully via SendGrid:', info.messageId);
+      console.log(`📧 Email details: From: "Acclaim Credit Management" <email@acclaim.law>, To: ${adminEmail}, Subject: ${subject}`);
+      console.log(`📧 Response details:`, {
+        messageId: info.messageId,
+        response: info.response,
+        accepted: info.accepted,
+        rejected: info.rejected,
+        pending: info.pending
+      });
       return true;
     } catch (error) {
       console.error('❌ Failed to send user-to-admin email via SendGrid:', error);
