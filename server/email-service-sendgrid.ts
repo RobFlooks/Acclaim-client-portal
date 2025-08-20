@@ -11,6 +11,7 @@ interface EmailNotificationData {
   messageSubject?: string;
   messageContent: string;
   caseReference?: string;
+  caseName?: string;
   organisationName: string;
 }
 
@@ -22,6 +23,7 @@ interface AdminToUserNotificationData {
   messageSubject?: string;
   messageContent: string;
   caseReference?: string;
+  caseName?: string;
   organisationName: string;
 }
 
@@ -31,6 +33,7 @@ interface ExternalMessageNotificationData {
   messageSubject: string;
   messageContent: string;
   caseReference?: string;
+  caseName?: string;
   organisationName: string;
   senderName: string;
   messageType: string;
@@ -105,6 +108,12 @@ class SendGridEmailService {
                   <td style="padding: 8px 0; color: #1e293b;">${data.caseReference}</td>
                 </tr>
                 ` : ''}
+                ${data.caseName ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Case Name:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseName}</td>
+                </tr>
+                ` : ''}
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; color: #475569;">Update Type:</td>
                   <td style="padding: 8px 0; color: #1e293b;">
@@ -146,6 +155,7 @@ New case update from ${data.senderName}
 
 Organisation: ${data.organisationName}
 ${data.caseReference ? `Case Reference: ${data.caseReference}` : ''}
+${data.caseName ? `Case Name: ${data.caseName}` : ''}
 Update Type: ${data.messageType.toUpperCase()}
 Subject: ${data.messageSubject}
 
@@ -219,6 +229,12 @@ Please log in to the Acclaim Portal to view and respond to this message.
                   <td style="padding: 8px 0; color: #1e293b;">${data.caseReference}</td>
                 </tr>
                 ` : ''}
+                ${data.caseName ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Case Name:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseName}</td>
+                </tr>
+                ` : ''}
                 ${data.messageSubject ? `
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; color: #475569;">Subject:</td>
@@ -250,6 +266,7 @@ Please log in to the Acclaim Portal to view and respond to this message.
 New message from ${data.userName} (${data.userEmail})
 Organisation: ${data.organisationName}
 ${data.caseReference ? `Case Reference: ${data.caseReference}` : ''}
+${data.caseName ? `Case Name: ${data.caseName}` : ''}
 ${data.messageSubject ? `Subject: ${data.messageSubject}` : ''}
 
 Message:
@@ -350,6 +367,7 @@ Please log in to the Acclaim Portal to view and respond to this message.
 Message from Administrator: ${data.adminName}
 Organisation: ${data.organisationName}
 ${data.caseReference ? `Case Reference: ${data.caseReference}` : ''}
+${data.caseName ? `Case Name: ${data.caseName}` : ''}
 ${data.messageSubject ? `Subject: ${data.messageSubject}` : ''}
 
 Message:

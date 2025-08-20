@@ -596,12 +596,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             }
 
-            // Get case reference if this is a case-specific message
+            // Get case reference and name if this is a case-specific message
             let caseReference = undefined;
+            let caseName = undefined;
             if (messageData.caseId) {
               const messageCase = await storage.getCaseById(messageData.caseId);
               if (messageCase) {
                 caseReference = messageCase.accountNumber;
+                caseName = messageCase.caseName;
               }
             }
 
@@ -613,6 +615,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 messageSubject: messageData.subject || '',
                 messageContent: messageData.content,
                 caseReference,
+                caseName,
                 organisationName,
               },
               adminUser.email
@@ -638,12 +641,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
               }
 
-              // Get case reference if this is a case-specific message
+              // Get case reference and name if this is a case-specific message
               let caseReference = undefined;
+              let caseName = undefined;
               if (messageData.caseId) {
                 const messageCase = await storage.getCaseById(messageData.caseId);
                 if (messageCase) {
                   caseReference = messageCase.accountNumber;
+                  caseName = messageCase.caseName;
                 }
               }
 
@@ -656,6 +661,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 messageSubject: messageData.subject,
                 messageContent: messageData.content,
                 caseReference,
+                caseName,
                 organisationName,
               });
             }
