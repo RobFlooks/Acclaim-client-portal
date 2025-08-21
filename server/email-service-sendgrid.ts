@@ -11,7 +11,6 @@ interface EmailNotificationData {
   messageSubject?: string;
   messageContent: string;
   caseReference?: string;
-  caseName?: string;
   organisationName: string;
 }
 
@@ -23,7 +22,6 @@ interface AdminToUserNotificationData {
   messageSubject?: string;
   messageContent: string;
   caseReference?: string;
-  caseName?: string;
   organisationName: string;
 }
 
@@ -33,7 +31,6 @@ interface ExternalMessageNotificationData {
   messageSubject: string;
   messageContent: string;
   caseReference?: string;
-  caseName?: string;
   organisationName: string;
   senderName: string;
   messageType: string;
@@ -82,29 +79,65 @@ class SendGridEmailService {
     try {
       const subject = `${data.messageType}: ${data.messageSubject} - Acclaim Portal`;
       const htmlContent = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h2 style="color: #14b8a6;">Acclaim Credit Management - Case Update</h2>
-          
-          <p><strong>From:</strong> ${data.senderName} (External System)</p>
-          <p><strong>Organisation:</strong> ${data.organisationName}</p>
-          ${data.caseReference ? `<p><strong>Case Reference:</strong> ${data.caseReference}</p>` : ''}
-          ${data.caseName ? `<p><strong>Case Name:</strong> ${data.caseName}</p>` : ''}
-          <p><strong>Update Type:</strong> ${data.messageType.toUpperCase()}</p>
-          <p><strong>Subject:</strong> ${data.messageSubject}</p>
-          
-          <h3>Message Content:</h3>
-          <div style="background: #f8f9fa; padding: 15px; border-left: 4px solid #14b8a6;">
-            ${data.messageContent}
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
+          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 30px; text-align: center;">
+            <div style="margin-bottom: 10px;">
+              <img src="cid:logo" alt="Acclaim Credit Management" style="height: 40px; width: auto;" />
+            </div>
+            <p style="margin: 0; opacity: 0.9; font-size: 16px;">New case update received</p>
           </div>
           
-          <p style="margin-top: 20px; font-size: 14px; color: #666;">
-            Please log in to the Acclaim Portal to view and respond to this message.
-          </p>
-          
-          <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
-          <p style="font-size: 12px; color: #888; text-align: center;">
-            This is an automated notification from Acclaim Credit Management
-          </p>
+          <div style="padding: 30px;">
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <h2 style="color: #1e293b; margin-top: 0;">Case Update Details</h2>
+              <table style="width: 100%; border-spacing: 0;">
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 140px;">From:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.senderName} (External System)</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Organisation:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.organisationName}</td>
+                </tr>
+                ${data.caseReference ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Case Reference:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseReference}</td>
+                </tr>
+                ` : ''}
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Update Type:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">
+                    <span style="background: #e0f2fe; color: #0277bd; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                      ${data.messageType.toUpperCase()}
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Subject:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.messageSubject}</td>
+                </tr>
+              </table>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <h3 style="color: #1e293b; margin-top: 0;">Message Content</h3>
+              <div style="color: #475569; line-height: 1.6; white-space: pre-wrap;">${data.messageContent}</div>
+            </div>
+
+            <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; text-align: center;">
+              <p style="margin: 0 0 15px 0; color: #64748b;">
+                Please log in to the Acclaim Portal to view and respond to this message.
+              </p>
+              <a href="#" style="background: #14b8a6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+                View in Portal
+              </a>
+            </div>
+          </div>
+
+          <div style="background: #e2e8f0; padding: 20px; text-align: center; color: #64748b; font-size: 14px;">
+            <p style="margin: 0;">This is an automated notification from Acclaim Credit Management</p>
+          </div>
         </div>
       `;
 
@@ -113,7 +146,6 @@ New case update from ${data.senderName}
 
 Organisation: ${data.organisationName}
 ${data.caseReference ? `Case Reference: ${data.caseReference}` : ''}
-${data.caseName ? `Case Name: ${data.caseName}` : ''}
 Update Type: ${data.messageType.toUpperCase()}
 Subject: ${data.messageSubject}
 
@@ -128,8 +160,14 @@ Please log in to the Acclaim Portal to view and respond to this message.
         to: data.userEmail,
         subject: subject,
         text: textContent,
-        html: htmlContent
-        // Removed logo attachment as it may trigger spam filters
+        html: htmlContent,
+        attachments: [
+          {
+            filename: 'logo.png',
+            path: path.join(__dirname, '../attached_assets/Acclaim rose.Cur_1752271300769.png'),
+            cid: 'logo'
+          }
+        ]
       });
 
       console.log(`✅ REAL EMAIL SENT via SendGrid to: ${data.userEmail}`);
@@ -181,12 +219,6 @@ Please log in to the Acclaim Portal to view and respond to this message.
                   <td style="padding: 8px 0; color: #1e293b;">${data.caseReference}</td>
                 </tr>
                 ` : ''}
-                ${data.caseName ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Case Name:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseName}</td>
-                </tr>
-                ` : ''}
                 ${data.messageSubject ? `
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; color: #475569;">Subject:</td>
@@ -218,7 +250,6 @@ Please log in to the Acclaim Portal to view and respond to this message.
 New message from ${data.userName} (${data.userEmail})
 Organisation: ${data.organisationName}
 ${data.caseReference ? `Case Reference: ${data.caseReference}` : ''}
-${data.caseName ? `Case Name: ${data.caseName}` : ''}
 ${data.messageSubject ? `Subject: ${data.messageSubject}` : ''}
 
 Message:
@@ -243,14 +274,6 @@ Please log in to the Acclaim Portal to view and respond to this message.
       });
 
       console.log('✅ User-to-admin email sent successfully via SendGrid:', info.messageId);
-      console.log(`📧 Email details: From: "Acclaim Credit Management" <email@acclaim.law>, To: ${adminEmail}, Subject: ${subject}`);
-      console.log(`📧 Response details:`, {
-        messageId: info.messageId,
-        response: info.response,
-        accepted: info.accepted,
-        rejected: info.rejected,
-        pending: info.pending
-      });
       return true;
     } catch (error) {
       console.error('❌ Failed to send user-to-admin email via SendGrid:', error);
@@ -327,7 +350,6 @@ Please log in to the Acclaim Portal to view and respond to this message.
 Message from Administrator: ${data.adminName}
 Organisation: ${data.organisationName}
 ${data.caseReference ? `Case Reference: ${data.caseReference}` : ''}
-${data.caseName ? `Case Name: ${data.caseName}` : ''}
 ${data.messageSubject ? `Subject: ${data.messageSubject}` : ''}
 
 Message:

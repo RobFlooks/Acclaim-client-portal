@@ -583,7 +583,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user.isAdmin) {
         // User-to-admin notification (existing functionality)
         try {
-          // Get the primary admin user for notifications
+          // Get the main admin user
           const adminUser = await storage.getUser("admin_1753292574.014698");
           
           if (adminUser && adminUser.email) {
@@ -596,32 +596,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             }
 
-            // Get case reference and name if this is a case-specific message
+            // Get case reference if this is a case-specific message
             let caseReference = undefined;
-            let caseName = undefined;
             if (messageData.caseId) {
               const messageCase = await storage.getCaseById(messageData.caseId);
               if (messageCase) {
                 caseReference = messageCase.accountNumber;
-                caseName = messageCase.caseName;
               }
             }
 
-            // Send email notification only to email@acclaim.law
-            console.log(`📧 Sending user message notification to: ${adminUser.email}`);
-            const emailResult = await sendGridEmailService.sendMessageNotification(
+            // Send email notification
+            await sendGridEmailService.sendMessageNotification(
               {
                 userEmail: user.email || '',
                 userName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || '',
                 messageSubject: messageData.subject || '',
                 messageContent: messageData.content,
                 caseReference,
-                caseName,
                 organisationName,
               },
               adminUser.email
             );
-            console.log(`📧 Email sent to ${adminUser.email}: ${emailResult ? 'Success' : 'Failed'}`);
           }
         } catch (emailError) {
           // Log email error but don't fail the message creation
@@ -643,14 +638,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
               }
 
-              // Get case reference and name if this is a case-specific message
+              // Get case reference if this is a case-specific message
               let caseReference = undefined;
-              let caseName = undefined;
               if (messageData.caseId) {
                 const messageCase = await storage.getCaseById(messageData.caseId);
                 if (messageCase) {
                   caseReference = messageCase.accountNumber;
-                  caseName = messageCase.caseName;
                 }
               }
 
@@ -663,7 +656,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 messageSubject: messageData.subject,
                 messageContent: messageData.content,
                 caseReference,
-                caseName,
                 organisationName,
               });
             }
@@ -3855,105 +3847,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user organisations:", error);
       res.status(500).json({ message: "Failed to fetch user organisations" });
-    }
-  });
-
-  // Email debugging and testing endpoints
-  app.post('/api/debug/email-test', async (req: any, res) => {
-    try {
-      const { to, subject, message } = req.body;
-      
-      console.log('🔍 Starting email debugging test...');
-      console.log(`📧 Attempting to send email to: ${to || 'pez474@yahoo.com'}`);
-      console.log(`📧 Subject: ${subject || 'Email Debug Test'}`);
-      console.log(`📧 Message: ${message || 'Testing email delivery system'}`);
-      
-      const testTo = to || 'pez474@yahoo.com';
-      const testSubject = subject || 'Email Debug Test';
-      const testMessage = message || 'Testing email delivery system to verify SendGrid configuration and email delivery.';
-      
-      const result = await sendGridEmailService.sendMessageNotification(
-        {
-          userEmail: 'debug@test.com',
-          userName: 'Debug Test User',
-          messageSubject: testSubject,
-          messageContent: testMessage,
-          caseReference: 'DEBUG-001',
-          caseName: 'Email Debug Test Case',
-          organisationName: 'Acclaim Credit Management',
-        },
-        testTo
-      );
-      
-      console.log(`🔍 Email sending result: ${result ? 'SUCCESS' : 'FAILED'}`);
-      
-      res.json({ 
-        success: result, 
-        message: 'Email debug test completed',
-        sentTo: testTo,
-        subject: testSubject,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('🔍 Email debug test error:', error);
-      res.status(500).json({ 
-        error: error.message,
-        message: 'Email debug test failed',
-        timestamp: new Date().toISOString()
-      });
-    }
-  });
-
-  // Test user-to-admin notification flow specifically
-  app.post('/api/debug/user-notification-test', async (req: any, res) => {
-    try {
-      console.log('🔍 Testing user-to-admin notification flow...');
-      
-      // Get the admin user
-      const adminUser = await storage.getUser("admin_1753292574.014698");
-      if (!adminUser) {
-        return res.status(404).json({ error: 'Admin user not found' });
-      }
-      
-      console.log(`🔍 Admin user found: ${adminUser.email}`);
-      
-      // Simulate the exact notification that should have been sent for Matt Perry's message
-      const result = await sendGridEmailService.sendMessageNotification(
-        {
-          userEmail: 'perry367@gmail.com',
-          userName: 'Matt Perry',
-          messageSubject: 'Hello',
-          messageContent: 'Hi',
-          caseReference: 'CLS00003-028',
-          caseName: 'Test matter only',
-          organisationName: 'Acclaim Credit Management',
-        },
-        adminUser.email
-      );
-      
-      console.log(`🔍 User-to-admin notification result: ${result ? 'SUCCESS' : 'FAILED'}`);
-      
-      res.json({
-        success: result,
-        message: 'User-to-admin notification test completed',
-        adminEmail: adminUser.email,
-        testData: {
-          userEmail: 'perry367@gmail.com',
-          userName: 'Matt Perry',
-          messageSubject: 'Hello',
-          messageContent: 'Hi',
-          caseReference: 'CLS00003-028',
-          caseName: 'Test matter only'
-        },
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('🔍 User notification test error:', error);
-      res.status(500).json({ 
-        error: error.message,
-        message: 'User notification test failed',
-        timestamp: new Date().toISOString()
-      });
     }
   });
 
