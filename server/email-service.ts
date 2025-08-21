@@ -53,6 +53,17 @@ interface AdminToUserNotificationData {
   };
 }
 
+interface WelcomeEmailData {
+  userEmail: string;
+  userName: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+  temporaryPassword: string;
+  organisationName: string;
+  adminName: string;
+}
+
 interface ExternalMessageNotificationData {
   userEmail: string;
   userName: string;
@@ -679,6 +690,142 @@ Please log in to the Acclaim Portal to view full case details and respond if nee
       return true;
     } catch (error) {
       console.error('Failed to send external message email notification:', error);
+      return false;
+    }
+  }
+
+  async sendWelcomeEmail(data: WelcomeEmailData): Promise<boolean> {
+    if (!this.initialized || !this.transporter) {
+      // Enhanced console logging for welcome emails
+      console.log('\n================= WELCOME EMAIL NOTIFICATION =================');
+      console.log(`📧 Welcome email would be sent to: ${data.userEmail}`);
+      console.log(`👤 New User: ${data.firstName} ${data.lastName}`);
+      console.log(`🏢 Organisation: ${data.organisationName}`);
+      console.log(`👮 Created by Admin: ${data.adminName}`);
+      console.log(`🔑 Username: ${data.username}`);
+      console.log(`🔐 Temporary Password: ${data.temporaryPassword}`);
+      console.log(`⏰ Time: ${new Date().toLocaleString('en-GB')}`);
+      console.log('===========================================================\n');
+      
+      console.log('ℹ️  Note: SMTP not configured, welcome email logged to console');
+      return true;
+    }
+
+    try {
+      const subject = `Welcome to Acclaim Credit Management Portal - ${data.firstName} ${data.lastName}`;
+
+      const htmlContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
+          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 30px; text-align: center;">
+            <div style="margin-bottom: 10px;">
+              <img src="cid:logo" alt="Acclaim Credit Management" style="height: 40px; width: auto;" />
+            </div>
+            <h1 style="margin: 0; font-size: 24px;">Welcome to Acclaim Portal</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">Your account has been created</p>
+          </div>
+          
+          <div style="padding: 30px;">
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <h2 style="color: #1e293b; margin-top: 0;">Account Details</h2>
+              <p style="color: #475569; margin-bottom: 20px;">Hello ${data.firstName},</p>
+              <p style="color: #475569; margin-bottom: 20px;">Welcome to the Acclaim Credit Management Portal! Your account has been created by ${data.adminName} from ${data.organisationName}.</p>
+              
+              <table style="width: 100%; border-spacing: 0; margin: 20px 0;">
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 140px;">Username:</td>
+                  <td style="padding: 8px 0; color: #1e293b; font-family: monospace; background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">${data.username}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Temporary Password:</td>
+                  <td style="padding: 8px 0; color: #1e293b; font-family: monospace; background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">${data.temporaryPassword}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Organisation:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.organisationName}</td>
+                </tr>
+              </table>
+            </div>
+
+            <div style="background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+              <h3 style="color: #92400e; margin-top: 0; margin-bottom: 10px;">⚠️ Important Security Notice</h3>
+              <p style="color: #92400e; margin: 0; font-size: 14px;">This is a temporary password. You will be required to change it when you first log in for security purposes.</p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <h3 style="color: #1e293b; margin-top: 0;">Getting Started</h3>
+              <ol style="color: #475569; line-height: 1.6; padding-left: 20px;">
+                <li>Visit the Acclaim Portal login page</li>
+                <li>Enter your username and temporary password</li>
+                <li>Create a new secure password when prompted</li>
+                <li>Explore your dashboard and case management tools</li>
+              </ol>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <div style="background: #14b8a6; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; display: inline-block; font-weight: bold;">
+                Access Portal
+              </div>
+            </div>
+
+            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; text-align: center;">
+              <p style="color: #64748b; margin: 0; font-size: 12px;">
+                If you have any questions, please contact ${data.adminName} or our support team.
+              </p>
+            </div>
+          </div>
+          
+          <div style="background: #1e293b; color: white; padding: 15px; text-align: center; font-size: 12px;">
+            <p style="margin: 0;">This is an automated notification from Acclaim Credit Management Portal</p>
+          </div>
+        </div>
+      `;
+
+      const textContent = `
+Welcome to Acclaim Credit Management Portal
+
+Hello ${data.firstName},
+
+Your account has been created by ${data.adminName} from ${data.organisationName}.
+
+Account Details:
+Username: ${data.username}
+Temporary Password: ${data.temporaryPassword}
+Organisation: ${data.organisationName}
+
+IMPORTANT: This is a temporary password. You will be required to change it when you first log in.
+
+Getting Started:
+1. Visit the Acclaim Portal login page
+2. Enter your username and temporary password
+3. Create a new secure password when prompted
+4. Explore your dashboard and case management tools
+
+If you have any questions, please contact ${data.adminName} or our support team.
+      `;
+
+      const info = await this.transporter.sendMail({
+        from: '"Acclaim Credit Management" <noreply@acclaim-portal.com>',
+        to: data.userEmail,
+        subject: subject,
+        text: textContent,
+        html: htmlContent,
+        attachments: [
+          {
+            filename: 'logo.png',
+            path: path.join(__dirname, '../attached_assets/Acclaim rose.Cur_1752271300769.png'),
+            cid: 'logo'
+          }
+        ]
+      });
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+      }
+
+      console.log('Welcome email sent successfully');
+      return true;
+    } catch (error) {
+      console.error('Failed to send welcome email:', error);
       return false;
     }
   }

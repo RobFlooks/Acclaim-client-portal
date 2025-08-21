@@ -1286,6 +1286,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Send welcome email to a user
+  app.post('/api/admin/users/:userId/send-welcome-email', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const currentUser = req.user;
+
+      // Get user details
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Check if user has a temporary password (indicating they haven't logged in yet)
+      if (!user.temporaryPassword) {
+        return res.status(400).json({ 
+          message: "User does not have a temporary password. Welcome emails are only sent to new users who haven't logged in yet." 
+        });
+      }
+
+      // Get user's organisation
+      const userOrgs = await storage.getUserOrganisations(userId);
+      if (!userOrgs || userOrgs.length === 0) {
+        return res.status(400).json({ message: "User must be assigned to an organisation before sending welcome email" });
+      }
+
+      // Get admin details
+      const admin = await storage.getUser(currentUser.id);
+      if (!admin) {
+        return res.status(500).json({ message: "Admin user not found" });
+      }
+
+      // Use the first organisation (most users are in one organisation)
+      const organisation = userOrgs[0];
+
+      const welcomeEmailData = {
+        userEmail: user.email,
+        userName: `${user.firstName} ${user.lastName}`,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username,
+        temporaryPassword: user.temporaryPassword,
+        organisationName: organisation.name,
+        adminName: `${admin.firstName} ${admin.lastName}`
+      };
+
+      // Try SendGrid first, fallback to console logging
+      let emailSent = false;
+      try {
+        emailSent = await sendGridEmailService.sendWelcomeEmail(welcomeEmailData);
+      } catch (error) {
+        console.error("SendGrid welcome email failed:", error);
+      }
+
+      if (!emailSent) {
+        // Fallback to console logging
+        emailSent = await emailService.sendWelcomeEmail(welcomeEmailData);
+      }
+
+      if (emailSent) {
+        res.json({ 
+          message: `Welcome email sent successfully to ${user.email}`,
+          recipient: {
+            name: `${user.firstName} ${user.lastName}`,
+            email: user.email,
+            organisation: organisation.name
+          }
+        });
+      } else {
+        res.status(500).json({ message: "Failed to send welcome email" });
+      }
+
+    } catch (error) {
+      console.error("Error sending welcome email:", error);
+      res.status(500).json({ message: "Failed to send welcome email" });
+    }
+  });
+
   // Delete user
   app.delete('/api/admin/users/:userId', isAuthenticated, isAdmin, async (req: any, res) => {
     try {

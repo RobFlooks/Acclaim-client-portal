@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye } from "lucide-react";
+import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, Mail } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrganisationSchema } from "@shared/schema";
@@ -2096,6 +2096,38 @@ export default function AdminEnhanced() {
     },
   });
 
+  // Send welcome email mutation
+  const sendWelcomeEmailMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const response = await apiRequest("POST", `/api/admin/users/${userId}/send-welcome-email`);
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Welcome Email Sent",
+        description: data.message,
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send welcome email",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Copy temp password to clipboard
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -2490,6 +2522,24 @@ export default function AdminEnhanced() {
                         <Key className="h-3 w-3 mr-1" />
                         Reset
                       </Button>
+                      {(user as any).temporaryPassword && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => {
+                            const confirmation = confirm(`Send welcome email to ${user.firstName} ${user.lastName}?\n\nThis will send their username and temporary password to ${user.email}.`);
+                            if (confirmation) {
+                              sendWelcomeEmailMutation.mutate(user.id);
+                            }
+                          }}
+                          disabled={sendWelcomeEmailMutation.isPending}
+                          title="Send welcome email with login details"
+                        >
+                          <Mail className="h-3 w-3 mr-1" />
+                          Welcome
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
@@ -2636,6 +2686,22 @@ export default function AdminEnhanced() {
                             >
                               <Key className="h-3 w-3" />
                             </Button>
+                            {(user as any).temporaryPassword && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const confirmation = confirm(`Send welcome email to ${user.firstName} ${user.lastName}?\n\nThis will send their username and temporary password to ${user.email}.`);
+                                  if (confirmation) {
+                                    sendWelcomeEmailMutation.mutate(user.id);
+                                  }
+                                }}
+                                disabled={sendWelcomeEmailMutation.isPending}
+                                title="Send welcome email with login details"
+                              >
+                                <Mail className="h-3 w-3" />
+                              </Button>
+                            )}
                             <Button
                               variant="outline"
                               size="sm"
