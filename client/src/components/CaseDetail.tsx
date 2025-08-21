@@ -509,8 +509,8 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               id: `activity_${activity.id}`,
               date: activity.createdAt,
               type: 'activity',
-              title: activity.activityType || 'Activity',
-              description: activity.description || 'No description',
+              title: activity.description || 'Activity',
+              description: activity.activityType || '',
               icon: '⚡',
               color: '#14b8a6'
             });
