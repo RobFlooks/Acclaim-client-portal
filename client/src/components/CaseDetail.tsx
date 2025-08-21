@@ -44,7 +44,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
 
   // Calculate accurate outstanding amount
   const getTotalPayments = () => {
-    if (!payments || payments.length === 0) return 0;
+    if (!payments || !Array.isArray(payments) || payments.length === 0) return 0;
     return payments.reduce((sum: number, payment: any) => {
       const numericAmount = parseFloat(payment.amount || 0);
       return sum + (isNaN(numericAmount) ? 0 : numericAmount);
@@ -85,7 +85,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   };
 
   const getLastMessage = () => {
-    if (!messages || messages.length === 0) return null;
+    if (!messages || !Array.isArray(messages) || messages.length === 0) return null;
     return messages[0]; // Messages are ordered by newest first
   };
 
@@ -497,23 +497,11 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
       const totalPayments = getTotalPayments();
       const outstandingAmount = getOutstandingAmount();
       
-      // Create a comprehensive timeline combining all events
+      // Create timeline with ONLY case activities (no portal actions)
+      // Timeline should only contain data pushed from SOS, never portal activity
       const timelineEvents: any[] = [];
       
-      // Add case creation event
-      if (caseData.createdAt) {
-        timelineEvents.push({
-          id: `case_${caseData.id}`,
-          date: caseData.createdAt,
-          type: 'case_created',
-          title: 'Case Created',
-          description: `Case ${caseData.accountNumber} was created`,
-          icon: '🏗️',
-          color: '#0d9488'
-        });
-      }
-      
-      // Add activities
+      // Only add activities from case_activities table (these come from SOS)
       if (activities && Array.isArray(activities)) {
         activities.forEach((activity: any) => {
           if (activity && activity.createdAt) {
@@ -526,61 +514,6 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               icon: '⚡',
               color: '#14b8a6'
             });
-          }
-        });
-      }
-      
-      // Add messages
-      if (messages && Array.isArray(messages)) {
-        messages.forEach((message: any) => {
-          if (message && message.createdAt) {
-            timelineEvents.push({
-              id: `message_${message.id}`,
-              date: message.createdAt,
-              type: 'message',
-              title: message.subject || 'Message',
-              description: `Message from ${message.senderName || 'Unknown'}`,
-              icon: '💬',
-              color: '#0891b2'
-            });
-          }
-        });
-      }
-      
-      // Add documents
-      if (documents && Array.isArray(documents)) {
-        documents.forEach((document: any) => {
-          if (document && document.createdAt) {
-            timelineEvents.push({
-              id: `document_${document.id}`,
-              date: document.createdAt,
-              type: 'document',
-              title: 'Document Uploaded',
-              description: document.fileName || 'Unknown file',
-              icon: '📄',
-              color: '#0d9488'
-            });
-          }
-        });
-      }
-      
-      // Add payments
-      if (payments && Array.isArray(payments)) {
-        payments.forEach((payment: any) => {
-          if (payment && payment.paymentDate) {
-            const numericAmount = parseFloat(payment.amount || 0);
-            
-            if (!isNaN(numericAmount)) {
-              timelineEvents.push({
-                id: `payment_${payment.id}`,
-                date: payment.paymentDate,
-                type: 'payment',
-                title: 'Payment Received',
-                description: `Payment of ${formatCurrency(numericAmount)} received`,
-                icon: '💰',
-                color: '#10b981'
-              });
-            }
           }
         });
       }

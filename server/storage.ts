@@ -768,13 +768,8 @@ export class DatabaseStorage implements IStorage {
       .where(eq(cases.id, id))
       .returning();
     
-    // Log the archiving activity
-    await this.addCaseActivity({
-      caseId: id,
-      activityType: 'case_archived',
-      description: 'Case archived by admin',
-      performedBy: userId,
-    });
+    // Timeline activities are only created by SOS pushes, not portal actions
+    // Case archiving does not create timeline entry
     
     return archivedCase;
   }
@@ -791,13 +786,8 @@ export class DatabaseStorage implements IStorage {
       .where(eq(cases.id, id))
       .returning();
     
-    // Log the unarchiving activity
-    await this.addCaseActivity({
-      caseId: id,
-      activityType: 'case_unarchived',
-      description: 'Case unarchived by admin',
-      performedBy: userId,
-    });
+    // Timeline activities are only created by SOS pushes, not portal actions
+    // Case unarchiving does not create timeline entry
     
     return unarchivedCase;
   }

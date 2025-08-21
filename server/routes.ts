@@ -945,13 +945,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         organisationId: user.organisationId,
       });
 
-      // Add case activity
-      await storage.addCaseActivity({
-        caseId,
-        activityType: "document_uploaded",
-        description: `Document uploaded: ${req.file.originalname}`,
-        performedBy: userId,
-      });
+      // Timeline activities are only created by SOS pushes, not portal actions
+      // Document upload does not create timeline entry
 
       res.status(201).json(document);
     } catch (error) {
@@ -1051,13 +1046,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         recordedBy: userId,
       });
 
-      // Add case activity
-      await storage.addCaseActivity({
-        caseId,
-        activityType: "payment_received",
-        description: `Payment received: £${req.body.amount}`,
-        performedBy: userId,
-      });
+      // Timeline activities are only created by SOS pushes, not portal actions
+      // Payment recording does not create timeline entry
 
       res.status(201).json(payment);
     } catch (error) {
