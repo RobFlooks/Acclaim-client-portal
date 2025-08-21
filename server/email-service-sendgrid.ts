@@ -303,12 +303,12 @@ Please log in to the Acclaim Portal to view and respond to this message.
 
       const htmlContent = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
-          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 30px; text-align: center;">
+          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); background-color: #14b8a6; color: #ffffff; padding: 30px; text-align: center;">
             <div style="margin-bottom: 10px;">
               <img src="cid:logo" alt="Acclaim Credit Management & Recovery" style="height: 40px; width: auto;" />
             </div>
-            <p style="margin: 0; opacity: 0.9; font-size: 16px;">New message received</p>
-            ${data.caseReference ? `<p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
+            <p style="margin: 0; color: #ffffff; font-size: 16px; font-weight: 500;">New message received</p>
+            ${data.caseReference ? `<p style="margin: 5px 0 0 0; color: #ffffff; font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
           </div>
           
           <div style="padding: 30px;">
