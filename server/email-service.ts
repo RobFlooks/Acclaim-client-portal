@@ -31,6 +31,14 @@ interface AdminToUserNotificationData {
   messageContent: string;
   caseReference?: string;
   organisationName: string;
+  caseDetails?: {
+    caseName: string;
+    debtorType: string;
+    originalAmount: string;
+    outstandingAmount: string;
+    status: string;
+    stage: string;
+  };
 }
 
 interface ExternalMessageNotificationData {
@@ -42,6 +50,14 @@ interface ExternalMessageNotificationData {
   organisationName: string;
   senderName: string;
   messageType: string;
+  caseDetails?: {
+    caseName: string;
+    debtorType: string;
+    originalAmount: string;
+    outstandingAmount: string;
+    status: string;
+    stage: string;
+  };
 }
 
 class EmailService {
@@ -297,6 +313,15 @@ Please log in to the Acclaim Portal to respond to this message.
       if (data.caseReference) {
         console.log(`📋 Case: ${data.caseReference}`);
       }
+      if (data.caseDetails) {
+        console.log(`📁 Case Details:`);
+        console.log(`   └─ Name: ${data.caseDetails.caseName}`);
+        console.log(`   └─ Type: ${data.caseDetails.debtorType.charAt(0).toUpperCase() + data.caseDetails.debtorType.slice(1).replace('_', ' ')}`);
+        console.log(`   └─ Original: £${data.caseDetails.originalAmount}`);
+        console.log(`   └─ Outstanding: £${data.caseDetails.outstandingAmount}`);
+        console.log(`   └─ Status: ${data.caseDetails.status.toUpperCase()}`);
+        console.log(`   └─ Stage: ${data.caseDetails.stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}`);
+      }
       console.log(`📝 Subject: ${data.messageSubject || 'New Message from Admin'}`);
       console.log(`💬 Message: ${data.messageContent}`);
       console.log(`⏰ Time: ${new Date().toLocaleString('en-GB')}`);
@@ -309,7 +334,9 @@ Please log in to the Acclaim Portal to respond to this message.
     }
 
     try {
-      const subject = `${data.messageSubject || 'New Message'} - Acclaim Portal`;
+      const subject = data.caseReference 
+        ? `${data.messageSubject || 'New Message'} [${data.caseReference}] - Acclaim Portal`
+        : `${data.messageSubject || 'New Message'} - Acclaim Portal`;
       
       const htmlContent = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
@@ -318,6 +345,7 @@ Please log in to the Acclaim Portal to respond to this message.
               <img src="cid:logo" alt="Acclaim Credit Management" style="height: 40px; width: auto;" />
             </div>
             <p style="margin: 0; opacity: 0.9; font-size: 16px;">New message from administrator</p>
+            ${data.caseReference ? `<p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
           </div>
           
           <div style="padding: 30px;">
@@ -336,6 +364,41 @@ Please log in to the Acclaim Portal to respond to this message.
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; color: #475569;">Case Reference:</td>
                   <td style="padding: 8px 0; color: #1e293b;">${data.caseReference}</td>
+                </tr>
+                ` : ''}
+                ${data.caseDetails ? `
+                <tr>
+                  <td colspan="2" style="padding: 15px 0 8px 0;">
+                    <h3 style="color: #0f172a; margin: 0; font-size: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Case Details</h3>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Case Name:</td>
+                  <td style="padding: 4px 0; color: #1e293b;">${data.caseDetails.caseName}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Debtor Type:</td>
+                  <td style="padding: 4px 0; color: #1e293b;">${data.caseDetails.debtorType.charAt(0).toUpperCase() + data.caseDetails.debtorType.slice(1).replace('_', ' ')}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Original Amount:</td>
+                  <td style="padding: 4px 0; color: #1e293b;">£${data.caseDetails.originalAmount}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Outstanding Amount:</td>
+                  <td style="padding: 4px 0; color: #1e293b; font-weight: bold;">£${data.caseDetails.outstandingAmount}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Status:</td>
+                  <td style="padding: 4px 0; color: #1e293b;">
+                    <span style="background: ${data.caseDetails.status === 'active' ? '#dcfce7' : '#fef3c7'}; color: ${data.caseDetails.status === 'active' ? '#166534' : '#a16207'}; padding: 2px 8px; border-radius: 4px; font-size: 12px; text-transform: uppercase; font-weight: bold;">
+                      ${data.caseDetails.status}
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Current Stage:</td>
+                  <td style="padding: 4px 0; color: #1e293b;">${data.caseDetails.stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</td>
                 </tr>
                 ` : ''}
                 <tr>
@@ -371,6 +434,15 @@ NEW MESSAGE FROM ADMIN - Acclaim Portal
 From: ${data.adminName}
 Organisation: ${data.organisationName}
 ${data.caseReference ? `Case Reference: ${data.caseReference}` : ''}
+${data.caseDetails ? `
+CASE DETAILS:
+- Case Name: ${data.caseDetails.caseName}
+- Debtor Type: ${data.caseDetails.debtorType.charAt(0).toUpperCase() + data.caseDetails.debtorType.slice(1).replace('_', ' ')}
+- Original Amount: £${data.caseDetails.originalAmount}
+- Outstanding Amount: £${data.caseDetails.outstandingAmount}
+- Status: ${data.caseDetails.status.toUpperCase()}
+- Current Stage: ${data.caseDetails.stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+` : ''}
 Subject: ${data.messageSubject || 'New Message from Admin'}
 
 Message:
@@ -415,6 +487,15 @@ Please log in to the Acclaim Portal to view and respond to this message.
       console.log(`🏢 Organisation: ${data.organisationName}`);
       console.log(`📤 From: ${data.senderName} (External System)`);
       console.log(`📋 Case: ${data.caseReference || 'No case reference'}`);
+      if (data.caseDetails) {
+        console.log(`📁 Case Details:`);
+        console.log(`   └─ Name: ${data.caseDetails.caseName}`);
+        console.log(`   └─ Type: ${data.caseDetails.debtorType.charAt(0).toUpperCase() + data.caseDetails.debtorType.slice(1).replace('_', ' ')}`);
+        console.log(`   └─ Original: £${data.caseDetails.originalAmount}`);
+        console.log(`   └─ Outstanding: £${data.caseDetails.outstandingAmount}`);
+        console.log(`   └─ Status: ${data.caseDetails.status.toUpperCase()}`);
+        console.log(`   └─ Stage: ${data.caseDetails.stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}`);
+      }
       console.log(`🔖 Type: ${data.messageType}`);
       console.log(`📝 Subject: ${data.messageSubject}`);
       console.log(`💬 Message: ${data.messageContent}`);
@@ -426,7 +507,9 @@ Please log in to the Acclaim Portal to view and respond to this message.
     }
 
     try {
-      const subject = `${data.messageType}: ${data.messageSubject} - Acclaim Portal`;
+      const subject = data.caseReference 
+        ? `${data.messageType}: ${data.messageSubject} [${data.caseReference}] - Acclaim Portal`
+        : `${data.messageType}: ${data.messageSubject} - Acclaim Portal`;
       const htmlContent = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
           <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 30px; text-align: center;">
@@ -434,6 +517,7 @@ Please log in to the Acclaim Portal to view and respond to this message.
               <img src="cid:logo" alt="Acclaim Credit Management" style="height: 40px; width: auto;" />
             </div>
             <p style="margin: 0; opacity: 0.9; font-size: 16px;">New case update received</p>
+            ${data.caseReference ? `<p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
           </div>
           
           <div style="padding: 30px;">
@@ -452,6 +536,41 @@ Please log in to the Acclaim Portal to view and respond to this message.
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; color: #475569;">Case Reference:</td>
                   <td style="padding: 8px 0; color: #1e293b;">${data.caseReference}</td>
+                </tr>
+                ` : ''}
+                ${data.caseDetails ? `
+                <tr>
+                  <td colspan="2" style="padding: 15px 0 8px 0;">
+                    <h3 style="color: #0f172a; margin: 0; font-size: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Case Details</h3>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Case Name:</td>
+                  <td style="padding: 4px 0; color: #1e293b;">${data.caseDetails.caseName}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Debtor Type:</td>
+                  <td style="padding: 4px 0; color: #1e293b;">${data.caseDetails.debtorType.charAt(0).toUpperCase() + data.caseDetails.debtorType.slice(1).replace('_', ' ')}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Original Amount:</td>
+                  <td style="padding: 4px 0; color: #1e293b;">£${data.caseDetails.originalAmount}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Outstanding Amount:</td>
+                  <td style="padding: 4px 0; color: #1e293b; font-weight: bold;">£${data.caseDetails.outstandingAmount}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Status:</td>
+                  <td style="padding: 4px 0; color: #1e293b;">
+                    <span style="background: ${data.caseDetails.status === 'active' ? '#dcfce7' : '#fef3c7'}; color: ${data.caseDetails.status === 'active' ? '#166534' : '#a16207'}; padding: 2px 8px; border-radius: 4px; font-size: 12px; text-transform: uppercase; font-weight: bold;">
+                      ${data.caseDetails.status}
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Current Stage:</td>
+                  <td style="padding: 4px 0; color: #1e293b;">${data.caseDetails.stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</td>
                 </tr>
                 ` : ''}
                 <tr>
@@ -497,6 +616,15 @@ CASE UPDATE NOTIFICATION - Acclaim Portal
 From: ${data.senderName} (External System)
 Organisation: ${data.organisationName}
 ${data.caseReference ? `Case Reference: ${data.caseReference}` : ''}
+${data.caseDetails ? `
+CASE DETAILS:
+- Case Name: ${data.caseDetails.caseName}
+- Debtor Type: ${data.caseDetails.debtorType.charAt(0).toUpperCase() + data.caseDetails.debtorType.slice(1).replace('_', ' ')}
+- Original Amount: £${data.caseDetails.originalAmount}
+- Outstanding Amount: £${data.caseDetails.outstandingAmount}
+- Status: ${data.caseDetails.status.toUpperCase()}
+- Current Stage: ${data.caseDetails.stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+` : ''}
 Update Type: ${data.messageType.toUpperCase()}
 Subject: ${data.messageSubject}
 
