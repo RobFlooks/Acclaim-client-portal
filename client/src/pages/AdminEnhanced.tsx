@@ -2522,24 +2522,26 @@ export default function AdminEnhanced() {
                         <Key className="h-3 w-3 mr-1" />
                         Reset
                       </Button>
-                      {(user as any).temporaryPassword && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1"
-                          onClick={() => {
-                            const confirmation = confirm(`Send welcome email to ${user.firstName} ${user.lastName}?\n\nThis will send their username and temporary password to ${user.email}.`);
-                            if (confirmation) {
-                              sendWelcomeEmailMutation.mutate(user.id);
-                            }
-                          }}
-                          disabled={sendWelcomeEmailMutation.isPending}
-                          title="Send welcome email with login details"
-                        >
-                          <Mail className="h-3 w-3 mr-1" />
-                          Welcome
-                        </Button>
-                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={`flex-1 ${!(user as any).temporaryPassword ? 'opacity-50' : ''}`}
+                        onClick={() => {
+                          if (!(user as any).temporaryPassword) {
+                            alert(`${user.firstName} ${user.lastName} does not have a temporary password.\n\nWelcome emails are only sent to new users who haven't logged in yet.`);
+                            return;
+                          }
+                          const confirmation = confirm(`Send welcome email to ${user.firstName} ${user.lastName}?\n\nThis will send their username and temporary password to ${user.email}.`);
+                          if (confirmation) {
+                            sendWelcomeEmailMutation.mutate(user.id);
+                          }
+                        }}
+                        disabled={sendWelcomeEmailMutation.isPending || !(user as any).temporaryPassword}
+                        title={(user as any).temporaryPassword ? "Send welcome email with login details" : "User does not have a temporary password"}
+                      >
+                        <Mail className="h-3 w-3 mr-1" />
+                        Welcome
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
@@ -2686,22 +2688,25 @@ export default function AdminEnhanced() {
                             >
                               <Key className="h-3 w-3" />
                             </Button>
-                            {(user as any).temporaryPassword && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  const confirmation = confirm(`Send welcome email to ${user.firstName} ${user.lastName}?\n\nThis will send their username and temporary password to ${user.email}.`);
-                                  if (confirmation) {
-                                    sendWelcomeEmailMutation.mutate(user.id);
-                                  }
-                                }}
-                                disabled={sendWelcomeEmailMutation.isPending}
-                                title="Send welcome email with login details"
-                              >
-                                <Mail className="h-3 w-3" />
-                              </Button>
-                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                if (!(user as any).temporaryPassword) {
+                                  alert(`${user.firstName} ${user.lastName} does not have a temporary password.\n\nWelcome emails are only sent to new users who haven't logged in yet.`);
+                                  return;
+                                }
+                                const confirmation = confirm(`Send welcome email to ${user.firstName} ${user.lastName}?\n\nThis will send their username and temporary password to ${user.email}.`);
+                                if (confirmation) {
+                                  sendWelcomeEmailMutation.mutate(user.id);
+                                }
+                              }}
+                              disabled={sendWelcomeEmailMutation.isPending || !(user as any).temporaryPassword}
+                              title={(user as any).temporaryPassword ? "Send welcome email with login details" : "User does not have a temporary password"}
+                              className={!(user as any).temporaryPassword ? 'opacity-50' : ''}
+                            >
+                              <Mail className="h-3 w-3" />
+                            </Button>
                             <Button
                               variant="outline"
                               size="sm"
