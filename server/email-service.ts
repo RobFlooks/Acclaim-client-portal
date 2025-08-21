@@ -701,8 +701,7 @@ Please log in to the Acclaim Portal to view full case details and respond if nee
       console.log(`📧 Welcome email would be sent to: ${data.userEmail}`);
       console.log(`👤 New User: ${data.firstName} ${data.lastName}`);
       console.log(`🏢 Organisation: ${data.organisationName}`);
-      console.log(`👮 Created by Admin: ${data.adminName}`);
-      console.log(`🔑 Username: ${data.username}`);
+      console.log(`🔑 Username: ${data.userEmail}`);
       console.log(`🔐 Temporary Password: ${data.temporaryPassword}`);
       console.log(`⏰ Time: ${new Date().toLocaleString('en-GB')}`);
       console.log('===========================================================\n');
@@ -712,7 +711,7 @@ Please log in to the Acclaim Portal to view full case details and respond if nee
     }
 
     try {
-      const subject = `Welcome to Acclaim Credit Management Portal - ${data.firstName} ${data.lastName}`;
+      const subject = `Welcome to the Acclaim Credit Management & Recovery Portal!`;
 
       const htmlContent = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
@@ -720,20 +719,20 @@ Please log in to the Acclaim Portal to view full case details and respond if nee
             <div style="margin-bottom: 10px;">
               <img src="cid:logo" alt="Acclaim Credit Management" style="height: 40px; width: auto;" />
             </div>
-            <h1 style="margin: 0; font-size: 24px;">Welcome to Acclaim Portal</h1>
-            <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">Your account has been created</p>
+            <h1 style="margin: 0; font-size: 24px;">Welcome to the Acclaim Credit Management & Recovery Portal!</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">Your account is ready</p>
           </div>
           
           <div style="padding: 30px;">
             <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
               <h2 style="color: #1e293b; margin-top: 0;">Account Details</h2>
               <p style="color: #475569; margin-bottom: 20px;">Hello ${data.firstName},</p>
-              <p style="color: #475569; margin-bottom: 20px;">Welcome to the Acclaim Credit Management Portal! Your account has been created by ${data.adminName} from ${data.organisationName}.</p>
+              <p style="color: #475569; margin-bottom: 20px;">Welcome to the Acclaim Credit Management & Recovery Portal! Your account has been created and you can now access the system.</p>
               
               <table style="width: 100%; border-spacing: 0; margin: 20px 0;">
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 140px;">Username:</td>
-                  <td style="padding: 8px 0; color: #1e293b; font-family: monospace; background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">${data.username}</td>
+                  <td style="padding: 8px 0; color: #1e293b; font-family: monospace; background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">${data.userEmail}</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; color: #475569;">Temporary Password:</td>
@@ -769,7 +768,7 @@ Please log in to the Acclaim Portal to view full case details and respond if nee
 
             <div style="background: #f8fafc; padding: 15px; border-radius: 8px; text-align: center;">
               <p style="color: #64748b; margin: 0; font-size: 12px;">
-                If you have any questions, please contact ${data.adminName} or our support team.
+                If you have any questions, please contact our support team.
               </p>
             </div>
           </div>
@@ -781,14 +780,14 @@ Please log in to the Acclaim Portal to view full case details and respond if nee
       `;
 
       const textContent = `
-Welcome to Acclaim Credit Management Portal
+Welcome to the Acclaim Credit Management & Recovery Portal!
 
 Hello ${data.firstName},
 
-Your account has been created by ${data.adminName} from ${data.organisationName}.
+Your account has been created and you can now access the system.
 
 Account Details:
-Username: ${data.username}
+Username: ${data.userEmail}
 Temporary Password: ${data.temporaryPassword}
 Organisation: ${data.organisationName}
 
@@ -800,7 +799,7 @@ Getting Started:
 3. Create a new secure password when prompted
 4. Explore your dashboard and case management tools
 
-If you have any questions, please contact ${data.adminName} or our support team.
+If you have any questions, please contact our support team.
       `;
 
       const info = await this.transporter.sendMail({
