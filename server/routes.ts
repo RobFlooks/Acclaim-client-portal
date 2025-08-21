@@ -660,12 +660,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
               }
 
-              // Get case reference if this is a case-specific message
+              // Get case reference and details if this is a case-specific message
               let caseReference = undefined;
+              let caseDetails = undefined;
               if (messageData.caseId) {
                 const messageCase = await storage.getCaseById(messageData.caseId);
                 if (messageCase) {
                   caseReference = messageCase.accountNumber;
+                  caseDetails = {
+                    caseName: messageCase.caseName,
+                    debtorType: messageCase.debtorType,
+                    originalAmount: messageCase.originalAmount,
+                    outstandingAmount: messageCase.outstandingAmount,
+                    status: messageCase.status,
+                    stage: messageCase.stage
+                  };
                 }
               }
 
@@ -673,11 +682,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               await sendGridEmailService.sendAdminToUserNotification({
                 adminName: `${user.firstName} ${user.lastName}`.trim() || user.email,
                 adminEmail: user.email,
-                userEmail: recipientUser.email,
-                userName: `${recipientUser.firstName} ${recipientUser.lastName}`.trim() || recipientUser.email,
+                userEmail: recipientUser.email!,
+                userName: `${recipientUser.firstName} ${recipientUser.lastName}`.trim() || recipientUser.email!,
                 messageSubject: messageData.subject,
                 messageContent: messageData.content,
                 caseReference,
+                caseDetails,
                 organisationName,
               });
             }
@@ -696,12 +706,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 organisationName = organisation.name;
               }
 
-              // Get case reference if this is a case-specific message
+              // Get case reference and details if this is a case-specific message
               let caseReference = undefined;
+              let caseDetails = undefined;
               if (messageData.caseId) {
                 const messageCase = await storage.getCaseById(messageData.caseId);
                 if (messageCase) {
                   caseReference = messageCase.accountNumber;
+                  caseDetails = {
+                    caseName: messageCase.caseName,
+                    debtorType: messageCase.debtorType,
+                    originalAmount: messageCase.originalAmount,
+                    outstandingAmount: messageCase.outstandingAmount,
+                    status: messageCase.status,
+                    stage: messageCase.stage
+                  };
                 }
               }
 
@@ -710,11 +729,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 await sendGridEmailService.sendAdminToUserNotification({
                   adminName: `${user.firstName} ${user.lastName}`.trim() || user.email,
                   adminEmail: user.email,
-                  userEmail: orgUser.email,
-                  userName: `${orgUser.firstName} ${orgUser.lastName}`.trim() || orgUser.email,
+                  userEmail: orgUser.email!,
+                  userName: `${orgUser.firstName} ${orgUser.lastName}`.trim() || orgUser.email!,
                   messageSubject: messageData.subject,
                   messageContent: messageData.content,
                   caseReference,
+                  caseDetails,
                   organisationName,
                 });
               }
