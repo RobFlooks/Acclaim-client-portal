@@ -139,7 +139,9 @@ class EmailService {
     }
 
     try {
-      const subject = `New Message: ${data.messageSubject || 'User Enquiry'} - Acclaim Portal`;
+      const subject = data.caseReference 
+        ? `New Message: ${data.messageSubject || 'User Enquiry'} [${data.caseReference}] - Acclaim Portal`
+        : `New Message: ${data.messageSubject || 'User Enquiry'} - Acclaim Portal`;
       const htmlContent = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 20px; text-align: center;">
@@ -147,6 +149,7 @@ class EmailService {
               <img src="cid:logo" alt="Acclaim Credit Management" style="height: 32px; width: auto;" />
             </div>
             <h2 style="margin: 0; font-size: 18px;">New Message Received</h2>
+            ${data.caseReference ? `<p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
           </div>
           
           <div style="padding: 30px; background: #f8fafc; border: 1px solid #e2e8f0;">

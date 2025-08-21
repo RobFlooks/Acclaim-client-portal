@@ -207,9 +207,13 @@ Please log in to the Acclaim Portal to view and respond to this message.
     }
 
     try {
-      const subject = data.messageSubject 
-        ? `New Message: ${data.messageSubject} - Acclaim Portal`
-        : 'New Message Received - Acclaim Portal';
+      const subject = data.caseReference 
+        ? data.messageSubject 
+          ? `New Message: ${data.messageSubject} [${data.caseReference}] - Acclaim Portal`
+          : `New Message Received [${data.caseReference}] - Acclaim Portal`
+        : data.messageSubject 
+          ? `New Message: ${data.messageSubject} - Acclaim Portal`
+          : 'New Message Received - Acclaim Portal';
 
       const htmlContent = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
@@ -218,6 +222,7 @@ Please log in to the Acclaim Portal to view and respond to this message.
               <img src="cid:logo" alt="Acclaim Credit Management" style="height: 40px; width: auto;" />
             </div>
             <p style="margin: 0; opacity: 0.9; font-size: 16px;">New message received</p>
+            ${data.caseReference ? `<p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
           </div>
           
           <div style="padding: 30px;">
