@@ -2525,19 +2525,20 @@ export default function AdminEnhanced() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className={`flex-1 ${!(user as any).temporaryPassword ? 'opacity-50' : ''}`}
+                        className="flex-1"
                         onClick={() => {
-                          if (!(user as any).temporaryPassword) {
-                            alert(`${user.firstName} ${user.lastName} does not have a temporary password.\n\nWelcome emails are only sent to new users who haven't logged in yet.`);
-                            return;
-                          }
-                          const confirmation = confirm(`Send welcome email to ${user.firstName} ${user.lastName}?\n\nThis will send their username and temporary password to ${user.email}.`);
+                          const hasTemporaryPassword = (user as any).temporaryPassword;
+                          const message = hasTemporaryPassword
+                            ? `Send welcome email to ${user.firstName} ${user.lastName}?\n\nThis will send their username and temporary password to ${user.email}.`
+                            : `Send welcome email to ${user.firstName} ${user.lastName}?\n\nNote: This user has already logged in, so the email will include instructions to reset their password if needed.`;
+                          
+                          const confirmation = confirm(message);
                           if (confirmation) {
                             sendWelcomeEmailMutation.mutate(user.id);
                           }
                         }}
-                        disabled={sendWelcomeEmailMutation.isPending || !(user as any).temporaryPassword}
-                        title={(user as any).temporaryPassword ? "Send welcome email with login details" : "User does not have a temporary password"}
+                        disabled={sendWelcomeEmailMutation.isPending}
+                        title="Send welcome email with login details"
                       >
                         <Mail className="h-3 w-3 mr-1" />
                         Welcome
@@ -2692,18 +2693,18 @@ export default function AdminEnhanced() {
                               variant="outline"
                               size="sm"
                               onClick={() => {
-                                if (!(user as any).temporaryPassword) {
-                                  alert(`${user.firstName} ${user.lastName} does not have a temporary password.\n\nWelcome emails are only sent to new users who haven't logged in yet.`);
-                                  return;
-                                }
-                                const confirmation = confirm(`Send welcome email to ${user.firstName} ${user.lastName}?\n\nThis will send their username and temporary password to ${user.email}.`);
+                                const hasTemporaryPassword = (user as any).temporaryPassword;
+                                const message = hasTemporaryPassword
+                                  ? `Send welcome email to ${user.firstName} ${user.lastName}?\n\nThis will send their username and temporary password to ${user.email}.`
+                                  : `Send welcome email to ${user.firstName} ${user.lastName}?\n\nNote: This user has already logged in, so the email will include instructions to reset their password if needed.`;
+                                
+                                const confirmation = confirm(message);
                                 if (confirmation) {
                                   sendWelcomeEmailMutation.mutate(user.id);
                                 }
                               }}
-                              disabled={sendWelcomeEmailMutation.isPending || !(user as any).temporaryPassword}
-                              title={(user as any).temporaryPassword ? "Send welcome email with login details" : "User does not have a temporary password"}
-                              className={!(user as any).temporaryPassword ? 'opacity-50' : ''}
+                              disabled={sendWelcomeEmailMutation.isPending}
+                              title="Send welcome email with login details"
                             >
                               <Mail className="h-3 w-3" />
                             </Button>
