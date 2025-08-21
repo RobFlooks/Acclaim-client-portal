@@ -25,7 +25,7 @@ async function testDirectEmail() {
     
     const info = await transporter.sendMail({
       from: '"Acclaim Credit Management" <email@acclaim.law>',
-      to: 'pez474@yahoo.com',
+      to: 'mattperrylawyer@gmail.com',
       subject: 'Direct SendGrid Test - Email Delivery Verification',
       text: 'This is a direct test of SendGrid email delivery. If you receive this email, the SendGrid configuration is working correctly.',
       html: `
@@ -35,7 +35,7 @@ async function testDirectEmail() {
           <p>If you receive this email, the SendGrid configuration is working correctly.</p>
           <p><strong>Test Time:</strong> ${new Date().toISOString()}</p>
           <p><strong>From:</strong> Acclaim Credit Management System</p>
-          <p><strong>To:</strong> pez474@yahoo.com</p>
+          <p><strong>To:</strong> mattperrylawyer@gmail.com</p>
         </div>
       `
     });

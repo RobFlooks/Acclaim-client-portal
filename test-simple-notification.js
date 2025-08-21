@@ -23,7 +23,7 @@ async function testSimpleNotification() {
     
     const info = await transporter.sendMail({
       from: '"Acclaim Credit Management" <email@acclaim.law>',
-      to: 'pez474@yahoo.com',
+      to: 'mattperrylawyer@gmail.com',
       subject: 'New Message: Test Email Notification System - Acclaim Portal',
       text: `
 New message from Matt Perry (Test User) (perry367@gmail.com)
@@ -92,7 +92,7 @@ Please log in to the Acclaim Portal to view and respond to this message.
     console.log('✅ User notification email sent successfully!');
     console.log('📧 Message ID:', info.messageId);
     console.log('📧 Response:', info.response);
-    console.log('📧 Status: Email queued for delivery to pez474@yahoo.com');
+    console.log('📧 Status: Email queued for delivery to mattperrylawyer@gmail.com');
     
   } catch (error) {
     console.error('❌ User notification email failed:', error);
