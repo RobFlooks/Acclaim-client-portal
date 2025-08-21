@@ -1298,12 +1298,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Check if user has a temporary password (indicating they haven't logged in yet)
-      if (!user.temporaryPassword) {
-        return res.status(400).json({ 
-          message: "User does not have a temporary password. Welcome emails are only sent to new users who haven't logged in yet." 
-        });
-      }
+      // Note: Welcome emails can be sent to any user, regardless of temporary password status
 
       // Get user's organisation
       const userOrgs = await storage.getUserOrganisations(userId);
@@ -1326,7 +1321,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         firstName: user.firstName,
         lastName: user.lastName,
         username: user.username,
-        temporaryPassword: user.temporaryPassword,
+        temporaryPassword: user.temporaryPassword || 'Please contact admin for login credentials',
         organisationName: organisation.name,
         adminName: `${admin.firstName} ${admin.lastName}`
       };
