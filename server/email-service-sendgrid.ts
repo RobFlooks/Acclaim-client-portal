@@ -174,6 +174,17 @@ Please log in to the Acclaim Portal to view and respond to this message.
       console.log(`📧 Subject: ${subject}`);
       console.log(`📋 Message ID: ${info.messageId}`);
       
+      // Log full response details for bounce detection
+      if (info.response) {
+        console.log(`📦 SMTP Response: ${info.response}`);
+      }
+      if (info.rejected && info.rejected.length > 0) {
+        console.log(`❌ REJECTED ADDRESSES: ${info.rejected.join(', ')}`);
+      }
+      if (info.pending && info.pending.length > 0) {
+        console.log(`⏳ PENDING ADDRESSES: ${info.pending.join(', ')}`);
+      }
+      
       return true;
     } catch (error) {
       console.error('❌ SendGrid email sending failed:', error);
