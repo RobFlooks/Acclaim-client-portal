@@ -596,12 +596,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             }
 
-            // Get case reference if this is a case-specific message
+            // Get case reference and details if this is a case-specific message
             let caseReference = undefined;
+            let caseDetails = undefined;
             if (messageData.caseId) {
               const messageCase = await storage.getCaseById(messageData.caseId);
               if (messageCase) {
                 caseReference = messageCase.accountNumber;
+                caseDetails = {
+                  caseName: messageCase.caseName,
+                  debtorType: messageCase.debtorType,
+                  originalAmount: messageCase.originalAmount.toString(),
+                  outstandingAmount: messageCase.outstandingAmount.toString(),
+                  status: messageCase.status,
+                  stage: messageCase.stage,
+                };
               }
             }
 
@@ -613,6 +622,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 messageSubject: messageData.subject || '',
                 messageContent: messageData.content,
                 caseReference,
+                caseDetails,
                 organisationName,
               },
               adminUser.email
