@@ -700,7 +700,6 @@ Please log in to the Acclaim Portal to view full case details and respond if nee
       console.log('\n================= WELCOME EMAIL NOTIFICATION =================');
       console.log(`📧 Welcome email would be sent to: ${data.userEmail}`);
       console.log(`👤 New User: ${data.firstName} ${data.lastName}`);
-      console.log(`🏢 Organisation: ${data.organisationName}`);
       console.log(`🔑 Username: ${data.userEmail}`);
       console.log(`🔐 Temporary Password: ${data.temporaryPassword}`);
       console.log(`⏰ Time: ${new Date().toLocaleString('en-GB')}`);
@@ -737,10 +736,6 @@ Please log in to the Acclaim Portal to view full case details and respond if nee
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; color: #475569;">Temporary Password:</td>
                   <td style="padding: 8px 0; color: #1e293b; font-family: monospace; background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">${data.temporaryPassword}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Organisation:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.organisationName}</td>
                 </tr>
               </table>
             </div>
@@ -789,7 +784,6 @@ Your account has been created and you can now access the system.
 Account Details:
 Username: ${data.userEmail}
 Temporary Password: ${data.temporaryPassword}
-Organisation: ${data.organisationName}
 
 IMPORTANT: This is a temporary password. You will be required to change it when you first log in.
 
