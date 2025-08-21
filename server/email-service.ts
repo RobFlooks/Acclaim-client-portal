@@ -185,7 +185,7 @@ class EmailService {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 20px; text-align: center;">
             <div style="margin-bottom: 10px;">
-              <img src="cid:logo" alt="Acclaim Credit Management" style="height: 32px; width: auto;" />
+              <img src="cid:logo" alt="Acclaim Credit Management & Recovery" style="height: 32px; width: auto;" />
             </div>
             <h2 style="margin: 0; font-size: 18px;">New Message Received</h2>
             ${data.caseReference ? `<p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
@@ -280,7 +280,7 @@ class EmailService {
           </div>
           
           <div style="background: #1e293b; color: white; padding: 15px; text-align: center; font-size: 12px;">
-            <p style="margin: 0;">This is an automated notification from Acclaim Credit Management Portal</p>
+            <p style="margin: 0;">This is an automated notification from Acclaim Credit Management & Recovery Portal</p>
           </div>
         </div>
       `;
@@ -309,7 +309,7 @@ Please log in to the Acclaim Portal to respond to this message.
       `;
 
       const info = await this.transporter.sendMail({
-        from: '"Acclaim Credit Management" <noreply@acclaim-portal.com>',
+        from: '"Acclaim Credit Management & Recovery" <noreply@acclaim-portal.com>',
         to: adminEmail,
         subject: subject,
         text: textContent,
@@ -374,7 +374,7 @@ Please log in to the Acclaim Portal to respond to this message.
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
           <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 30px; text-align: center;">
             <div style="margin-bottom: 10px;">
-              <img src="cid:logo" alt="Acclaim Credit Management" style="height: 40px; width: auto;" />
+              <img src="cid:logo" alt="Acclaim Credit Management & Recovery" style="height: 40px; width: auto;" />
             </div>
             <p style="margin: 0; opacity: 0.9; font-size: 16px;">New message from administrator</p>
             ${data.caseReference ? `<p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
@@ -455,7 +455,7 @@ Please log in to the Acclaim Portal to respond to this message.
           </div>
           
           <div style="background: #1e293b; color: white; padding: 15px; text-align: center; font-size: 12px;">
-            <p style="margin: 0;">This is an automated notification from Acclaim Credit Management Portal</p>
+            <p style="margin: 0;">This is an automated notification from Acclaim Credit Management & Recovery Portal</p>
           </div>
         </div>
       `;
@@ -484,7 +484,7 @@ Please log in to the Acclaim Portal to view and respond to this message.
       `;
 
       const info = await this.transporter.sendMail({
-        from: '"Acclaim Credit Management" <noreply@acclaim-portal.com>',
+        from: '"Acclaim Credit Management & Recovery" <noreply@acclaim-portal.com>',
         to: data.userEmail,
         subject: subject,
         text: textContent,
@@ -546,7 +546,7 @@ Please log in to the Acclaim Portal to view and respond to this message.
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
           <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 30px; text-align: center;">
             <div style="margin-bottom: 10px;">
-              <img src="cid:logo" alt="Acclaim Credit Management" style="height: 40px; width: auto;" />
+              <img src="cid:logo" alt="Acclaim Credit Management & Recovery" style="height: 40px; width: auto;" />
             </div>
             <p style="margin: 0; opacity: 0.9; font-size: 16px;">New case update received</p>
             ${data.caseReference ? `<p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
@@ -637,7 +637,7 @@ Please log in to the Acclaim Portal to view and respond to this message.
           </div>
           
           <div style="background: #1e293b; color: white; padding: 15px; text-align: center; font-size: 12px;">
-            <p style="margin: 0;">This is an automated notification from Acclaim Credit Management Portal</p>
+            <p style="margin: 0;">This is an automated notification from Acclaim Credit Management & Recovery Portal</p>
           </div>
         </div>
       `;
@@ -668,7 +668,7 @@ Please log in to the Acclaim Portal to view full case details and respond if nee
       `;
 
       const info = await this.transporter.sendMail({
-        from: '"Acclaim Credit Management" <noreply@acclaim-portal.com>',
+        from: '"Acclaim Credit Management & Recovery" <noreply@acclaim-portal.com>',
         to: data.userEmail,
         subject: subject,
         text: textContent,
@@ -716,7 +716,7 @@ Please log in to the Acclaim Portal to view full case details and respond if nee
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
           <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 30px; text-align: center;">
             <div style="margin-bottom: 10px;">
-              <img src="cid:logo" alt="Acclaim Credit Management" style="height: 40px; width: auto;" />
+              <img src="cid:logo" alt="Acclaim Credit Management & Recovery" style="height: 40px; width: auto;" />
             </div>
             <h1 style="margin: 0; font-size: 24px;">Welcome to the Acclaim Credit Management & Recovery Portal!</h1>
             <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">Your account is ready</p>
@@ -769,7 +769,7 @@ Please log in to the Acclaim Portal to view full case details and respond if nee
           </div>
           
           <div style="background: #1e293b; color: white; padding: 15px; text-align: center; font-size: 12px;">
-            <p style="margin: 0;">This is an automated notification from Acclaim Credit Management Portal</p>
+            <p style="margin: 0;">This is an automated notification from Acclaim Credit Management & Recovery Portal</p>
           </div>
         </div>
       `;
@@ -797,7 +797,7 @@ If you have any questions, please contact our support team.
       `;
 
       const info = await this.transporter.sendMail({
-        from: '"Acclaim Credit Management" <noreply@acclaim-portal.com>',
+        from: '"Acclaim Credit Management & Recovery" <noreply@acclaim-portal.com>',
         to: data.userEmail,
         subject: subject,
         text: textContent,
