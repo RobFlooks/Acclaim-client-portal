@@ -20,6 +20,12 @@ interface EmailNotificationData {
     status: string;
     stage: string;
   };
+  attachment?: {
+    fileName: string;
+    filePath: string;
+    fileSize: number;
+    fileType: string;
+  };
 }
 
 interface AdminToUserNotificationData {
@@ -38,6 +44,12 @@ interface AdminToUserNotificationData {
     outstandingAmount: string;
     status: string;
     stage: string;
+  };
+  attachment?: {
+    fileName: string;
+    filePath: string;
+    fileSize: number;
+    fileType: string;
   };
 }
 
@@ -389,19 +401,30 @@ ${data.messageContent}
 Please log in to the Acclaim Portal to view and respond to this message.
       `;
 
+      // Prepare attachments array - always include logo, add user attachment if present
+      const attachments: any[] = [
+        {
+          filename: 'logo.png',
+          path: path.join(__dirname, '../attached_assets/Acclaim rose.Cur_1752271300769.png'),
+          cid: 'logo'
+        }
+      ];
+
+      // Add user attachment if present
+      if (data.attachment && data.attachment.filePath) {
+        attachments.push({
+          filename: data.attachment.fileName,
+          path: data.attachment.filePath
+        });
+      }
+
       const info = await this.transporter.sendMail({
         from: '"Acclaim Credit Management" <email@acclaim.law>',
         to: adminEmail,
         subject: subject,
         text: textContent,
         html: htmlContent,
-        attachments: [
-          {
-            filename: 'logo.png',
-            path: path.join(__dirname, '../attached_assets/Acclaim rose.Cur_1752271300769.png'),
-            cid: 'logo'
-          }
-        ]
+        attachments: attachments
       });
 
       console.log('✅ User-to-admin email sent successfully via SendGrid:', info.messageId);

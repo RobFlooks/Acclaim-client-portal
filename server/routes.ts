@@ -614,6 +614,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             }
 
+            // Prepare attachment data if present
+            let attachmentData = undefined;
+            if (messageData.attachmentFileName && messageData.attachmentFilePath) {
+              attachmentData = {
+                fileName: messageData.attachmentFileName,
+                filePath: messageData.attachmentFilePath,
+                fileSize: messageData.attachmentFileSize || 0,
+                fileType: messageData.attachmentFileType || 'application/octet-stream',
+              };
+            }
+
             // Send email notification
             await sendGridEmailService.sendMessageNotification(
               {
@@ -624,6 +635,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 caseReference,
                 caseDetails,
                 organisationName,
+                attachment: attachmentData,
               },
               adminUser.email
             );

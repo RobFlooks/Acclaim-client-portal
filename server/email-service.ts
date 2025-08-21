@@ -20,6 +20,12 @@ interface EmailNotificationData {
     status: string;
     stage: string;
   };
+  attachment?: {
+    fileName: string;
+    filePath: string;
+    fileSize: number;
+    fileType: string;
+  };
 }
 
 interface AdminToUserNotificationData {
@@ -38,6 +44,12 @@ interface AdminToUserNotificationData {
     outstandingAmount: string;
     status: string;
     stage: string;
+  };
+  attachment?: {
+    fileName: string;
+    filePath: string;
+    fileSize: number;
+    fileType: string;
   };
 }
 
@@ -230,6 +242,15 @@ class EmailService {
                   <td style="padding: 8px 0; font-weight: bold; color: #475569;">Subject:</td>
                   <td style="padding: 8px 0; color: #1e293b;">${data.messageSubject || 'New Message'}</td>
                 </tr>
+                ${data.attachment ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Attachment:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">
+                    📎 ${data.attachment.fileName} 
+                    <span style="color: #64748b; font-size: 14px;">(${(data.attachment.fileSize / 1024).toFixed(1)}KB)</span>
+                  </td>
+                </tr>
+                ` : ''}
               </table>
             </div>
             
