@@ -378,7 +378,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOrganisation(org: InsertOrganization): Promise<Organization> {
+    console.log('Storage.createOrganisation - Received data:', JSON.stringify(org, null, 2));
     const [newOrg] = await db.insert(organisations).values(org).returning();
+    console.log('Storage.createOrganisation - Created org:', JSON.stringify(newOrg, null, 2));
     return newOrg;
   }
 
