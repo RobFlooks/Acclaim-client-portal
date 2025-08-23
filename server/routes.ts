@@ -1398,8 +1398,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create organisation
   app.post('/api/admin/organisations', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
+      console.log('Creating organisation with data:', JSON.stringify(req.body, null, 2));
       const orgData = createOrganisationSchema.parse(req.body);
+      console.log('Parsed organisation data:', JSON.stringify(orgData, null, 2));
       const organisation = await storage.createOrganisation(orgData);
+      console.log('Created organisation:', JSON.stringify(organisation, null, 2));
       res.status(201).json(organisation);
     } catch (error) {
       console.error("Error creating organisation:", error);
