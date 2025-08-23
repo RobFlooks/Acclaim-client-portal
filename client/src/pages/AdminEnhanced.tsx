@@ -2821,10 +2821,16 @@ export default function AdminEnhanced() {
                         Cancel
                       </Button>
                       <Button
-                        onClick={() => createOrganisationMutation.mutate({ 
-                          name: newOrgName, 
-                          externalRef: newOrgExternalRef || undefined 
-                        })}
+                        onClick={() => {
+                          console.log('Frontend sending data:', { 
+                            name: newOrgName, 
+                            externalRef: newOrgExternalRef || undefined 
+                          });
+                          createOrganisationMutation.mutate({ 
+                            name: newOrgName, 
+                            externalRef: newOrgExternalRef || undefined 
+                          });
+                        }}
                         disabled={createOrganisationMutation.isPending}
                         className="bg-acclaim-teal hover:bg-acclaim-teal/90"
                       >
