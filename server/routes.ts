@@ -1144,30 +1144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/admin/organisations', isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const userId = req.user.id;
-      const currentUser = await storage.getUser(userId);
-      
-      if (!currentUser) {
-        return res.status(404).json({ message: "User not found" });
-      }
 
-      const { name } = req.body;
-      if (!name || !name.trim()) {
-        return res.status(400).json({ message: "Organisation name is required" });
-      }
-
-      const organisation = await storage.createOrganisation({
-        name: name.trim(),
-      });
-
-      res.status(201).json(organisation);
-    } catch (error) {
-      console.error("Error creating organisation:", error);
-      res.status(500).json({ message: "Failed to create organisation" });
-    }
-  });
 
   app.put('/api/admin/users/:userId/assign', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
