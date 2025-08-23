@@ -1717,6 +1717,7 @@ export default function AdminEnhanced() {
   // State for organisation management
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [newOrgName, setNewOrgName] = useState("");
+  const [newOrgExternalRef, setNewOrgExternalRef] = useState("");
   const [showCreateOrg, setShowCreateOrg] = useState(false);
   const [showEditOrg, setShowEditOrg] = useState(false);
   const [showAssignUser, setShowAssignUser] = useState(false);
@@ -1724,6 +1725,7 @@ export default function AdminEnhanced() {
   const [editingOrg, setEditingOrg] = useState<Organisation | null>(null);
   const [orgFormData, setOrgFormData] = useState<CreateOrganisationForm>({
     name: "",
+    externalRef: "",
   });
 
   // State for user management
@@ -1765,7 +1767,9 @@ export default function AdminEnhanced() {
         description: "Organisation created successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/organisations"] });
-      setOrgFormData({ name: "" });
+      setOrgFormData({ name: "", externalRef: "" });
+      setNewOrgName("");
+      setNewOrgExternalRef("");
       setShowCreateOrg(false);
     },
     onError: (error) => {
@@ -1789,7 +1793,7 @@ export default function AdminEnhanced() {
         description: "Organisation updated successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/organisations"] });
-      setOrgFormData({ name: "" });
+      setOrgFormData({ name: "", externalRef: "" });
       setEditingOrg(null);
       setShowEditOrg(false);
     },
@@ -2795,13 +2799,32 @@ export default function AdminEnhanced() {
                           placeholder="Enter organisation name"
                         />
                       </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="externalRef">Client Code (Optional)</Label>
+                        <Input
+                          id="externalRef"
+                          value={newOrgExternalRef}
+                          onChange={(e) => setNewOrgExternalRef(e.target.value)}
+                          placeholder="Enter client code from case management system"
+                        />
+                        <p className="text-sm text-muted-foreground">
+                          This is the client code as it appears in your case management system (e.g., SOS).
+                        </p>
+                      </div>
                     </div>
                     <div className="flex justify-end space-x-2">
-                      <Button variant="outline" onClick={() => setShowCreateOrg(false)}>
+                      <Button variant="outline" onClick={() => {
+                        setShowCreateOrg(false);
+                        setNewOrgName("");
+                        setNewOrgExternalRef("");
+                      }}>
                         Cancel
                       </Button>
                       <Button
-                        onClick={() => createOrganisationMutation.mutate({ name: newOrgName })}
+                        onClick={() => createOrganisationMutation.mutate({ 
+                          name: newOrgName, 
+                          externalRef: newOrgExternalRef || undefined 
+                        })}
                         disabled={createOrganisationMutation.isPending}
                         className="bg-acclaim-teal hover:bg-acclaim-teal/90"
                       >
@@ -2842,7 +2865,10 @@ export default function AdminEnhanced() {
                             size="sm"
                             onClick={() => {
                               setEditingOrg(org);
-                              setOrgFormData({ name: org.name });
+                              setOrgFormData({ 
+                                name: org.name, 
+                                externalRef: org.externalRef || undefined 
+                              });
                               setShowEditOrg(true);
                             }}
                           >
@@ -2937,9 +2963,25 @@ export default function AdminEnhanced() {
                 placeholder="Enter organisation name"
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="editOrgExternalRef">Client Code (Optional)</Label>
+              <Input
+                id="editOrgExternalRef"
+                value={orgFormData.externalRef || ""}
+                onChange={(e) => setOrgFormData({ ...orgFormData, externalRef: e.target.value || undefined })}
+                placeholder="Enter client code from case management system"
+              />
+              <p className="text-sm text-muted-foreground">
+                This is the client code as it appears in your case management system (e.g., SOS).
+              </p>
+            </div>
           </div>
           <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setShowEditOrg(false)}>
+            <Button variant="outline" onClick={() => {
+              setShowEditOrg(false);
+              setEditingOrg(null);
+              setOrgFormData({ name: "", externalRef: "" });
+            }}>
               Cancel
             </Button>
             <Button

@@ -502,8 +502,10 @@ export const resetPasswordSchema = z.object({
 // Organization management schemas
 export const createOrganisationSchema = z.object({
   name: z.string().min(1, "Organization name is required"),
+  externalRef: z.string().optional(),
 });
 
 export const updateOrganisationSchema = z.object({
   name: z.string().min(1, "Organization name is required"),
+  externalRef: z.string().optional(),
 });
