@@ -267,6 +267,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Handle uploaded documents
       const uploadedFiles = req.files as Express.Multer.File[];
+      const documentFiles: Array<{ fileName: string; filePath: string; fileSize: number; fileType: string }> = [];
+      
       if (uploadedFiles && uploadedFiles.length > 0) {
         for (const file of uploadedFiles) {
           // Store document info in case submission documents table
@@ -277,7 +279,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
             fileSize: file.size,
             fileType: file.mimetype,
           });
+          
+          // Add to documents array for email notification
+          documentFiles.push({
+            fileName: file.originalname,
+            filePath: file.path,
+            fileSize: file.size,
+            fileType: file.mimetype,
+          });
         }
+      }
+
+      // Get organisation details for email notification
+      const organisation = await storage.getOrganisation(validatedData.organisationId);
+      
+      // Send email notification to email@acclaim.law
+      try {
+        const { sendGridEmailService } = await import('./email-service-sendgrid.js');
+        await sendGridEmailService.sendCaseSubmissionNotification({
+          userEmail: user.email || '',
+          userName: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+          firstName: user.firstName || '',
+          lastName: user.lastName || '',
+          organisationName: organisation?.name || 'Unknown Organisation',
+          submissionId: submission.id,
+          caseSubmission: {
+            caseName: validatedData.caseName,
+            debtorType: validatedData.debtorType,
+            clientName: validatedData.clientName,
+            clientEmail: validatedData.clientEmail,
+            clientPhone: validatedData.clientPhone,
+            totalDebtAmount: validatedData.totalDebtAmount.toString(),
+            currency: validatedData.currency || 'GBP',
+            debtDetails: validatedData.debtDetails,
+            additionalInfo: validatedData.additionalInfo,
+            submittedAt: submission.submittedAt || new Date(),
+          },
+          uploadedFiles: documentFiles.length > 0 ? documentFiles : undefined,
+        });
+        console.log('✅ Case submission notification email sent to email@acclaim.law');
+      } catch (emailError) {
+        console.error('❌ Failed to send case submission notification email:', emailError);
+        // Don't fail the submission if email fails
       }
 
       res.status(201).json(submission);
