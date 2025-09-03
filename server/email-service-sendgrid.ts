@@ -799,12 +799,12 @@ If you have any questions, please contact our support team.
 
       const htmlContent = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
-          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 30px; text-align: center;">
+          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: #ffffff !important; padding: 30px; text-align: center;">
             <div style="margin-bottom: 10px;">
               <img src="cid:logo" alt="Acclaim Credit Management & Recovery" style="height: 40px; width: auto;" />
             </div>
-            <h1 style="margin: 0; font-size: 24px;">New Case Submission Received</h1>
-            <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">Submission ID: #${data.submissionId}</p>
+            <h1 style="margin: 0; font-size: 24px; color: #ffffff !important;">New Case Submission Received</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px; color: #ffffff !important;">Submission ID: #${data.submissionId}</p>
           </div>
           
           <div style="padding: 30px;">
