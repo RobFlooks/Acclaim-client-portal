@@ -269,12 +269,6 @@ export default function Reports() {
               <div className="pt-2 border-t">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-900">Recovery Rate</span>
-                  <span className="text-lg font-bold text-acclaim-teal">
-                    {recoveryAnalysis.totalOriginal > 0 
-                      ? `${Math.round((recoveryAnalysis.totalRecovered / recoveryAnalysis.totalOriginal) * 100)}%`
-                      : "0%"
-                    }
-                  </span>
                 </div>
               </div>
             </div>
