@@ -749,7 +749,7 @@ export default function CaseSummaryReport() {
 
       {/* Footer */}
       <div className="mt-8 text-center text-sm text-gray-500">
-        <p>This report was generated on {formatDate(new Date().toISOString())} by Acclaim Credit Management System</p>
+        <p>This report was generated on {formatDate(new Date().toISOString())} by Acclaim Credit Management & Recovery System</p>
         <p className="mt-2">All amounts are in GBP. Outstanding amounts may include interest and recovery costs.</p>
       </div>
     </div>
