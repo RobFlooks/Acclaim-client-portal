@@ -268,7 +268,6 @@ export default function Reports() {
               </div>
               <div className="pt-2 border-t">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-900">Recovery Rate</span>
                 </div>
               </div>
             </div>
