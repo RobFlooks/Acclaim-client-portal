@@ -266,10 +266,6 @@ export default function Reports() {
                 <span className="text-sm text-gray-600">Still Outstanding</span>
                 <span className="font-medium text-orange-600">{formatCurrency(recoveryAnalysis.totalOutstanding)}</span>
               </div>
-              <div className="pt-2 border-t">
-                <div className="flex items-center justify-between">
-                </div>
-              </div>
             </div>
           </CardContent>
         </Card>
