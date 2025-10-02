@@ -98,9 +98,48 @@ interface CaseSubmissionNotificationData {
     clientName: string;
     clientEmail: string;
     clientPhone?: string;
+    creditorName?: string;
+    
+    // Organisation specific fields
+    organisationName?: string;
+    organisationTradingName?: string;
+    companyNumber?: string;
+    
+    // Individual/Sole Trader specific fields
+    individualType?: string;
+    tradingName?: string;
+    principalSalutation?: string;
+    principalFirstName?: string;
+    principalLastName?: string;
+    
+    // Address
+    addressLine1?: string;
+    addressLine2?: string;
+    city?: string;
+    county?: string;
+    postcode?: string;
+    
+    // Contact details
+    mainPhone?: string;
+    altPhone?: string;
+    mainEmail?: string;
+    altEmail?: string;
+    
+    // Debt details
     totalDebtAmount: string;
     currency: string;
     debtDetails?: string;
+    
+    // Payment terms
+    paymentTermsType?: string;
+    paymentTermsDays?: number;
+    paymentTermsOther?: string;
+    
+    // Invoice details
+    singleInvoice?: string;
+    firstOverdueDate?: string;
+    lastOverdueDate?: string;
+    
     additionalInfo?: string;
     submittedAt: Date;
   };
@@ -733,7 +772,7 @@ If you have any questions, please contact our support team.
 
     // Set up headers with styling
     worksheet.columns = [
-      { header: 'Field', key: 'field', width: 25 },
+      { header: 'Field', key: 'field', width: 30 },
       { header: 'Value', key: 'value', width: 50 }
     ];
 
@@ -745,29 +784,126 @@ If you have any questions, please contact our support team.
       fgColor: { argb: 'FF14b8a6' }
     };
 
-    // Add case submission data
-    const submissionData = [
+    // Build submission data array with all populated fields
+    const submissionData: Array<{ field: string; value: string }> = [];
+    
+    // Basic Information
+    submissionData.push(
       { field: 'Submission ID', value: data.submissionId.toString() },
-      { field: 'Case Name', value: data.caseSubmission.caseName },
-      { field: 'Debtor Type', value: data.caseSubmission.debtorType },
-      { field: 'Client Name', value: data.caseSubmission.clientName },
-      { field: 'Client Email', value: data.caseSubmission.clientEmail },
-      { field: 'Client Phone', value: data.caseSubmission.clientPhone || 'Not provided' },
-      { field: 'Total Debt Amount', value: `${data.caseSubmission.currency || 'GBP'} ${data.caseSubmission.totalDebtAmount}` },
-      { field: 'Debt Details', value: data.caseSubmission.debtDetails || 'Not provided' },
-      { field: 'Additional Information', value: data.caseSubmission.additionalInfo || 'Not provided' },
-      { field: 'Submitted By', value: data.userName },
-      { field: 'Submitted By Email', value: data.userEmail },
-      { field: 'Organisation', value: data.organisationName },
-      { field: 'Submitted At', value: data.caseSubmission.submittedAt.toISOString() }
-    ];
+      { field: 'Submitted At', value: data.caseSubmission.submittedAt.toLocaleString('en-GB') }
+    );
+    
+    // Submitter Information
+    submissionData.push(
+      { field: '', value: '' },
+      { field: '=== SUBMITTER INFORMATION ===', value: '' }
+    );
+    if (data.userName) submissionData.push({ field: 'Submitted By', value: data.userName });
+    if (data.userEmail) submissionData.push({ field: 'Submitted By Email', value: data.userEmail });
+    if (data.organisationName) submissionData.push({ field: 'Organisation', value: data.organisationName });
+    
+    // Client Details
+    submissionData.push(
+      { field: '', value: '' },
+      { field: '=== CLIENT DETAILS ===', value: '' }
+    );
+    if (data.caseSubmission.clientName) submissionData.push({ field: 'Client Name', value: data.caseSubmission.clientName });
+    if (data.caseSubmission.clientEmail) submissionData.push({ field: 'Client Email', value: data.caseSubmission.clientEmail });
+    if (data.caseSubmission.clientPhone) submissionData.push({ field: 'Client Phone', value: data.caseSubmission.clientPhone });
+    if (data.caseSubmission.creditorName) submissionData.push({ field: 'Creditor Name', value: data.caseSubmission.creditorName });
+    
+    // Debtor Information
+    submissionData.push(
+      { field: '', value: '' },
+      { field: '=== DEBTOR INFORMATION ===', value: '' }
+    );
+    submissionData.push({ field: 'Case Name', value: data.caseSubmission.caseName });
+    submissionData.push({ field: 'Debtor Type', value: data.caseSubmission.debtorType });
+    
+    if (data.caseSubmission.debtorType === 'organisation') {
+      if (data.caseSubmission.organisationName) submissionData.push({ field: 'Organisation Name', value: data.caseSubmission.organisationName });
+      if (data.caseSubmission.organisationTradingName) submissionData.push({ field: 'Trading Name', value: data.caseSubmission.organisationTradingName });
+      if (data.caseSubmission.companyNumber) submissionData.push({ field: 'Company Number', value: data.caseSubmission.companyNumber });
+    } else {
+      if (data.caseSubmission.individualType) submissionData.push({ field: 'Individual Type', value: data.caseSubmission.individualType });
+      if (data.caseSubmission.tradingName) submissionData.push({ field: 'Trading Name', value: data.caseSubmission.tradingName });
+      if (data.caseSubmission.principalSalutation) submissionData.push({ field: 'Principal Salutation', value: data.caseSubmission.principalSalutation });
+      if (data.caseSubmission.principalFirstName) submissionData.push({ field: 'Principal First Name', value: data.caseSubmission.principalFirstName });
+      if (data.caseSubmission.principalLastName) submissionData.push({ field: 'Principal Last Name', value: data.caseSubmission.principalLastName });
+    }
+    
+    // Address
+    if (data.caseSubmission.addressLine1) {
+      submissionData.push(
+        { field: '', value: '' },
+        { field: '=== ADDRESS ===', value: '' }
+      );
+      if (data.caseSubmission.addressLine1) submissionData.push({ field: 'Address Line 1', value: data.caseSubmission.addressLine1 });
+      if (data.caseSubmission.addressLine2) submissionData.push({ field: 'Address Line 2', value: data.caseSubmission.addressLine2 });
+      if (data.caseSubmission.city) submissionData.push({ field: 'City', value: data.caseSubmission.city });
+      if (data.caseSubmission.county) submissionData.push({ field: 'County', value: data.caseSubmission.county });
+      if (data.caseSubmission.postcode) submissionData.push({ field: 'Postcode', value: data.caseSubmission.postcode });
+    }
+    
+    // Contact Details
+    const hasContact = data.caseSubmission.mainPhone || data.caseSubmission.altPhone || 
+                      data.caseSubmission.mainEmail || data.caseSubmission.altEmail;
+    if (hasContact) {
+      submissionData.push(
+        { field: '', value: '' },
+        { field: '=== CONTACT DETAILS ===', value: '' }
+      );
+      if (data.caseSubmission.mainPhone) submissionData.push({ field: 'Main Phone', value: data.caseSubmission.mainPhone });
+      if (data.caseSubmission.altPhone) submissionData.push({ field: 'Alternative Phone', value: data.caseSubmission.altPhone });
+      if (data.caseSubmission.mainEmail) submissionData.push({ field: 'Main Email', value: data.caseSubmission.mainEmail });
+      if (data.caseSubmission.altEmail) submissionData.push({ field: 'Alternative Email', value: data.caseSubmission.altEmail });
+    }
+    
+    // Debt Details
+    submissionData.push(
+      { field: '', value: '' },
+      { field: '=== DEBT DETAILS ===', value: '' }
+    );
+    submissionData.push({ field: 'Total Debt Amount', value: `${data.caseSubmission.currency || 'GBP'} ${data.caseSubmission.totalDebtAmount}` });
+    if (data.caseSubmission.debtDetails) submissionData.push({ field: 'Debt Description', value: data.caseSubmission.debtDetails });
+    
+    // Payment Terms
+    if (data.caseSubmission.paymentTermsType) {
+      submissionData.push(
+        { field: '', value: '' },
+        { field: '=== PAYMENT TERMS ===', value: '' }
+      );
+      submissionData.push({ field: 'Payment Terms Type', value: data.caseSubmission.paymentTermsType });
+      if (data.caseSubmission.paymentTermsDays) submissionData.push({ field: 'Payment Terms Days', value: data.caseSubmission.paymentTermsDays.toString() });
+      if (data.caseSubmission.paymentTermsOther) submissionData.push({ field: 'Other Payment Terms', value: data.caseSubmission.paymentTermsOther });
+    }
+    
+    // Invoice Details
+    if (data.caseSubmission.singleInvoice || data.caseSubmission.firstOverdueDate || data.caseSubmission.lastOverdueDate) {
+      submissionData.push(
+        { field: '', value: '' },
+        { field: '=== INVOICE DETAILS ===', value: '' }
+      );
+      if (data.caseSubmission.singleInvoice) submissionData.push({ field: 'Single Invoice', value: data.caseSubmission.singleInvoice === 'yes' ? 'Yes' : 'No' });
+      if (data.caseSubmission.firstOverdueDate) submissionData.push({ field: 'First Overdue Date', value: data.caseSubmission.firstOverdueDate });
+      if (data.caseSubmission.lastOverdueDate) submissionData.push({ field: 'Last Overdue Date', value: data.caseSubmission.lastOverdueDate });
+    }
+    
+    // Additional Information
+    if (data.caseSubmission.additionalInfo) {
+      submissionData.push(
+        { field: '', value: '' },
+        { field: '=== ADDITIONAL INFORMATION ===', value: '' }
+      );
+      submissionData.push({ field: 'Additional Notes', value: data.caseSubmission.additionalInfo });
+    }
 
     worksheet.addRows(submissionData);
 
     // Add uploaded files section if there are any
     if (data.uploadedFiles && data.uploadedFiles.length > 0) {
-      worksheet.addRow({ field: '', value: '' }); // Empty row
-      worksheet.addRow({ field: 'UPLOADED FILES', value: '' });
+      worksheet.addRow({ field: '', value: '' });
+      worksheet.addRow({ field: '=== UPLOADED FILES ===', value: '' });
       worksheet.getRow(worksheet.rowCount).font = { bold: true };
       
       data.uploadedFiles.forEach((file, index) => {
@@ -797,6 +933,46 @@ If you have any questions, please contact our support team.
       // Generate Excel file
       const excelFilePath = await this.generateCaseSubmissionExcel(data);
 
+      // Build dynamic HTML sections based on populated fields
+      let debtorDetailsHtml = '';
+      if (data.caseSubmission.debtorType === 'organisation') {
+        debtorDetailsHtml = `
+          ${data.caseSubmission.organisationName ? `
+          <tr>
+            <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 180px;">Organisation Name:</td>
+            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.organisationName}</td>
+          </tr>` : ''}
+          ${data.caseSubmission.organisationTradingName ? `
+          <tr>
+            <td style="padding: 8px 0; font-weight: bold; color: #475569;">Trading Name:</td>
+            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.organisationTradingName}</td>
+          </tr>` : ''}
+          ${data.caseSubmission.companyNumber ? `
+          <tr>
+            <td style="padding: 8px 0; font-weight: bold; color: #475569;">Company Number:</td>
+            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.companyNumber}</td>
+          </tr>` : ''}
+        `;
+      } else {
+        debtorDetailsHtml = `
+          ${data.caseSubmission.individualType ? `
+          <tr>
+            <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 180px;">Individual Type:</td>
+            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.individualType === 'individual' ? 'Individual' : 'Sole Trader/Business'}</td>
+          </tr>` : ''}
+          ${data.caseSubmission.tradingName ? `
+          <tr>
+            <td style="padding: 8px 0; font-weight: bold; color: #475569;">Trading Name:</td>
+            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.tradingName}</td>
+          </tr>` : ''}
+          ${data.caseSubmission.principalSalutation || data.caseSubmission.principalFirstName || data.caseSubmission.principalLastName ? `
+          <tr>
+            <td style="padding: 8px 0; font-weight: bold; color: #475569;">Principal Name:</td>
+            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.principalSalutation || ''} ${data.caseSubmission.principalFirstName || ''} ${data.caseSubmission.principalLastName || ''}`.trim() + `</td>
+          </tr>` : ''}
+        `;
+      }
+
       const htmlContent = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
           <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); padding: 30px; text-align: center;">
@@ -808,23 +984,12 @@ If you have any questions, please contact our support team.
           </div>
           
           <div style="padding: 30px;">
+            <!-- Client Details -->
             <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h2 style="color: #1e293b; margin-top: 0;">Case Details</h2>
+              <h2 style="color: #1e293b; margin-top: 0;">Client Details</h2>
               <table style="width: 100%; border-spacing: 0;">
                 <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 140px;">Case Name:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.caseName}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Debtor Type:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.debtorType}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Total Amount:</td>
-                  <td style="padding: 8px 0; color: #1e293b; font-weight: bold;">${data.caseSubmission.currency || 'GBP'} ${data.caseSubmission.totalDebtAmount}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Client Name:</td>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 180px;">Client Name:</td>
                   <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.clientName}</td>
                 </tr>
                 <tr>
@@ -835,16 +1000,166 @@ If you have any questions, please contact our support team.
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; color: #475569;">Client Phone:</td>
                   <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.clientPhone}</td>
-                </tr>
-                ` : ''}
+                </tr>` : ''}
+                ${data.caseSubmission.creditorName ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Creditor Name:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.creditorName}</td>
+                </tr>` : ''}
               </table>
             </div>
 
+            <!-- Debtor Information -->
             <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h3 style="color: #1e293b; margin-top: 0;">Submitted By</h3>
+              <h2 style="color: #1e293b; margin-top: 0;">Debtor Information</h2>
               <table style="width: 100%; border-spacing: 0;">
                 <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 140px;">Name:</td>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 180px;">Case Name:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.caseName}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Debtor Type:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.debtorType === 'individual' ? 'Individual/Sole Trader' : 'Organisation'}</td>
+                </tr>
+                ${debtorDetailsHtml}
+              </table>
+            </div>
+
+            <!-- Address -->
+            ${data.caseSubmission.addressLine1 ? `
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <h2 style="color: #1e293b; margin-top: 0;">Address</h2>
+              <table style="width: 100%; border-spacing: 0;">
+                ${data.caseSubmission.addressLine1 ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 180px;">Address Line 1:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.addressLine1}</td>
+                </tr>` : ''}
+                ${data.caseSubmission.addressLine2 ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Address Line 2:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.addressLine2}</td>
+                </tr>` : ''}
+                ${data.caseSubmission.city ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">City:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.city}</td>
+                </tr>` : ''}
+                ${data.caseSubmission.county ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">County:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.county}</td>
+                </tr>` : ''}
+                ${data.caseSubmission.postcode ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Postcode:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.postcode}</td>
+                </tr>` : ''}
+              </table>
+            </div>` : ''}
+
+            <!-- Contact Details -->
+            ${data.caseSubmission.mainPhone || data.caseSubmission.altPhone || data.caseSubmission.mainEmail || data.caseSubmission.altEmail ? `
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <h2 style="color: #1e293b; margin-top: 0;">Contact Details</h2>
+              <table style="width: 100%; border-spacing: 0;">
+                ${data.caseSubmission.mainPhone ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 180px;">Main Phone:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.mainPhone}</td>
+                </tr>` : ''}
+                ${data.caseSubmission.altPhone ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Alternative Phone:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.altPhone}</td>
+                </tr>` : ''}
+                ${data.caseSubmission.mainEmail ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Main Email:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.mainEmail}</td>
+                </tr>` : ''}
+                ${data.caseSubmission.altEmail ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Alternative Email:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.altEmail}</td>
+                </tr>` : ''}
+              </table>
+            </div>` : ''}
+
+            <!-- Debt Details -->
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <h2 style="color: #1e293b; margin-top: 0;">Debt Details</h2>
+              <table style="width: 100%; border-spacing: 0;">
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 180px;">Total Amount:</td>
+                  <td style="padding: 8px 0; color: #1e293b; font-weight: bold; font-size: 18px;">${data.caseSubmission.currency || 'GBP'} ${data.caseSubmission.totalDebtAmount}</td>
+                </tr>
+              </table>
+              ${data.caseSubmission.debtDetails ? `
+              <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                <h3 style="color: #475569; margin: 0 0 10px 0; font-size: 14px;">Debt Description:</h3>
+                <p style="color: #1e293b; margin: 0; white-space: pre-wrap;">${data.caseSubmission.debtDetails}</p>
+              </div>` : ''}
+            </div>
+
+            <!-- Payment Terms -->
+            ${data.caseSubmission.paymentTermsType ? `
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <h2 style="color: #1e293b; margin-top: 0;">Payment Terms</h2>
+              <table style="width: 100%; border-spacing: 0;">
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 180px;">Payment Terms Type:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.paymentTermsType.replace(/_/g, ' ')}</td>
+                </tr>
+                ${data.caseSubmission.paymentTermsDays ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Payment Terms Days:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.paymentTermsDays}</td>
+                </tr>` : ''}
+                ${data.caseSubmission.paymentTermsOther ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Other Terms:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.paymentTermsOther}</td>
+                </tr>` : ''}
+              </table>
+            </div>` : ''}
+
+            <!-- Invoice Details -->
+            ${data.caseSubmission.singleInvoice || data.caseSubmission.firstOverdueDate || data.caseSubmission.lastOverdueDate ? `
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <h2 style="color: #1e293b; margin-top: 0;">Invoice Details</h2>
+              <table style="width: 100%; border-spacing: 0;">
+                ${data.caseSubmission.singleInvoice ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 180px;">Single Invoice:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.singleInvoice === 'yes' ? 'Yes' : 'No'}</td>
+                </tr>` : ''}
+                ${data.caseSubmission.firstOverdueDate ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">First Overdue Date:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.firstOverdueDate}</td>
+                </tr>` : ''}
+                ${data.caseSubmission.lastOverdueDate ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Last Overdue Date:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.lastOverdueDate}</td>
+                </tr>` : ''}
+              </table>
+            </div>` : ''}
+
+            <!-- Additional Information -->
+            ${data.caseSubmission.additionalInfo ? `
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <h2 style="color: #1e293b; margin-top: 0;">Additional Information</h2>
+              <p style="color: #475569; margin: 0; white-space: pre-wrap;">${data.caseSubmission.additionalInfo}</p>
+            </div>` : ''}
+
+            <!-- Submitted By -->
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <h2 style="color: #1e293b; margin-top: 0;">Submitted By</h2>
+              <table style="width: 100%; border-spacing: 0;">
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 180px;">Name:</td>
                   <td style="padding: 8px 0; color: #1e293b;">${data.firstName} ${data.lastName} (${data.userName})</td>
                 </tr>
                 <tr>
@@ -862,23 +1177,10 @@ If you have any questions, please contact our support team.
               </table>
             </div>
 
-            ${data.caseSubmission.debtDetails ? `
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h3 style="color: #1e293b; margin-top: 0;">Debt Details</h3>
-              <p style="color: #475569; margin: 0; white-space: pre-wrap;">${data.caseSubmission.debtDetails}</p>
-            </div>
-            ` : ''}
-
-            ${data.caseSubmission.additionalInfo ? `
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h3 style="color: #1e293b; margin-top: 0;">Additional Information</h3>
-              <p style="color: #475569; margin: 0; white-space: pre-wrap;">${data.caseSubmission.additionalInfo}</p>
-            </div>
-            ` : ''}
-
+            <!-- Uploaded Files -->
             ${data.uploadedFiles && data.uploadedFiles.length > 0 ? `
             <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h3 style="color: #1e293b; margin-top: 0;">Uploaded Files (${data.uploadedFiles.length})</h3>
+              <h2 style="color: #1e293b; margin-top: 0;">Uploaded Files (${data.uploadedFiles.length})</h2>
               <ul style="color: #475569; margin: 0; padding-left: 20px;">
                 ${data.uploadedFiles.map(file => `
                   <li style="margin-bottom: 5px;">
@@ -888,8 +1190,7 @@ If you have any questions, please contact our support team.
                 `).join('')}
               </ul>
               <p style="color: #64748b; font-size: 14px; margin: 10px 0 0 0;">All uploaded files are attached to this email.</p>
-            </div>
-            ` : ''}
+            </div>` : ''}
 
             <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
               <p style="color: #475569; margin: 0; font-size: 14px;">

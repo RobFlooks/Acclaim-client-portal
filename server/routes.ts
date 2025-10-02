@@ -309,9 +309,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
             clientName: validatedData.clientName,
             clientEmail: validatedData.clientEmail,
             clientPhone: validatedData.clientPhone,
+            creditorName: validatedData.creditorName,
+            
+            // Organisation specific fields
+            organisationName: validatedData.organisationName,
+            organisationTradingName: validatedData.organisationTradingName,
+            companyNumber: validatedData.companyNumber,
+            
+            // Individual/Sole Trader specific fields
+            individualType: validatedData.individualType,
+            tradingName: validatedData.tradingName,
+            principalSalutation: validatedData.principalSalutation,
+            principalFirstName: validatedData.principalFirstName,
+            principalLastName: validatedData.principalLastName,
+            
+            // Address
+            addressLine1: validatedData.addressLine1,
+            addressLine2: validatedData.addressLine2,
+            city: validatedData.city,
+            county: validatedData.county,
+            postcode: validatedData.postcode,
+            
+            // Contact details
+            mainPhone: validatedData.mainPhone,
+            altPhone: validatedData.altPhone,
+            mainEmail: validatedData.mainEmail,
+            altEmail: validatedData.altEmail,
+            
+            // Debt details
             totalDebtAmount: validatedData.totalDebtAmount.toString(),
             currency: validatedData.currency || 'GBP',
             debtDetails: validatedData.debtDetails,
+            
+            // Payment terms
+            paymentTermsType: validatedData.paymentTermsType,
+            paymentTermsDays: validatedData.paymentTermsDays,
+            paymentTermsOther: validatedData.paymentTermsOther,
+            
+            // Invoice details
+            singleInvoice: validatedData.singleInvoice,
+            firstOverdueDate: validatedData.firstOverdueDate,
+            lastOverdueDate: validatedData.lastOverdueDate,
+            
             additionalInfo: validatedData.additionalInfo,
             submittedAt: submission.submittedAt || new Date(),
           },
