@@ -1,735 +1,948 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acclaim Credit Management & Recovery Portal - User Guide</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: #f8f9fa;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: white;
-            padding: 40px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .header {
-            background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
-            color: white;
-            padding: 40px;
-            margin: -40px -40px 40px -40px;
-            border-radius: 0;
-        }
-
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            font-size: 1.2em;
-            opacity: 0.9;
-        }
-
-        h2 {
-            color: #0d9488;
-            margin-top: 40px;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 3px solid #14b8a6;
-            font-size: 1.8em;
-        }
-
-        h3 {
-            color: #0d9488;
-            margin-top: 30px;
-            margin-bottom: 15px;
-            font-size: 1.4em;
-        }
-
-        h4 {
-            color: #333;
-            margin-top: 20px;
-            margin-bottom: 10px;
-            font-size: 1.1em;
-        }
-
-        p {
-            margin-bottom: 15px;
-        }
-
-        ul, ol {
-            margin-left: 30px;
-            margin-bottom: 15px;
-        }
-
-        li {
-            margin-bottom: 8px;
-        }
-
-        .info-box {
-            background: #e0f2fe;
-            border-left: 4px solid #0284c7;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-
-        .warning-box {
-            background: #fef3c7;
-            border-left: 4px solid #f59e0b;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-
-        .success-box {
-            background: #d1fae5;
-            border-left: 4px solid #10b981;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-
-        table th {
-            background: #0d9488;
-            color: white;
-            padding: 12px;
-            text-align: left;
-            font-weight: 600;
-        }
-
-        table td {
-            padding: 12px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        table tr:hover {
-            background: #f1f5f9;
-        }
-
-        .toc {
-            background: #f8fafc;
-            padding: 20px;
-            margin: 30px 0;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .toc h3 {
-            margin-top: 0;
-            color: #0d9488;
-        }
-
-        .toc ul {
-            list-style: none;
-            margin-left: 0;
-        }
-
-        .toc li {
-            margin-bottom: 10px;
-        }
-
-        .toc a {
-            color: #0d9488;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-
-        .toc a:hover {
-            color: #14b8a6;
-            text-decoration: underline;
-        }
-
-        code {
-            background: #f1f5f9;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: 'Courier New', monospace;
-            color: #dc2626;
-        }
-
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
-
-        .feature-card {
-            background: #f8fafc;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .feature-card h4 {
-            color: #0d9488;
-            margin-top: 0;
-        }
-
-        .contact-info {
-            background: #f0fdfa;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-            border: 1px solid #14b8a6;
-        }
-
-        .footer {
-            margin-top: 60px;
-            padding-top: 20px;
-            border-top: 2px solid #e2e8f0;
-            text-align: center;
-            color: #64748b;
-        }
-
-        @media print {
-            body {
-                background: white;
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Acclaim Credit Management & Recovery Portal - User Guide</title>
+        <style>
+            * {
+                margin: 0;
                 padding: 0;
+                box-sizing: border-box;
             }
-            
-            .container {
-                box-shadow: none;
-                padding: 20px;
-            }
-            
-            .header {
-                background: #0d9488 !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            
-            h2 {
-                page-break-after: avoid;
-            }
-            
-            table {
-                page-break-inside: avoid;
-            }
-        }
 
-        @media (max-width: 768px) {
+            body {
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                background: #f8f9fa;
+                padding: 20px;
+            }
+
             .container {
-                padding: 20px;
+                max-width: 1000px;
+                margin: 0 auto;
+                background: white;
+                padding: 40px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             }
-            
+
             .header {
-                margin: -20px -20px 20px -20px;
-                padding: 20px;
+                background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+                color: white;
+                padding: 40px;
+                margin: -40px -40px 40px -40px;
+                border-radius: 0;
             }
-            
+
             .header h1 {
+                font-size: 2.5em;
+                margin-bottom: 10px;
+            }
+
+            .header p {
+                font-size: 1.2em;
+                opacity: 0.9;
+            }
+
+            h2 {
+                color: #0d9488;
+                margin-top: 40px;
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 3px solid #14b8a6;
                 font-size: 1.8em;
             }
-            
-            .feature-grid {
-                grid-template-columns: 1fr;
+
+            h3 {
+                color: #0d9488;
+                margin-top: 30px;
+                margin-bottom: 15px;
+                font-size: 1.4em;
             }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Acclaim Credit Management & Recovery Portal</h1>
-            <p>Complete User Guide</p>
-        </div>
 
-        <div class="toc">
-            <h3>Table of Contents</h3>
-            <ul>
-                <li><a href="#welcome">1. Welcome to Acclaim Portal</a></li>
-                <li><a href="#getting-started">2. Getting Started</a></li>
-                <li><a href="#dashboard">3. Dashboard Overview</a></li>
-                <li><a href="#cases">4. Managing Your Cases</a></li>
-                <li><a href="#messages">5. Messages & Communication</a></li>
-                <li><a href="#documents">6. Document Management</a></li>
-                <li><a href="#reports">7. Reports & Analytics</a></li>
-                <li><a href="#submit-case">8. Submitting New Cases</a></li>
-                <li><a href="#profile">9. Profile & Settings</a></li>
-                <li><a href="#faq">10. Frequently Asked Questions</a></li>
-                <li><a href="#support">11. Support & Contact</a></li>
-            </ul>
-        </div>
+            h4 {
+                color: #333;
+                margin-top: 20px;
+                margin-bottom: 10px;
+                font-size: 1.1em;
+            }
 
-        <h2 id="welcome">Welcome to Acclaim Portal</h2>
-        
-        <p>Welcome to the Acclaim Credit Management & Recovery Portal. This secure online platform has been designed to give you complete control and visibility over your debt recovery cases, enabling you to:</p>
-        
-        <div class="feature-grid">
-            <div class="feature-card">
-                <h4>📊 Track Case Progress</h4>
-                <p>Monitor all your cases in real-time</p>
-            </div>
-            <div class="feature-card">
-                <h4>💬 Secure Communication</h4>
-                <p>Communicate directly with our recovery team</p>
-            </div>
-            <div class="feature-card">
-                <h4>📄 Document Access</h4>
-                <p>View and download case documents</p>
-            </div>
-            <div class="feature-card">
-                <h4>💰 Payment Monitoring</h4>
-                <p>Track payments and recovery performance</p>
-            </div>
-            <div class="feature-card">
-                <h4>📈 Comprehensive Reports</h4>
-                <p>Generate detailed analytics and reports</p>
-            </div>
-            <div class="feature-card">
-                <h4>➕ Submit Cases</h4>
-                <p>Submit new cases directly through the portal</p>
-            </div>
-        </div>
+            p {
+                margin-bottom: 15px;
+            }
 
-        <h2 id="getting-started">Getting Started</h2>
+            ul,
+            ol {
+                margin-left: 30px;
+                margin-bottom: 15px;
+            }
 
-        <h3>Accessing the Portal</h3>
-        <ol>
-            <li>Open your web browser and navigate to your portal URL (provided by Acclaim)</li>
-            <li>You will be directed to the login page</li>
-        </ol>
+            li {
+                margin-bottom: 8px;
+            }
 
-        <h3>First-Time Login</h3>
-        <p>When you first receive your account credentials:</p>
-        <ol>
-            <li>Enter your <strong>username</strong> (typically your email address)</li>
-            <li>Enter the <strong>temporary password</strong> provided by the administrator</li>
-            <li>Click <strong>"Sign In"</strong></li>
-            <li>You will be prompted to <strong>change your password immediately</strong> for security purposes</li>
-            <li>Create a strong, unique password following these requirements:
+            .info-box {
+                background: #e0f2fe;
+                border-left: 4px solid #0284c7;
+                padding: 15px;
+                margin: 20px 0;
+                border-radius: 4px;
+            }
+
+            .warning-box {
+                background: #fef3c7;
+                border-left: 4px solid #f59e0b;
+                padding: 15px;
+                margin: 20px 0;
+                border-radius: 4px;
+            }
+
+            .success-box {
+                background: #d1fae5;
+                border-left: 4px solid #10b981;
+                padding: 15px;
+                margin: 20px 0;
+                border-radius: 4px;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+            }
+
+            table th {
+                background: #0d9488;
+                color: white;
+                padding: 12px;
+                text-align: left;
+                font-weight: 600;
+            }
+
+            table td {
+                padding: 12px;
+                border-bottom: 1px solid #ddd;
+            }
+
+            table tr:hover {
+                background: #f1f5f9;
+            }
+
+            .toc {
+                background: #f8fafc;
+                padding: 20px;
+                margin: 30px 0;
+                border-radius: 8px;
+                border: 1px solid #e2e8f0;
+            }
+
+            .toc h3 {
+                margin-top: 0;
+                color: #0d9488;
+            }
+
+            .toc ul {
+                list-style: none;
+                margin-left: 0;
+            }
+
+            .toc li {
+                margin-bottom: 10px;
+            }
+
+            .toc a {
+                color: #0d9488;
+                text-decoration: none;
+                transition: color 0.3s;
+            }
+
+            .toc a:hover {
+                color: #14b8a6;
+                text-decoration: underline;
+            }
+
+            code {
+                background: #f1f5f9;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-family: "Courier New", monospace;
+                color: #dc2626;
+            }
+
+            .feature-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+                margin: 20px 0;
+            }
+
+            .feature-card {
+                background: #f8fafc;
+                padding: 20px;
+                border-radius: 8px;
+                border: 1px solid #e2e8f0;
+            }
+
+            .feature-card h4 {
+                color: #0d9488;
+                margin-top: 0;
+            }
+
+            .contact-info {
+                background: #f0fdfa;
+                padding: 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+                border: 1px solid #14b8a6;
+            }
+
+            .footer {
+                margin-top: 60px;
+                padding-top: 20px;
+                border-top: 2px solid #e2e8f0;
+                text-align: center;
+                color: #64748b;
+            }
+
+            @media print {
+                body {
+                    background: white;
+                    padding: 0;
+                }
+
+                .container {
+                    box-shadow: none;
+                    padding: 20px;
+                }
+
+                .header {
+                    background: #0d9488 !important;
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                }
+
+                h2 {
+                    page-break-after: avoid;
+                }
+
+                table {
+                    page-break-inside: avoid;
+                }
+            }
+
+            @media (max-width: 768px) {
+                .container {
+                    padding: 20px;
+                }
+
+                .header {
+                    margin: -20px -20px 20px -20px;
+                    padding: 20px;
+                }
+
+                .header h1 {
+                    font-size: 1.8em;
+                }
+
+                .feature-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Acclaim Credit Management & Recovery Portal</h1>
+                <p>Complete User Guide</p>
+            </div>
+
+            <div class="toc">
+                <h3>Table of Contents</h3>
                 <ul>
-                    <li>At least 8 characters long</li>
-                    <li>Mix of uppercase and lowercase letters</li>
-                    <li>Include numbers and special characters</li>
+                    <li><a href="#welcome">1. Welcome to Acclaim Portal</a></li>
+                    <li><a href="#getting-started">2. Getting Started</a></li>
+                    <li><a href="#dashboard">3. Dashboard Overview</a></li>
+                    <li><a href="#cases">4. Managing Your Cases</a></li>
+                    <li><a href="#messages">5. Messages & Communication</a></li>
+                    <li><a href="#documents">6. Document Management</a></li>
+                    <li><a href="#reports">7. Reports & Analytics</a></li>
+                    <li><a href="#submit-case">8. Submitting New Cases</a></li>
+                    <li><a href="#profile">9. Profile & Settings</a></li>
+                    <li><a href="#faq">10. Frequently Asked Questions</a></li>
+                    <li><a href="#support">11. Support & Contact</a></li>
                 </ul>
-            </li>
-            <li>Confirm your new password and click "Change Password"</li>
-            <li>You're now ready to use the portal!</li>
-        </ol>
+            </div>
 
-        <div class="warning-box">
-            <strong>⚠️ Security Tips</strong>
-            <ul>
-                <li>Never share your password with anyone</li>
-                <li>Log out when finished, especially on shared computers</li>
-                <li>Change your password regularly for enhanced security</li>
-                <li>Your session will automatically expire after a period of inactivity</li>
-            </ul>
-        </div>
+            <h2 id="welcome">Welcome to Acclaim Portal</h2>
 
-        <h2 id="dashboard">Dashboard Overview</h2>
-        
-        <p>When you log in, you'll land on your <strong>Dashboard</strong> - your central hub for all case activity.</p>
+            <p>
+                Welcome to the Acclaim Credit Management & Recovery Portal. This
+                secure online platform has been designed to give you complete
+                control and visibility over your debt recovery cases, enabling
+                you to:
+            </p>
 
-        <h3>Quick Statistics</h3>
-        <p>At the top of your dashboard, you'll see key metrics:</p>
-        <ul>
-            <li><strong>Active Cases</strong>: Number of cases currently being worked on</li>
-            <li><strong>Closed Cases</strong>: Successfully resolved cases</li>
-            <li><strong>Total Debt</strong>: Combined value of all outstanding debt across your cases</li>
-            <li><strong>Total Recovered</strong>: Amount successfully recovered to date</li>
-        </ul>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>📊 Track Case Progress</h4>
+                    <p>Monitor all your cases in real-time</p>
+                </div>
+                <div class="feature-card">
+                    <h4>💬 Secure Communication</h4>
+                    <p>Communicate directly with our recovery team</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📄 Document Access</h4>
+                    <p>View and download case documents</p>
+                </div>
+                <div class="feature-card">
+                    <h4>💰 Payment Monitoring</h4>
+                    <p>Track payments and recovery performance</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📈 Comprehensive Reports</h4>
+                    <p>Generate detailed analytics and reports</p>
+                </div>
+                <div class="feature-card">
+                    <h4>➕ Submit Cases</h4>
+                    <p>Submit new cases directly through the portal</p>
+                </div>
+            </div>
 
-        <h3>Navigation Menu</h3>
-        <p>The sidebar (or top menu on mobile) provides quick access to:</p>
-        <ul>
-            <li><strong>Dashboard</strong>: Overview and statistics (home)</li>
-            <li><strong>Cases</strong>: View and manage all your cases</li>
-            <li><strong>Messages</strong>: Communication centre</li>
-            <li><strong>Documents</strong>: View and download case documents</li>
-            <li><strong>Reports</strong>: Generate detailed reports</li>
-            <li><strong>Profile</strong>: Manage your account settings</li>
-        </ul>
+            <h2 id="getting-started">Getting Started</h2>
 
-        <h2 id="cases">Managing Your Cases</h2>
+            <h3>Accessing the Portal</h3>
+            <ol>
+                <li>
+                    Open your web browser and navigate to your portal URL
+                    (provided by Acclaim)
+                </li>
+                <li>You will be directed to the login page</li>
+            </ol>
 
-        <p>The <strong>Cases</strong> section is where you'll spend most of your time, monitoring and managing your debt recovery cases.</p>
+            <h3>First-Time Login</h3>
+            <p>When you first receive your account credentials:</p>
+            <ol>
+                <li>
+                    Enter your <strong>username</strong> (typically your email
+                    address)
+                </li>
+                <li>
+                    Enter the <strong>temporary password</strong> provided by
+                    the administrator
+                </li>
+                <li>Click <strong>"Sign In"</strong></li>
+                <li>
+                    You will be prompted to
+                    <strong>change your password immediately</strong> for
+                    security purposes
+                </li>
+                <li>
+                    Create a strong, unique password following these
+                    requirements:
+                    <ul>
+                        <li>At least 8 characters long</li>
+                        <li>Mix of uppercase and lowercase letters</li>
+                        <li>Include numbers and special characters</li>
+                    </ul>
+                </li>
+                <li>Confirm your new password and click "Change Password"</li>
+                <li>You're now ready to use the portal!</li>
+            </ol>
 
-        <h3>Viewing Your Cases</h3>
-        <ol>
-            <li>Click <strong>"Cases"</strong> in the navigation menu</li>
-            <li>You'll see a list of all your cases, showing:
+            <div class="warning-box">
+                <strong>⚠️ Security Tips</strong>
                 <ul>
-                    <li>Case reference number</li>
-                    <li>Debtor name</li>
-                    <li>Outstanding amount</li>
-                    <li>Current status</li>
-                    <li>Recovery stage</li>
-                    <li>Last update date</li>
+                    <li>Never share your password with anyone</li>
+                    <li>
+                        Log out when finished, especially on shared computers
+                    </li>
+                    <li>
+                        Change your password regularly for enhanced security
+                    </li>
+                    <li>
+                        Your session will automatically expire after a period of
+                        inactivity
+                    </li>
                 </ul>
-            </li>
-        </ol>
-
-        <h3>Case Filters & Search</h3>
-        
-        <p><strong>Search Bar</strong>: Type debtor name, case reference, or account number to quickly find specific cases</p>
-        
-        <p><strong>Filter Options</strong>:</p>
-        <ul>
-            <li><strong>By Status</strong>: Active, In Progress, On Hold, Closed</li>
-            <li><strong>By Stage</strong>: Initial Contact, Legal Action, Payment Plan, etc.</li>
-            <li><strong>By Debtor Type</strong>: Individual or Organisation</li>
-            <li><strong>By Amount</strong>: Filter by debt value ranges</li>
-        </ul>
-
-        <h3>Viewing Case Details</h3>
-        
-        <p>Click on any case to view full details with these tabs:</p>
-
-        <h4>Case Information Tab</h4>
-        <ul>
-            <li>Debtor details (name, address, contact information)</li>
-            <li>Debt information (original amount, interest, fees, costs)</li>
-            <li>Current outstanding balance</li>
-            <li>Case status and stage</li>
-            <li>Date created and last updated</li>
-        </ul>
-
-        <h4>Activity History Tab</h4>
-        <p>View a complete timeline of all actions taken on the case</p>
-
-        <h4>Messages Tab</h4>
-        <p>View and send messages related to this specific case</p>
-
-        <h4>Documents Tab</h4>
-        <p>View, download, and upload documents associated with the case</p>
-
-        <h4>Payments Tab</h4>
-        <p>View complete payment history with dates, amounts, and running balances</p>
-
-        <h2 id="messages">Messages & Communication</h2>
-
-        <p>The <strong>Messages</strong> section is your direct communication channel with the Acclaim recovery team.</p>
-
-        <h3>Sending a Message</h3>
-
-        <h4>General Message (Not Case-Specific)</h4>
-        <ol>
-            <li>Click <strong>"Compose New Message"</strong></li>
-            <li>Enter a <strong>Subject line</strong></li>
-            <li>Type your <strong>message content</strong></li>
-            <li>Optionally <strong>attach files</strong> (up to 10MB)</li>
-            <li>Click <strong>"Send"</strong></li>
-        </ol>
-
-        <h4>Case-Specific Message</h4>
-        <ol>
-            <li>Go to the <strong>Cases</strong> section</li>
-            <li>Open the relevant case</li>
-            <li>Click the <strong>"Messages"</strong> tab</li>
-            <li>Click <strong>"Send Message"</strong></li>
-            <li>Enter subject and message</li>
-            <li>Click <strong>"Send"</strong></li>
-        </ol>
-
-        <div class="info-box">
-            <strong>💡 Important:</strong> Case-specific messages automatically include case details in the notification to our team, ensuring faster response times.
-        </div>
-
-        <h3>Response Times</h3>
-        <table>
-            <tr>
-                <th>Query Type</th>
-                <th>Response Time</th>
-            </tr>
-            <tr>
-                <td>Standard queries</td>
-                <td>Within 2 business days</td>
-            </tr>
-            <tr>
-                <td>Urgent matters</td>
-                <td>Within 4 business hours</td>
-            </tr>
-            <tr>
-                <td>Payment notifications</td>
-                <td>Within 1 business day</td>
-            </tr>
-        </table>
-
-        <h2 id="documents">Document Management</h2>
-
-        <p>Access all case-related documents in one secure location.</p>
-
-        <h3>Downloading Documents</h3>
-        <ol>
-            <li>Find the document you need</li>
-            <li>Click the <strong>"Download"</strong> icon or button</li>
-            <li>The document will download to your computer</li>
-        </ol>
-
-        <h3>Uploading Documents</h3>
-        <p>To upload documents to a specific case:</p>
-        <ol>
-            <li>Navigate to the case</li>
-            <li>Go to the <strong>Documents</strong> tab</li>
-            <li>Click <strong>"Upload Document"</strong></li>
-            <li>Select the file from your computer (max 10MB)</li>
-            <li>Click <strong>"Upload"</strong></li>
-        </ol>
-
-        <p><strong>Supported file types:</strong> PDF, Word documents, Excel spreadsheets, images, and other common formats.</p>
-
-        <h2 id="reports">Reports & Analytics</h2>
-
-        <p>Generate comprehensive reports to analyse case performance and track recovery progress.</p>
-
-        <h3>Available Reports</h3>
-
-        <div class="feature-grid">
-            <div class="feature-card">
-                <h4>Case Summary Report</h4>
-                <p>Complete list of all your cases with key details and summary statistics</p>
-                <p><strong>Best for:</strong> Portfolio overview</p>
             </div>
-            <div class="feature-card">
-                <h4>Recovery Analysis Report</h4>
-                <p>Original debt vs. amount recovered, recovery rates, and performance trends</p>
-                <p><strong>Best for:</strong> Recovery effectiveness</p>
-            </div>
-            <div class="feature-card">
-                <h4>Payment Performance Report</h4>
-                <p>Payment history, trends, and monthly/quarterly breakdowns</p>
-                <p><strong>Best for:</strong> Cash flow tracking</p>
-            </div>
-            <div class="feature-card">
-                <h4>Monthly Statement Report</h4>
-                <p>All activity for a specific month including new cases, payments, and balances</p>
-                <p><strong>Best for:</strong> Monthly reconciliation</p>
-            </div>
-        </div>
 
-        <h3>Generating a Report</h3>
-        <ol>
-            <li>Navigate to <strong>Reports</strong></li>
-            <li>Select the <strong>report type</strong> you want</li>
-            <li>Choose any <strong>filters</strong> (date range, case status, etc.)</li>
-            <li>Click <strong>"Generate Report"</strong></li>
-            <li>Review the report on-screen</li>
-            <li>Click <strong>"Export to Excel"</strong> or <strong>"Export to PDF"</strong> to download</li>
-        </ol>
+            <h2 id="dashboard">Dashboard Overview</h2>
 
-        <h2 id="submit-case">Submitting New Cases</h2>
+            <p>
+                When you log in, you'll land on your
+                <strong>Dashboard</strong> - your central hub for all case
+                activity.
+            </p>
 
-        <p>Submit new debt recovery cases directly through the portal for faster processing.</p>
-
-        <h3>Required Information</h3>
-        
-        <p>Complete all sections of the submission form:</p>
-
-        <ol>
-            <li><strong>Case Details</strong>: Case name and your internal reference</li>
-            <li><strong>Client Information</strong>: Your company details and contact</li>
-            <li><strong>Creditor Details</strong>: If different from client</li>
-            <li><strong>Debtor Information</strong>: Full debtor details and type</li>
-            <li><strong>Debtor Address</strong>: Complete address information</li>
-            <li><strong>Debtor Contact Details</strong>: Email and phone numbers</li>
-            <li><strong>Debt Details</strong>: Original amount, interest, costs, total</li>
-            <li><strong>Payment Terms</strong>: Original agreement terms</li>
-            <li><strong>Invoice Information</strong>: Invoice numbers and dates</li>
-            <li><strong>Additional Information</strong>: Relevant notes and instructions</li>
-            <li><strong>Supporting Documents</strong>: Upload invoices, contracts, correspondence</li>
-        </ol>
-
-        <div class="success-box">
-            <strong>✅ After Submission</strong>
+            <h3>Quick Statistics</h3>
+            <p>At the top of your dashboard, you'll see key metrics:</p>
             <ul>
-                <li>You'll receive a confirmation message with the case reference number</li>
-                <li>An email confirmation will be sent to you</li>
-                <li>Our team will review and process your submission within 1-2 business days</li>
-                <li>The case will appear in your Cases section</li>
-            </ul>
-        </div>
-
-        <h2 id="profile">Profile & Settings</h2>
-
-        <h3>Profile Tabs</h3>
-
-        <h4>Personal Information</h4>
-        <p>Update your contact details including first name, last name, and phone number.</p>
-
-        <h4>Security Settings</h4>
-        <p>Change your password by entering your current password and confirming your new one.</p>
-
-        <p><strong>Password Requirements:</strong></p>
-        <ul>
-            <li>Minimum 8 characters</li>
-            <li>Mix of uppercase and lowercase</li>
-            <li>Include numbers and special characters</li>
-        </ul>
-
-        <h4>Notification Preferences</h4>
-        <p>Toggle email notifications ON/OFF. When enabled, you'll receive emails for:</p>
-        <ul>
-            <li>New messages from the recovery team</li>
-            <li>Case status updates</li>
-            <li>Payment confirmations</li>
-            <li>Important system notifications</li>
-        </ul>
-
-        <div class="info-box">
-            <strong>💡 Recommended:</strong> Keep email notifications enabled to stay informed about your cases.
-        </div>
-
-        <h2 id="faq">Frequently Asked Questions</h2>
-
-        <h3>General Questions</h3>
-
-        <h4>Q: How do I reset my password if I forget it?</h4>
-        <p>A: Contact the Acclaim administrator at email@acclaim.law to request a password reset. For security reasons, passwords cannot be reset through the portal.</p>
-
-        <h4>Q: Can I access the portal on my mobile phone?</h4>
-        <p>A: Yes! The portal is fully responsive and works on all devices - desktop, tablet, and mobile phones.</p>
-
-        <h4>Q: How secure is my data?</h4>
-        <p>A: Very secure. The portal uses industry-standard SSL encryption, secure authentication, regular security audits, and automatic session timeouts.</p>
-
-        <h3>Cases</h3>
-
-        <h4>Q: How often is case information updated?</h4>
-        <p>A: Case information is updated in real-time as actions are taken by our recovery team.</p>
-
-        <h4>Q: What does each case status mean?</h4>
-        <ul>
-            <li><strong>Active</strong>: Case is currently being worked on</li>
-            <li><strong>In Progress</strong>: Recovery actions are underway</li>
-            <li><strong>On Hold</strong>: Temporary pause (e.g., awaiting debtor response)</li>
-            <li><strong>Closed</strong>: Case successfully resolved or closed</li>
-        </ul>
-
-        <h3>Messages</h3>
-
-        <h4>Q: How quickly will I receive a response to my messages?</h4>
-        <p>A: Standard queries receive responses within 2 business days. Urgent matters are addressed within 4 business hours.</p>
-
-        <h4>Q: Can I attach files to messages?</h4>
-        <p>A: Yes, you can attach files up to 10MB. Supported formats include PDF, Word, Excel, images, and more.</p>
-
-        <h3>Documents</h3>
-
-        <h4>Q: What file formats are supported for upload?</h4>
-        <p>A: PDF, Word (.doc, .docx), Excel (.xls, .xlsx), images (.jpg, .png), and most common document formats.</p>
-
-        <h4>Q: Is there a limit on file size?</h4>
-        <p>A: Yes, the maximum file size is 10MB per file.</p>
-
-        <h2 id="support">Support & Contact</h2>
-
-        <div class="contact-info">
-            <h3>Getting Help</h3>
-            <p><strong>Email Support</strong><br>
-            📧 email@acclaim.law</p>
-
-            <p><strong>Response Times</strong></p>
-            <ul>
-                <li>General enquiries: Within 2 business days</li>
-                <li>Urgent matters: Within 4 business hours</li>
-                <li>Technical issues: Within 1 business day</li>
+                <li>
+                    <strong>Active Cases</strong>: Number of cases currently
+                    being worked on
+                </li>
+                <li>
+                    <strong>Closed Cases</strong>: Successfully resolved cases
+                </li>
+                <li>
+                    <strong>Total Debt</strong>: Combined value of all
+                    outstanding debt across your cases
+                </li>
+                <li>
+                    <strong>Total Recovered</strong>: Amount successfully
+                    recovered to date
+                </li>
             </ul>
 
-            <p><strong>Business Hours</strong><br>
-            Monday - Friday: 9:00 AM - 5:30 PM GMT<br>
-            Saturday - Sunday: Closed<br>
-            Bank Holidays: Closed</p>
-        </div>
-
-        <h3>What to Include When Contacting Support</h3>
-        <ul>
-            <li>Your name and organisation</li>
-            <li>Case reference number (if applicable)</li>
-            <li>Detailed description of your issue or question</li>
-            <li>Screenshots (if relevant)</li>
-            <li>Any error messages you've received</li>
-        </ul>
-
-        <h2>Quick Reference Guide</h2>
-
-        <table>
-            <tr>
-                <th>Task</th>
-                <th>Steps</th>
-            </tr>
-            <tr>
-                <td>Log in</td>
-                <td>Enter username and password at login page</td>
-            </tr>
-            <tr>
-                <td>View cases</td>
-                <td>Click "Cases" in navigation menu</td>
-            </tr>
-            <tr>
-                <td>Search for a case</td>
-                <td>Use search bar in Cases section</td>
-            </tr>
-            <tr>
-                <td>Send a message</td>
-                <td>Go to Messages → Compose New Message</td>
-            </tr>
-            <tr>
-                <td>Upload a document</td>
-                <td>Go to case → Documents tab → Upload</td>
-            </tr>
-            <tr>
-                <td>Generate a report</td>
-                <td>Click Reports → Select report type → Generate</td>
-            </tr>
-            <tr>
-                <td>Change password</td>
-                <td>Profile → Security → Change Password</td>
-            </tr>
-            <tr>
-                <td>Submit new case</td>
-                <td>Profile menu → Submit New Case</td>
-            </tr>
-        </table>
-
-        <div class="success-box">
-            <h3>Important Reminders</h3>
+            <h3>Navigation Menu</h3>
+            <p>The sidebar (or top menu on mobile) provides quick access to:</p>
             <ul>
-                <li>✅ Keep your password secure and change it regularly</li>
-                <li>✅ Log out when finished, especially on shared devices</li>
-                <li>✅ Enable email notifications to stay informed</li>
-                <li>✅ Check the portal regularly for updates</li>
-                <li>✅ Upload supporting documents when submitting cases</li>
-                <li>✅ Respond promptly to messages from the recovery team</li>
-                <li>✅ Export reports monthly for your records</li>
-                <li>✅ Contact support if you encounter any issues</li>
+                <li>
+                    <strong>Dashboard</strong>: Overview and statistics (home)
+                </li>
+                <li><strong>Cases</strong>: View and manage all your cases</li>
+                <li><strong>Messages</strong>: Communication centre</li>
+                <li>
+                    <strong>Documents</strong>: View and download case documents
+                </li>
+                <li><strong>Reports</strong>: Generate detailed reports</li>
+                <li><strong>Profile</strong>: Manage your account settings</li>
             </ul>
-        </div>
 
-        <div class="footer">
-            <p><strong>Document Version 1.0</strong> | Last Updated: November 2024</p>
-            <p>Published by Acclaim Credit Management & Recovery</p>
-            <hr style="margin: 20px 0; border: none; border-top: 1px solid #e2e8f0;">
-            <h3 style="color: #0d9488; margin-top: 20px;">Thank You</h3>
-            <p>Thank you for using the Acclaim Credit Management & Recovery Portal. We're committed to providing you with the best possible service and tools to manage your debt recovery cases effectively.</p>
-            <p>If you have any suggestions for improving this guide or the portal, please don't hesitate to contact us at <a href="mailto:email@acclaim.law" style="color: #0d9488;">email@acclaim.law</a>.</p>
-            <p style="margin-top: 30px; font-size: 1.2em; color: #0d9488;"><strong>Acclaim Credit Management & Recovery</strong><br>
-            <em>Professional Debt Recovery Solutions</em></p>
+            <h2 id="cases">Managing Your Cases</h2>
+
+            <p>
+                The <strong>Cases</strong> section is where you'll spend most of
+                your time, monitoring and managing your debt recovery cases.
+            </p>
+
+            <h3>Viewing Your Cases</h3>
+            <ol>
+                <li>Click <strong>"Cases"</strong> in the navigation menu</li>
+                <li>
+                    You'll see a list of all your cases, showing:
+                    <ul>
+                        <li>Case reference number</li>
+                        <li>Debtor name</li>
+                        <li>Outstanding amount</li>
+                        <li>Current status</li>
+                        <li>Recovery stage</li>
+                        <li>Last update date</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h3>Case Filters & Search</h3>
+
+            <p>
+                <strong>Search Bar</strong>: Type debtor name, case reference,
+                or account number to quickly find specific cases
+            </p>
+
+            <p><strong>Filter Options</strong>:</p>
+            <ul>
+                <li>
+                    <strong>By Status</strong>: Active, In Progress, On Hold,
+                    Closed
+                </li>
+                <li>
+                    <strong>By Stage</strong>: Initial Contact, Legal Action,
+                    Payment Plan, etc.
+                </li>
+                <li>
+                    <strong>By Debtor Type</strong>: Individual or Organisation
+                </li>
+                <li><strong>By Amount</strong>: Filter by debt value ranges</li>
+            </ul>
+
+            <h3>Viewing Case Details</h3>
+
+            <p>Click on any case to view full details with these tabs:</p>
+
+            <h4>Case Information Tab</h4>
+            <ul>
+                <li>Debtor details (name, address, contact information)</li>
+                <li>
+                    Debt information (original amount, interest, fees, costs)
+                </li>
+                <li>Current outstanding balance</li>
+                <li>Case status and stage</li>
+                <li>Date created and last updated</li>
+            </ul>
+
+            <h4>Activity History Tab</h4>
+            <p>View a complete timeline of all actions taken on the case</p>
+
+            <h4>Messages Tab</h4>
+            <p>View and send messages related to this specific case</p>
+
+            <h4>Documents Tab</h4>
+            <p>View, download, and upload documents associated with the case</p>
+
+            <h4>Payments Tab</h4>
+            <p>
+                View complete payment history with dates, amounts, and running
+                balances
+            </p>
+
+            <h2 id="messages">Messages & Communication</h2>
+
+            <p>
+                The <strong>Messages</strong> section is your direct
+                communication channel with the Acclaim recovery team.
+            </p>
+
+            <h3>Sending a Message</h3>
+
+            <h4>General Message (Not Case-Specific)</h4>
+            <ol>
+                <li>Click <strong>"Compose New Message"</strong></li>
+                <li>Enter a <strong>Subject line</strong></li>
+                <li>Type your <strong>message content</strong></li>
+                <li>Optionally <strong>attach files</strong> (up to 10MB)</li>
+                <li>Click <strong>"Send"</strong></li>
+            </ol>
+
+            <h4>Case-Specific Message</h4>
+            <ol>
+                <li>Go to the <strong>Cases</strong> section</li>
+                <li>Open the relevant case</li>
+                <li>Click the <strong>"Messages"</strong> tab</li>
+                <li>Click <strong>"Send Message"</strong></li>
+                <li>Enter subject and message</li>
+                <li>Click <strong>"Send"</strong></li>
+            </ol>
+
+            <div class="info-box">
+                <strong>💡 Important:</strong> Case-specific messages
+                automatically include case details in the notification to our
+                team, ensuring faster response times.
+            </div>
+
+            <h3>Response Times</h3>
+            <table>
+                <tr>
+                    <th>Query Type</th>
+                    <th>Response Time</th>
+                </tr>
+                <tr>
+                    <td>Standard queries</td>
+                    <td>Within 2 business days</td>
+                </tr>
+                <tr>
+                    <td>Urgent matters</td>
+                    <td>Within 4 business hours</td>
+                </tr>
+                <tr>
+                    <td>Payment notifications</td>
+                    <td>Within 1 business day</td>
+                </tr>
+            </table>
+
+            <h2 id="documents">Document Management</h2>
+
+            <p>Access all case-related documents in one secure location.</p>
+
+            <h3>Downloading Documents</h3>
+            <ol>
+                <li>Find the document you need</li>
+                <li>Click the <strong>"Download"</strong> icon or button</li>
+                <li>The document will download to your computer</li>
+            </ol>
+
+            <h3>Uploading Documents</h3>
+            <p>To upload documents to a specific case:</p>
+            <ol>
+                <li>Navigate to the case</li>
+                <li>Go to the <strong>Documents</strong> tab</li>
+                <li>Click <strong>"Upload Document"</strong></li>
+                <li>Select the file from your computer (max 10MB)</li>
+                <li>Click <strong>"Upload"</strong></li>
+            </ol>
+
+            <p>
+                <strong>Supported file types:</strong> PDF, Word documents,
+                Excel spreadsheets, images, and other common formats.
+            </p>
+
+            <h2 id="reports">Reports & Analytics</h2>
+
+            <p>
+                Generate comprehensive reports to analyse case performance and
+                track recovery progress.
+            </p>
+
+            <h3>Available Reports</h3>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>Case Summary Report</h4>
+                    <p>
+                        Complete list of all your cases with key details and
+                        summary statistics
+                    </p>
+                    <p><strong>Best for:</strong> Portfolio overview</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Recovery Analysis Report</h4>
+                    <p>
+                        Original debt vs. amount recovered, recovery rates, and
+                        performance trends
+                    </p>
+                    <p><strong>Best for:</strong> Recovery effectiveness</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Payment Performance Report</h4>
+                    <p>
+                        Payment history, trends, and monthly/quarterly
+                        breakdowns
+                    </p>
+                    <p><strong>Best for:</strong> Cash flow tracking</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Monthly Statement Report</h4>
+                    <p>
+                        All activity for a specific month including new cases,
+                        payments, and balances
+                    </p>
+                    <p><strong>Best for:</strong> Monthly reconciliation</p>
+                </div>
+            </div>
+
+            <h3>Generating a Report</h3>
+            <ol>
+                <li>Navigate to <strong>Reports</strong></li>
+                <li>Select the <strong>report type</strong> you want</li>
+                <li>
+                    Choose any <strong>filters</strong> (date range, case
+                    status, etc.)
+                </li>
+                <li>Click <strong>"Generate Report"</strong></li>
+                <li>Review the report on-screen</li>
+                <li>
+                    Click <strong>"Export to Excel"</strong> or
+                    <strong>"Export to PDF"</strong> to download
+                </li>
+            </ol>
+
+            <h2 id="submit-case">Submitting New Cases</h2>
+
+            <p>
+                Submit new debt recovery cases directly through the portal for
+                faster processing.
+            </p>
+
+            <h3>Required Information</h3>
+
+            <p>Complete all sections of the submission form:</p>
+
+            <ol>
+                <li>
+                    <strong>Case Details</strong>: Case name and your internal
+                    reference
+                </li>
+                <li>
+                    <strong>Client Information</strong>: Your company details
+                    and contact
+                </li>
+                <li>
+                    <strong>Creditor Details</strong>: If different from client
+                </li>
+                <li>
+                    <strong>Debtor Information</strong>: Full debtor details and
+                    type
+                </li>
+                <li>
+                    <strong>Debtor Address</strong>: Complete address
+                    information
+                </li>
+                <li>
+                    <strong>Debtor Contact Details</strong>: Email and phone
+                    numbers
+                </li>
+                <li>
+                    <strong>Debt Details</strong>: Original amount, interest,
+                    costs, total
+                </li>
+                <li>
+                    <strong>Payment Terms</strong>: Original agreement terms
+                </li>
+                <li>
+                    <strong>Invoice Information</strong>: Invoice numbers and
+                    dates
+                </li>
+                <li>
+                    <strong>Additional Information</strong>: Relevant notes and
+                    instructions
+                </li>
+                <li>
+                    <strong>Supporting Documents</strong>: Upload invoices,
+                    contracts, correspondence
+                </li>
+            </ol>
+
+            <div class="success-box">
+                <strong>✅ After Submission</strong>
+                <ul>
+                    <li>
+                        You'll receive a confirmation message with the case
+                        reference number
+                    </li>
+                    <li>An email confirmation will be sent to you</li>
+                    <li>
+                        Our team will review and process your submission within
+                        1-2 business days
+                    </li>
+                    <li>The case will appear in your Cases section</li>
+                </ul>
+            </div>
+
+            <h2 id="profile">Profile & Settings</h2>
+
+            <h3>Profile Tabs</h3>
+
+            <h4>Personal Information</h4>
+            <p>
+                Update your contact details including first name, last name, and
+                phone number.
+            </p>
+
+            <h4>Security Settings</h4>
+            <p>
+                Change your password by entering your current password and
+                confirming your new one.
+            </p>
+
+            <p><strong>Password Requirements:</strong></p>
+            <ul>
+                <li>Minimum 8 characters</li>
+                <li>Mix of uppercase and lowercase</li>
+                <li>Include numbers and special characters</li>
+            </ul>
+
+            <h4>Notification Preferences</h4>
+            <p>
+                Toggle email notifications ON/OFF. When enabled, you'll receive
+                emails for:
+            </p>
+            <ul>
+                <li>New messages from the recovery team</li>
+                <li>Case status updates</li>
+                <li>Payment confirmations</li>
+                <li>Important system notifications</li>
+            </ul>
+
+            <div class="info-box">
+                <strong>💡 Recommended:</strong> Keep email notifications
+                enabled to stay informed about your cases.
+            </div>
+
+            <h2 id="faq">Frequently Asked Questions</h2>
+
+            <h3>General Questions</h3>
+
+            <h4>Q: How do I reset my password if I forget it?</h4>
+            <p>
+                A: Contact the Acclaim administrator at email@acclaim.law to
+                request a password reset. For security reasons, passwords cannot
+                be reset through the portal.
+            </p>
+
+            <h4>Q: Can I access the portal on my mobile phone?</h4>
+            <p>
+                A: Yes! The portal is fully responsive and works on all devices
+                - desktop, tablet, and mobile phones.
+            </p>
+
+            <h4>Q: How secure is my data?</h4>
+            <p>
+                A: Very secure. The portal uses industry-standard SSL
+                encryption, secure authentication, regular security audits, and
+                automatic session timeouts.
+            </p>
+
+            <h3>Cases</h3>
+
+            <h4>Q: How often is case information updated?</h4>
+            <p>
+                A: Case information is updated in real-time as actions are taken
+                by our recovery team.
+            </p>
+
+            <h4>Q: What does each case status mean?</h4>
+            <ul>
+                <li>
+                    <strong>Active</strong>: Case is currently being worked on
+                </li>
+                <li>
+                    <strong>In Progress</strong>: Recovery actions are underway
+                </li>
+                <li>
+                    <strong>On Hold</strong>: Temporary pause (e.g., awaiting
+                    debtor response)
+                </li>
+                <li>
+                    <strong>Closed</strong>: Case successfully resolved or
+                    closed
+                </li>
+            </ul>
+
+            <h3>Messages</h3>
+
+            <h4>Q: How quickly will I receive a response to my messages?</h4>
+            <p>
+                A: Standard queries receive responses within 2 business days.
+                Urgent matters are addressed within 4 business hours.
+            </p>
+
+            <h4>Q: Can I attach files to messages?</h4>
+            <p>
+                A: Yes, you can attach files up to 10MB. Supported formats
+                include PDF, Word, Excel, images, and more.
+            </p>
+
+            <h3>Documents</h3>
+
+            <h4>Q: What file formats are supported for upload?</h4>
+            <p>
+                A: PDF, Word (.doc, .docx), Excel (.xls, .xlsx), images (.jpg,
+                .png), and most common document formats.
+            </p>
+
+            <h4>Q: Is there a limit on file size?</h4>
+            <p>A: Yes, the maximum file size is 10MB per file.</p>
+
+            <h2 id="support">Support & Contact</h2>
+
+            <div class="contact-info">
+                <h3>Getting Help</h3>
+                <p>
+                    <strong>Email Support</strong><br />
+                    📧 email@acclaim.law
+                </p>
+
+                <p><strong>Response Times</strong></p>
+                <ul>
+                    <li>General enquiries: Within 2 business days</li>
+                    <li>Urgent matters: Within 4 business hours</li>
+                    <li>Technical issues: Within 1 business day</li>
+                </ul>
+
+                <p>
+                    <strong>Business Hours</strong><br />
+                    Monday - Friday: 9:00 AM - 5:30 PM GMT<br />
+                    Saturday - Sunday: Closed<br />
+                    Bank Holidays: Closed
+                </p>
+            </div>
+
+            <h3>What to Include When Contacting Support</h3>
+            <ul>
+                <li>Your name and organisation</li>
+                <li>Case reference number (if applicable)</li>
+                <li>Detailed description of your issue or question</li>
+                <li>Screenshots (if relevant)</li>
+                <li>Any error messages you've received</li>
+            </ul>
+
+            <h2>Quick Reference Guide</h2>
+
+            <table>
+                <tr>
+                    <th>Task</th>
+                    <th>Steps</th>
+                </tr>
+                <tr>
+                    <td>Log in</td>
+                    <td>Enter username and password at login page</td>
+                </tr>
+                <tr>
+                    <td>View cases</td>
+                    <td>Click "Cases" in navigation menu</td>
+                </tr>
+                <tr>
+                    <td>Search for a case</td>
+                    <td>Use search bar in Cases section</td>
+                </tr>
+                <tr>
+                    <td>Send a message</td>
+                    <td>Go to Messages → Compose New Message</td>
+                </tr>
+                <tr>
+                    <td>Upload a document</td>
+                    <td>Go to case → Documents tab → Upload</td>
+                </tr>
+                <tr>
+                    <td>Generate a report</td>
+                    <td>Click Reports → Select report type → Generate</td>
+                </tr>
+                <tr>
+                    <td>Change password</td>
+                    <td>Profile → Security → Change Password</td>
+                </tr>
+                <tr>
+                    <td>Submit new case</td>
+                    <td>Profile menu → Submit New Case</td>
+                </tr>
+            </table>
+
+            <div class="success-box">
+                <h3>Important Reminders</h3>
+                <ul>
+                    <li>
+                        ✅ Keep your password secure and change it regularly
+                    </li>
+                    <li>
+                        ✅ Log out when finished, especially on shared devices
+                    </li>
+                    <li>✅ Enable email notifications to stay informed</li>
+                    <li>✅ Check the portal regularly for updates</li>
+                    <li>
+                        ✅ Upload supporting documents when submitting cases
+                    </li>
+                    <li>
+                        ✅ Respond promptly to messages from the recovery team
+                    </li>
+                    <li>✅ Export reports monthly for your records</li>
+                    <li>✅ Contact support if you encounter any issues</li>
+                </ul>
+            </div>
+
+            <div class="footer">
+                <p>
+                    <strong>Document Version 1.0</strong> | Last Updated:
+                    November 2024
+                </p>
+                <p>Published by Acclaim Credit Management & Recovery</p>
+                <hr
+                    style="
+                        margin: 20px 0;
+                        border: none;
+                        border-top: 1px solid #e2e8f0;
+                    "
+                />
+                <h3 style="color: #0d9488; margin-top: 20px">Thank You</h3>
+                <p>
+                    Thank you for using the Acclaim Credit Management & Recovery
+                    Portal. We're committed to providing you with the best
+                    possible service and tools to manage your debt recovery
+                    cases effectively.
+                </p>
+                <p>
+                    If you have any suggestions for improving this guide or the
+                    portal, please don't hesitate to contact us at
+                    <a href="mailto:email@acclaim.law" style="color: #0d9488"
+                        >email@acclaim.law</a
+                    >.
+                </p>
+                <p style="margin-top: 30px; font-size: 1.2em; color: #0d9488">
+                    <strong>Acclaim Credit Management & Recovery</strong><br />
+                    <em>Professional Debt Recovery Solutions</em>
+                </p>
+            </div>
         </div>
-    </div>
-</body>
+    </body>
 </html>
