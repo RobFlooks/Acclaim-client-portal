@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acclaim Portal - Azure Deployment Guide</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f0f4f8;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        .header {
+            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+            color: white;
+            padding: 40px;
+            margin: -40px -40px 40px -40px;
+            text-align: center;
+        }
+        .header h1 { font-size: 2.2em; margin-bottom: 10px; }
+        .header p { font-size: 1.1em; opacity: 0.9; }
+        h2 {
+            color: #0078d4;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #0078d4;
+            font-size: 1.6em;
+        }
+        h3 { color: #0078d4; margin-top: 25px; margin-bottom: 15px; font-size: 1.3em; }
+        h4 { color: #444; margin-top: 20px; margin-bottom: 10px; font-size: 1.1em; }
+        p { margin-bottom: 15px; }
+        ul, ol { margin-left: 25px; margin-bottom: 15px; }
+        li { margin-bottom: 8px; }
+        .step-box {
+            background: #e7f3ff;
+            border-left: 4px solid #0078d4;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .step-number {
+            background: #0078d4;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .warning-box {
+            background: #fff4ce;
+            border-left: 4px solid #ffb900;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .success-box {
+            background: #dff6dd;
+            border-left: 4px solid #107c10;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .info-box {
+            background: #f3f2f1;
+            border-left: 4px solid #605e5c;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table th {
+            background: #0078d4;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        table tr:nth-child(even) { background: #f9f9f9; }
+        code {
+            background: #f4f4f4;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #c7254e;
+        }
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .checklist { list-style: none; margin-left: 0; }
+        .checklist li { padding: 8px 0; border-bottom: 1px solid #eee; }
+        .checklist li:before { content: "☐ "; font-size: 1.2em; }
+        .architecture {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-family: monospace;
+            white-space: pre;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+            text-align: center;
+            color: #666;
+        }
+        @media print {
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; }
+            .header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            h2 { page-break-after: avoid; }
+        }
+        @media (max-width: 768px) {
+            .container { padding: 20px; }
+            .header { margin: -20px -20px 20px -20px; padding: 20px; }
+            .header h1 { font-size: 1.6em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>☁️ Azure Deployment Guide</h1>
+            <p>How to Deploy Your Acclaim Portal to Microsoft Azure</p>
+        </div>
+
+        <h2>What You'll Need</h2>
+        <div class="info-box">
+            <p>Before you start, make sure you have:</p>
+            <ul>
+                <li>✅ A Microsoft Azure account (<a href="https://azure.microsoft.com/free/">Sign up free</a>)</li>
+                <li>✅ A credit/debit card (Azure needs this, but you get free credits)</li>
+                <li>✅ Your SendGrid API key (for emails)</li>
+                <li>✅ About 30-60 minutes of time</li>
+            </ul>
+        </div>
+
+        <h2>Overview: What We're Setting Up</h2>
+        <div class="architecture">
+┌─────────────────────────────────────────────────────────┐
+│                    AZURE CLOUD                          │
+│                                                         │
+│   ┌──────────────────┐      ┌──────────────────┐       │
+│   │   Azure App      │      │ Azure PostgreSQL │       │
+│   │   Service        │ ───► │   Database       │       │
+│   │   (Your Website) │      │   (Your Data)    │       │
+│   └──────────────────┘      └──────────────────┘       │
+│            │                                            │
+│            ▼                                            │
+│   ┌──────────────────┐                                 │
+│   │    SendGrid      │                                 │
+│   │   (Emails)       │                                 │
+│   └──────────────────┘                                 │
+└─────────────────────────────────────────────────────────┘
+        </div>
+
+        <h2><span class="step-number">1</span> Create the Database</h2>
+
+        <h3>1.1 Go to Azure Portal</h3>
+        <ol>
+            <li>Open <a href="https://portal.azure.com">portal.azure.com</a></li>
+            <li>Sign in with your Microsoft account</li>
+        </ol>
+
+        <h3>1.2 Create a PostgreSQL Database</h3>
+        <ol>
+            <li>Click <strong>"Create a resource"</strong> (the + button)</li>
+            <li>Search for <strong>"Azure Database for PostgreSQL"</strong></li>
+            <li>Click <strong>"Create"</strong></li>
+            <li>Choose <strong>"Flexible server"</strong> (recommended)</li>
+            <li>Click <strong>"Create"</strong></li>
+        </ol>
+
+        <h3>1.3 Fill in the Details</h3>
+        <table>
+            <tr><th>Setting</th><th>What to Enter</th></tr>
+            <tr><td>Subscription</td><td>Your Azure subscription</td></tr>
+            <tr><td>Resource group</td><td>Click "Create new" → Name it <code>acclaim-resources</code></td></tr>
+            <tr><td>Server name</td><td><code>acclaim-database</code> (must be unique)</td></tr>
+            <tr><td>Region</td><td>Choose one close to you (e.g., UK South)</td></tr>
+            <tr><td>PostgreSQL version</td><td>15 (or latest)</td></tr>
+            <tr><td>Workload type</td><td>Development (cheaper for testing)</td></tr>
+            <tr><td>Admin username</td><td><code>acclaimadmin</code> (write this down!)</td></tr>
+            <tr><td>Password</td><td>Create a strong password (write this down!)</td></tr>
+        </table>
+
+        <div class="warning-box">
+            <strong>⚠️ Important:</strong> Write down your admin username and password! You'll need these later.
+        </div>
+
+        <h3>1.4 Create the Database</h3>
+        <p>Once deployed (wait 5-10 minutes):</p>
+        <ol>
+            <li>Go to your new PostgreSQL server</li>
+            <li>Click <strong>"Databases"</strong> in the left menu</li>
+            <li>Click <strong>"+ Add"</strong></li>
+            <li>Name it <code>acclaim_portal</code></li>
+            <li>Click <strong>"Save"</strong></li>
+        </ol>
+
+        <h3>1.5 Get Your Connection String</h3>
+        <p>Convert your connection details to this format:</p>
+        <pre>postgresql://acclaimadmin:YOUR_PASSWORD@acclaim-database.postgres.database.azure.com:5432/acclaim_portal?sslmode=require</pre>
+        <p><strong>Save this - you'll need it in Step 4!</strong></p>
+
+        <h2><span class="step-number">2</span> Export Your Current Database</h2>
+
+        <h3>2.1 Export from Replit</h3>
+        <ol>
+            <li>In Replit, open the <strong>Shell</strong> (bottom of screen)</li>
+            <li>Type this command and press Enter:
+                <pre>bash export-to-azure.sh</pre>
+            </li>
+            <li>Wait for it to finish</li>
+            <li>Look for a file in the <code>exports</code> folder</li>
+            <li><strong>Right-click</strong> on this file → <strong>Download</strong></li>
+        </ol>
+
+        <h3>2.2 Import to Azure</h3>
+        <div class="step-box">
+            <h4>Using Azure Cloud Shell (Easiest)</h4>
+            <ol>
+                <li>In Azure Portal, click the <strong>Cloud Shell</strong> icon (top right, looks like <code>>_</code>)</li>
+                <li>Choose <strong>Bash</strong></li>
+                <li>Upload your SQL file (click the upload icon)</li>
+                <li>Run:
+                    <pre>psql "host=acclaim-database.postgres.database.azure.com port=5432 dbname=acclaim_portal user=acclaimadmin password=YOUR_PASSWORD sslmode=require" -f your-export-file.sql</pre>
+                </li>
+            </ol>
+        </div>
+
+        <h2><span class="step-number">3</span> Create the Web App</h2>
+
+        <h3>3.1 Create App Service</h3>
+        <ol>
+            <li>In Azure Portal, click <strong>"Create a resource"</strong></li>
+            <li>Search for <strong>"Web App"</strong></li>
+            <li>Click <strong>"Create"</strong></li>
+        </ol>
+
+        <h3>3.2 Fill in the Details</h3>
+        <table>
+            <tr><th>Setting</th><th>What to Enter</th></tr>
+            <tr><td>Resource group</td><td>Select <code>acclaim-resources</code></td></tr>
+            <tr><td>Name</td><td><code>acclaim-portal</code> (becomes your URL)</td></tr>
+            <tr><td>Publish</td><td>Code</td></tr>
+            <tr><td>Runtime stack</td><td>Node 20 LTS</td></tr>
+            <tr><td>Operating System</td><td>Linux</td></tr>
+            <tr><td>Region</td><td>Same as your database</td></tr>
+            <tr><td>Pricing plan</td><td>Basic B1 (to start)</td></tr>
+        </table>
+
+        <h2><span class="step-number">4</span> Configure Your App Settings</h2>
+
+        <h3>4.1 Add Environment Variables</h3>
+        <ol>
+            <li>Go to your Web App in Azure Portal</li>
+            <li>Click <strong>"Configuration"</strong> in the left menu</li>
+            <li>Click <strong>"+ New application setting"</strong> for each of these:</li>
+        </ol>
+
+        <table>
+            <tr><th>Name</th><th>Value</th></tr>
+            <tr><td><code>DATABASE_URL</code></td><td>Your PostgreSQL connection string from Step 1.5</td></tr>
+            <tr><td><code>SENDGRID_API_KEY</code></td><td>Your SendGrid API key</td></tr>
+            <tr><td><code>SESSION_SECRET</code></td><td>Create a random string (e.g., <code>acclaim-session-2024-secure</code>)</td></tr>
+            <tr><td><code>NODE_ENV</code></td><td><code>production</code></td></tr>
+        </table>
+
+        <h3>4.2 Configure Startup Command</h3>
+        <ol>
+            <li>Click <strong>"General settings"</strong> tab</li>
+            <li>Find <strong>"Startup Command"</strong></li>
+            <li>Enter: <code>npm run start</code></li>
+            <li>Click <strong>"Save"</strong></li>
+        </ol>
+
+        <h2><span class="step-number">5</span> Deploy Your Code</h2>
+
+        <div class="step-box">
+            <h4>Deploy from GitHub (Recommended)</h4>
+            <ol>
+                <li>In your Web App, click <strong>"Deployment Center"</strong></li>
+                <li>Choose <strong>"GitHub"</strong> as the source</li>
+                <li>Click <strong>"Authorize"</strong> and sign in</li>
+                <li>Select your repository (<code>RobFlooks/Acclaim-portal</code>)</li>
+                <li>Select branch: <code>main</code></li>
+                <li>Click <strong>"Save"</strong></li>
+            </ol>
+            <p>Azure will automatically deploy your code in 5-10 minutes!</p>
+        </div>
+
+        <h2><span class="step-number">6</span> Test Your Portal</h2>
+
+        <p>Your portal is now live at:</p>
+        <pre>https://acclaim-portal.azurewebsites.net</pre>
+
+        <div class="success-box">
+            <strong>✅ Check Everything Works:</strong>
+            <ul class="checklist">
+                <li>Can you see the login page?</li>
+                <li>Can you log in with your admin account?</li>
+                <li>Do cases display correctly?</li>
+                <li>Can you send messages?</li>
+                <li>Do emails arrive?</li>
+            </ul>
+        </div>
+
+        <h2>Costs (Approximate)</h2>
+        <table>
+            <tr><th>Service</th><th>Monthly Cost</th></tr>
+            <tr><td>Azure App Service (Basic B1)</td><td>~£10-15</td></tr>
+            <tr><td>Azure PostgreSQL (Basic)</td><td>~£15-25</td></tr>
+            <tr><td><strong>Total</strong></td><td><strong>~£25-40/month</strong></td></tr>
+        </table>
+
+        <h2>Troubleshooting</h2>
+
+        <h3>"Application Error" when visiting site</h3>
+        <div class="info-box">
+            <ol>
+                <li>Go to Web App → <strong>"Log stream"</strong></li>
+                <li>Look for error messages</li>
+                <li>Check DATABASE_URL is correct</li>
+                <li>Make sure all environment variables are set</li>
+            </ol>
+        </div>
+
+        <h3>"Connection refused" to database</h3>
+        <div class="info-box">
+            <ol>
+                <li>Go to your PostgreSQL server</li>
+                <li>Click <strong>"Networking"</strong></li>
+                <li>Enable "Allow access to Azure services"</li>
+            </ol>
+        </div>
+
+        <h3>Emails not sending</h3>
+        <div class="info-box">
+            <ol>
+                <li>Check SENDGRID_API_KEY is set correctly</li>
+                <li>Verify your SendGrid account is active</li>
+                <li>Check SendGrid activity log for errors</li>
+            </ol>
+        </div>
+
+        <h2>Summary Checklist</h2>
+        <ul class="checklist">
+            <li>Created Azure account</li>
+            <li>Created PostgreSQL database</li>
+            <li>Exported data from Replit</li>
+            <li>Imported data to Azure database</li>
+            <li>Created Web App</li>
+            <li>Set environment variables</li>
+            <li>Deployed code</li>
+            <li>Tested the portal</li>
+            <li>(Optional) Set up custom domain</li>
+        </ul>
+
+        <div class="success-box" style="text-align: center; padding: 30px;">
+            <h3 style="color: #107c10; margin-bottom: 15px;">🎉 Congratulations!</h3>
+            <p style="font-size: 1.1em;">Your Acclaim Portal is now running on Azure!</p>
+        </div>
+
+        <div class="footer">
+            <p><strong>Azure Deployment Guide</strong> | Acclaim Credit Management & Recovery</p>
+            <p>Last updated: November 2024</p>
+        </div>
+    </div>
+</body>
+</html>
