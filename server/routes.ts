@@ -23,6 +23,7 @@ import officegen from "officegen";
 import bcrypt from "bcrypt";
 import { emailService } from "./email-service";
 import { sendGridEmailService } from "./email-service-sendgrid";
+import { setupAzureAuth } from "./azure-auth";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -55,6 +56,9 @@ const isAdmin: RequestHandler = async (req, res, next) => {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+  
+  // Azure Entra External ID authentication (optional - only if configured)
+  setupAzureAuth(app);
   
   // Serve screenshots for user guide
   app.use("/screenshots", express.static(path.join(__dirname, "../screenshots")));

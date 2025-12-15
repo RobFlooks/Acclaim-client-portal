@@ -45,6 +45,14 @@ function getMsalClient(): msal.ConfidentialClientApplication {
 }
 
 export function setupAzureAuth(app: Express): void {
+  // Status endpoint is always available so frontend can check if Azure auth is enabled
+  app.get("/api/auth/azure/status", (req, res) => {
+    res.json({
+      enabled: isAzureAuthEnabled(),
+      configured: !!(AZURE_CLIENT_ID && AZURE_TENANT_ID),
+    });
+  });
+
   if (!isAzureAuthEnabled()) {
     console.log("[Azure Auth] Azure Entra External ID not configured - skipping setup");
     return;
@@ -145,13 +153,6 @@ export function setupAzureAuth(app: Express): void {
       }
       const logoutUri = `https://${AZURE_TENANT_ID}.ciamlogin.com/${AZURE_TENANT_ID}/oauth2/v2.0/logout?post_logout_redirect_uri=${encodeURIComponent(getBaseUrl(req) + "/auth")}`;
       res.redirect(logoutUri);
-    });
-  });
-
-  app.get("/api/auth/azure/status", (req, res) => {
-    res.json({
-      enabled: isAzureAuthEnabled(),
-      configured: !!(AZURE_CLIENT_ID && AZURE_TENANT_ID),
     });
   });
 }

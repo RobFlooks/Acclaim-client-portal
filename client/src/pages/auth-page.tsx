@@ -1,13 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, Loader2, FileText, MessageSquare, TrendingUp, Shield } from "lucide-react";
 import acclaimLogo from "@assets/Acclaim rose.Cur_1752271300769.png";
+
+const MicrosoftIcon = () => (
+  <svg className="h-4 w-4" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M11 11H0V0H11V11Z" fill="#F25022"/>
+    <path d="M23 11H12V0H23V11Z" fill="#7FBA00"/>
+    <path d="M11 23H0V12H11V23Z" fill="#00A4EF"/>
+    <path d="M23 23H12V12H23V23Z" fill="#FFB900"/>
+  </svg>
+);
 
 export default function AuthPage() {
   const [, navigate] = useLocation();
@@ -19,12 +30,41 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
+  // Check if Azure auth is enabled
+  const { data: azureStatus } = useQuery<{ enabled: boolean; configured: boolean }>({
+    queryKey: ['/api/auth/azure/status'],
+  });
+
+  // Handle URL error parameters from Azure auth
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorParam = urlParams.get('error');
+    if (errorParam) {
+      const errorMessages: Record<string, string> = {
+        'azure_login_failed': 'Microsoft sign-in failed. Please try again.',
+        'no_code': 'Authentication was cancelled or failed.',
+        'no_account': 'Could not retrieve account information from Microsoft.',
+        'no_email': 'No email address found in your Microsoft account.',
+        'user_not_found': 'Your Microsoft account is not registered with Acclaim. Please contact your administrator.',
+        'session_error': 'Failed to create session. Please try again.',
+        'callback_failed': 'Authentication callback failed. Please try again.',
+      };
+      setError(errorMessages[errorParam] || `Authentication error: ${errorParam}`);
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
   // Redirect if already logged in - check after all hooks to avoid rule violations
   if (user) {
     // Use setTimeout to avoid setting state during render
     setTimeout(() => navigate("/"), 0);
     return null;
   }
+
+  const handleAzureLogin = () => {
+    window.location.href = '/auth/azure/login';
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,6 +174,7 @@ export default function AuthPage() {
                   type="submit" 
                   className="w-full h-11 bg-acclaim-teal hover:bg-acclaim-teal/90 font-medium"
                   disabled={loginMutation.isPending}
+                  data-testid="button-login"
                 >
                   {loginMutation.isPending ? (
                     <>
@@ -145,6 +186,28 @@ export default function AuthPage() {
                   )}
                 </Button>
               </form>
+
+              {azureStatus?.enabled && (
+                <>
+                  <div className="relative my-6">
+                    <Separator />
+                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-xs text-muted-foreground">
+                      or
+                    </span>
+                  </div>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full h-11 font-medium"
+                    onClick={handleAzureLogin}
+                    data-testid="button-azure-login"
+                  >
+                    <MicrosoftIcon />
+                    <span className="ml-2">Sign in with Microsoft</span>
+                  </Button>
+                </>
+              )}
               
               <div className="mt-6 text-center text-xs text-muted-foreground">Need assistance? Please contact us at email@acclaim.law | 0113 225 8811</div>
             </CardContent>
