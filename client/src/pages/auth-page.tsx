@@ -1,100 +1,23 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, EyeOff, Loader2, FileText, MessageSquare, TrendingUp, Shield, UserPlus, Copy, Check } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { Eye, EyeOff, Loader2, FileText, MessageSquare, TrendingUp, Shield } from "lucide-react";
 import acclaimLogo from "@assets/Acclaim rose.Cur_1752271300769.png";
-
-interface CreateUserForm {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  organisationId?: number;
-  isAdmin: boolean;
-}
-
-interface Organisation {
-  id: number;
-  name: string;
-}
 
 export default function AuthPage() {
   const [, navigate] = useLocation();
   const { user, loginMutation } = useAuth();
-  const { toast } = useToast();
   
   // Login form state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  
-  // Create User state
-  const [showCreateUser, setShowCreateUser] = useState(false);
-  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
-  const [tempPassword, setTempPassword] = useState("");
-  const [copied, setCopied] = useState(false);
-  const [userFormData, setUserFormData] = useState<CreateUserForm>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    organisationId: undefined,
-    isAdmin: false,
-  });
-
-  // Fetch organisations for registration
-  const { data: organisations } = useQuery<Organisation[]>({
-    queryKey: ["/api/public/organisations"],
-  });
-
-  // Create user mutation
-  const createUserMutation = useMutation({
-    mutationFn: async (userData: CreateUserForm) => {
-      const response = await apiRequest("POST", `/api/register`, userData);
-      return await response.json();
-    },
-    onSuccess: (data) => {
-      toast({
-        title: "Success",
-        description: "Account created successfully",
-      });
-      setUserFormData({
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
-        organisationId: undefined,
-        isAdmin: false,
-      });
-      setShowCreateUser(false);
-      setTempPassword(data.tempPassword || "");
-      setShowPasswordDialog(true);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create account",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const copyPassword = () => {
-    navigator.clipboard.writeText(tempPassword);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   // Redirect if already logged in - check after all hooks to avoid rule violations
   if (user) {
@@ -224,148 +147,8 @@ export default function AuthPage() {
               </form>
               
               <div className="mt-6 text-center text-xs text-muted-foreground">Need assistance? Please contact us at email@acclaim.law | 0113 225 8811</div>
-              
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <p className="text-center text-sm text-muted-foreground mb-4">Don't have an account?</p>
-                <Dialog open={showCreateUser} onOpenChange={setShowCreateUser}>
-                  <DialogTrigger asChild>
-                    <Button 
-                      variant="outline"
-                      className="w-full h-11"
-                      data-testid="button-create-account"
-                    >
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Create Account
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                      <DialogTitle>Create New Account</DialogTitle>
-                      <DialogDescription>
-                        Fill in your details to create an account
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="reg-firstName">First Name</Label>
-                          <Input
-                            id="reg-firstName"
-                            data-testid="input-reg-first-name"
-                            value={userFormData.firstName}
-                            onChange={(e) => setUserFormData({ ...userFormData, firstName: e.target.value })}
-                            placeholder="John"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="reg-lastName">Last Name</Label>
-                          <Input
-                            id="reg-lastName"
-                            data-testid="input-reg-last-name"
-                            value={userFormData.lastName}
-                            onChange={(e) => setUserFormData({ ...userFormData, lastName: e.target.value })}
-                            placeholder="Doe"
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="reg-email">Email</Label>
-                        <Input
-                          id="reg-email"
-                          type="email"
-                          data-testid="input-reg-email"
-                          value={userFormData.email}
-                          onChange={(e) => setUserFormData({ ...userFormData, email: e.target.value })}
-                          placeholder="john.doe@example.com"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="reg-phone">Phone (Optional)</Label>
-                        <Input
-                          id="reg-phone"
-                          data-testid="input-reg-phone"
-                          value={userFormData.phone}
-                          onChange={(e) => setUserFormData({ ...userFormData, phone: e.target.value })}
-                          placeholder="+44 20 7123 4567"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="reg-organisation">Organisation (Optional)</Label>
-                        <Select 
-                          value={userFormData.organisationId?.toString() || "none"}
-                          onValueChange={(value) => setUserFormData({ 
-                            ...userFormData, 
-                            organisationId: value === "none" ? undefined : parseInt(value) 
-                          })}
-                        >
-                          <SelectTrigger data-testid="select-reg-organisation">
-                            <SelectValue placeholder="Select organisation (optional)" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">No organisation</SelectItem>
-                            {organisations?.map((org: Organisation) => (
-                              <SelectItem key={org.id} value={org.id.toString()}>
-                                {org.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="flex flex-col sm:flex-row justify-end gap-2 sm:space-x-2">
-                      <Button variant="outline" onClick={() => setShowCreateUser(false)} className="order-2 sm:order-1">
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={() => createUserMutation.mutate(userFormData)}
-                        disabled={createUserMutation.isPending || !userFormData.firstName || !userFormData.lastName || !userFormData.email}
-                        className="bg-acclaim-teal hover:bg-acclaim-teal/90 order-1 sm:order-2"
-                        data-testid="button-submit-create-account"
-                      >
-                        {createUserMutation.isPending ? "Creating..." : "Create Account"}
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
             </CardContent>
           </Card>
-          
-          {/* Temporary Password Dialog */}
-          <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
-            <DialogContent className="sm:max-w-[400px]">
-              <DialogHeader>
-                <DialogTitle>Account Created Successfully</DialogTitle>
-                <DialogDescription>
-                  Your temporary password is shown below. You will be required to change it on first login.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="py-4">
-                <div className="bg-gray-100 rounded-lg p-4">
-                  <Label className="text-sm text-gray-600 mb-2 block">Temporary Password</Label>
-                  <div className="flex items-center justify-between">
-                    <code className="text-lg font-mono font-bold" data-testid="text-reg-temp-password">{tempPassword}</code>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={copyPassword}
-                      data-testid="button-copy-reg-password"
-                    >
-                      {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-500 mt-4">
-                  Make sure to copy this password now. It will not be shown again. Use it to log in below.
-                </p>
-              </div>
-              <div className="flex justify-end">
-                <Button onClick={() => setShowPasswordDialog(false)} data-testid="button-close-reg-password-dialog">
-                  Done
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
         </div>
       </div>
       {/* Right side - Feature showcase */}

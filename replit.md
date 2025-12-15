@@ -24,11 +24,10 @@ Language preference: British English (organisation not organization, colour not 
 - **Security**: bcrypt for password hashing.
 
 ### Authentication & Authorization
-- **Provider**: Local username/password authentication via Passport.js. 
-- **Public Registration**: Users can self-register via the "Create Account" button on the login page. A temporary password is generated and displayed once, which must be changed on first login. Public registration cannot create admin accounts (only @chadlaw.co.uk emails can be admins, and only admins can grant admin privileges).
+- **Provider**: Local username/password authentication via Passport.js. Registration is disabled; user accounts are created by administrators.
 - **Session Storage**: PostgreSQL-backed sessions with 1-week TTL, secured with HTTP-only cookies and CSRF protection.
 - **Security Features**: Temporary passwords with forced change on first login.
-- **Admin Controls**: Email domain restrictions for admin privileges (@chadlaw.co.uk only).
+- **Admin Controls**: Email domain restrictions for admin privileges.
 - **Access Control**: Comprehensive real-time access control for multi-organisation users, ensuring users can access cases, messages, and documents from all assigned organisations while maintaining security restrictions.
 
 ### Key Features
