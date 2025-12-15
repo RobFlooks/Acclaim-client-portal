@@ -57,6 +57,8 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByAzureId(azureId: string): Promise<User | undefined>;
+  linkAzureAccount(userId: string, azureId: string): Promise<void>;
   createUser(userData: any): Promise<User>;
   getUserByExternalRef(externalRef: string): Promise<User | undefined>;
   createUserWithExternalRef(userData: any): Promise<{ user: User; tempPassword: string }>;
@@ -312,6 +314,15 @@ export class DatabaseStorage implements IStorage {
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email.toLowerCase()));
     return user;
+  }
+
+  async getUserByAzureId(azureId: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.azureId, azureId));
+    return user;
+  }
+
+  async linkAzureAccount(userId: string, azureId: string): Promise<void> {
+    await db.update(users).set({ azureId, updatedAt: new Date() }).where(eq(users.id, userId));
   }
 
   async createUser(userData: any): Promise<User> {

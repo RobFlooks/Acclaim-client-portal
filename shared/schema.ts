@@ -40,6 +40,7 @@ export const users = pgTable("users", {
   tempPassword: varchar("temp_password"),
   mustChangePassword: boolean("must_change_password").default(false),
   externalRef: varchar("external_ref", { length: 100 }).unique(), // For external system integration
+  azureId: varchar("azure_id", { length: 255 }).unique(), // Azure Entra External ID
   emailNotifications: boolean("email_notifications").default(true), // User preference for email notifications
   pushNotifications: boolean("push_notifications").default(true), // User preference for push notifications
   createdAt: timestamp("created_at").defaultNow(),
