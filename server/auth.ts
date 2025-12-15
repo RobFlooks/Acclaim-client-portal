@@ -106,12 +106,8 @@ export function setupAuth(app: Express) {
     }
   });
 
-  // Registration endpoint disabled - users are created by administrators only
-  app.post("/api/register", (req, res) => {
-    res.status(403).json({ 
-      message: "Registration is disabled. Please contact your administrator to create an account." 
-    });
-  });
+  // Registration endpoint - public registration is now enabled
+  // The actual registration logic is in server/routes.ts at /api/register
 
   app.post("/api/login", (req, res, next) => {
     passport.authenticate("local", (err: any, user: any, info: any) => {

@@ -71,6 +71,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public registration endpoint - allows anyone to create an account
+  app.post('/api/register', async (req: any, res) => {
+    try {
+      const userData = createUserSchema.parse(req.body);
+      
+      // Public registration cannot create admin accounts
+      if (userData.isAdmin) {
+        return res.status(400).json({ 
+          message: "Admin privileges cannot be self-assigned during registration" 
+        });
+      }
+
+      const result = await storage.createUser(userData);
+      
+      res.status(201).json({
+        user: result,
+        tempPassword: result.tempPassword,
+        message: "Account created successfully. Please use the temporary password to log in, then change it immediately.",
+      });
+    } catch (error: any) {
+      console.error("Error creating user:", error instanceof Error ? error.message : String(error));
+      if (error.message?.includes('duplicate') || error.message?.includes('unique')) {
+        res.status(400).json({ message: "An account with this email already exists" });
+      } else {
+        res.status(500).json({ message: error.message || "Failed to create account" });
+      }
+    }
+  });
+
+  // Public organisations list - for registration form
+  app.get('/api/public/organisations', async (req: any, res) => {
+    try {
+      const organisations = await storage.getAllOrganisations();
+      // Return only id and name for public display
+      const publicOrgs = organisations.map(org => ({
+        id: org.id,
+        name: org.name
+      }));
+      res.json(publicOrgs);
+    } catch (error) {
+      console.error("Error fetching public organisations:", error);
+      res.status(500).json({ message: "Failed to fetch organisations" });
+    }
+  });
+
   // Dashboard/Statistics routes
   app.get('/api/dashboard/stats', isAuthenticated, async (req: any, res) => {
     try {
