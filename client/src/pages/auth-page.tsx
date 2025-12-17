@@ -291,26 +291,21 @@ export default function AuthPage() {
               
               <div className="mt-6 text-center text-xs text-muted-foreground">Need assistance? Please contact us at email@acclaim.law | 0113 225 8811</div>
 
-              {setupStatus?.setupRequired && (
-                <div className="mt-4 pt-4 border-t">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full h-10 text-sm"
-                    onClick={() => {
-                      resetSetupForm();
-                      setShowSetupDialog(true);
-                    }}
-                    data-testid="button-initial-setup"
-                  >
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Create Initial Admin Account
-                  </Button>
-                  <p className="mt-2 text-center text-xs text-muted-foreground">
-                    No admin accounts exist. Create one to get started.
-                  </p>
-                </div>
-              )}
+              <div className="mt-4 pt-4 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full h-10 text-sm"
+                  onClick={() => {
+                    resetSetupForm();
+                    setShowSetupDialog(true);
+                  }}
+                  data-testid="button-initial-setup"
+                >
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Create Initial Admin Account
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
