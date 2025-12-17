@@ -249,6 +249,18 @@ export const loginAttempts = pgTable("login_attempts", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  hashedToken: varchar("hashed_token", { length: 255 }).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_password_reset_tokens_user_id").on(table.userId),
+  index("idx_password_reset_tokens_expires_at").on(table.expiresAt),
+]);
+
 export const systemMetrics = pgTable("system_metrics", {
   id: serial("id").primaryKey(),
   metricName: varchar("metric_name", { length: 100 }).notNull(),
@@ -437,6 +449,9 @@ export type InsertExternalApiCredential = typeof externalApiCredentials.$inferIn
 
 export type UserOrganisation = typeof userOrganisations.$inferSelect;
 export type InsertUserOrganisation = typeof userOrganisations.$inferInsert;
+
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type InsertPasswordResetToken = typeof passwordResetTokens.$inferInsert;
 
 // Schemas
 export const insertOrganisationSchema = createInsertSchema(organisations);
