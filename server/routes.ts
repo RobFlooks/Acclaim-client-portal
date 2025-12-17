@@ -106,6 +106,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Check password complexity
+      const hasUppercase = /[A-Z]/.test(password);
+      const hasLowercase = /[a-z]/.test(password);
+      const hasNumber = /[0-9]/.test(password);
+      if (!hasUppercase || !hasLowercase || !hasNumber) {
+        return res.status(400).json({ 
+          message: "Password must contain at least one uppercase letter, one lowercase letter, and one number" 
+        });
+      }
+
       // Check if email already exists
       const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {

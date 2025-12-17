@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
-import { Eye, EyeOff, Loader2, FileText, MessageSquare, TrendingUp, Shield } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Eye, EyeOff, Loader2, FileText, MessageSquare, TrendingUp, Shield, UserPlus } from "lucide-react";
 import acclaimLogo from "@assets/Acclaim rose.Cur_1752271300769.png";
 
 const MicrosoftIcon = () => (
@@ -30,9 +32,41 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
+  // Setup dialog state
+  const [showSetupDialog, setShowSetupDialog] = useState(false);
+  const [setupFirstName, setSetupFirstName] = useState("");
+  const [setupLastName, setSetupLastName] = useState("");
+  const [setupEmail, setSetupEmail] = useState("");
+  const [setupPassword, setSetupPassword] = useState("");
+  const [setupConfirmPassword, setSetupConfirmPassword] = useState("");
+  const [showSetupPassword, setShowSetupPassword] = useState(false);
+  const [setupError, setSetupError] = useState("");
+  const [setupSuccess, setSetupSuccess] = useState(false);
+
   // Check if Azure auth is enabled
   const { data: azureStatus } = useQuery<{ enabled: boolean; configured: boolean }>({
     queryKey: ['/api/auth/azure/status'],
+  });
+
+  // Check if initial setup is required
+  const { data: setupStatus } = useQuery<{ setupRequired: boolean; message: string }>({
+    queryKey: ['/api/setup/status'],
+  });
+
+  // Mutation for creating initial admin
+  const createAdminMutation = useMutation({
+    mutationFn: async (data: { firstName: string; lastName: string; email: string; password: string }) => {
+      const response = await apiRequest('POST', '/api/setup/admin', data);
+      return response.json();
+    },
+    onSuccess: () => {
+      setSetupSuccess(true);
+      setSetupError("");
+      queryClient.invalidateQueries({ queryKey: ['/api/setup/status'] });
+    },
+    onError: (error: any) => {
+      setSetupError(error.message || "Failed to create admin account");
+    }
   });
 
   // Handle URL error parameters from Azure auth
@@ -64,6 +98,52 @@ export default function AuthPage() {
 
   const handleAzureLogin = () => {
     window.location.href = '/auth/azure/login';
+  };
+
+  const handleSetupSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSetupError("");
+
+    if (!setupFirstName || !setupLastName || !setupEmail || !setupPassword) {
+      setSetupError("Please fill in all fields");
+      return;
+    }
+
+    if (setupPassword !== setupConfirmPassword) {
+      setSetupError("Passwords do not match");
+      return;
+    }
+
+    if (setupPassword.length < 8) {
+      setSetupError("Password must be at least 8 characters long");
+      return;
+    }
+
+    // Check for password complexity
+    const hasUppercase = /[A-Z]/.test(setupPassword);
+    const hasLowercase = /[a-z]/.test(setupPassword);
+    const hasNumber = /[0-9]/.test(setupPassword);
+    if (!hasUppercase || !hasLowercase || !hasNumber) {
+      setSetupError("Password must contain at least one uppercase letter, one lowercase letter, and one number");
+      return;
+    }
+
+    createAdminMutation.mutate({
+      firstName: setupFirstName,
+      lastName: setupLastName,
+      email: setupEmail,
+      password: setupPassword
+    });
+  };
+
+  const resetSetupForm = () => {
+    setSetupFirstName("");
+    setSetupLastName("");
+    setSetupEmail("");
+    setSetupPassword("");
+    setSetupConfirmPassword("");
+    setSetupError("");
+    setSetupSuccess(false);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -210,6 +290,27 @@ export default function AuthPage() {
               )}
               
               <div className="mt-6 text-center text-xs text-muted-foreground">Need assistance? Please contact us at email@acclaim.law | 0113 225 8811</div>
+
+              {setupStatus?.setupRequired && (
+                <div className="mt-4 pt-4 border-t">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full h-10 text-sm"
+                    onClick={() => {
+                      resetSetupForm();
+                      setShowSetupDialog(true);
+                    }}
+                    data-testid="button-initial-setup"
+                  >
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Create Initial Admin Account
+                  </Button>
+                  <p className="mt-2 text-center text-xs text-muted-foreground">
+                    No admin accounts exist. Create one to get started.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -269,6 +370,159 @@ export default function AuthPage() {
           </div>
         </div>
       </div>
+
+      {/* Initial Admin Setup Dialog */}
+      <Dialog open={showSetupDialog} onOpenChange={(open) => {
+        setShowSetupDialog(open);
+        if (!open) {
+          // Reset success state when dialog closes
+          setSetupSuccess(false);
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5" />
+              Create Initial Admin Account
+            </DialogTitle>
+            <DialogDescription>
+              Set up your first administrator account to access the system.
+            </DialogDescription>
+          </DialogHeader>
+
+          {setupSuccess ? (
+            <div className="space-y-4">
+              <Alert className="bg-green-50 border-green-200">
+                <AlertDescription className="text-green-800">
+                  Admin account created successfully! You can now sign in with your new credentials.
+                </AlertDescription>
+              </Alert>
+              <Button 
+                className="w-full bg-acclaim-teal hover:bg-acclaim-teal/90"
+                onClick={() => {
+                  setShowSetupDialog(false);
+                  setEmail(setupEmail);
+                }}
+              >
+                Continue to Sign In
+              </Button>
+            </div>
+          ) : (
+            <form onSubmit={handleSetupSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="setup-firstName">First Name</Label>
+                  <Input
+                    id="setup-firstName"
+                    value={setupFirstName}
+                    onChange={(e) => setSetupFirstName(e.target.value)}
+                    placeholder="First name"
+                    required
+                    data-testid="input-setup-firstname"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="setup-lastName">Last Name</Label>
+                  <Input
+                    id="setup-lastName"
+                    value={setupLastName}
+                    onChange={(e) => setSetupLastName(e.target.value)}
+                    placeholder="Last name"
+                    required
+                    data-testid="input-setup-lastname"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="setup-email">Email Address</Label>
+                <Input
+                  id="setup-email"
+                  type="email"
+                  value={setupEmail}
+                  onChange={(e) => setSetupEmail(e.target.value)}
+                  placeholder="admin@example.com"
+                  required
+                  data-testid="input-setup-email"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="setup-password">Password</Label>
+                <div className="relative">
+                  <Input
+                    id="setup-password"
+                    type={showSetupPassword ? "text" : "password"}
+                    value={setupPassword}
+                    onChange={(e) => setSetupPassword(e.target.value)}
+                    placeholder="Minimum 8 characters"
+                    required
+                    data-testid="input-setup-password"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowSetupPassword(!showSetupPassword)}
+                  >
+                    {showSetupPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-500" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-500" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="setup-confirmPassword">Confirm Password</Label>
+                <Input
+                  id="setup-confirmPassword"
+                  type={showSetupPassword ? "text" : "password"}
+                  value={setupConfirmPassword}
+                  onChange={(e) => setSetupConfirmPassword(e.target.value)}
+                  placeholder="Re-enter your password"
+                  required
+                  data-testid="input-setup-confirm-password"
+                />
+              </div>
+
+              {setupError && (
+                <Alert variant="destructive">
+                  <AlertDescription>{setupError}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowSetupDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="flex-1 bg-acclaim-teal hover:bg-acclaim-teal/90"
+                  disabled={createAdminMutation.isPending}
+                  data-testid="button-create-admin"
+                >
+                  {createAdminMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    "Create Admin Account"
+                  )}
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
