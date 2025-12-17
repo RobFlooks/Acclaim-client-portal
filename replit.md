@@ -26,6 +26,7 @@ Language preference: British English (organisation not organization, colour not 
 ### Authentication & Authorization
 - **Provider**: Local username/password authentication via Passport.js, with optional Azure Entra External ID (Microsoft) single sign-on. Registration is disabled; user accounts are created by administrators.
 - **Azure Entra External ID**: Optional SSO integration allowing users to sign in with their Microsoft accounts. Requires AZURE_CLIENT_ID, AZURE_TENANT_ID, and AZURE_CLIENT_SECRET environment variables. Users must have existing portal accounts (matched by email). See `AZURE_ENTRA_SETUP_GUIDE.md` for configuration instructions.
+- **Initial Admin Setup**: First-time system deployment includes a "Create Initial Admin Account" button on the login page that only appears when no admin users exist in the database. This allows secure bootstrapping of the system without requiring database access. Password complexity requirements: 8+ characters with uppercase, lowercase, and number.
 - **Session Storage**: PostgreSQL-backed sessions with 1-week TTL, secured with HTTP-only cookies and CSRF protection.
 - **Security Features**: Temporary passwords with forced change on first login.
 - **Admin Controls**: Email domain restrictions for admin privileges.
