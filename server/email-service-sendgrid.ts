@@ -766,6 +766,113 @@ If you have any questions, please contact our support team.
     }
   }
 
+  async sendPasswordResetOTP(data: { userEmail: string; userName: string; otp: string; expiresInMinutes: number }): Promise<boolean> {
+    if (!this.initialized || !this.transporter) {
+      console.log('❌ SendGrid not configured - password reset email not sent');
+      return false;
+    }
+
+    try {
+      const subject = `Your Password Reset Code - Acclaim Portal`;
+
+      const htmlContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
+          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 30px; text-align: center;">
+            <div style="margin-bottom: 10px;">
+              <img src="cid:logo" alt="Acclaim Credit Management & Recovery" style="height: 40px; width: auto;" />
+            </div>
+            <p style="margin: 0; opacity: 0.9; font-size: 16px;">Password Reset Request</p>
+          </div>
+          
+          <div style="padding: 30px;">
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <h2 style="color: #1e293b; margin-top: 0;">Hello ${data.userName},</h2>
+              <p style="color: #475569; margin-bottom: 20px;">
+                We received a request to reset your password for the Acclaim Credit Management & Recovery Portal.
+              </p>
+              
+              <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px;">
+                <p style="color: #475569; margin: 0 0 10px 0; font-size: 14px;">Your one-time password is:</p>
+                <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #0d9488; font-family: monospace;">
+                  ${data.otp}
+                </div>
+                <p style="color: #94a3b8; margin: 10px 0 0 0; font-size: 12px;">
+                  This code expires in ${data.expiresInMinutes} minutes
+                </p>
+              </div>
+              
+              <div style="background: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                <p style="color: #92400e; margin: 0; font-size: 14px;">
+                  <strong>⚠️ Security Notice:</strong> If you didn't request this password reset, please ignore this email. Your account remains secure.
+                </p>
+              </div>
+            </div>
+            
+            <div style="background: white; padding: 20px; border-radius: 8px;">
+              <h3 style="color: #1e293b; margin-top: 0;">How to Reset Your Password</h3>
+              <ol style="color: #475569; padding-left: 20px;">
+                <li style="margin-bottom: 10px;">Go to the login page</li>
+                <li style="margin-bottom: 10px;">Click "Forgot Password"</li>
+                <li style="margin-bottom: 10px;">Enter your email and click "Send Code" (already done)</li>
+                <li style="margin-bottom: 10px;">Enter this one-time code and click "Login with Code"</li>
+                <li style="margin-bottom: 10px;">You'll be prompted to create a new password</li>
+              </ol>
+            </div>
+          </div>
+
+          <div style="background: #e2e8f0; padding: 20px; text-align: center; color: #64748b; font-size: 14px;">
+            <p style="margin: 0;">This is an automated notification from Acclaim Credit Management & Recovery</p>
+            <p style="margin: 5px 0 0 0;">Need help? Contact us at <a href="mailto:email@acclaim.law" style="color: #0d9488;">email@acclaim.law</a></p>
+          </div>
+        </div>
+      `;
+
+      const textContent = `
+Password Reset Request - Acclaim Portal
+
+Hello ${data.userName},
+
+We received a request to reset your password for the Acclaim Credit Management & Recovery Portal.
+
+Your one-time password is: ${data.otp}
+
+This code expires in ${data.expiresInMinutes} minutes.
+
+How to Reset Your Password:
+1. Go to the login page
+2. Click "Forgot Password"
+3. Enter your email and click "Send Code" (already done)
+4. Enter this one-time code and click "Login with Code"
+5. You'll be prompted to create a new password
+
+Security Notice: If you didn't request this password reset, please ignore this email. Your account remains secure.
+
+Need help? Contact us at email@acclaim.law
+      `;
+
+      const info = await this.transporter.sendMail({
+        from: '"Acclaim Credit Management & Recovery" <email@acclaim.law>',
+        to: data.userEmail,
+        subject: subject,
+        text: textContent,
+        html: htmlContent,
+        attachments: [
+          {
+            filename: 'logo.png',
+            path: path.join(__dirname, '../attached_assets/Acclaim rose.Cur_1752271300769.png'),
+            cid: 'logo'
+          }
+        ]
+      });
+
+      console.log('✅ Password reset OTP email sent successfully via SendGrid:', info.messageId);
+      return true;
+    } catch (error) {
+      console.error('❌ Failed to send password reset OTP email via SendGrid:', error);
+      return false;
+    }
+  }
+
   private async generateCaseSubmissionExcel(data: CaseSubmissionNotificationData): Promise<string> {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Case Submission Details');

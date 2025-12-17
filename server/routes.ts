@@ -162,6 +162,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to create initial admin account" });
     }
   });
+
+  // Password reset routes
+  app.post('/api/auth/password-reset/request', async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      // Always return success to prevent email enumeration
+      const genericResponse = { 
+        message: "If an account with this email exists, a password reset code has been sent." 
+      };
+
+      // Find user by email
+      const user = await storage.getUserByEmail(email.toLowerCase());
+      if (!user) {
+        console.log(`[Password Reset] Request for unknown email: ${email}`);
+        return res.json(genericResponse);
+      }
+
+      // Generate 6-digit OTP
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // Hash the OTP before storing
+      const hashedOtp = await bcrypt.hash(otp, 10);
+      
+      // Set expiry to 15 minutes from now
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+      
+      // Store the token
+      await storage.createPasswordResetToken(user.id, hashedOtp, expiresAt);
+      
+      // Send email with OTP
+      const { sendGridEmailService } = await import('./email-service-sendgrid');
+      const emailSent = await sendGridEmailService.sendPasswordResetOTP({
+        userEmail: user.email!,
+        userName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User',
+        otp,
+        expiresInMinutes: 15
+      });
+
+      if (!emailSent) {
+        console.error(`[Password Reset] Failed to send email to ${email}`);
+        // Still return generic response to prevent enumeration
+      } else {
+        console.log(`[Password Reset] OTP sent to ${email}`);
+      }
+
+      res.json(genericResponse);
+    } catch (error) {
+      console.error("Error requesting password reset:", error);
+      res.status(500).json({ message: "Failed to process password reset request" });
+    }
+  });
+
+  app.post('/api/auth/login/otp', async (req, res) => {
+    try {
+      const { email, otp } = req.body;
+
+      if (!email || !otp) {
+        return res.status(400).json({ message: "Email and OTP are required" });
+      }
+
+      // Find user by email
+      const user = await storage.getUserByEmail(email.toLowerCase());
+      if (!user) {
+        return res.status(401).json({ message: "Invalid email or code" });
+      }
+
+      // Get valid token for user
+      const token = await storage.getValidPasswordResetToken(user.id);
+      if (!token) {
+        return res.status(401).json({ message: "No valid reset code found. Please request a new one." });
+      }
+
+      // Verify OTP
+      const otpValid = await bcrypt.compare(otp, token.hashedToken);
+      if (!otpValid) {
+        return res.status(401).json({ message: "Invalid code. Please check and try again." });
+      }
+
+      // Mark token as used
+      await storage.markPasswordResetTokenUsed(token.id);
+
+      // Update user to require password change
+      await storage.updateUserPassword(user.id, {
+        mustChangePassword: true
+      });
+
+      // Log the user in
+      (req as any).login(user, (err: any) => {
+        if (err) {
+          console.error("Login error after OTP verification:", err);
+          return res.status(500).json({ message: "Login failed" });
+        }
+
+        console.log(`[Password Reset] User ${email} logged in with OTP, must change password`);
+        
+        res.json({
+          message: "Login successful. Please change your password.",
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            isAdmin: user.isAdmin,
+            mustChangePassword: true
+          }
+        });
+      });
+    } catch (error) {
+      console.error("Error during OTP login:", error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
   
   // Serve screenshots for user guide
   app.use("/screenshots", express.static(path.join(__dirname, "../screenshots")));
