@@ -172,6 +172,7 @@ export interface IStorage {
   }>; // Get combined stats from multiple organizations
 
   // Admin operations
+  hasAdminUser(): Promise<boolean>; // Check if any admin user exists (for initial setup)
   getAllUsers(): Promise<User[]>;
   getAllOrganisations(): Promise<Organization[]>;
   assignUserToOrganisation(userId: string, organisationId: number): Promise<User | null>;
@@ -1385,6 +1386,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Admin operations
+  async hasAdminUser(): Promise<boolean> {
+    const [result] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
+      .where(eq(users.isAdmin, true));
+    return result.count > 0;
+  }
+
   async getAllUsers(): Promise<User[]> {
     const result = await db
       .select({
