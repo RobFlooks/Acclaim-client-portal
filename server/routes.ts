@@ -157,9 +157,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isAdmin: user.isAdmin
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating initial admin:", error);
-      res.status(500).json({ message: "Failed to create initial admin account" });
+      const errorMessage = error?.message || "Unknown error";
+      res.status(500).json({ 
+        message: "Failed to create initial admin account",
+        error: process.env.NODE_ENV !== 'production' ? errorMessage : undefined
+      });
     }
   });
 
