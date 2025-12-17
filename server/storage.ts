@@ -10,6 +10,7 @@ import {
   payments,
   userActivityLogs,
   loginAttempts,
+  passwordResetTokens,
   systemMetrics,
   auditLog,
   externalApiCredentials,
@@ -34,6 +35,7 @@ import {
   type InsertUserActivityLog,
   type LoginAttempt,
   type InsertLoginAttempt,
+  type PasswordResetToken,
   type SystemMetric,
   type InsertSystemMetric,
   type AuditLog,
@@ -298,6 +300,12 @@ export interface IStorage {
     orderBy?: string;
     limit?: number;
   }): Promise<any[]>;
+
+  // Password reset token operations
+  createPasswordResetToken(userId: string, hashedToken: string, expiresAt: Date): Promise<PasswordResetToken>;
+  getValidPasswordResetToken(userId: string): Promise<PasswordResetToken | undefined>;
+  markPasswordResetTokenUsed(tokenId: number): Promise<void>;
+  invalidatePasswordResetTokensForUser(userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2361,6 +2369,51 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCaseSubmissionDocument(id: number): Promise<void> {
     await db.delete(caseSubmissionDocuments).where(eq(caseSubmissionDocuments.id, id));
+  }
+
+  // Password reset token operations
+  async createPasswordResetToken(userId: string, hashedToken: string, expiresAt: Date): Promise<PasswordResetToken> {
+    // Invalidate any existing tokens for this user first
+    await this.invalidatePasswordResetTokensForUser(userId);
+    
+    const [token] = await db.insert(passwordResetTokens).values({
+      userId,
+      hashedToken,
+      expiresAt,
+    }).returning();
+    return token;
+  }
+
+  async getValidPasswordResetToken(userId: string): Promise<PasswordResetToken | undefined> {
+    const [token] = await db.select()
+      .from(passwordResetTokens)
+      .where(
+        and(
+          eq(passwordResetTokens.userId, userId),
+          isNull(passwordResetTokens.usedAt),
+          sql`${passwordResetTokens.expiresAt} > NOW()`
+        )
+      )
+      .orderBy(desc(passwordResetTokens.createdAt))
+      .limit(1);
+    return token;
+  }
+
+  async markPasswordResetTokenUsed(tokenId: number): Promise<void> {
+    await db.update(passwordResetTokens)
+      .set({ usedAt: new Date() })
+      .where(eq(passwordResetTokens.id, tokenId));
+  }
+
+  async invalidatePasswordResetTokensForUser(userId: string): Promise<void> {
+    await db.update(passwordResetTokens)
+      .set({ usedAt: new Date() })
+      .where(
+        and(
+          eq(passwordResetTokens.userId, userId),
+          isNull(passwordResetTokens.usedAt)
+        )
+      );
   }
 }
 
