@@ -60,6 +60,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Azure Entra External ID authentication (optional - only if configured)
   setupAzureAuth(app);
   
+  // Initial setup routes (only available when no admin exists)
+  app.get('/api/setup/status', async (req, res) => {
+    try {
+      const hasAdmin = await storage.hasAdminUser();
+      res.json({ 
+        setupRequired: !hasAdmin,
+        message: hasAdmin ? 'System is already configured' : 'Initial admin setup required'
+      });
+    } catch (error) {
+      console.error("Error checking setup status:", error);
+      res.status(500).json({ message: "Failed to check setup status" });
+    }
+  });
+
+  app.post('/api/setup/admin', async (req, res) => {
+    try {
+      // Check if any admin already exists
+      const hasAdmin = await storage.hasAdminUser();
+      if (hasAdmin) {
+        return res.status(403).json({ 
+          message: "Initial setup has already been completed. Admin users already exist." 
+        });
+      }
+
+      const { firstName, lastName, email, password } = req.body;
+
+      // Validate required fields
+      if (!firstName || !lastName || !email || !password) {
+        return res.status(400).json({ 
+          message: "All fields are required: firstName, lastName, email, password" 
+        });
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ message: "Invalid email format" });
+      }
+
+      // Validate password strength
+      if (password.length < 8) {
+        return res.status(400).json({ 
+          message: "Password must be at least 8 characters long" 
+        });
+      }
+
+      // Check if email already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "A user with this email already exists" });
+      }
+
+      // Create the admin user with the provided password (not temporary)
+      const passwordHash = await bcrypt.hash(password, 10);
+      const userId = `admin-${Date.now()}`;
+
+      // Use db directly to create user with custom password
+      const { db } = await import('./db');
+      const { users } = await import('@shared/schema');
+      
+      const [user] = await db
+        .insert(users)
+        .values({
+          id: userId,
+          firstName,
+          lastName,
+          email: email.toLowerCase(),
+          isAdmin: true,
+          passwordHash,
+          mustChangePassword: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+
+      console.log(`[Setup] Initial admin user created: ${email}`);
+
+      res.status(201).json({ 
+        message: "Initial admin account created successfully",
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          isAdmin: user.isAdmin
+        }
+      });
+    } catch (error) {
+      console.error("Error creating initial admin:", error);
+      res.status(500).json({ message: "Failed to create initial admin account" });
+    }
+  });
+  
   // Serve screenshots for user guide
   app.use("/screenshots", express.static(path.join(__dirname, "../screenshots")));
 
