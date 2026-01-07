@@ -7,6 +7,27 @@ import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+function getLogoAttachment(): { filename: string; path: string; cid: string } | null {
+  const possiblePaths = [
+    path.join(__dirname, '../attached_assets/Acclaim rose.Cur_1752271300769.png'),
+    path.join(__dirname, '../../attached_assets/Acclaim rose.Cur_1752271300769.png'),
+    path.join(process.cwd(), 'attached_assets/Acclaim rose.Cur_1752271300769.png'),
+  ];
+  
+  for (const logoPath of possiblePaths) {
+    if (fs.existsSync(logoPath)) {
+      return {
+        filename: 'logo.png',
+        path: logoPath,
+        cid: 'logo'
+      };
+    }
+  }
+  
+  console.log('[Email] Logo file not found, sending email without logo attachment');
+  return null;
+}
+
 interface EmailNotificationData {
   userEmail: string;
   userName: string;
@@ -317,19 +338,14 @@ ${data.messageContent}
 Please log in to the Acclaim Portal to view and respond to this message.
       `;
 
+      const logoAttachment = getLogoAttachment();
       const info = await this.transporter.sendMail({
         from: '"Acclaim Credit Management & Recovery" <email@acclaim.law>',
         to: data.userEmail,
         subject: subject,
         text: textContent,
         html: htmlContent,
-        attachments: [
-          {
-            filename: 'logo.png',
-            path: path.join(__dirname, '../attached_assets/Acclaim rose.Cur_1752271300769.png'),
-            cid: 'logo'
-          }
-        ]
+        attachments: logoAttachment ? [logoAttachment] : []
       });
 
       console.log(`✅ REAL EMAIL SENT via SendGrid to: ${data.userEmail}`);
@@ -480,14 +496,12 @@ ${data.messageContent}
 Please log in to the Acclaim Portal to view and respond to this message.
       `;
 
-      // Prepare attachments array - always include logo, add user attachment if present
-      const attachments: any[] = [
-        {
-          filename: 'logo.png',
-          path: path.join(__dirname, '../attached_assets/Acclaim rose.Cur_1752271300769.png'),
-          cid: 'logo'
-        }
-      ];
+      // Prepare attachments array - include logo if available, add user attachment if present
+      const attachments: any[] = [];
+      const logoAttachment = getLogoAttachment();
+      if (logoAttachment) {
+        attachments.push(logoAttachment);
+      }
 
       // Add user attachment if present
       if (data.attachment && data.attachment.filePath) {
@@ -631,19 +645,14 @@ ${data.messageContent}
 Please log in to the Acclaim Portal to view this message and respond if needed.
       `;
 
+      const logoAttachment = getLogoAttachment();
       const info = await this.transporter.sendMail({
         from: '"Acclaim Credit Management & Recovery" <email@acclaim.law>',
         to: data.userEmail,
         subject: subject,
         text: textContent,
         html: htmlContent,
-        attachments: [
-          {
-            filename: 'logo.png',
-            path: path.join(__dirname, '../attached_assets/Acclaim rose.Cur_1752271300769.png'),
-            cid: 'logo'
-          }
-        ]
+        attachments: logoAttachment ? [logoAttachment] : []
       });
 
       console.log('✅ Admin-to-user email sent successfully via SendGrid:', info.messageId);
@@ -743,19 +752,14 @@ Getting Started:
 If you have any questions, please contact our support team.
       `;
 
+      const logoAttachment = getLogoAttachment();
       const info = await this.transporter.sendMail({
         from: '"Acclaim Credit Management & Recovery" <email@acclaim.law>',
         to: data.userEmail,
         subject: subject,
         text: textContent,
         html: htmlContent,
-        attachments: [
-          {
-            filename: 'logo.png',
-            path: path.join(__dirname, '../attached_assets/Acclaim rose.Cur_1752271300769.png'),
-            cid: 'logo'
-          }
-        ]
+        attachments: logoAttachment ? [logoAttachment] : []
       });
 
       console.log('✅ Welcome email sent successfully via SendGrid:', info.messageId);
@@ -850,19 +854,14 @@ Security Notice: If you didn't request this password reset, please ignore this e
 Need help? Contact us at email@acclaim.law
       `;
 
+      const logoAttachment = getLogoAttachment();
       const info = await this.transporter.sendMail({
         from: '"Acclaim Credit Management & Recovery" <email@acclaim.law>',
         to: data.userEmail,
         subject: subject,
         text: textContent,
         html: htmlContent,
-        attachments: [
-          {
-            filename: 'logo.png',
-            path: path.join(__dirname, '../attached_assets/Acclaim rose.Cur_1752271300769.png'),
-            cid: 'logo'
-          }
-        ]
+        attachments: logoAttachment ? [logoAttachment] : []
       });
 
       console.log('✅ Password reset OTP email sent successfully via SendGrid:', info.messageId);
@@ -1337,17 +1336,15 @@ A detailed Excel spreadsheet and all uploaded files are attached to this email.
       `;
 
       // Prepare attachments
-      const attachments = [
-        {
-          filename: 'logo.png',
-          path: path.join(__dirname, '../attached_assets/Acclaim rose.Cur_1752271300769.png'),
-          cid: 'logo'
-        },
-        {
-          filename: `case-submission-${data.submissionId}.xlsx`,
-          path: excelFilePath
-        }
-      ];
+      const attachments: any[] = [];
+      const logoAttachment = getLogoAttachment();
+      if (logoAttachment) {
+        attachments.push(logoAttachment);
+      }
+      attachments.push({
+        filename: `case-submission-${data.submissionId}.xlsx`,
+        path: excelFilePath
+      });
 
       // Add uploaded files to attachments
       if (data.uploadedFiles && data.uploadedFiles.length > 0) {
