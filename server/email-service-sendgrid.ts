@@ -1,4 +1,3 @@
-import nodemailer from 'nodemailer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import ExcelJS from 'exceljs';
@@ -6,6 +5,9 @@ import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// APIM endpoint for SendGrid
+const APIM_ENDPOINT = 'https://acclaim-api-apim.azure-api.net/sendgrid/v3/mail/send';
 
 function getLogoAttachment(): { filename: string; path: string; cid: string } | null {
   const possiblePaths = [
@@ -25,6 +27,35 @@ function getLogoAttachment(): { filename: string; path: string; cid: string } | 
   }
   
   console.log('[Email] Logo file not found, sending email without logo attachment');
+  return null;
+}
+
+// Get logo as base64 for HTTP API
+function getLogoBase64(): { content: string; filename: string; type: string; content_id: string; disposition: string } | null {
+  const possiblePaths = [
+    path.join(__dirname, '../attached_assets/Acclaim rose.Cur_1752271300769.png'),
+    path.join(__dirname, '../../attached_assets/Acclaim rose.Cur_1752271300769.png'),
+    path.join(process.cwd(), 'attached_assets/Acclaim rose.Cur_1752271300769.png'),
+  ];
+  
+  for (const logoPath of possiblePaths) {
+    if (fs.existsSync(logoPath)) {
+      try {
+        const fileContent = fs.readFileSync(logoPath);
+        return {
+          content: fileContent.toString('base64'),
+          filename: 'logo.png',
+          type: 'image/png',
+          content_id: 'logo',
+          disposition: 'inline'
+        };
+      } catch (error) {
+        console.log('[Email] Failed to read logo file:', error);
+      }
+    }
+  }
+  
+  console.log('[Email] Logo file not found for base64 encoding');
   return null;
 }
 
@@ -173,41 +204,92 @@ interface CaseSubmissionNotificationData {
 }
 
 class SendGridEmailService {
-  private transporter: nodemailer.Transporter | null = null;
   private initialized = false;
 
   constructor() {
-    this.initializeTransporter();
+    this.initializeService();
   }
 
-  private async initializeTransporter() {
+  private initializeService() {
+    // Check for APIM subscription key (required for Azure APIM)
+    if (process.env.APIM_SUBSCRIPTION_KEY) {
+      this.initialized = true;
+      console.log('✅ SendGrid Email Service: REAL email delivery enabled via Azure APIM');
+      console.log('📧 Emails will be delivered to actual inboxes through APIM');
+    } else {
+      this.initialized = false;
+      console.log('❌ APIM_SUBSCRIPTION_KEY not found - emails will not be sent');
+    }
+  }
+
+  // Send email via Azure APIM to SendGrid HTTP API
+  private async sendViaAPIM(payload: {
+    to: string;
+    subject: string;
+    textContent: string;
+    htmlContent: string;
+    attachments?: Array<{
+      content: string;
+      filename: string;
+      type: string;
+      disposition?: string;
+      content_id?: string;
+    }>;
+  }): Promise<boolean> {
+    if (!this.initialized) {
+      console.log('❌ SendGrid not configured - email not sent');
+      return false;
+    }
+
     try {
-      // ALWAYS prioritize SendGrid if available
-      if (process.env.SENDGRID_API_KEY) {
-        this.transporter = nodemailer.createTransport({
-          host: 'smtp.sendgrid.net',
-          port: 587,
-          secure: false,
-          auth: {
-            user: 'apikey',
-            pass: process.env.SENDGRID_API_KEY,
-          },
-        });
-        this.initialized = true;
-        console.log('✅ SendGrid Email Service: REAL email delivery enabled');
-        console.log('📧 Emails will be delivered to actual inboxes');
+      const emailPayload: any = {
+        personalizations: [
+          {
+            to: [{ email: payload.to }]
+          }
+        ],
+        from: {
+          email: 'email@acclaim.law',
+          name: 'Acclaim Credit Management & Recovery'
+        },
+        subject: payload.subject,
+        content: [
+          { type: 'text/plain', value: payload.textContent },
+          { type: 'text/html', value: payload.htmlContent }
+        ]
+      };
+
+      // Add attachments if present
+      if (payload.attachments && payload.attachments.length > 0) {
+        emailPayload.attachments = payload.attachments;
+      }
+
+      const response = await fetch(APIM_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Ocp-Apim-Subscription-Key': process.env.APIM_SUBSCRIPTION_KEY!
+        },
+        body: JSON.stringify(emailPayload)
+      });
+
+      if (response.ok || response.status === 202) {
+        console.log(`✅ REAL EMAIL SENT via Azure APIM to: ${payload.to}`);
+        console.log(`📧 Subject: ${payload.subject}`);
+        return true;
       } else {
-        this.initialized = false;
-        console.log('❌ SendGrid API key not found - emails will not be sent');
+        const errorText = await response.text();
+        console.error(`❌ APIM email failed with status ${response.status}:`, errorText);
+        return false;
       }
     } catch (error) {
-      console.error('Failed to initialize SendGrid email service:', error);
-      this.initialized = false;
+      console.error('❌ APIM email sending failed:', error);
+      return false;
     }
   }
 
   async sendExternalMessageNotification(data: ExternalMessageNotificationData): Promise<boolean> {
-    if (!this.initialized || !this.transporter) {
+    if (!this.initialized) {
       console.log('❌ SendGrid not configured - email not sent');
       return false;
     }
@@ -338,32 +420,20 @@ ${data.messageContent}
 Please log in to the Acclaim Portal to view and respond to this message.
       `;
 
-      const logoAttachment = getLogoAttachment();
-      const info = await this.transporter.sendMail({
-        from: '"Acclaim Credit Management & Recovery" <email@acclaim.law>',
+      // Prepare attachments for APIM
+      const attachments: Array<{ content: string; filename: string; type: string; disposition?: string; content_id?: string }> = [];
+      const logoBase64 = getLogoBase64();
+      if (logoBase64) {
+        attachments.push(logoBase64);
+      }
+
+      return await this.sendViaAPIM({
         to: data.userEmail,
         subject: subject,
-        text: textContent,
-        html: htmlContent,
-        attachments: logoAttachment ? [logoAttachment] : []
+        textContent: textContent,
+        htmlContent: htmlContent,
+        attachments: attachments
       });
-
-      console.log(`✅ REAL EMAIL SENT via SendGrid to: ${data.userEmail}`);
-      console.log(`📧 Subject: ${subject}`);
-      console.log(`📋 Message ID: ${info.messageId}`);
-      
-      // Log full response details for bounce detection
-      if (info.response) {
-        console.log(`📦 SMTP Response: ${info.response}`);
-      }
-      if (info.rejected && info.rejected.length > 0) {
-        console.log(`❌ REJECTED ADDRESSES: ${info.rejected.join(', ')}`);
-      }
-      if (info.pending && info.pending.length > 0) {
-        console.log(`⏳ PENDING ADDRESSES: ${info.pending.join(', ')}`);
-      }
-      
-      return true;
     } catch (error) {
       console.error('❌ SendGrid email sending failed:', error);
       return false;
@@ -371,7 +441,7 @@ Please log in to the Acclaim Portal to view and respond to this message.
   }
 
   async sendMessageNotification(data: EmailNotificationData, adminEmail: string): Promise<boolean> {
-    if (!this.initialized || !this.transporter) {
+    if (!this.initialized) {
       console.log('❌ SendGrid not configured - email not sent');
       return false;
     }
@@ -496,32 +566,35 @@ ${data.messageContent}
 Please log in to the Acclaim Portal to view and respond to this message.
       `;
 
-      // Prepare attachments array - include logo if available, add user attachment if present
-      const attachments: any[] = [];
-      const logoAttachment = getLogoAttachment();
-      if (logoAttachment) {
-        attachments.push(logoAttachment);
+      // Prepare attachments for APIM
+      const attachments: Array<{ content: string; filename: string; type: string; disposition?: string; content_id?: string }> = [];
+      const logoBase64 = getLogoBase64();
+      if (logoBase64) {
+        attachments.push(logoBase64);
       }
 
-      // Add user attachment if present
+      // Add user attachment if present (convert to base64)
       if (data.attachment && data.attachment.filePath) {
-        attachments.push({
-          filename: data.attachment.fileName,
-          path: data.attachment.filePath
-        });
+        try {
+          const fileContent = fs.readFileSync(data.attachment.filePath);
+          attachments.push({
+            content: fileContent.toString('base64'),
+            filename: data.attachment.fileName,
+            type: data.attachment.fileType || 'application/octet-stream',
+            disposition: 'attachment'
+          });
+        } catch (error) {
+          console.error('Failed to read attachment file:', error);
+        }
       }
 
-      const info = await this.transporter.sendMail({
-        from: '"Acclaim Credit Management & Recovery" <email@acclaim.law>',
+      return await this.sendViaAPIM({
         to: adminEmail,
         subject: subject,
-        text: textContent,
-        html: htmlContent,
+        textContent: textContent,
+        htmlContent: htmlContent,
         attachments: attachments
       });
-
-      console.log('✅ User-to-admin email sent successfully via SendGrid:', info.messageId);
-      return true;
     } catch (error) {
       console.error('❌ Failed to send user-to-admin email via SendGrid:', error);
       return false;
@@ -529,7 +602,7 @@ Please log in to the Acclaim Portal to view and respond to this message.
   }
 
   async sendAdminToUserNotification(data: AdminToUserNotificationData): Promise<boolean> {
-    if (!this.initialized || !this.transporter) {
+    if (!this.initialized) {
       console.log('❌ SendGrid not configured - email not sent');
       return false;
     }
@@ -645,18 +718,20 @@ ${data.messageContent}
 Please log in to the Acclaim Portal to view this message and respond if needed.
       `;
 
-      const logoAttachment = getLogoAttachment();
-      const info = await this.transporter.sendMail({
-        from: '"Acclaim Credit Management & Recovery" <email@acclaim.law>',
+      // Prepare attachments for APIM
+      const attachments: Array<{ content: string; filename: string; type: string; disposition?: string; content_id?: string }> = [];
+      const logoBase64 = getLogoBase64();
+      if (logoBase64) {
+        attachments.push(logoBase64);
+      }
+
+      return await this.sendViaAPIM({
         to: data.userEmail,
         subject: subject,
-        text: textContent,
-        html: htmlContent,
-        attachments: logoAttachment ? [logoAttachment] : []
+        textContent: textContent,
+        htmlContent: htmlContent,
+        attachments: attachments
       });
-
-      console.log('✅ Admin-to-user email sent successfully via SendGrid:', info.messageId);
-      return true;
     } catch (error) {
       console.error('❌ Failed to send admin-to-user email via SendGrid:', error);
       return false;
@@ -664,7 +739,7 @@ Please log in to the Acclaim Portal to view this message and respond if needed.
   }
 
   async sendWelcomeEmail(data: WelcomeEmailData): Promise<boolean> {
-    if (!this.initialized || !this.transporter) {
+    if (!this.initialized) {
       console.log('❌ SendGrid not configured - welcome email not sent');
       return false;
     }
@@ -752,18 +827,20 @@ Getting Started:
 If you have any questions, please contact our support team.
       `;
 
-      const logoAttachment = getLogoAttachment();
-      const info = await this.transporter.sendMail({
-        from: '"Acclaim Credit Management & Recovery" <email@acclaim.law>',
+      // Prepare attachments for APIM
+      const attachments: Array<{ content: string; filename: string; type: string; disposition?: string; content_id?: string }> = [];
+      const logoBase64 = getLogoBase64();
+      if (logoBase64) {
+        attachments.push(logoBase64);
+      }
+
+      return await this.sendViaAPIM({
         to: data.userEmail,
         subject: subject,
-        text: textContent,
-        html: htmlContent,
-        attachments: logoAttachment ? [logoAttachment] : []
+        textContent: textContent,
+        htmlContent: htmlContent,
+        attachments: attachments
       });
-
-      console.log('✅ Welcome email sent successfully via SendGrid:', info.messageId);
-      return true;
     } catch (error) {
       console.error('❌ Failed to send welcome email via SendGrid:', error);
       return false;
@@ -771,7 +848,7 @@ If you have any questions, please contact our support team.
   }
 
   async sendPasswordResetOTP(data: { userEmail: string; userName: string; otp: string; expiresInMinutes: number }): Promise<boolean> {
-    if (!this.initialized || !this.transporter) {
+    if (!this.initialized) {
       console.log('❌ SendGrid not configured - password reset email not sent');
       return false;
     }
@@ -854,18 +931,20 @@ Security Notice: If you didn't request this password reset, please ignore this e
 Need help? Contact us at email@acclaim.law
       `;
 
-      const logoAttachment = getLogoAttachment();
-      const info = await this.transporter.sendMail({
-        from: '"Acclaim Credit Management & Recovery" <email@acclaim.law>',
+      // Prepare attachments for APIM
+      const attachments: Array<{ content: string; filename: string; type: string; disposition?: string; content_id?: string }> = [];
+      const logoBase64 = getLogoBase64();
+      if (logoBase64) {
+        attachments.push(logoBase64);
+      }
+
+      return await this.sendViaAPIM({
         to: data.userEmail,
         subject: subject,
-        text: textContent,
-        html: htmlContent,
-        attachments: logoAttachment ? [logoAttachment] : []
+        textContent: textContent,
+        htmlContent: htmlContent,
+        attachments: attachments
       });
-
-      console.log('✅ Password reset OTP email sent successfully via SendGrid:', info.messageId);
-      return true;
     } catch (error) {
       console.error('❌ Failed to send password reset OTP email via SendGrid:', error);
       return false;
@@ -1028,7 +1107,7 @@ Need help? Contact us at email@acclaim.law
   }
 
   async sendCaseSubmissionNotification(data: CaseSubmissionNotificationData): Promise<boolean> {
-    if (!this.initialized || !this.transporter) {
+    if (!this.initialized) {
       console.log('❌ SendGrid not configured - case submission email not sent');
       return false;
     }
@@ -1335,37 +1414,52 @@ ${data.uploadedFiles && data.uploadedFiles.length > 0 ? `Uploaded Files:\n${data
 A detailed Excel spreadsheet and all uploaded files are attached to this email.
       `;
 
-      // Prepare attachments
-      const attachments: any[] = [];
-      const logoAttachment = getLogoAttachment();
-      if (logoAttachment) {
-        attachments.push(logoAttachment);
+      // Prepare attachments for APIM (convert to base64)
+      const attachments: Array<{ content: string; filename: string; type: string; disposition?: string; content_id?: string }> = [];
+      
+      // Add logo
+      const logoBase64 = getLogoBase64();
+      if (logoBase64) {
+        attachments.push(logoBase64);
       }
-      attachments.push({
-        filename: `case-submission-${data.submissionId}.xlsx`,
-        path: excelFilePath
-      });
+      
+      // Add Excel file
+      try {
+        const excelContent = fs.readFileSync(excelFilePath);
+        attachments.push({
+          content: excelContent.toString('base64'),
+          filename: `case-submission-${data.submissionId}.xlsx`,
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          disposition: 'attachment'
+        });
+      } catch (error) {
+        console.error('Failed to read Excel file:', error);
+      }
 
       // Add uploaded files to attachments
       if (data.uploadedFiles && data.uploadedFiles.length > 0) {
         data.uploadedFiles.forEach(file => {
-          attachments.push({
-            filename: file.fileName,
-            path: file.filePath
-          });
+          try {
+            const fileContent = fs.readFileSync(file.filePath);
+            attachments.push({
+              content: fileContent.toString('base64'),
+              filename: file.fileName,
+              type: file.fileType || 'application/octet-stream',
+              disposition: 'attachment'
+            });
+          } catch (error) {
+            console.error(`Failed to read attachment file ${file.fileName}:`, error);
+          }
         });
       }
 
-      const info = await this.transporter.sendMail({
-        from: '"Acclaim Credit Management & Recovery" <email@acclaim.law>',
+      const result = await this.sendViaAPIM({
         to: 'email@acclaim.law',
         subject: subject,
-        text: textContent,
-        html: htmlContent,
+        textContent: textContent,
+        htmlContent: htmlContent,
         attachments: attachments
       });
-
-      console.log('✅ Case submission notification sent successfully via SendGrid:', info.messageId);
       
       // Clean up the temporary Excel file
       try {
@@ -1374,7 +1468,7 @@ A detailed Excel spreadsheet and all uploaded files are attached to this email.
         console.error('Warning: Failed to delete temporary Excel file:', error);
       }
       
-      return true;
+      return result;
     } catch (error) {
       console.error('❌ Failed to send case submission notification via SendGrid:', error);
       return false;
