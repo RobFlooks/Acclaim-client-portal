@@ -2173,43 +2173,41 @@ export default function AdminEnhanced() {
   return (
     <div className="space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+      <div className="space-y-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold">Admin Panel</h1>
+          <p className="text-gray-600 text-sm sm:text-base">Comprehensive user and organisation management</p>
+        </div>
+        <div className="flex flex-wrap gap-2 sm:items-center">
           <Link href="/">
-            <Button variant="outline" size="sm" className="w-fit">
+            <Button variant="outline" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Home
             </Button>
           </Link>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold">Admin Panel</h1>
-            <p className="text-gray-600 text-sm sm:text-base">Comprehensive user and organisation management</p>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:items-center sm:space-x-2">
           <Link href="/system-monitoring">
-            <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+            <Button variant="outline" size="sm">
               <Activity className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">System Monitoring</span>
               <span className="sm:hidden">System</span>
             </Button>
           </Link>
           <Link href="/admin-payment-performance-report">
-            <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+            <Button variant="outline" size="sm">
               <CreditCard className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Payment Performance</span>
               <span className="sm:hidden">Payments</span>
             </Button>
           </Link>
           <Link href="/advanced-reports">
-            <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+            <Button variant="outline" size="sm">
               <FileText className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Advanced Reports</span>
               <span className="sm:hidden">Reports</span>
             </Button>
           </Link>
           <Link href="/audit-management">
-            <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+            <Button variant="outline" size="sm">
               <Shield className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Audit Management</span>
               <span className="sm:hidden">Audit</span>
