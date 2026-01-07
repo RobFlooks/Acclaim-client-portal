@@ -242,6 +242,12 @@ class SendGridEmailService {
     }
 
     try {
+         // 🔎 DEBUG (add these)
+    console.log("APIM key present:", !!process.env.APIM_SUBSCRIPTION_KEY);
+    console.log("APIM endpoint:", APIM_ENDPOINT);
+    console.log("fetch exists:", typeof fetch);
+
+      
       const emailPayload: any = {
         personalizations: [
           {
