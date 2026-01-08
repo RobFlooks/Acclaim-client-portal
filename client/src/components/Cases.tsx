@@ -305,10 +305,11 @@ export default function Cases() {
                           setSelectedCase(case_);
                           setDialogOpen(true);
                         }}
-                        className="w-full sm:w-auto sm:ml-4"
+                        className="flex-shrink-0 px-2 sm:px-3 text-xs sm:text-sm whitespace-nowrap"
                       >
-                        <Eye className="w-4 h-4 mr-2" />
-                        View Details
+                        <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                        <span className="sm:hidden">View</span>
+                        <span className="hidden sm:inline">View Details</span>
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto w-[95vw]">
