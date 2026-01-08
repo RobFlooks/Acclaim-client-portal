@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,6 @@ export default function ChangePasswordPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Redirect if not logged in or doesn't need password change
   if (!user) {
     setTimeout(() => navigate("/auth"), 0);
     return null;
@@ -64,7 +63,6 @@ export default function ChangePasswordPage() {
     }
 
     try {
-      // ✅ send both fields so the server Zod schema passes
       await apiRequest("POST", "/api/user/set-password", {
         newPassword,
         confirmPassword,
@@ -75,7 +73,6 @@ export default function ChangePasswordPage() {
         description: "You can now access the system with your new password.",
       });
 
-      // Refresh user data and redirect
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       navigate("/");
     } catch (err: any) {
@@ -88,7 +85,6 @@ export default function ChangePasswordPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
       <div className="w-full max-w-md">
-        {/* Logo and Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-6">
             <img
@@ -133,7 +129,6 @@ export default function ChangePasswordPage() {
                 <Label htmlFor="newPassword" className="text-sm font-medium">
                   New Password
                 </Label>
-
                 <div className="relative">
                   <Input
                     id="newPassword"
@@ -145,7 +140,6 @@ export default function ChangePasswordPage() {
                     required
                     data-testid="input-new-password"
                   />
-
                   <Button
                     type="button"
                     variant="ghost"
@@ -161,7 +155,6 @@ export default function ChangePasswordPage() {
                     )}
                   </Button>
                 </div>
-
                 <p className="text-xs text-muted-foreground">
                   Password must be at least 8 characters long
                 </p>
@@ -171,7 +164,6 @@ export default function ChangePasswordPage() {
                 <Label htmlFor="confirmPassword" className="text-sm font-medium">
                   Confirm Password
                 </Label>
-
                 <div className="relative">
                   <Input
                     id="confirmPassword"
@@ -183,8 +175,48 @@ export default function ChangePasswordPage() {
                     required
                     data-testid="input-confirm-password"
                   />
-
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    data-testid="button-toggle-confirm-password"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-500" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-500" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription data-testid="text-error">{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full h-11 bg-acclaim-teal hover:bg-acclaim-teal/90 font-medium"
+                disabled={isLoading}
+                data-testid="button-set-password"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Setting Password...
+                  </>
+                ) : (
+                  "Set Password"
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
