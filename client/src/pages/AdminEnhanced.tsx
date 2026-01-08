@@ -3178,6 +3178,18 @@ export default function AdminEnhanced() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Bottom Action Button */}
+      <div className="fixed bottom-6 right-6">
+        <Button 
+          variant="outline"
+          className="shadow-lg"
+          onClick={() => {}}
+          data-testid="button-remove"
+        >
+          Remove
+        </Button>
+      </div>
     </div>
   );
 }
