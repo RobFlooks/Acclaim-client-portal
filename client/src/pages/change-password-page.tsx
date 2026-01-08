@@ -1,10 +1,16 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff, Loader2, KeyRound } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -15,7 +21,7 @@ export default function ChangePasswordPage() {
   const [, navigate] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
-  
+
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -38,7 +44,7 @@ export default function ChangePasswordPage() {
     e.preventDefault();
     setError("");
     setIsLoading(true);
-    
+
     if (!newPassword || !confirmPassword) {
       setError("Please fill in all fields");
       setIsLoading(false);
@@ -58,8 +64,10 @@ export default function ChangePasswordPage() {
     }
 
     try {
+      // ✅ send both fields so the server Zod schema passes
       await apiRequest("POST", "/api/user/set-password", {
-        newPassword
+        newPassword,
+        confirmPassword,
       });
 
       toast({
@@ -70,8 +78,8 @@ export default function ChangePasswordPage() {
       // Refresh user data and redirect
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       navigate("/");
-    } catch (error: any) {
-      setError(error.message || "Failed to set password");
+    } catch (err: any) {
+      setError(err?.message || "Failed to set password");
     } finally {
       setIsLoading(false);
     }
@@ -83,23 +91,30 @@ export default function ChangePasswordPage() {
         {/* Logo and Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-6">
-            <img 
-              src={acclaimLogo} 
-              alt="Acclaim Credit Management" 
+            <img
+              src={acclaimLogo}
+              alt="Acclaim Credit Management"
               className="h-16 w-16 mr-3"
             />
             <div className="text-left">
               <h1 className="text-2xl font-bold text-acclaim-navy">Acclaim</h1>
-              <p className="text-sm text-muted-foreground">Credit Management & Recovery</p>
+              <p className="text-sm text-muted-foreground">
+                Credit Management &amp; Recovery
+              </p>
             </div>
           </div>
+
           <div className="flex items-center justify-center mb-4">
             <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mr-3">
               <KeyRound className="h-6 w-6 text-amber-600" />
             </div>
             <div className="text-left">
-              <h2 className="text-xl font-semibold text-gray-900">Set Your Password</h2>
-              <p className="text-sm text-muted-foreground">Create a secure password for your account</p>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Set Your Password
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Create a secure password for your account
+              </p>
             </div>
           </div>
         </div>
@@ -111,10 +126,14 @@ export default function ChangePasswordPage() {
               Choose a secure password for your account
             </CardDescription>
           </CardHeader>
+
           <CardContent>
             <form onSubmit={handleSetPassword} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="newPassword" className="text-sm font-medium">New Password</Label>
+                <Label htmlFor="newPassword" className="text-sm font-medium">
+                  New Password
+                </Label>
+
                 <div className="relative">
                   <Input
                     id="newPassword"
@@ -126,12 +145,13 @@ export default function ChangePasswordPage() {
                     required
                     data-testid="input-new-password"
                   />
+
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    onClick={() => setShowNewPassword((v) => !v)}
                     data-testid="button-toggle-new-password"
                   >
                     {showNewPassword ? (
@@ -141,13 +161,17 @@ export default function ChangePasswordPage() {
                     )}
                   </Button>
                 </div>
+
                 <p className="text-xs text-muted-foreground">
                   Password must be at least 8 characters long
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm Password</Label>
+                <Label htmlFor="confirmPassword" className="text-sm font-medium">
+                  Confirm Password
+                </Label>
+
                 <div className="relative">
                   <Input
                     id="confirmPassword"
@@ -159,48 +183,8 @@ export default function ChangePasswordPage() {
                     required
                     data-testid="input-confirm-password"
                   />
+
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    data-testid="button-toggle-confirm-password"
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-500" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-gray-500" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription data-testid="text-error">{error}</AlertDescription>
-                </Alert>
-              )}
-
-              <Button 
-                type="submit" 
-                className="w-full h-11 bg-acclaim-teal hover:bg-acclaim-teal/90 font-medium"
-                disabled={isLoading}
-                data-testid="button-set-password"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Setting Password...
-                  </>
-                ) : (
-                  "Set Password"
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-}
