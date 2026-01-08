@@ -16,10 +16,8 @@ export default function ChangePasswordPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
@@ -41,28 +39,28 @@ export default function ChangePasswordPage() {
     setError("");
     setIsLoading(true);
     
-    if (!currentPassword || !newPassword || !confirmPassword) {
+    if (!newPassword || !confirmPassword) {
       setError("Please fill in all fields");
       setIsLoading(false);
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError("New passwords do not match");
+      setError("Passwords do not match");
       setIsLoading(false);
       return;
     }
 
     if (newPassword.length < 8) {
-      setError("New password must be at least 8 characters long");
+      setError("Password must be at least 8 characters long");
       setIsLoading(false);
       return;
     }
 
     try {
-      await apiRequest("POST", "/api/change-password", {
-        currentPassword,
-        newPassword
+      await apiRequest("POST", "/api/user/set-password", {
+        newPassword,
+        confirmPassword
       });
 
       toast({
@@ -111,39 +109,11 @@ export default function ChangePasswordPage() {
           <CardHeader className="pb-4">
             <CardTitle className="text-lg">Set New Password</CardTitle>
             <CardDescription>
-              Enter your temporary password and choose a new secure password
+              Choose a new secure password for your account
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleChangePassword} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="currentPassword" className="text-sm font-medium">Current (Temporary) Password</Label>
-                <div className="relative">
-                  <Input
-                    id="currentPassword"
-                    type={showCurrentPassword ? "text" : "password"}
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    placeholder="Enter your temporary password"
-                    className="h-11 pr-10"
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  >
-                    {showCurrentPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-500" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-gray-500" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-              
               <div className="space-y-2">
                 <Label htmlFor="newPassword" className="text-sm font-medium">New Password</Label>
                 <div className="relative">
