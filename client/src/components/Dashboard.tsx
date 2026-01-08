@@ -260,12 +260,12 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className="p-3 bg-blue-100 rounded-lg">
+                <div className="p-3 bg-blue-100 rounded-lg flex-shrink-0">
                   <PoundSterling className="text-blue-600 h-6 w-6" />
                 </div>
-                <div className="ml-4">
+                <div className="ml-4 min-w-0 flex-1">
                   <p className="text-gray-600 text-sm">Total Outstanding</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">
                     {statsLoading ? "..." : formatCurrency(stats?.totalOutstanding || 0)}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">*Active cases only</p>
@@ -277,12 +277,12 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className="p-3 bg-purple-100 rounded-lg">
+                <div className="p-3 bg-purple-100 rounded-lg flex-shrink-0">
                   <PoundSterling className="text-purple-600 h-6 w-6" />
                 </div>
-                <div className="ml-4">
+                <div className="ml-4 min-w-0 flex-1">
                   <p className="text-gray-600 text-sm">Total Recovery</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">
                     {statsLoading ? "..." : `£${parseFloat(stats?.totalRecovery || '0').toLocaleString()}`}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">*Active cases only</p>
