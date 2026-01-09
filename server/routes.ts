@@ -833,7 +833,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       for (const caseId of caseIds) {
         try {
-          const caseData = await storage.getCase(caseId);
+          const caseData = await storage.getCaseById(caseId);
           if (caseData) {
             caseNameMap[caseId] = caseData.caseName || `Case #${caseId}`;
           }
