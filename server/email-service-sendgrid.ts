@@ -661,14 +661,6 @@ Please log in to the Acclaim Portal to view and respond to this message.
                   <td style="padding: 4px 0; color: #1e293b;">${data.caseDetails.caseName}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Debtor Type:</td>
-                  <td style="padding: 4px 0; color: #1e293b;">${data.caseDetails.debtorType.charAt(0).toUpperCase() + data.caseDetails.debtorType.slice(1).replace('_', ' ')}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Original Amount:</td>
-                  <td style="padding: 4px 0; color: #1e293b;">£${data.caseDetails.originalAmount}</td>
-                </tr>
-                <tr>
                   <td style="padding: 4px 0; font-weight: bold; color: #475569;">Outstanding Amount:</td>
                   <td style="padding: 4px 0; color: #1e293b; font-weight: bold;">£${data.caseDetails.outstandingAmount}</td>
                 </tr>
@@ -679,10 +671,6 @@ Please log in to the Acclaim Portal to view and respond to this message.
                       ${data.caseDetails.status}
                     </span>
                   </td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Current Stage:</td>
-                  <td style="padding: 4px 0; color: #1e293b;">${data.caseDetails.stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</td>
                 </tr>
                 ` : ''}
                 ${data.messageSubject ? `
