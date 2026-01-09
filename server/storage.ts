@@ -1616,6 +1616,16 @@ export class DatabaseStorage implements IStorage {
     return user || null;
   }
 
+  async updateUserCaseSubmission(userId: string, canSubmitCases: boolean): Promise<User | null> {
+    const [user] = await db
+      .update(users)
+      .set({ canSubmitCases, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+
+    return user || null;
+  }
+
   async resetUserPassword(userId: string): Promise<string> {
     const tempPassword = nanoid(12);
     const hashedPassword = await bcrypt.hash(tempPassword, 10);

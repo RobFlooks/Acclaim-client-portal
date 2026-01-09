@@ -1648,7 +1648,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const user = await storage.updateUser(userId, { canSubmitCases });
+      const user = await storage.updateUserCaseSubmission(userId, canSubmitCases);
       const action = canSubmitCases ? 'enabled' : 'disabled';
       res.json({ user, message: `Case submission ${action} for user` });
     } catch (error) {
