@@ -114,18 +114,72 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err: any, user: any, info: any) => {
+    const email = req.body.email || '';
+    const ipAddress = req.ip || req.socket?.remoteAddress || 'unknown';
+    const userAgent = req.get('user-agent') || 'unknown';
+
+    passport.authenticate("local", async (err: any, user: any, info: any) => {
       if (err) {
+        // Record failed login attempt due to error
+        try {
+          await storage.logLoginAttempt({
+            email: email.toLowerCase(),
+            success: false,
+            ipAddress,
+            userAgent,
+            failureReason: 'Server error',
+          });
+        } catch (logErr) {
+          console.error('Failed to record login attempt:', logErr);
+        }
         return next(err);
       }
       if (!user) {
+        // Record failed login attempt
+        try {
+          await storage.logLoginAttempt({
+            email: email.toLowerCase(),
+            success: false,
+            ipAddress,
+            userAgent,
+            failureReason: info?.message || 'Invalid credentials',
+          });
+        } catch (logErr) {
+          console.error('Failed to record login attempt:', logErr);
+        }
         return res.status(401).json({ 
           message: info?.message || "Invalid email or password" 
         });
       }
 
-      req.login(user, (err) => {
-        if (err) return next(err);
+      req.login(user, async (err) => {
+        if (err) {
+          // Record failed login due to session error
+          try {
+            await storage.logLoginAttempt({
+              email: email.toLowerCase(),
+              success: false,
+              ipAddress,
+              userAgent,
+              failureReason: 'Session error',
+            });
+          } catch (logErr) {
+            console.error('Failed to record login attempt:', logErr);
+          }
+          return next(err);
+        }
+        
+        // Record successful login
+        try {
+          await storage.logLoginAttempt({
+            email: user.email,
+            success: true,
+            ipAddress,
+            userAgent,
+          });
+        } catch (logErr) {
+          console.error('Failed to record login attempt:', logErr);
+        }
         
         res.json({
           id: user.id,
