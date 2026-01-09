@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { Send, MessageSquare, Plus, User, Paperclip, Download, Trash2, Search, Filter, Calendar, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -24,6 +25,7 @@ export default function Messages() {
   const [viewingMessage, setViewingMessage] = useState<any>(null);
   const [messageViewOpen, setMessageViewOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [linkedCaseId, setLinkedCaseId] = useState<string>("");
   const [selectedCase, setSelectedCase] = useState<any>(null);
   const [caseDialogOpen, setCaseDialogOpen] = useState(false);
   
@@ -91,6 +93,10 @@ export default function Messages() {
       formData.append("subject", messageData.subject);
       formData.append("content", messageData.content);
       
+      if (messageData.caseId) {
+        formData.append("caseId", messageData.caseId);
+      }
+      
       if (selectedFile) {
         formData.append("attachment", selectedFile);
       }
@@ -114,6 +120,7 @@ export default function Messages() {
       setNewMessage("");
       setNewSubject("");
       setSelectedFile(null);
+      setLinkedCaseId("");
       setDialogOpen(false);
       toast({
         title: "Success",
@@ -194,6 +201,7 @@ export default function Messages() {
       recipientId: "support",
       subject: newSubject,
       content: messageContent,
+      caseId: linkedCaseId || undefined,
     });
   };
 
@@ -210,6 +218,7 @@ export default function Messages() {
     setNewMessage("");
     setNewSubject("");
     setSelectedFile(null);
+    setLinkedCaseId("");
   };
 
   const handleDialogOpenChange = (open: boolean) => {
@@ -388,6 +397,27 @@ export default function Messages() {
                       onChange={(e) => setNewMessage(e.target.value)}
                       rows={6}
                     />
+                  </div>
+                  <div>
+                    <Label htmlFor="linkedCase">Link to Case (optional)</Label>
+                    <Select value={linkedCaseId} onValueChange={setLinkedCaseId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a case to link this message to..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">No case (general message)</SelectItem>
+                        {cases?.map((c: any) => (
+                          <SelectItem key={c.id} value={c.id.toString()}>
+                            {c.accountNumber} - {c.caseName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {linkedCaseId && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        Message will be stored against the selected case
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="attachment">Attachment (optional)</Label>
