@@ -1003,9 +1003,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           } else if (recipientType === 'organisation') {
             // Admin sending to organisation - notify all non-admin users in that organisation
-            const orgUsers = await storage.getAllUsers();
+            // Use getUsersByOrganisationId which properly checks both legacy organisationId and junction table
+            const orgUsers = await storage.getUsersByOrganisationId(parseInt(recipientId));
             const organisationUsers = orgUsers.filter(u => 
-              u.organisationId?.toString() === recipientId && !u.isAdmin && u.email && u.emailNotifications !== false
+              !u.isAdmin && u.email && u.emailNotifications !== false
             );
 
             if (organisationUsers.length > 0) {
