@@ -200,10 +200,10 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Documents table
+// Documents table (caseId is optional - documents can be general or case-specific)
 export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
-  caseId: integer("case_id").references(() => cases.id).notNull(),
+  caseId: integer("case_id").references(() => cases.id),
   fileName: varchar("file_name", { length: 255 }).notNull(),
   fileSize: integer("file_size"),
   fileType: varchar("file_type", { length: 100 }),
