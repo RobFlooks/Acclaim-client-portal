@@ -960,7 +960,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // If admin is sending to a specific user, notify them
           if (recipientType === 'user') {
             const recipientUser = await storage.getUser(recipientId);
-            if (recipientUser && recipientUser.email && !recipientUser.isAdmin) {
+            if (recipientUser && recipientUser.email && !recipientUser.isAdmin && recipientUser.emailNotifications !== false) {
               // Get organisation name
               let organisationName = "Unknown Organisation";
               if (recipientUser.organisationId) {
@@ -1005,7 +1005,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Admin sending to organisation - notify all non-admin users in that organisation
             const orgUsers = await storage.getAllUsers();
             const organisationUsers = orgUsers.filter(u => 
-              u.organisationId?.toString() === recipientId && !u.isAdmin && u.email
+              u.organisationId?.toString() === recipientId && !u.isAdmin && u.email && u.emailNotifications !== false
             );
 
             if (organisationUsers.length > 0) {
