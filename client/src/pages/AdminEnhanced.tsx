@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, Mail } from "lucide-react";
+import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, Mail, Bell, BellOff } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrganisationSchema } from "@shared/schema";
@@ -2448,6 +2448,11 @@ export default function AdminEnhanced() {
                           {user.email?.endsWith('@chadlaw.co.uk') && (
                             <Shield className="h-3 w-3 text-blue-600" />
                           )}
+                          {(user as any).emailNotifications === false ? (
+                            <BellOff className="h-3 w-3 text-gray-400" title="Email notifications disabled" />
+                          ) : (
+                            <Bell className="h-3 w-3 text-green-500" title="Email notifications enabled" />
+                          )}
                         </div>
                       </div>
                       
@@ -2617,6 +2622,11 @@ export default function AdminEnhanced() {
                             <span>{user.email}</span>
                             {user.email?.endsWith('@chadlaw.co.uk') && (
                               <Shield className="h-3 w-3 text-blue-600" />
+                            )}
+                            {(user as any).emailNotifications === false ? (
+                              <BellOff className="h-3 w-3 text-gray-400" title="Email notifications disabled" />
+                            ) : (
+                              <Bell className="h-3 w-3 text-green-500" title="Email notifications enabled" />
                             )}
                           </div>
                         </TableCell>
