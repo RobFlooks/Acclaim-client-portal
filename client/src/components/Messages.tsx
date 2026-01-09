@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-import { Send, MessageSquare, Plus, User, Paperclip, Download, Trash2, Search, Filter, Calendar, X } from "lucide-react";
+import { Send, MessageSquare, Plus, User, Paperclip, Download, Trash2, Search, Filter, Calendar, X, FileSpreadsheet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/use-auth";
@@ -342,6 +342,70 @@ export default function Messages() {
     resetPagination();
   };
 
+  // Export messages state
+  const [isExporting, setIsExporting] = useState(false);
+
+  // Export messages to Excel
+  const handleExportMessages = async () => {
+    if (!searchDateFrom && !searchDateTo) {
+      toast({
+        title: "Date Range Required",
+        description: "Please select at least a 'Date From' or 'Date To' to export messages.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      const params = new URLSearchParams();
+      if (searchDateFrom) params.append('from', searchDateFrom);
+      if (searchDateTo) params.append('to', searchDateTo);
+
+      const response = await fetch(`/api/messages/export?${params.toString()}`, {
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to export messages');
+      }
+
+      // Get the blob and trigger download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      
+      // Extract filename from Content-Disposition header or use default
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = 'Messages_Export.xlsx';
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename="(.+)"/);
+        if (match) filename = match[1];
+      }
+      
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Export Complete",
+        description: "Messages have been exported to Excel successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Export Failed",
+        description: error.message || "Failed to export messages",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header with Search and New Message Button */}
@@ -482,58 +546,77 @@ export default function Messages() {
 
             {/* Advanced Search */}
             {showAdvancedSearch && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <Label htmlFor="dateFrom">Date From</Label>
-                  <Input
-                    id="dateFrom"
-                    type="date"
-                    value={searchDateFrom}
-                    onChange={(e) => {
-                      setSearchDateFrom(e.target.value);
-                      resetPagination();
-                    }}
-                    className="mt-1"
-                  />
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <Label htmlFor="dateFrom">Date From</Label>
+                    <Input
+                      id="dateFrom"
+                      type="date"
+                      value={searchDateFrom}
+                      onChange={(e) => {
+                        setSearchDateFrom(e.target.value);
+                        resetPagination();
+                      }}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="dateTo">Date To</Label>
+                    <Input
+                      id="dateTo"
+                      type="date"
+                      value={searchDateTo}
+                      onChange={(e) => {
+                        setSearchDateTo(e.target.value);
+                        resetPagination();
+                      }}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="sender">Sender</Label>
+                    <Input
+                      id="sender"
+                      placeholder="Search by sender name/email..."
+                      value={searchSender}
+                      onChange={(e) => {
+                        setSearchSender(e.target.value);
+                        resetPagination();
+                      }}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="caseSearch">Case</Label>
+                    <Input
+                      id="caseSearch"
+                      placeholder="Search by case number/name..."
+                      value={searchCaseId}
+                      onChange={(e) => {
+                        setSearchCaseId(e.target.value);
+                        resetPagination();
+                      }}
+                      className="mt-1"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="dateTo">Date To</Label>
-                  <Input
-                    id="dateTo"
-                    type="date"
-                    value={searchDateTo}
-                    onChange={(e) => {
-                      setSearchDateTo(e.target.value);
-                      resetPagination();
-                    }}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="sender">Sender</Label>
-                  <Input
-                    id="sender"
-                    placeholder="Search by sender name/email..."
-                    value={searchSender}
-                    onChange={(e) => {
-                      setSearchSender(e.target.value);
-                      resetPagination();
-                    }}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="caseSearch">Case</Label>
-                  <Input
-                    id="caseSearch"
-                    placeholder="Search by case number/name..."
-                    value={searchCaseId}
-                    onChange={(e) => {
-                      setSearchCaseId(e.target.value);
-                      resetPagination();
-                    }}
-                    className="mt-1"
-                  />
+                
+                {/* Export to Excel Button */}
+                <div className="flex items-center justify-end p-4 bg-gray-50 rounded-lg border-t border-gray-200">
+                  <Button
+                    onClick={handleExportMessages}
+                    disabled={isExporting || (!searchDateFrom && !searchDateTo)}
+                    variant="outline"
+                    className="border-acclaim-teal text-acclaim-teal hover:bg-acclaim-teal hover:text-white"
+                    title={(!searchDateFrom && !searchDateTo) 
+                      ? "Select a date range to enable export" 
+                      : "Export messages within the selected date range to Excel"
+                    }
+                  >
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                    {isExporting ? "Exporting..." : "Export to Excel"}
+                  </Button>
                 </div>
               </div>
             )}

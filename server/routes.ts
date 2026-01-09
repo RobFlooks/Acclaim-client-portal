@@ -24,6 +24,7 @@ import bcrypt from "bcrypt";
 import { emailService } from "./email-service";
 import { sendGridEmailService } from "./email-service-sendgrid";
 import { setupAzureAuth } from "./azure-auth";
+import ExcelJS from "exceljs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -761,6 +762,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching messages:", error);
       res.status(500).json({ message: "Failed to fetch messages" });
+    }
+  });
+
+  // Export messages to Excel with date range filtering
+  app.get('/api/messages/export', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { from, to } = req.query;
+
+      // Validate at least one date is provided
+      if (!from && !to) {
+        return res.status(400).json({ message: "Please provide at least a 'from' or 'to' date parameter" });
+      }
+
+      // Get all messages for the user
+      const allMessages = await storage.getMessagesForUser(userId);
+
+      // Filter by date range
+      let filteredMessages = allMessages;
+      
+      if (from) {
+        const fromDate = new Date(from as string);
+        if (!isNaN(fromDate.getTime())) {
+          filteredMessages = filteredMessages.filter((m: any) => new Date(m.createdAt) >= fromDate);
+        }
+      }
+      
+      if (to) {
+        const toDate = new Date(to as string);
+        if (!isNaN(toDate.getTime())) {
+          toDate.setHours(23, 59, 59, 999); // End of day
+          filteredMessages = filteredMessages.filter((m: any) => new Date(m.createdAt) <= toDate);
+        }
+      }
+
+      if (filteredMessages.length === 0) {
+        return res.status(404).json({ message: "No messages found in the specified date range" });
+      }
+
+      // Create Excel workbook
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = 'Acclaim Credit Management';
+      workbook.created = new Date();
+      
+      const worksheet = workbook.addWorksheet('Messages');
+
+      // Define columns
+      worksheet.columns = [
+        { header: 'Date', key: 'date', width: 18 },
+        { header: 'Time', key: 'time', width: 10 },
+        { header: 'Subject', key: 'subject', width: 35 },
+        { header: 'Sender', key: 'sender', width: 25 },
+        { header: 'Recipient', key: 'recipient', width: 25 },
+        { header: 'Case', key: 'caseName', width: 30 },
+        { header: 'Message', key: 'content', width: 60 },
+        { header: 'Attachment', key: 'attachment', width: 25 },
+        { header: 'Read', key: 'isRead', width: 8 },
+      ];
+
+      // Style header row
+      worksheet.getRow(1).font = { bold: true };
+      worksheet.getRow(1).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF008080' } // Teal colour
+      };
+      worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+
+      // Add data rows
+      for (const message of filteredMessages) {
+        const createdAt = new Date(message.createdAt);
+        worksheet.addRow({
+          date: createdAt.toLocaleDateString('en-GB'),
+          time: createdAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+          subject: message.subject || '(No subject)',
+          sender: message.senderName || message.senderId,
+          recipient: message.recipientType === 'admin' ? 'Admin' : (message.recipientName || message.recipientId),
+          caseName: message.caseName || '',
+          content: message.content,
+          attachment: message.attachmentFileName || '',
+          isRead: message.isRead ? 'Yes' : 'No',
+        });
+      }
+
+      // Generate filename with date range
+      const fromStr = from ? new Date(from as string).toLocaleDateString('en-GB').replace(/\//g, '-') : 'start';
+      const toStr = to ? new Date(to as string).toLocaleDateString('en-GB').replace(/\//g, '-') : 'end';
+      const filename = `Messages_${fromStr}_to_${toStr}.xlsx`;
+
+      // Set response headers
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+      // Write to response
+      await workbook.xlsx.write(res);
+      res.end();
+    } catch (error) {
+      console.error("Error exporting messages:", error);
+      res.status(500).json({ message: "Failed to export messages" });
     }
   });
 
