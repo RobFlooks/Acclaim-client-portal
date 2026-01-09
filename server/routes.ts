@@ -808,17 +808,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const worksheet = workbook.addWorksheet('Messages');
 
-      // Define columns
+      // Define columns - reordered: Date, Time, Sender, Case, Subject, Message
       worksheet.columns = [
         { header: 'Date', key: 'date', width: 18 },
         { header: 'Time', key: 'time', width: 10 },
-        { header: 'Subject', key: 'subject', width: 35 },
         { header: 'Sender', key: 'sender', width: 25 },
-        { header: 'Recipient', key: 'recipient', width: 25 },
         { header: 'Case', key: 'caseName', width: 30 },
+        { header: 'Subject', key: 'subject', width: 35 },
         { header: 'Message', key: 'content', width: 60 },
-        { header: 'Attachment', key: 'attachment', width: 25 },
-        { header: 'Read', key: 'isRead', width: 8 },
       ];
 
       // Style header row
@@ -830,21 +827,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
 
+      // Fetch case names for messages that have caseId
+      const caseIds = [...new Set(filteredMessages.filter((m: any) => m.caseId).map((m: any) => m.caseId))];
+      const caseNameMap: Record<number, string> = {};
+      
+      for (const caseId of caseIds) {
+        try {
+          const caseData = await storage.getCase(caseId);
+          if (caseData) {
+            caseNameMap[caseId] = caseData.caseName || `Case #${caseId}`;
+          }
+        } catch (e) {
+          // Case may not exist or user may not have access
+        }
+      }
+
       // Add data rows
       for (const message of filteredMessages) {
         const createdAt = new Date(message.createdAt);
+        const caseName = message.caseId ? (caseNameMap[message.caseId] || `Case #${message.caseId}`) : '';
+        
         worksheet.addRow({
           date: createdAt.toLocaleDateString('en-GB'),
           time: createdAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-          subject: message.subject || '(No subject)',
           sender: message.senderName || message.senderId,
-          recipient: message.recipientType === 'admin' ? 'Admin' : (message.recipientName || message.recipientId),
-          caseName: message.caseName || '',
+          caseName: caseName,
+          subject: message.subject || '(No subject)',
           content: message.content,
-          attachment: message.attachmentFileName || '',
-          isRead: message.isRead ? 'Yes' : 'No',
         });
       }
+
+      // Enable column filtering (autoFilter)
+      worksheet.autoFilter = {
+        from: 'A1',
+        to: 'F1'
+      };
 
       // Generate filename with date range
       const fromStr = from ? new Date(from as string).toLocaleDateString('en-GB').replace(/\//g, '-') : 'start';
