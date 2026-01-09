@@ -511,7 +511,11 @@ export default function Documents() {
                             {doc.uploadedBy && (
                               <div className="flex items-center space-x-1 mt-1">
                                 <User className="h-3 w-3 text-gray-400" />
-                                <span className="text-xs text-gray-500">Uploaded by system</span>
+                                <span className="text-xs text-gray-500">
+                                  Uploaded by {doc.uploaderFirstName && doc.uploaderLastName 
+                                    ? `${doc.uploaderFirstName} ${doc.uploaderLastName}` 
+                                    : 'system'}
+                                </span>
                               </div>
                             )}
                           </div>

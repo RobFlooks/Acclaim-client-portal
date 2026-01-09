@@ -1060,8 +1060,8 @@ export class DatabaseStorage implements IStorage {
     await db.delete(messages).where(eq(messages.id, id));
   }
 
-  async getDocumentsForCase(caseId: number): Promise<Document[]> {
-    // Only return documents for non-archived cases
+  async getDocumentsForCase(caseId: number): Promise<any[]> {
+    // Only return documents for non-archived cases, with uploader name
     const results = await db
       .select({
         id: documents.id,
@@ -1073,9 +1073,12 @@ export class DatabaseStorage implements IStorage {
         uploadedBy: documents.uploadedBy,
         organisationId: documents.organisationId,
         createdAt: documents.createdAt,
+        uploaderFirstName: users.firstName,
+        uploaderLastName: users.lastName,
       })
       .from(documents)
       .leftJoin(cases, eq(documents.caseId, cases.id))
+      .leftJoin(users, eq(documents.uploadedBy, users.id))
       .where(and(
         eq(documents.caseId, caseId),
         eq(cases.isArchived, false)
@@ -1107,9 +1110,12 @@ export class DatabaseStorage implements IStorage {
           uploadedBy: documents.uploadedBy,
           organisationId: documents.organisationId,
           createdAt: documents.createdAt,
+          uploaderFirstName: users.firstName,
+          uploaderLastName: users.lastName,
         })
         .from(documents)
         .leftJoin(cases, eq(documents.caseId, cases.id))
+        .leftJoin(users, eq(documents.uploadedBy, users.id))
         .where(
           or(
             isNull(documents.caseId), // General documents not tied to a case
@@ -1151,9 +1157,12 @@ export class DatabaseStorage implements IStorage {
         uploadedBy: documents.uploadedBy,
         organisationId: documents.organisationId,
         createdAt: documents.createdAt,
+        uploaderFirstName: users.firstName,
+        uploaderLastName: users.lastName,
       })
       .from(documents)
       .leftJoin(cases, eq(documents.caseId, cases.id))
+      .leftJoin(users, eq(documents.uploadedBy, users.id))
       .where(and(
         inArray(documents.organisationId, orgIdArray), // Documents from any of user's organisations
         or(
@@ -1166,8 +1175,8 @@ export class DatabaseStorage implements IStorage {
     return results;
   }
 
-  async getDocumentsForOrganisation(organisationId: number): Promise<Document[]> {
-    // Only return documents for non-archived cases
+  async getDocumentsForOrganisation(organisationId: number): Promise<any[]> {
+    // Only return documents for non-archived cases, with uploader name
     const results = await db
       .select({
         id: documents.id,
@@ -1179,9 +1188,12 @@ export class DatabaseStorage implements IStorage {
         uploadedBy: documents.uploadedBy,
         organisationId: documents.organisationId,
         createdAt: documents.createdAt,
+        uploaderFirstName: users.firstName,
+        uploaderLastName: users.lastName,
       })
       .from(documents)
       .leftJoin(cases, eq(documents.caseId, cases.id))
+      .leftJoin(users, eq(documents.uploadedBy, users.id))
       .where(and(
         eq(documents.organisationId, organisationId),
         or(
