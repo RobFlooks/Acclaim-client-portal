@@ -291,7 +291,7 @@ export const externalApiCredentials = pgTable("external_api_credentials", {
   id: serial("id").primaryKey(),
   organisationId: integer("organisation_id").references(() => organisations.id).notNull(),
   username: varchar("username", { length: 100 }).notNull(),
-  passwordHash: varchar("password_hash", { length: 255 }).notNull(),
+  hashedPassword: varchar("password_hash", { length: 255 }).notNull(),
   isActive: boolean("is_active").default(true),
   description: text("description"),
   createdBy: varchar("created_by").references(() => users.id),

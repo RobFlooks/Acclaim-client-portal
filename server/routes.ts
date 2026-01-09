@@ -123,7 +123,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create the admin user with the provided password (not temporary)
-      const passwordHash = await bcrypt.hash(password, 10);
+      const hashedPassword = await bcrypt.hash(password, 10);
       const userId = `admin-${Date.now()}`;
 
       // Use db directly to create user with custom password
@@ -138,7 +138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastName,
           email: email.toLowerCase(),
           isAdmin: true,
-          passwordHash,
+          hashedPassword,
           mustChangePassword: false,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -3411,19 +3411,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Hash the password
-      const passwordHash = await bcrypt.hash(password, 10);
+      const hashedPassword = await bcrypt.hash(password, 10);
 
       const credential = await storage.createExternalApiCredential({
         organisationId: parseInt(organisationId),
         username,
-        passwordHash,
+        hashedPassword,
         description,
         createdBy: userId,
       });
 
       res.status(201).json({ 
         message: "External API credentials created successfully", 
-        credential: { ...credential, passwordHash: undefined } // Don't return the hash
+        credential: { ...credential, hashedPassword: undefined } // Don't return the hash
       });
     } catch (error) {
       console.error("Error creating external API credentials:", error);
@@ -3443,7 +3443,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           organisationName: org.name,
           credentials: credentials.map(cred => ({
             ...cred,
-            passwordHash: undefined // Don't return the hash
+            hashedPassword: undefined // Don't return the hash
           }))
         });
       }

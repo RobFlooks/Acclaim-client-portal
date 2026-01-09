@@ -1459,7 +1459,7 @@ export class DatabaseStorage implements IStorage {
     isAdmin?: boolean;
   }): Promise<{ user: User; tempPassword: string }> {
     const tempPassword = nanoid(12); // Generate temporary password
-    const passwordHash = await bcrypt.hash(tempPassword, 10);
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
     const userId = nanoid(10);
 
     const [user] = await db
@@ -1472,7 +1472,7 @@ export class DatabaseStorage implements IStorage {
         phone: userData.phone,
         organisationId: userData.organisationId,
         isAdmin: userData.isAdmin || false,
-        passwordHash,
+        hashedPassword,
         tempPassword,
         mustChangePassword: true,
       })
@@ -1606,12 +1606,12 @@ export class DatabaseStorage implements IStorage {
 
   async resetUserPassword(userId: string): Promise<string> {
     const tempPassword = nanoid(12);
-    const passwordHash = await bcrypt.hash(tempPassword, 10);
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
     await db
       .update(users)
       .set({
-        passwordHash,
+        hashedPassword,
         tempPassword,
         mustChangePassword: true,
         updatedAt: new Date(),
@@ -1623,16 +1623,16 @@ export class DatabaseStorage implements IStorage {
 
   async changeUserPassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean> {
     const [user] = await db.select().from(users).where(eq(users.id, userId));
-    if (!user || !user.passwordHash) return false;
+    if (!user || !user.hashedPassword) return false;
 
-    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.hashedPassword);
     if (!isCurrentPasswordValid) return false;
 
     const newPasswordHash = await bcrypt.hash(newPassword, 10);
     await db
       .update(users)
       .set({
-        passwordHash: newPasswordHash,
+        hashedPassword: newPasswordHash,
         tempPassword: null,
         mustChangePassword: false,
         updatedAt: new Date(),
@@ -1647,7 +1647,7 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db
       .update(users)
       .set({
-        passwordHash: newPasswordHash,
+        hashedPassword: newPasswordHash,
         tempPassword: null,
         mustChangePassword: false,
         updatedAt: new Date(),
@@ -1660,9 +1660,9 @@ export class DatabaseStorage implements IStorage {
 
   async verifyUserPassword(userId: string, password: string): Promise<boolean> {
     const [user] = await db.select().from(users).where(eq(users.id, userId));
-    if (!user || !user.passwordHash) return false;
+    if (!user || !user.hashedPassword) return false;
 
-    return await bcrypt.compare(password, user.passwordHash);
+    return await bcrypt.compare(password, user.hashedPassword);
   }
 
   async checkMustChangePassword(userId: string): Promise<boolean> {
@@ -2104,7 +2104,7 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
 
-    return await bcrypt.compare(password, credential.passwordHash);
+    return await bcrypt.compare(password, credential.hashedPassword);
   }
 
   async getExternalApiCredentialByUsername(username: string): Promise<ExternalApiCredential | undefined> {
