@@ -1637,6 +1637,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Toggle case submission permission
+  app.put('/api/admin/users/:userId/case-submission', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { canSubmitCases } = req.body;
+      
+      const existingUser = await storage.getUser(userId);
+      if (!existingUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const user = await storage.updateUser(userId, { canSubmitCases });
+      const action = canSubmitCases ? 'enabled' : 'disabled';
+      res.json({ user, message: `Case submission ${action} for user` });
+    } catch (error) {
+      console.error("Error updating case submission permission:", error);
+      res.status(500).json({ message: "Failed to update case submission permission" });
+    }
+  });
+
   // Reset user password (admin function)
   app.post('/api/admin/users/:userId/reset-password', isAuthenticated, isAdmin, async (req: any, res) => {
     try {

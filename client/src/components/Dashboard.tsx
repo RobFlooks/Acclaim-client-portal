@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { FolderOpen, CheckCircle, PoundSterling, TrendingUp, User, Building, Clock, FileText, Check, AlertTriangle, Store, UserCheck, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation } from "wouter";
 import CaseDetail from "./CaseDetail";
@@ -18,6 +19,7 @@ interface DashboardProps {
 
 export default function Dashboard({ setActiveSection }: DashboardProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [selectedCase, setSelectedCase] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -219,13 +221,15 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600 mt-1">Welcome to your debt recovery portal</p>
         </div>
-        <Button 
-          className="bg-acclaim-teal hover:bg-acclaim-teal/90 text-white"
-          onClick={() => setLocation("/submit-case")}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Submit New Case
-        </Button>
+        {user?.canSubmitCases !== false && (
+          <Button 
+            className="bg-acclaim-teal hover:bg-acclaim-teal/90 text-white"
+            onClick={() => setLocation("/submit-case")}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Submit New Case
+          </Button>
+        )}
       </div>
 
       {/* Live Cases Statistics */}

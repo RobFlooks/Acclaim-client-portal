@@ -43,6 +43,7 @@ export const users = pgTable("users", {
   azureId: varchar("azure_id", { length: 255 }).unique(), // Azure Entra External ID
   emailNotifications: boolean("email_notifications").default(true), // User preference for email notifications
   pushNotifications: boolean("push_notifications").default(true), // User preference for push notifications
+  canSubmitCases: boolean("can_submit_cases").default(true), // Admin-controlled permission to submit new cases
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

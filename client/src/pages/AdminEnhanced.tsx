@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, Mail, Bell, BellOff } from "lucide-react";
+import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, Mail, Bell, BellOff, FilePlus, FileX } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrganisationSchema } from "@shared/schema";
@@ -2066,6 +2066,39 @@ export default function AdminEnhanced() {
     },
   });
 
+  // Toggle case submission permission mutation
+  const toggleCaseSubmissionMutation = useMutation({
+    mutationFn: async ({ userId, canSubmitCases }: { userId: string; canSubmitCases: boolean }) => {
+      const response = await apiRequest("PUT", `/api/admin/users/${userId}/case-submission`, { canSubmitCases });
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Success",
+        description: data.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users-with-orgs"] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update case submission permission",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
@@ -2582,6 +2615,29 @@ export default function AdminEnhanced() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
+                          const currentValue = (user as any).canSubmitCases !== false;
+                          const action = currentValue ? 'disable' : 'enable';
+                          const confirmation = confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} case submission for ${user.firstName} ${user.lastName}?`);
+                          if (confirmation) {
+                            toggleCaseSubmissionMutation.mutate({
+                              userId: user.id,
+                              canSubmitCases: !currentValue
+                            });
+                          }
+                        }}
+                        disabled={toggleCaseSubmissionMutation.isPending}
+                        title={(user as any).canSubmitCases !== false ? "Can submit cases - click to disable" : "Cannot submit cases - click to enable"}
+                      >
+                        {(user as any).canSubmitCases !== false ? (
+                          <FilePlus className="h-3 w-3 text-green-600" />
+                        ) : (
+                          <FileX className="h-3 w-3 text-gray-400" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
                           const confirmation = confirm(`Are you sure you want to permanently delete ${user.firstName} ${user.lastName}? This action cannot be undone.`);
                           if (confirmation) {
                             deleteUserMutation.mutate(user.id);
@@ -2746,6 +2802,29 @@ export default function AdminEnhanced() {
                                 <ShieldCheck className="h-3 w-3 text-blue-600" />
                               ) : (
                                 <Shield className="h-3 w-3" />
+                              )}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const currentValue = (user as any).canSubmitCases !== false;
+                                const action = currentValue ? 'disable' : 'enable';
+                                const confirmation = confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} case submission for ${user.firstName} ${user.lastName}?`);
+                                if (confirmation) {
+                                  toggleCaseSubmissionMutation.mutate({
+                                    userId: user.id,
+                                    canSubmitCases: !currentValue
+                                  });
+                                }
+                              }}
+                              disabled={toggleCaseSubmissionMutation.isPending}
+                              title={(user as any).canSubmitCases !== false ? "Can submit cases - click to disable" : "Cannot submit cases - click to enable"}
+                            >
+                              {(user as any).canSubmitCases !== false ? (
+                                <FilePlus className="h-3 w-3 text-green-600" />
+                              ) : (
+                                <FileX className="h-3 w-3 text-gray-400" />
                               )}
                             </Button>
                             <Button
