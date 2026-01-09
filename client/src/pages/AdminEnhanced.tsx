@@ -559,6 +559,7 @@ function CaseManagementTab() {
             variant="default"
             size="sm"
             className="gap-2"
+            title="Create a new case directly"
           >
             <Plus className="h-4 w-4" />
             Submit New Case
@@ -568,6 +569,7 @@ function CaseManagementTab() {
             variant="outline"
             size="sm"
             className="gap-2"
+            title="Export all cases to CSV file"
           >
             <Download className="h-4 w-4" />
             Export CSV
@@ -1279,7 +1281,15 @@ function CaseSubmissionsTab() {
             </div>
           )}
         </div>
-        <Button onClick={exportSubmissionsToCSV} variant="outline" size="sm">
+        <Button 
+          onClick={exportSubmissionsToCSV} 
+          variant="outline" 
+          size="sm"
+          title={selectedSubmissions.size > 0 
+            ? `Export ${selectedSubmissions.size} selected submissions to CSV`
+            : 'Export all submissions to CSV file'
+          }
+        >
           <Download className="h-4 w-4 mr-2" />
           {selectedSubmissions.size > 0 
             ? `Export Selected (${selectedSubmissions.size})`
@@ -1458,6 +1468,7 @@ function CaseSubmissionsTab() {
                           setShowDetailsDialog(true);
                         }}
                         className="text-blue-600 hover:text-blue-700"
+                        title="View submission details"
                       >
                         <Eye className="h-3 w-3" />
                       </Button>
@@ -1469,6 +1480,7 @@ function CaseSubmissionsTab() {
                             onClick={() => updateStatusMutation.mutate({ id: submission.id, status: 'processed' })}
                             disabled={updateStatusMutation.isPending}
                             className="text-green-600 hover:text-green-700"
+                            title="Mark as processed"
                           >
                             <Check className="h-3 w-3" />
                           </Button>
@@ -1478,6 +1490,7 @@ function CaseSubmissionsTab() {
                             onClick={() => updateStatusMutation.mutate({ id: submission.id, status: 'rejected' })}
                             disabled={updateStatusMutation.isPending}
                             className="text-red-600 hover:text-red-700"
+                            title="Reject submission"
                           >
                             <AlertTriangle className="h-3 w-3" />
                           </Button>
@@ -1493,6 +1506,7 @@ function CaseSubmissionsTab() {
                         }}
                         disabled={deleteSubmissionMutation.isPending}
                         className="text-red-600 hover:text-red-700"
+                        title="Delete submission permanently"
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>
@@ -2970,6 +2984,7 @@ export default function AdminEnhanced() {
                               });
                               setShowEditOrg(true);
                             }}
+                            title="Edit organisation details"
                           >
                             <Edit className="h-3 w-3" />
                           </Button>
@@ -2983,6 +2998,7 @@ export default function AdminEnhanced() {
                             }}
                             disabled={deleteOrganisationMutation.isPending}
                             className="text-red-600 hover:text-red-700"
+                            title="Delete organisation permanently"
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
