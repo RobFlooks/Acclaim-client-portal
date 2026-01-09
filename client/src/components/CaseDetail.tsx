@@ -241,6 +241,9 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cases", caseData.id, "messages"] });
       queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
+      // Also invalidate documents cache since attachments are now saved as documents
+      queryClient.invalidateQueries({ queryKey: ["/api/cases", caseData.id, "documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       setNewMessage("");
       setMessageSubject("");
       setMessageAttachment(null);

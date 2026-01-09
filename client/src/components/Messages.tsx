@@ -108,6 +108,9 @@ export default function Messages() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
+      // Also invalidate documents cache since attachments are now saved as documents
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/cases"] });
       setNewMessage("");
       setNewSubject("");
       setSelectedFile(null);
