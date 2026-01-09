@@ -64,6 +64,10 @@ export function setupAzureAuth(app: Express): void {
     try {
       const client = getMsalClient();
       const redirectUri = getFullRedirectUri(req);
+      
+      console.log("[Azure Auth] Starting login flow");
+      console.log("[Azure Auth] Redirect URI:", redirectUri);
+      console.log("[Azure Auth] Tenant ID:", AZURE_TENANT_ID);
 
       const authCodeUrlParameters: msal.AuthorizationUrlRequest = {
         scopes: ["openid", "profile", "email", "offline_access"],
@@ -72,9 +76,16 @@ export function setupAzureAuth(app: Express): void {
       };
 
       const authUrl = await client.getAuthCodeUrl(authCodeUrlParameters);
+      console.log("[Azure Auth] Generated auth URL, redirecting...");
       res.redirect(authUrl);
-    } catch (error) {
+    } catch (error: any) {
       console.error("[Azure Auth] Login error:", error);
+      console.error("[Azure Auth] Error details:", {
+        message: error.message,
+        code: error.code,
+        name: error.name,
+        stack: error.stack?.substring(0, 500)
+      });
       res.redirect("/auth?error=azure_login_failed");
     }
   });
