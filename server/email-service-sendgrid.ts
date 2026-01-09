@@ -731,6 +731,22 @@ Please log in to the Acclaim Portal to view this message and respond if needed.
         attachments.push(logoBase64);
       }
 
+      // Add user attachment if present (convert to base64)
+      if (data.attachment && data.attachment.filePath) {
+        try {
+          const fileContent = fs.readFileSync(data.attachment.filePath);
+          attachments.push({
+            content: fileContent.toString('base64'),
+            filename: data.attachment.fileName,
+            type: data.attachment.fileType || 'application/octet-stream',
+            disposition: 'attachment'
+          });
+          console.log(`📎 Including attachment in admin-to-user email: ${data.attachment.fileName}`);
+        } catch (error) {
+          console.error('Failed to read attachment file for admin-to-user email:', error);
+        }
+      }
+
       return await this.sendViaAPIM({
         to: data.userEmail,
         subject: subject,

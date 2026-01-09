@@ -1033,6 +1033,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
               }
 
+              // Prepare attachment data if present
+              let adminAttachmentData = undefined;
+              if (messageData.attachmentFileName && messageData.attachmentFilePath) {
+                adminAttachmentData = {
+                  fileName: messageData.attachmentFileName,
+                  filePath: messageData.attachmentFilePath,
+                  fileSize: messageData.attachmentFileSize || 0,
+                  fileType: messageData.attachmentFileType || 'application/octet-stream',
+                };
+              }
+
               // Send admin-to-user notification
               await sendGridEmailService.sendAdminToUserNotification({
                 adminName: `${user.firstName} ${user.lastName}`.trim() || user.email,
@@ -1044,6 +1055,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 caseReference,
                 caseDetails,
                 organisationName,
+                attachment: adminAttachmentData,
               });
             }
           } else if (recipientType === 'organisation') {
@@ -1080,6 +1092,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
               }
 
+              // Prepare attachment data if present
+              let orgAttachmentData = undefined;
+              if (messageData.attachmentFileName && messageData.attachmentFilePath) {
+                orgAttachmentData = {
+                  fileName: messageData.attachmentFileName,
+                  filePath: messageData.attachmentFilePath,
+                  fileSize: messageData.attachmentFileSize || 0,
+                  fileType: messageData.attachmentFileType || 'application/octet-stream',
+                };
+              }
+
               // Send notification to each user in the organisation
               for (const orgUser of organisationUsers) {
                 await sendGridEmailService.sendAdminToUserNotification({
@@ -1092,6 +1115,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   caseReference,
                   caseDetails,
                   organisationName,
+                  attachment: orgAttachmentData,
                 });
               }
             }
