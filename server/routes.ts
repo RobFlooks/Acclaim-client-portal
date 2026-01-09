@@ -845,7 +845,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add data rows
       for (const message of filteredMessages) {
         const createdAt = new Date(message.createdAt);
-        const caseName = message.caseId ? (caseNameMap[message.caseId] || `Case #${message.caseId}`) : '';
+        const caseName = message.caseId ? (caseNameMap[message.caseId] || `Case #${message.caseId}`) : 'General';
         
         worksheet.addRow({
           date: createdAt.toLocaleDateString('en-GB'),
