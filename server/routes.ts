@@ -895,15 +895,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Determine the organisation ID for the document
           let documentOrgId: number | undefined;
           
-          if (user.organisationId) {
-            // Regular user or admin with organisation
-            documentOrgId = user.organisationId;
-          } else if (messageData.caseId) {
-            // Admin sending on a case - use the case's organisation
+          if (messageData.caseId) {
+            // Case-specific message - always use the case's organisation
             const messageCase = await storage.getCaseById(messageData.caseId);
             if (messageCase) {
               documentOrgId = messageCase.organisationId;
             }
+          } else if (user.organisationId) {
+            // Regular user or admin with organisation - general message
+            documentOrgId = user.organisationId;
           } else if (recipientType === 'organisation' && recipientId) {
             // Admin sending to an organisation - use that organisation
             documentOrgId = parseInt(recipientId);
