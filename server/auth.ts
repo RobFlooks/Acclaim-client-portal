@@ -177,6 +177,15 @@ export function setupAuth(app: Express) {
             ipAddress,
             userAgent,
           });
+          
+          // Log user activity for successful login
+          await storage.logUserActivity({
+            userId: user.id,
+            action: 'LOGIN',
+            details: 'User logged in successfully',
+            ipAddress,
+            userAgent,
+          });
         } catch (logErr) {
           console.error('Failed to record login attempt:', logErr);
         }
@@ -195,7 +204,26 @@ export function setupAuth(app: Express) {
     })(req, res, next);
   });
 
-  app.post("/api/logout", (req, res, next) => {
+  app.post("/api/logout", async (req, res, next) => {
+    const user = req.user as SelectUser | undefined;
+    const ipAddress = req.ip || req.socket?.remoteAddress || 'unknown';
+    const userAgent = req.get('user-agent') || 'unknown';
+    
+    // Log logout activity before destroying session
+    if (user) {
+      try {
+        await storage.logUserActivity({
+          userId: user.id,
+          action: 'LOGOUT',
+          details: 'User logged out',
+          ipAddress,
+          userAgent,
+        });
+      } catch (logErr) {
+        console.error('Failed to log logout activity:', logErr);
+      }
+    }
+    
     req.logout((err) => {
       if (err) return next(err);
       res.json({ message: "Logged out successfully" });

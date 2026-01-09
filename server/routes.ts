@@ -1243,6 +1243,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Log user activity for sending message
+      try {
+        await storage.logUserActivity({
+          userId,
+          action: 'MESSAGE_SENT',
+          details: `Sent message: ${messageData.subject || 'No subject'}${messageData.caseId ? ` (Case ID: ${messageData.caseId})` : ''}`,
+          ipAddress: req.ip || req.socket?.remoteAddress || 'unknown',
+          userAgent: req.get('user-agent') || 'unknown',
+        });
+      } catch (logErr) {
+        console.error('Failed to log message activity:', logErr);
+      }
+      
       res.status(201).json(newMessage);
     } catch (error) {
       console.error("Error creating message:", error);
