@@ -201,7 +201,7 @@ export default function Messages() {
       recipientId: "support",
       subject: newSubject,
       content: messageContent,
-      caseId: linkedCaseId || undefined,
+      caseId: linkedCaseId && linkedCaseId !== "none" ? linkedCaseId : undefined,
     });
   };
 
@@ -405,7 +405,7 @@ export default function Messages() {
                         <SelectValue placeholder="Select a case to link this message to..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">No case (general message)</SelectItem>
+                        <SelectItem value="none">No case (general message)</SelectItem>
                         {cases?.map((c: any) => (
                           <SelectItem key={c.id} value={c.id.toString()}>
                             {c.accountNumber} - {c.caseName}
@@ -413,7 +413,7 @@ export default function Messages() {
                         ))}
                       </SelectContent>
                     </Select>
-                    {linkedCaseId && (
+                    {linkedCaseId && linkedCaseId !== "none" && (
                       <p className="text-sm text-gray-600 mt-1">
                         Message will be stored against the selected case
                       </p>
