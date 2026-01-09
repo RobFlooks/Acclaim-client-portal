@@ -2548,6 +2548,7 @@ export default function AdminEnhanced() {
                           setSelectedUser(user);
                           setShowAssignUser(true);
                         }}
+                        title="Assign user to organisation"
                       >
                         <UserPlus className="h-3 w-3 mr-1" />
                         Assign
@@ -2558,6 +2559,7 @@ export default function AdminEnhanced() {
                         className="flex-1"
                         onClick={() => resetPasswordMutation.mutate(user.id)}
                         disabled={resetPasswordMutation.isPending}
+                        title="Reset user password"
                       >
                         <Key className="h-3 w-3 mr-1" />
                         Reset
@@ -2604,6 +2606,7 @@ export default function AdminEnhanced() {
                         }}
                         disabled={toggleAdminMutation.isPending || (!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk'))}
                         className={(!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk')) ? 'opacity-50 cursor-not-allowed' : ''}
+                        title={user.isAdmin ? "Remove admin privileges" : "Grant admin privileges"}
                       >
                         {user.isAdmin ? (
                           <ShieldCheck className="h-3 w-3 text-blue-600" />
@@ -2645,6 +2648,7 @@ export default function AdminEnhanced() {
                         }}
                         disabled={deleteUserMutation.isPending}
                         className="text-red-600 hover:text-red-700"
+                        title="Delete user permanently"
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>
@@ -2754,6 +2758,7 @@ export default function AdminEnhanced() {
                               size="sm"
                               onClick={() => resetPasswordMutation.mutate(user.id)}
                               disabled={resetPasswordMutation.isPending}
+                              title="Reset user password"
                             >
                               <Key className="h-3 w-3" />
                             </Button>
@@ -2797,6 +2802,7 @@ export default function AdminEnhanced() {
                               }}
                               disabled={toggleAdminMutation.isPending || (!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk'))}
                               className={(!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk')) ? 'opacity-50 cursor-not-allowed' : ''}
+                              title={user.isAdmin ? "Remove admin privileges" : "Grant admin privileges"}
                             >
                               {user.isAdmin ? (
                                 <ShieldCheck className="h-3 w-3 text-blue-600" />
