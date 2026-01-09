@@ -135,6 +135,7 @@ export function setupAuth(app: Express) {
           organisationId: user.organisationId,
           isAdmin: user.isAdmin,
           mustChangePassword: user.mustChangePassword,
+          canSubmitCases: user.canSubmitCases,
         });
       });
     })(req, res, next);
@@ -161,6 +162,7 @@ export function setupAuth(app: Express) {
       organisationId: user.organisationId,
       isAdmin: user.isAdmin,
       mustChangePassword: user.mustChangePassword,
+      canSubmitCases: user.canSubmitCases,
     });
   });
 
