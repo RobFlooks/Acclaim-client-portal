@@ -795,12 +795,6 @@ Please log in to the Acclaim Portal to view this message and respond if needed.
               </ol>
             </div>
 
-            <div style="text-align: center; margin: 30px 0;">
-              <div style="background: #14b8a6; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; display: inline-block; font-weight: bold;">
-                Access Portal
-              </div>
-            </div>
-
             <div style="background: #f8fafc; padding: 15px; border-radius: 8px; text-align: center;">
               <p style="color: #64748b; margin: 0; font-size: 12px;">
                 If you have any questions, please contact our support team.
