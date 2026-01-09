@@ -628,7 +628,7 @@ Please log in to the Acclaim Portal to view and respond to this message.
             <div style="margin-bottom: 10px;">
               <img src="cid:logo" alt="Acclaim Credit Management & Recovery" style="height: 40px; width: auto;" />
             </div>
-            <p style="margin: 0; opacity: 0.9; font-size: 16px;">Message from Administrator</p>
+            <p style="margin: 0; opacity: 0.9; font-size: 16px;">Message from Acclaim</p>
             ${data.caseReference ? `<p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
           </div>
           
@@ -638,11 +638,7 @@ Please log in to the Acclaim Portal to view and respond to this message.
               <table style="width: 100%; border-spacing: 0;">
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 140px;">From:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.adminName} (Administrator)</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Organisation:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.organisationName}</td>
+                  <td style="padding: 8px 0; color: #1e293b;">Acclaim</td>
                 </tr>
                 ${data.caseReference ? `
                 <tr>
@@ -701,8 +697,7 @@ Please log in to the Acclaim Portal to view and respond to this message.
       `;
 
       const textContent = `
-Message from Administrator: ${data.adminName}
-Organisation: ${data.organisationName}
+Message from Acclaim
 ${data.caseReference ? `Case Reference: ${data.caseReference}` : ''}
 ${data.messageSubject ? `Subject: ${data.messageSubject}` : ''}
 
