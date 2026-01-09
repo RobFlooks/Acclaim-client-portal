@@ -889,6 +889,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const newMessage = await storage.createMessage(messageData);
       
+      // Save attachment as document if present
+      if (req.file) {
+        try {
+          // Determine the organisation ID for the document
+          let documentOrgId: number | undefined;
+          
+          if (user.organisationId) {
+            // Regular user or admin with organisation
+            documentOrgId = user.organisationId;
+          } else if (messageData.caseId) {
+            // Admin sending on a case - use the case's organisation
+            const messageCase = await storage.getCaseById(messageData.caseId);
+            if (messageCase) {
+              documentOrgId = messageCase.organisationId;
+            }
+          } else if (recipientType === 'organisation' && recipientId) {
+            // Admin sending to an organisation - use that organisation
+            documentOrgId = parseInt(recipientId);
+          } else if (recipientType === 'user' && recipientId) {
+            // Admin sending to a specific user - use the recipient's organisation
+            const recipientUser = await storage.getUser(recipientId);
+            if (recipientUser && recipientUser.organisationId) {
+              documentOrgId = recipientUser.organisationId;
+            }
+          }
+          
+          if (documentOrgId) {
+            await storage.createDocument({
+              caseId: messageData.caseId || null,
+              fileName: req.file.originalname,
+              fileSize: req.file.size,
+              fileType: req.file.mimetype,
+              filePath: req.file.path,
+              uploadedBy: userId,
+              organisationId: documentOrgId,
+            });
+          } else {
+            console.warn("Could not determine organisation for document, attachment not saved as document");
+          }
+        } catch (docError) {
+          console.error("Failed to save message attachment as document:", docError);
+          // Don't fail the message creation if document save fails
+        }
+      }
+      
       // Send email notifications
       if (!user.isAdmin) {
         // User-to-admin notification (existing functionality)
