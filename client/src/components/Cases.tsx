@@ -277,9 +277,6 @@ export default function Cases() {
                           {case_.organisationName}
                         </p>
                       )}
-                      <p className="text-xs text-gray-500">
-                        Created: {formatDate(case_.createdAt)}
-                      </p>
                     </div>
                   </div>
                   
