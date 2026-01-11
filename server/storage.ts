@@ -567,10 +567,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCasesForOrganisation(organisationId: number): Promise<Case[]> {
-    // Get all non-archived cases for the organisation
+    // Get all non-archived cases for the organisation with organisation name
     const allCases = await db
-      .select()
+      .select({
+        ...cases,
+        organisationName: organisations.name,
+      })
       .from(cases)
+      .leftJoin(organisations, eq(cases.organisationId, organisations.id))
       .where(and(eq(cases.organisationId, organisationId), eq(cases.isArchived, false)));
 
     // For each case, get payments and last activity time
