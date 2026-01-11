@@ -410,24 +410,26 @@ export default function Messages() {
     <div className="space-y-6">
       {/* Header with Search and New Message Button */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Messages</CardTitle>
-            <div className="flex items-center space-x-2">
+        <CardHeader className="pb-3 sm:pb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <CardTitle className="text-lg sm:text-xl">Messages</CardTitle>
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
-                className="border-acclaim-teal text-acclaim-teal hover:bg-acclaim-teal hover:text-white"
+                className="flex-1 sm:flex-none border-acclaim-teal text-acclaim-teal hover:bg-acclaim-teal hover:text-white text-xs sm:text-sm h-9"
               >
-                <Filter className="h-4 w-4 mr-2" />
-                {showAdvancedSearch ? "Hide Filters" : "Show Filters"}
+                <Filter className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">{showAdvancedSearch ? "Hide Filters" : "Show Filters"}</span>
+                <span className="sm:hidden ml-1">Filter</span>
               </Button>
               <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
                 <DialogTrigger asChild>
-                  <Button className="bg-acclaim-teal hover:bg-acclaim-teal/90">
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Message
+                  <Button className="flex-1 sm:flex-none bg-acclaim-teal hover:bg-acclaim-teal/90 text-xs sm:text-sm h-9">
+                    <Plus className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">New Message</span>
+                    <span className="sm:hidden ml-1">New</span>
                   </Button>
                 </DialogTrigger>
               <DialogContent>
@@ -515,20 +517,20 @@ export default function Messages() {
 
       {/* Search Panel */}
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="pt-4 sm:pt-6">
           {/* Basic Search */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex items-center gap-2">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Search messages by subject or content..."
+                  placeholder="Search messages..."
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
                     resetPagination();
                   }}
-                  className="pl-10"
+                  className="pl-10 h-9 sm:h-10 text-sm"
                 />
               </div>
               {(searchTerm || searchDateFrom || searchDateTo || searchSender || searchCaseId) && (
@@ -536,20 +538,20 @@ export default function Messages() {
                   variant="outline"
                   size="sm"
                   onClick={clearAllFilters}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-gray-500 hover:text-gray-700 h-9 px-2 sm:px-3"
                 >
-                  <X className="h-4 w-4 mr-1" />
-                  Clear
+                  <X className="h-4 w-4" />
+                  <span className="hidden sm:inline ml-1">Clear</span>
                 </Button>
               )}
             </div>
 
             {/* Advanced Search */}
             {showAdvancedSearch && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
                   <div>
-                    <Label htmlFor="dateFrom">Date From</Label>
+                    <Label htmlFor="dateFrom" className="text-xs sm:text-sm">From</Label>
                     <Input
                       id="dateFrom"
                       type="date"
@@ -558,11 +560,11 @@ export default function Messages() {
                         setSearchDateFrom(e.target.value);
                         resetPagination();
                       }}
-                      className="mt-1"
+                      className="mt-1 h-9 text-xs sm:text-sm"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="dateTo">Date To</Label>
+                    <Label htmlFor="dateTo" className="text-xs sm:text-sm">To</Label>
                     <Input
                       id="dateTo"
                       type="date"
@@ -571,65 +573,67 @@ export default function Messages() {
                         setSearchDateTo(e.target.value);
                         resetPagination();
                       }}
-                      className="mt-1"
+                      className="mt-1 h-9 text-xs sm:text-sm"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="sender">Sender</Label>
+                    <Label htmlFor="sender" className="text-xs sm:text-sm">Sender</Label>
                     <Input
                       id="sender"
-                      placeholder="Search by sender name/email..."
+                      placeholder="Name/email..."
                       value={searchSender}
                       onChange={(e) => {
                         setSearchSender(e.target.value);
                         resetPagination();
                       }}
-                      className="mt-1"
+                      className="mt-1 h-9 text-xs sm:text-sm"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="caseSearch">Case</Label>
+                    <Label htmlFor="caseSearch" className="text-xs sm:text-sm">Case</Label>
                     <Input
                       id="caseSearch"
-                      placeholder="Search by case number/name..."
+                      placeholder="Case #/name..."
                       value={searchCaseId}
                       onChange={(e) => {
                         setSearchCaseId(e.target.value);
                         resetPagination();
                       }}
-                      className="mt-1"
+                      className="mt-1 h-9 text-xs sm:text-sm"
                     />
                   </div>
                 </div>
                 
                 {/* Export to Excel Button */}
-                <div className="flex items-center justify-end p-4 bg-gray-50 rounded-lg border-t border-gray-200">
+                <div className="flex items-center justify-end p-3 sm:p-4 bg-gray-50 rounded-lg border-t border-gray-200">
                   <Button
                     onClick={handleExportMessages}
                     disabled={isExporting || (!searchDateFrom && !searchDateTo)}
                     variant="outline"
-                    className="border-acclaim-teal text-acclaim-teal hover:bg-acclaim-teal hover:text-white"
+                    className="border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700 text-xs sm:text-sm h-9"
                     title={(!searchDateFrom && !searchDateTo) 
                       ? "Select a date range to enable export" 
                       : "Export messages within the selected date range to Excel"
                     }
                   >
-                    <FileSpreadsheet className="h-4 w-4 mr-2" />
-                    {isExporting ? "Exporting..." : "Export to Excel"}
+                    <FileSpreadsheet className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">{isExporting ? "Exporting..." : "Export to Excel"}</span>
+                    <span className="sm:hidden ml-1">XLS</span>
                   </Button>
                 </div>
               </div>
             )}
 
             {/* Search Results Summary with Pagination Info */}
-            <div className="flex items-center justify-between text-sm text-gray-600">
-              <span>
-                Showing {startIndex + 1}-{Math.min(endIndex, filteredMessages.length)} of {filteredMessages.length} messages
-                {filteredMessages.length !== totalMessages && ` (filtered from ${totalMessages})`}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-1 text-xs sm:text-sm text-gray-600">
+              <span className="text-center sm:text-left">
+                {startIndex + 1}-{Math.min(endIndex, filteredMessages.length)} of {filteredMessages.length}
+                <span className="hidden sm:inline"> messages</span>
+                {filteredMessages.length !== totalMessages && <span className="hidden sm:inline"> (filtered from {totalMessages})</span>}
               </span>
               {totalPages > 1 && (
                 <span className="text-accent-foreground">
-                  Page {currentPage} of {totalPages}
+                  Page {currentPage}/{totalPages}
                 </span>
               )}
             </div>
@@ -758,68 +762,59 @@ export default function Messages() {
 
       {/* Messages List */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>
-              All Messages ({filteredMessages.length})
-            </CardTitle>
-          </div>
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="text-base sm:text-lg">
+            All Messages ({filteredMessages.length})
+          </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-3 sm:px-6">
           {isLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3, 4, 5].map((i) => (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
                 <div key={i} className="animate-pulse">
-                  <div className="h-20 bg-gray-200 rounded-lg"></div>
+                  <div className="h-16 sm:h-20 bg-gray-200 rounded-lg"></div>
                 </div>
               ))}
             </div>
           ) : paginatedMessages && paginatedMessages.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {paginatedMessages.map((message: any) => (
                 <div
                   key={message.id}
-                  className="p-4 rounded-lg border transition-colors cursor-pointer hover:shadow-md bg-gray-50 border-gray-200 hover:bg-gray-100"
+                  className="p-3 sm:p-4 rounded-lg border transition-colors cursor-pointer hover:shadow-md bg-gray-50 border-gray-200 hover:bg-gray-100"
                   onClick={() => handleMessageClick(message)}
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-3">
-                      <div className="relative">
-                        <div className="w-10 h-10 bg-acclaim-teal bg-opacity-10 rounded-full flex items-center justify-center">
-                          <User className="h-5 w-5 text-acclaim-teal" />
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1">
+                      <div className="relative flex-shrink-0">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-acclaim-teal bg-opacity-10 rounded-full flex items-center justify-center">
+                          <User className="h-4 w-4 sm:h-5 sm:w-5 text-acclaim-teal" />
                         </div>
-
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <p className="font-medium text-gray-900">{message.subject}</p>
-
-                        </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 text-sm sm:text-base truncate mb-1">{message.subject}</p>
                         <div className="mb-2">
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center space-x-2">
-                              <p className="text-xs text-gray-500">
-                                From: <span className="font-medium">{message.senderName || message.senderEmail || 'Unknown'}</span>
-                              </p>
-                              <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
-                                {message.senderIsAdmin ? "Acclaim" : (message.senderOrganisationName || "User")}
-                              </Badge>
-                            </div>
+                          <div className="flex flex-wrap items-center gap-1 sm:gap-2 mb-1">
+                            <p className="text-xs text-gray-500 truncate">
+                              <span className="hidden sm:inline">From: </span>
+                              <span className="font-medium">{message.senderName || message.senderEmail || 'Unknown'}</span>
+                            </p>
+                            <Badge variant="secondary" className="text-[10px] sm:text-xs bg-blue-100 text-blue-800 px-1.5 py-0">
+                              {message.senderIsAdmin ? "Acclaim" : (message.senderOrganisationName || "User")}
+                            </Badge>
                             {message.attachmentFileName && (
-                              <div className="flex items-center text-xs text-gray-500">
-                                <Paperclip className="h-3 w-3 mr-1" />
-                                <span>Attachment</span>
-                              </div>
+                              <Paperclip className="h-3 w-3 text-gray-400 flex-shrink-0" />
                             )}
                           </div>
-                          <p className="text-sm text-gray-600">{message.content}</p>
+                          <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">{message.content}</p>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <p className="text-xs text-gray-500">{formatDate(message.createdAt)}</p>
+                        <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-[10px] sm:text-xs text-gray-500">
+                          <span>{formatDate(message.createdAt)}</span>
                           {message.caseId && (
                             <>
-                              <span className="text-xs text-gray-400">•</span>
-                              <p className="text-xs text-gray-500">Related to case</p>
+                              <span className="text-gray-400">•</span>
+                              <span className="hidden sm:inline">Related to case</span>
+                              <span className="sm:hidden">Case linked</span>
                             </>
                           )}
                         </div>
@@ -828,7 +823,7 @@ export default function Messages() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-acclaim-teal hover:text-acclaim-teal"
+                      className="text-acclaim-teal hover:text-acclaim-teal flex-shrink-0 h-8 w-8 p-0"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleReply(message);
@@ -842,11 +837,11 @@ export default function Messages() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No messages found</p>
-              <p className="text-sm text-gray-400 mt-2">
-                Start a conversation with our team using the "New Message" button above.
+            <div className="text-center py-8 sm:py-12">
+              <MessageSquare className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+              <p className="text-gray-500 text-sm sm:text-base">No messages found</p>
+              <p className="text-xs sm:text-sm text-gray-400 mt-2">
+                Tap "New" above to start a conversation.
               </p>
             </div>
           )}
@@ -854,35 +849,34 @@ export default function Messages() {
         
         {/* Pagination Controls */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t bg-gray-50">
-            <div className="flex items-center space-x-2">
-              <p className="text-sm text-gray-700">
-                Showing {startIndex + 1} to {Math.min(endIndex, filteredMessages.length)} of {filteredMessages.length} messages
-              </p>
-            </div>
-            <div className="flex items-center space-x-2">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-3 sm:px-6 py-3 sm:py-4 border-t bg-gray-50">
+            <p className="text-xs sm:text-sm text-gray-700 text-center sm:text-left">
+              {startIndex + 1}-{Math.min(endIndex, filteredMessages.length)} of {filteredMessages.length}
+            </p>
+            <div className="flex items-center gap-1 sm:gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
-                className="text-acclaim-teal border-acclaim-teal hover:bg-acclaim-teal hover:text-white"
+                className="text-acclaim-teal border-acclaim-teal hover:bg-acclaim-teal hover:text-white h-8 px-2 sm:px-3"
               >
-                Previous
+                <span className="hidden sm:inline">Previous</span>
+                <span className="sm:hidden">&lt;</span>
               </Button>
               
-              {/* Page numbers */}
-              <div className="flex items-center space-x-1">
-                {Array.from({ length: Math.min(5, totalPages) }, (_, index) => {
+              {/* Page numbers - show fewer on mobile */}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(3, totalPages) }, (_, index) => {
                   let pageNumber;
-                  if (totalPages <= 5) {
+                  if (totalPages <= 3) {
                     pageNumber = index + 1;
-                  } else if (currentPage <= 3) {
+                  } else if (currentPage <= 2) {
                     pageNumber = index + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNumber = totalPages - 4 + index;
+                  } else if (currentPage >= totalPages - 1) {
+                    pageNumber = totalPages - 2 + index;
                   } else {
-                    pageNumber = currentPage - 2 + index;
+                    pageNumber = currentPage - 1 + index;
                   }
                   
                   return (
@@ -891,10 +885,10 @@ export default function Messages() {
                       variant={currentPage === pageNumber ? "default" : "outline"}
                       size="sm"
                       onClick={() => setCurrentPage(pageNumber)}
-                      className={currentPage === pageNumber 
+                      className={`h-8 w-8 p-0 ${currentPage === pageNumber 
                         ? "bg-acclaim-teal hover:bg-acclaim-teal/90 text-white" 
                         : "text-acclaim-teal border-acclaim-teal hover:bg-acclaim-teal hover:text-white"
-                      }
+                      }`}
                     >
                       {pageNumber}
                     </Button>
@@ -907,9 +901,10 @@ export default function Messages() {
                 size="sm"
                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
-                className="text-acclaim-teal border-acclaim-teal hover:bg-acclaim-teal hover:text-white"
+                className="text-acclaim-teal border-acclaim-teal hover:bg-acclaim-teal hover:text-white h-8 px-2 sm:px-3"
               >
-                Next
+                <span className="hidden sm:inline">Next</span>
+                <span className="sm:hidden">&gt;</span>
               </Button>
             </div>
           </div>
