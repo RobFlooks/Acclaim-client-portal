@@ -493,6 +493,11 @@ export default function Documents() {
                                     >
                                       {caseDetails.accountNumber}
                                     </button>
+                                    {caseDetails.organisationName && (
+                                      <span className="text-xs text-gray-500">
+                                        ({caseDetails.organisationName})
+                                      </span>
+                                    )}
                                   </div>
                                 );
                               }
