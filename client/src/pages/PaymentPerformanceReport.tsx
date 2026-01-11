@@ -135,7 +135,7 @@ export default function PaymentPerformanceReport() {
         const case_ = cases.find((c: any) => c.id === payment.caseId);
         return {
           'Account Number': case_?.accountNumber || 'N/A',
-          'Case Name': case_?.caseName || 'N/A',
+          'Case Name': case_?.organisationName ? `${case_.caseName} (${case_.organisationName})` : (case_?.caseName || 'N/A'),
           'Payment Amount': parseFloat(payment.amount),
           'Payment Date': formatDate(payment.createdAt),
           'Payment Method': payment.paymentMethod || 'Not Specified',

@@ -123,7 +123,8 @@ export default function MonthlyStatementReport() {
         acc.push(...monthlyPayments.map((payment: any) => ({
           ...payment,
           accountNumber: case_.accountNumber,
-          caseName: case_.caseName
+          caseName: case_.caseName,
+          organisationName: case_.organisationName
         })));
       }
       return acc;
@@ -167,7 +168,7 @@ export default function MonthlyStatementReport() {
     monthlyData.paymentsInMonth.forEach((payment: any) => {
       summaryData.push([
         payment.accountNumber,
-        payment.caseName,
+        payment.organisationName ? `${payment.caseName} (${payment.organisationName})` : payment.caseName,
         formatCurrency(payment.amount),
         formatDate(payment.createdAt),
         payment.method || 'N/A'
@@ -201,7 +202,7 @@ export default function MonthlyStatementReport() {
       const paymentsTableRows = monthlyData.paymentsInMonth.map((payment: any) => `
         <tr>
           <td>${payment.accountNumber}</td>
-          <td>${payment.caseName}</td>
+          <td>${payment.caseName}${payment.organisationName ? ` <span style="font-size: 10px; color: #666;">(${payment.organisationName})</span>` : ''}</td>
           <td class="currency">${formatCurrency(payment.amount)}</td>
           <td>${formatDate(payment.createdAt)}</td>
           <td>${payment.method || 'N/A'}</td>
@@ -433,7 +434,12 @@ export default function MonthlyStatementReport() {
                         {payment.accountNumber}
                       </td>
                       <td className="border border-gray-200 px-4 py-2">
-                        {payment.caseName}
+                        <div>
+                          {payment.caseName}
+                          {payment.organisationName && (
+                            <div className="text-xs text-gray-500">({payment.organisationName})</div>
+                          )}
+                        </div>
                       </td>
                       <td className="border border-gray-200 px-4 py-2 font-medium text-green-600">
                         {formatCurrency(payment.amount)}
