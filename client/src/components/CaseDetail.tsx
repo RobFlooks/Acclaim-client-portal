@@ -1413,7 +1413,28 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
         <TabsContent value="messages" className="space-y-4" data-tab="messages">
           <Card>
             <CardHeader>
-              <CardTitle>Messages</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Messages</CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const sendMessageSection = document.getElementById('send-message-section');
+                    if (sendMessageSection) {
+                      sendMessageSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      // Focus on the message textarea after scrolling
+                      setTimeout(() => {
+                        const textarea = document.getElementById('message');
+                        if (textarea) textarea.focus();
+                      }, 500);
+                    }
+                  }}
+                  className="bg-acclaim-teal text-white hover:bg-acclaim-teal/90"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Send Message
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {messagesLoading ? (
@@ -1485,7 +1506,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               )}
               
               {/* Send Message Form */}
-              <div className="mt-6 pt-6 border-t">
+              <div id="send-message-section" className="mt-6 pt-6 border-t">
                 <Label htmlFor="message" className="text-sm font-medium">
                   Send Message
                 </Label>
