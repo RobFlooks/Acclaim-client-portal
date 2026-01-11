@@ -345,6 +345,9 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
                         <div className="ml-4">
                           <p className="font-medium text-gray-900">{case_.caseName}</p>
                           <p className="text-sm text-gray-600">Account: {case_.accountNumber}</p>
+                          {case_.organisationName && (
+                            <p className="text-xs text-gray-500">{case_.organisationName}</p>
+                          )}
                         </div>
                       </div>
                       <div className="text-right">
@@ -426,11 +429,17 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
                         <p className="text-sm text-gray-700 line-clamp-2 leading-relaxed">
                           {message.content}
                         </p>
-                        {message.caseId && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Related to case
-                          </p>
-                        )}
+                        {message.caseId && (() => {
+                          const caseData = cases?.find((c: any) => c.id === message.caseId);
+                          return (
+                            <p className="text-xs text-acclaim-teal mt-1 truncate">
+                              {caseData?.caseName || getCaseAccountNumber(message.caseId)}
+                              {caseData?.organisationName && (
+                                <span className="text-gray-500"> ({caseData.organisationName})</span>
+                              )}
+                            </p>
+                          );
+                        })()}
                       </div>
                     </div>
                   ))}
