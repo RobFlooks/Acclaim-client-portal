@@ -416,41 +416,41 @@ export default function PaymentPerformanceReport() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <Link href="/?section=reports">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="w-full sm:w-auto">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Reports
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Payment Performance Report</h1>
-            <p className="text-gray-600">Generated on {formatDate(new Date().toISOString())}</p>
+            <h1 className="text-xl sm:text-3xl font-bold text-gray-900">Payment Performance Report</h1>
+            <p className="text-sm text-gray-600">Generated on {formatDate(new Date().toISOString())}</p>
           </div>
         </div>
         <div className="flex gap-2">
-          <Button onClick={handleExportExcel} variant="outline">
-            <FileSpreadsheet className="h-4 w-4 mr-2" />
-            Export to Excel
+          <Button onClick={handleExportExcel} variant="outline" size="sm" className="flex-1 sm:flex-none">
+            <FileSpreadsheet className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Export to Excel</span>
           </Button>
-          <Button onClick={handleDownloadPDF} variant="outline">
-            <FileText className="h-4 w-4 mr-2" />
-            View PDF Report
+          <Button onClick={handleDownloadPDF} variant="outline" size="sm" className="flex-1 sm:flex-none">
+            <FileText className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">View PDF Report</span>
           </Button>
         </div>
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6 mb-4 sm:mb-8">
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-gray-600">Total Payments</CardTitle>
+          <CardHeader className="pb-2 sm:pb-3">
+            <CardTitle className="text-xs sm:text-sm text-gray-600">Total Payments</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             <div className="flex items-center space-x-2">
-              <CreditCard className="h-8 w-8 text-green-600" />
-              <span className="text-3xl font-bold text-green-600">
+              <CreditCard className="h-5 w-5 sm:h-8 sm:w-8 text-green-600 hidden sm:block" />
+              <span className="text-xl sm:text-3xl font-bold text-green-600">
                 {formatCurrency(metrics?.totalPayments || 0)}
               </span>
             </div>
@@ -458,88 +458,86 @@ export default function PaymentPerformanceReport() {
         </Card>
 
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-gray-600">Average Payment</CardTitle>
+          <CardHeader className="pb-2 sm:pb-3">
+            <CardTitle className="text-xs sm:text-sm text-gray-600">Avg Payment</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             <div className="flex items-center space-x-2">
-              <TrendingUp className="h-8 w-8 text-blue-600" />
-              <span className="text-3xl font-bold text-blue-600">
+              <TrendingUp className="h-5 w-5 sm:h-8 sm:w-8 text-blue-600 hidden sm:block" />
+              <span className="text-xl sm:text-3xl font-bold text-blue-600">
                 {formatCurrency(metrics?.avgPaymentAmount || 0)}
               </span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-gray-600">Payment Count</CardTitle>
+        <Card className="col-span-2 sm:col-span-1">
+          <CardHeader className="pb-2 sm:pb-3">
+            <CardTitle className="text-xs sm:text-sm text-gray-600">Payment Count</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             <div className="flex items-center space-x-2">
-              <Calendar className="h-8 w-8 text-purple-600" />
-              <span className="text-3xl font-bold text-purple-600">
+              <Calendar className="h-5 w-5 sm:h-8 sm:w-8 text-purple-600 hidden sm:block" />
+              <span className="text-xl sm:text-3xl font-bold text-purple-600">
                 {metrics?.totalPaymentCount || 0}
               </span>
             </div>
           </CardContent>
         </Card>
-
-
       </div>
 
       {/* Recent Trends */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 mb-4 sm:mb-8">
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <TrendingUp className="h-5 w-5 mr-2" />
+          <CardHeader className="pb-2 sm:pb-4">
+            <CardTitle className="flex items-center text-sm sm:text-base">
+              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
               Last 30 Days
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Total:</span>
-                <span className="font-bold text-green-600">{formatCurrency(metrics?.last30DaysTotal || 0)}</span>
+                <span className="text-xs sm:text-sm text-gray-600">Total:</span>
+                <span className="font-bold text-green-600 text-sm sm:text-base">{formatCurrency(metrics?.last30DaysTotal || 0)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Payments:</span>
-                <span className="font-bold">{metrics?.last30DaysCount || 0}</span>
+                <span className="text-xs sm:text-sm text-gray-600">Payments:</span>
+                <span className="font-bold text-sm sm:text-base">{metrics?.last30DaysCount || 0}</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <TrendingUp className="h-5 w-5 mr-2" />
+          <CardHeader className="pb-2 sm:pb-4">
+            <CardTitle className="flex items-center text-sm sm:text-base">
+              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
               Last 60 Days
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Total:</span>
-                <span className="font-bold text-blue-600">{formatCurrency(metrics?.last60DaysTotal || 0)}</span>
+                <span className="text-xs sm:text-sm text-gray-600">Total:</span>
+                <span className="font-bold text-blue-600 text-sm sm:text-base">{formatCurrency(metrics?.last60DaysTotal || 0)}</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <TrendingUp className="h-5 w-5 mr-2" />
+          <CardHeader className="pb-2 sm:pb-4">
+            <CardTitle className="flex items-center text-sm sm:text-base">
+              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
               Last 90 Days
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Total:</span>
-                <span className="font-bold text-purple-600">{formatCurrency(metrics?.last90DaysTotal || 0)}</span>
+                <span className="text-xs sm:text-sm text-gray-600">Total:</span>
+                <span className="font-bold text-purple-600 text-sm sm:text-base">{formatCurrency(metrics?.last90DaysTotal || 0)}</span>
               </div>
             </div>
           </CardContent>
@@ -547,19 +545,19 @@ export default function PaymentPerformanceReport() {
       </div>
 
       {/* Payment Method Breakdown */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Payment Method Breakdown</CardTitle>
+      <Card className="mb-4 sm:mb-8">
+        <CardHeader className="pb-2 sm:pb-4">
+          <CardTitle className="text-base sm:text-lg">Payment Method Breakdown</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
             {Object.entries(metrics?.methodBreakdown || {})
               .sort(([a], [b]) => a.localeCompare(b))
               .map(([method, amount]) => (
-              <div key={method} className="p-4 border rounded-lg">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">{method}</span>
-                  <span className="text-lg font-bold text-acclaim-teal">
+              <div key={method} className="p-2 sm:p-4 border rounded-lg">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
+                  <span className="text-xs sm:text-sm font-medium">{method}</span>
+                  <span className="text-sm sm:text-lg font-bold text-acclaim-teal">
                     {formatCurrency(amount as number)}
                   </span>
                 </div>
@@ -571,29 +569,29 @@ export default function PaymentPerformanceReport() {
 
       {/* Monthly Trends */}
       <Card>
-        <CardHeader>
-          <CardTitle>Monthly Payment Trends</CardTitle>
+        <CardHeader className="pb-2 sm:pb-4">
+          <CardTitle className="text-base sm:text-lg">Monthly Payment Trends</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
+        <CardContent className="p-2 sm:p-6">
+          <div className="overflow-x-auto -mx-2 sm:mx-0">
+            <table className="w-full text-xs sm:text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left p-2">Month</th>
-                  <th className="text-right p-2">Total Amount</th>
-                  <th className="text-center p-2">Payment Count</th>
-                  <th className="text-right p-2">Average Amount</th>
+                  <th className="text-left p-2 font-medium">Month</th>
+                  <th className="text-right p-2 font-medium whitespace-nowrap">Total</th>
+                  <th className="text-center p-2 font-medium">Count</th>
+                  <th className="text-right p-2 font-medium whitespace-nowrap">Average</th>
                 </tr>
               </thead>
               <tbody>
                 {Object.entries(metrics?.monthlyTrends || {}).map(([month, data]: [string, any]) => (
                   <tr key={month} className="border-b">
-                    <td className="p-2 font-medium">{month}</td>
-                    <td className="p-2 text-right font-bold text-green-600">
+                    <td className="p-2 font-medium whitespace-nowrap">{month}</td>
+                    <td className="p-2 text-right font-bold text-green-600 whitespace-nowrap">
                       {formatCurrency(data.total)}
                     </td>
                     <td className="p-2 text-center">{data.count}</td>
-                    <td className="p-2 text-right">
+                    <td className="p-2 text-right whitespace-nowrap">
                       {formatCurrency(data.total / data.count)}
                     </td>
                   </tr>

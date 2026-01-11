@@ -521,54 +521,55 @@ export default function CaseSummaryReport() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <Link href="/?section=reports">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="w-full sm:w-auto">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Reports
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Case Summary Report</h1>
-            <p className="text-gray-600">Generated on {formatDate(new Date().toISOString())}</p>
+            <h1 className="text-xl sm:text-3xl font-bold text-gray-900">Case Summary Report</h1>
+            <p className="text-sm text-gray-600">Generated on {formatDate(new Date().toISOString())}</p>
           </div>
         </div>
         <div className="flex gap-2">
-          <Button onClick={handleExportExcel} variant="outline">
-            <FileSpreadsheet className="h-4 w-4 mr-2" />
-            Export to Excel
+          <Button onClick={handleExportExcel} variant="outline" size="sm" className="flex-1 sm:flex-none">
+            <FileSpreadsheet className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Export to Excel</span>
           </Button>
-          <Button onClick={handleDownloadPDF} variant="outline">
-            <FileText className="h-4 w-4 mr-2" />
-            View PDF Report
+          <Button onClick={handleDownloadPDF} variant="outline" size="sm" className="flex-1 sm:flex-none">
+            <FileText className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">View PDF Report</span>
           </Button>
-
         </div>
       </div>
 
       {/* Filter Control */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
+      <Card className="mb-4 sm:mb-6">
+        <CardHeader className="pb-2 sm:pb-4">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Filter className="h-4 w-4 sm:h-5 sm:w-5" />
             Filter Cases
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-gray-700">Show:</label>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Select filter" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Cases (Live & Closed)</SelectItem>
-                <SelectItem value="live">Live Cases Only</SelectItem>
-                <SelectItem value="closed">Closed Cases Only</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="text-sm text-gray-600">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 flex-1">
+              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Show:</label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Select filter" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Cases (Live & Closed)</SelectItem>
+                  <SelectItem value="live">Live Cases Only</SelectItem>
+                  <SelectItem value="closed">Closed Cases Only</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="text-xs sm:text-sm text-gray-600">
               Showing {filteredCases?.length || 0} of {cases?.length || 0} cases
             </div>
           </div>
@@ -576,65 +577,64 @@ export default function CaseSummaryReport() {
       </Card>
 
       {/* Summary Statistics */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Summary Statistics</CardTitle>
+      <Card className="mb-4 sm:mb-8">
+        <CardHeader className="pb-2 sm:pb-4">
+          <CardTitle className="text-base sm:text-lg">Summary Statistics</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <div className="p-4 bg-blue-50 rounded-lg">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4">
+            <div className="p-3 sm:p-4 bg-blue-50 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Cases</p>
-                  <p className="text-2xl font-bold text-blue-600">{filteredCases?.length || 0}</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Total Cases</p>
+                  <p className="text-lg sm:text-2xl font-bold text-blue-600">{filteredCases?.length || 0}</p>
                 </div>
-                <FileText className="h-8 w-8 text-blue-600" />
+                <FileText className="h-5 w-5 sm:h-8 sm:w-8 text-blue-600 hidden sm:block" />
               </div>
             </div>
-            <div className="p-4 bg-yellow-50 rounded-lg">
+            <div className="p-3 sm:p-4 bg-yellow-50 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Active Cases</p>
-                  <p className="text-2xl font-bold text-yellow-600">{filteredStats?.activeCases || 0}</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Active Cases</p>
+                  <p className="text-lg sm:text-2xl font-bold text-yellow-600">{filteredStats?.activeCases || 0}</p>
                 </div>
-                <User className="h-8 w-8 text-yellow-600" />
+                <User className="h-5 w-5 sm:h-8 sm:w-8 text-yellow-600 hidden sm:block" />
               </div>
             </div>
-            <div className="p-4 bg-green-50 rounded-lg">
+            <div className="p-3 sm:p-4 bg-green-50 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Closed Cases</p>
-                  <p className="text-2xl font-bold text-green-600">{filteredStats?.closedCases || 0}</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Closed Cases</p>
+                  <p className="text-lg sm:text-2xl font-bold text-green-600">{filteredStats?.closedCases || 0}</p>
                 </div>
-                <Calendar className="h-8 w-8 text-green-600" />
+                <Calendar className="h-5 w-5 sm:h-8 sm:w-8 text-green-600 hidden sm:block" />
               </div>
             </div>
-            <div className="p-4 bg-purple-50 rounded-lg">
+            <div className="p-3 sm:p-4 bg-purple-50 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Original Amount</p>
-                  <p className="text-2xl font-bold text-purple-600">{formatCurrency(getTotalOriginalAmount())}</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Original Amount</p>
+                  <p className="text-lg sm:text-2xl font-bold text-purple-600">{formatCurrency(getTotalOriginalAmount())}</p>
                 </div>
-                <Banknote className="h-8 w-8 text-purple-600" />
+                <Banknote className="h-5 w-5 sm:h-8 sm:w-8 text-purple-600 hidden sm:block" />
               </div>
             </div>
-
-            <div className="p-4 bg-emerald-50 rounded-lg">
+            <div className="p-3 sm:p-4 bg-emerald-50 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Payments Received</p>
-                  <p className="text-2xl font-bold text-emerald-600">{formatCurrency(getTotalPaymentsReceived())}</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Payments Received</p>
+                  <p className="text-lg sm:text-2xl font-bold text-emerald-600">{formatCurrency(getTotalPaymentsReceived())}</p>
                 </div>
-                <Banknote className="h-8 w-8 text-emerald-600" />
+                <Banknote className="h-5 w-5 sm:h-8 sm:w-8 text-emerald-600 hidden sm:block" />
               </div>
             </div>
-            <div className="p-4 bg-orange-50 rounded-lg">
+            <div className="p-3 sm:p-4 bg-orange-50 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Outstanding (inc. costs & interest)</p>
-                  <p className="text-2xl font-bold text-orange-600">{formatCurrency(getTotalOutstandingAmount())}</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Outstanding</p>
+                  <p className="text-lg sm:text-2xl font-bold text-orange-600">{formatCurrency(getTotalOutstandingAmount())}</p>
                 </div>
-                <Banknote className="h-8 w-8 text-orange-600" />
+                <Banknote className="h-5 w-5 sm:h-8 sm:w-8 text-orange-600 hidden sm:block" />
               </div>
             </div>
           </div>
@@ -643,62 +643,56 @@ export default function CaseSummaryReport() {
 
       {/* Cases Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>Detailed Case Information</CardTitle>
+        <CardHeader className="pb-2 sm:pb-4">
+          <CardTitle className="text-base sm:text-lg">Detailed Case Information</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-200">
+        <CardContent className="p-2 sm:p-6">
+          <div className="overflow-x-auto -mx-2 sm:mx-0">
+            <table className="w-full border-collapse border border-gray-200 text-xs sm:text-sm">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                    Account Number
+                  <th className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-900 whitespace-nowrap">
+                    Account
                   </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                  <th className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-900">
                     Case Name
                   </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                  <th className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-900">
                     Status
                   </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                  <th className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-900">
                     Stage
                   </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                    Original Amount
+                  <th className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-900 whitespace-nowrap">
+                    Original
                   </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                    Costs Added
+                  <th className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-900 whitespace-nowrap">
+                    Costs
                   </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                    Interest Added
+                  <th className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-900 whitespace-nowrap">
+                    Interest
                   </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                    Other Fees
+                  <th className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-900 whitespace-nowrap">
+                    Fees
                   </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                  <th className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-900 whitespace-nowrap">
                     Total Debt
-                    <div className="text-xs text-gray-500 mt-1 font-normal">
-                      Original + Costs + Interest + Fees
-                    </div>
                   </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                    Total Payments
+                  <th className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-900 whitespace-nowrap">
+                    Payments
                   </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                    Outstanding Amount
-                    <div className="text-xs text-gray-500 mt-1 font-normal">
-                      Total Debt - Total Payments
-                    </div>
+                  <th className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-900 whitespace-nowrap">
+                    Outstanding
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {filteredCases?.map((caseItem: any) => (
                   <tr key={caseItem.id} className="hover:bg-gray-50">
-                    <td className="border border-gray-200 px-4 py-3 text-sm text-gray-900">
+                    <td className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 text-gray-900 whitespace-nowrap">
                       {caseItem.accountNumber}
                     </td>
-                    <td className="border border-gray-200 px-4 py-3 text-sm text-gray-900">
+                    <td className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 text-gray-900">
                       <div>
                         {caseItem.caseName}
                         {caseItem.organisationName && (
@@ -706,25 +700,25 @@ export default function CaseSummaryReport() {
                         )}
                       </div>
                     </td>
-                    <td className="border border-gray-200 px-4 py-3 text-sm">
+                    <td className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3">
                       {getStatusBadge(caseItem.status)}
                     </td>
-                    <td className="border border-gray-200 px-4 py-3 text-sm">
+                    <td className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3">
                       {getStageBadge(caseItem.stage)}
                     </td>
-                    <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-gray-900">
+                    <td className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 font-medium text-gray-900 whitespace-nowrap">
                       {formatCurrency(caseItem.originalAmount)}
                     </td>
-                    <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-gray-900">
+                    <td className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 font-medium text-gray-900 whitespace-nowrap">
                       {formatCurrency(caseItem.costsAdded || 0)}
                     </td>
-                    <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-gray-900">
+                    <td className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 font-medium text-gray-900 whitespace-nowrap">
                       {formatCurrency(caseItem.interestAdded || 0)}
                     </td>
-                    <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-gray-900">
+                    <td className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 font-medium text-gray-900 whitespace-nowrap">
                       {formatCurrency(caseItem.feesAdded || 0)}
                     </td>
-                    <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-purple-600">
+                    <td className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 font-medium text-purple-600 whitespace-nowrap">
                       {formatCurrency(
                         parseFloat(caseItem.originalAmount) + 
                         parseFloat(caseItem.costsAdded || 0) + 
@@ -732,10 +726,10 @@ export default function CaseSummaryReport() {
                         parseFloat(caseItem.feesAdded || 0)
                       )}
                     </td>
-                    <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-green-600">
+                    <td className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 font-medium text-green-600 whitespace-nowrap">
                       {formatCurrency(getTotalPayments(caseItem))}
                     </td>
-                    <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-orange-600">
+                    <td className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 font-medium text-orange-600 whitespace-nowrap">
                       {formatCurrency(caseItem.outstandingAmount || 0)}
                     </td>
                   </tr>

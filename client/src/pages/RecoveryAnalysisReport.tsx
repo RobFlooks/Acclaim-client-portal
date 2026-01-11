@@ -643,41 +643,41 @@ export default function RecoveryAnalysisReport() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <Link href="/?section=reports">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="w-full sm:w-auto">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Reports
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Recovery Analysis Report</h1>
-            <p className="text-gray-600">Generated on {formatDate(new Date().toISOString())}</p>
-            <p className="text-sm text-acclaim-teal font-medium">Comprehensive analysis of all active and closed cases</p>
+            <h1 className="text-xl sm:text-3xl font-bold text-gray-900">Recovery Analysis Report</h1>
+            <p className="text-sm text-gray-600">Generated on {formatDate(new Date().toISOString())}</p>
+            <p className="text-xs sm:text-sm text-acclaim-teal font-medium">Comprehensive analysis of all cases</p>
           </div>
         </div>
         <div className="flex gap-2">
-          <Button onClick={handleExportExcel} variant="outline">
-            <FileSpreadsheet className="h-4 w-4 mr-2" />
-            Export to Excel
+          <Button onClick={handleExportExcel} variant="outline" size="sm" className="flex-1 sm:flex-none">
+            <FileSpreadsheet className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Export to Excel</span>
           </Button>
-          <Button onClick={handleDownloadPDF} variant="outline">
-            <FileText className="h-4 w-4 mr-2" />
-            View PDF Report
+          <Button onClick={handleDownloadPDF} variant="outline" size="sm" className="flex-1 sm:flex-none">
+            <FileText className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">View PDF Report</span>
           </Button>
         </div>
       </div>
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-8">
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-gray-600">Overall Recovery</CardTitle>
+          <CardHeader className="pb-2 sm:pb-3">
+            <CardTitle className="text-xs sm:text-sm text-gray-600">Overall Recovery</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             <div className="flex items-center space-x-2">
-              <TrendingUp className="h-8 w-8 text-green-600" />
-              <span className="text-3xl font-bold text-green-600">
+              <TrendingUp className="h-5 w-5 sm:h-8 sm:w-8 text-green-600 hidden sm:block" />
+              <span className="text-xl sm:text-3xl font-bold text-green-600">
                 {formatPercentage(metrics?.totalRecoveryRate || 0)}
               </span>
             </div>
@@ -685,13 +685,13 @@ export default function RecoveryAnalysisReport() {
         </Card>
 
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-gray-600">Total Amount Recovered</CardTitle>
+          <CardHeader className="pb-2 sm:pb-3">
+            <CardTitle className="text-xs sm:text-sm text-gray-600">Amount Recovered</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             <div className="flex items-center space-x-2">
-              <PieChart className="h-8 w-8 text-blue-600" />
-              <span className="text-3xl font-bold text-blue-600">
+              <PieChart className="h-5 w-5 sm:h-8 sm:w-8 text-blue-600 hidden sm:block" />
+              <span className="text-xl sm:text-3xl font-bold text-blue-600">
                 {formatCurrency(metrics?.totalRecovered || 0)}
               </span>
             </div>
@@ -699,13 +699,13 @@ export default function RecoveryAnalysisReport() {
         </Card>
 
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-gray-600">Total Outstanding</CardTitle>
+          <CardHeader className="pb-2 sm:pb-3">
+            <CardTitle className="text-xs sm:text-sm text-gray-600">Outstanding</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             <div className="flex items-center space-x-2">
-              <BarChart3 className="h-8 w-8 text-orange-600" />
-              <span className="text-3xl font-bold text-orange-600">
+              <BarChart3 className="h-5 w-5 sm:h-8 sm:w-8 text-orange-600 hidden sm:block" />
+              <span className="text-xl sm:text-3xl font-bold text-orange-600">
                 {formatCurrency(metrics?.totalOutstanding || 0)}
               </span>
             </div>
@@ -713,13 +713,13 @@ export default function RecoveryAnalysisReport() {
         </Card>
 
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-gray-600">Total Cases</CardTitle>
+          <CardHeader className="pb-2 sm:pb-3">
+            <CardTitle className="text-xs sm:text-sm text-gray-600">Total Cases</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             <div className="flex items-center space-x-2">
-              <Calendar className="h-8 w-8 text-purple-600" />
-              <span className="text-3xl font-bold text-purple-600">
+              <Calendar className="h-5 w-5 sm:h-8 sm:w-8 text-purple-600 hidden sm:block" />
+              <span className="text-xl sm:text-3xl font-bold text-purple-600">
                 {metrics?.totalCases || 0}
               </span>
             </div>
@@ -728,48 +728,48 @@ export default function RecoveryAnalysisReport() {
       </div>
 
       {/* Financial Summary */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Financial Summary</CardTitle>
+      <Card className="mb-4 sm:mb-8">
+        <CardHeader className="pb-2 sm:pb-4">
+          <CardTitle className="text-base sm:text-lg">Financial Summary</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
             <div>
-              <h4 className="font-medium text-gray-900 mb-4">Debt Composition</h4>
+              <h4 className="font-medium text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">Debt Composition</h4>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Total Original Amount</span>
-                  <span className="font-medium">{formatCurrency(metrics?.totalOriginalAmount || 0)}</span>
+                  <span className="text-xs sm:text-sm text-gray-600">Original Amount</span>
+                  <span className="font-medium text-xs sm:text-sm">{formatCurrency(metrics?.totalOriginalAmount || 0)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Costs Added</span>
-                  <span className="font-medium">{formatCurrency(metrics?.totalCostsAdded || 0)}</span>
+                  <span className="text-xs sm:text-sm text-gray-600">Costs Added</span>
+                  <span className="font-medium text-xs sm:text-sm">{formatCurrency(metrics?.totalCostsAdded || 0)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Interest Added</span>
-                  <span className="font-medium">{formatCurrency(metrics?.totalInterestAdded || 0)}</span>
+                  <span className="text-xs sm:text-sm text-gray-600">Interest Added</span>
+                  <span className="font-medium text-xs sm:text-sm">{formatCurrency(metrics?.totalInterestAdded || 0)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Fees Added</span>
-                  <span className="font-medium">{formatCurrency(metrics?.totalFeesAdded || 0)}</span>
+                  <span className="text-xs sm:text-sm text-gray-600">Fees Added</span>
+                  <span className="font-medium text-xs sm:text-sm">{formatCurrency(metrics?.totalFeesAdded || 0)}</span>
                 </div>
                 <div className="flex justify-between border-t pt-2">
-                  <span className="text-sm font-medium text-gray-900">Total Debt</span>
-                  <span className="font-bold text-purple-600">{formatCurrency(metrics?.totalDebt || 0)}</span>
+                  <span className="text-xs sm:text-sm font-medium text-gray-900">Total Debt</span>
+                  <span className="font-bold text-purple-600 text-xs sm:text-sm">{formatCurrency(metrics?.totalDebt || 0)}</span>
                 </div>
               </div>
             </div>
             
             <div>
-              <h4 className="font-medium text-gray-900 mb-4">Recovery Performance</h4>
+              <h4 className="font-medium text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">Recovery Performance</h4>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Amount Recovered</span>
-                  <span className="font-medium text-blue-600">{formatCurrency(metrics?.totalRecovered || 0)}</span>
+                  <span className="text-xs sm:text-sm text-gray-600">Amount Recovered</span>
+                  <span className="font-medium text-blue-600 text-xs sm:text-sm">{formatCurrency(metrics?.totalRecovered || 0)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Amount Outstanding</span>
-                  <span className="font-medium text-orange-600">{formatCurrency(metrics?.totalOutstanding || 0)}</span>
+                  <span className="text-xs sm:text-sm text-gray-600">Amount Outstanding</span>
+                  <span className="font-medium text-orange-600 text-xs sm:text-sm">{formatCurrency(metrics?.totalOutstanding || 0)}</span>
                 </div>
               </div>
             </div>
@@ -779,39 +779,36 @@ export default function RecoveryAnalysisReport() {
 
       {/* Detailed Case Recovery Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>Case Recovery Details</CardTitle>
+        <CardHeader className="pb-2 sm:pb-4">
+          <CardTitle className="text-base sm:text-lg">Case Recovery Details</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-200">
+        <CardContent className="p-2 sm:p-6">
+          <div className="overflow-x-auto -mx-2 sm:mx-0">
+            <table className="w-full border-collapse border border-gray-200 text-xs sm:text-sm">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                    Account Number
+                  <th className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-900 whitespace-nowrap">
+                    Account
                   </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                  <th className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-900">
                     Case Name
                   </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                  <th className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-900">
                     Status
                   </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                  <th className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-900">
                     Stage
                   </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                    Original Amount
+                  <th className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-900 whitespace-nowrap">
+                    Original
                   </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                  <th className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-900 whitespace-nowrap">
                     Total Debt
-                    <div className="text-xs text-gray-500 mt-1 font-normal">
-                      Original + Costs + Interest + Fees
-                    </div>
                   </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
-                    Amount Recovered
+                  <th className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-900 whitespace-nowrap">
+                    Recovered
                   </th>
-                  <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-900">
+                  <th className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 text-left font-medium text-gray-900 whitespace-nowrap">
                     Outstanding
                   </th>
                 </tr>
@@ -829,10 +826,10 @@ export default function RecoveryAnalysisReport() {
                   
                   return (
                     <tr key={caseItem.id} className="hover:bg-gray-50">
-                      <td className="border border-gray-200 px-4 py-3 text-sm text-gray-900">
+                      <td className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 text-gray-900 whitespace-nowrap">
                         {caseItem.accountNumber}
                       </td>
-                      <td className="border border-gray-200 px-4 py-3 text-sm text-gray-900">
+                      <td className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 text-gray-900">
                         <div>
                           {caseItem.caseName}
                           {caseItem.organisationName && (
@@ -840,22 +837,22 @@ export default function RecoveryAnalysisReport() {
                           )}
                         </div>
                       </td>
-                      <td className="border border-gray-200 px-4 py-3 text-sm">
+                      <td className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3">
                         {getStatusBadge(caseItem.status)}
                       </td>
-                      <td className="border border-gray-200 px-4 py-3 text-sm">
+                      <td className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3">
                         {getStageBadge(caseItem.stage)}
                       </td>
-                      <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-gray-900">
+                      <td className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 font-medium text-gray-900 whitespace-nowrap">
                         {formatCurrency(originalAmount)}
                       </td>
-                      <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-purple-600">
+                      <td className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 font-medium text-purple-600 whitespace-nowrap">
                         {formatCurrency(totalDebt)}
                       </td>
-                      <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-blue-600">
+                      <td className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 font-medium text-blue-600 whitespace-nowrap">
                         {formatCurrency(recovered)}
                       </td>
-                      <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-orange-600">
+                      <td className="border border-gray-200 px-2 sm:px-4 py-2 sm:py-3 font-medium text-orange-600 whitespace-nowrap">
                         {formatCurrency(outstanding)}
                       </td>
                     </tr>

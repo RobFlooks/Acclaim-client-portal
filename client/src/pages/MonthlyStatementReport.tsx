@@ -316,42 +316,42 @@ export default function MonthlyStatementReport() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <Link href="/?section=reports">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="w-full sm:w-auto">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Reports
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Monthly Statement Report</h1>
-            <p className="text-gray-600">Generated on {new Date().toLocaleDateString('en-GB')}</p>
+            <h1 className="text-xl sm:text-3xl font-bold text-gray-900">Monthly Statement Report</h1>
+            <p className="text-sm text-gray-600">Generated on {new Date().toLocaleDateString('en-GB')}</p>
           </div>
         </div>
         <div className="flex gap-2">
-          <Button onClick={handleExportExcel} variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Export to Excel
+          <Button onClick={handleExportExcel} variant="outline" size="sm" className="flex-1 sm:flex-none">
+            <Download className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Export to Excel</span>
           </Button>
-          <Button onClick={handleDownloadPDF} variant="outline">
-            <FileText className="h-4 w-4 mr-2" />
-            View PDF Report
+          <Button onClick={handleDownloadPDF} variant="outline" size="sm" className="flex-1 sm:flex-none">
+            <FileText className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">View PDF Report</span>
           </Button>
         </div>
       </div>
 
       {/* Month Selection */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Calendar className="h-5 w-5 mr-2" />
+      <Card className="mb-4 sm:mb-6">
+        <CardHeader className="pb-2 sm:pb-4">
+          <CardTitle className="flex items-center text-base sm:text-lg">
+            <Calendar className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
             Select Month
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4 items-center">
-            <div className="flex-1 max-w-xs">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center">
+            <div className="flex-1 sm:max-w-xs">
               <Select value={selectedMonth} onValueChange={setSelectedMonth}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select month" />
@@ -365,7 +365,7 @@ export default function MonthlyStatementReport() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-xs sm:text-sm text-gray-600">
               Showing data for {getMonthName(selectedMonth)}
             </div>
           </div>
@@ -373,36 +373,36 @@ export default function MonthlyStatementReport() {
       </Card>
 
       {/* Monthly Summary */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <TrendingUp className="h-5 w-5 mr-2" />
+      <Card className="mb-4 sm:mb-6">
+        <CardHeader className="pb-2 sm:pb-4">
+          <CardTitle className="flex items-center text-base sm:text-lg">
+            <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
             Monthly Summary - {getMonthName(selectedMonth)}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-purple-50 p-4 rounded-lg">
+          <div className="grid grid-cols-2 gap-3 sm:gap-6">
+            <div className="bg-purple-50 p-3 sm:p-4 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Payments</p>
-                  <p className="text-2xl font-bold text-purple-600">
+                  <p className="text-xs sm:text-sm text-gray-600">Total Payments</p>
+                  <p className="text-lg sm:text-2xl font-bold text-purple-600">
                     {formatCurrency(monthlyData?.totalPayments || 0)}
                   </p>
                 </div>
-                <PoundSterling className="h-8 w-8 text-purple-600" />
+                <PoundSterling className="h-5 w-5 sm:h-8 sm:w-8 text-purple-600 hidden sm:block" />
               </div>
             </div>
             
-            <div className="bg-blue-50 p-4 rounded-lg">
+            <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Number of Payments</p>
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-xs sm:text-sm text-gray-600">Number of Payments</p>
+                  <p className="text-lg sm:text-2xl font-bold text-blue-600">
                     {monthlyData?.paymentsCount || 0}
                   </p>
                 </div>
-                <CreditCard className="h-8 w-8 text-blue-600" />
+                <CreditCard className="h-5 w-5 sm:h-8 sm:w-8 text-blue-600 hidden sm:block" />
               </div>
             </div>
           </div>
@@ -411,29 +411,29 @@ export default function MonthlyStatementReport() {
 
       {/* Payments This Month */}
       <Card>
-        <CardHeader>
-          <CardTitle>Payments Received - {getMonthName(selectedMonth)}</CardTitle>
+        <CardHeader className="pb-2 sm:pb-4">
+          <CardTitle className="text-base sm:text-lg">Payments Received - {getMonthName(selectedMonth)}</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-2 sm:p-6">
           {monthlyData?.paymentsInMonth.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse border border-gray-200">
+            <div className="overflow-x-auto -mx-2 sm:mx-0">
+              <table className="w-full border-collapse border border-gray-200 text-xs sm:text-sm">
                 <thead>
                   <tr className="bg-gray-50">
-                    <th className="border border-gray-200 px-4 py-2 text-left">Account Number</th>
-                    <th className="border border-gray-200 px-4 py-2 text-left">Case Name</th>
-                    <th className="border border-gray-200 px-4 py-2 text-left">Amount</th>
-                    <th className="border border-gray-200 px-4 py-2 text-left">Date</th>
-                    <th className="border border-gray-200 px-4 py-2 text-left">Method</th>
+                    <th className="border border-gray-200 px-2 sm:px-4 py-2 text-left font-medium whitespace-nowrap">Account</th>
+                    <th className="border border-gray-200 px-2 sm:px-4 py-2 text-left font-medium">Case Name</th>
+                    <th className="border border-gray-200 px-2 sm:px-4 py-2 text-left font-medium whitespace-nowrap">Amount</th>
+                    <th className="border border-gray-200 px-2 sm:px-4 py-2 text-left font-medium">Date</th>
+                    <th className="border border-gray-200 px-2 sm:px-4 py-2 text-left font-medium">Method</th>
                   </tr>
                 </thead>
                 <tbody>
                   {monthlyData.paymentsInMonth.map((payment: any, index: number) => (
                     <tr key={index} className="hover:bg-gray-50">
-                      <td className="border border-gray-200 px-4 py-2 font-medium">
+                      <td className="border border-gray-200 px-2 sm:px-4 py-2 font-medium whitespace-nowrap">
                         {payment.accountNumber}
                       </td>
-                      <td className="border border-gray-200 px-4 py-2">
+                      <td className="border border-gray-200 px-2 sm:px-4 py-2">
                         <div>
                           {payment.caseName}
                           {payment.organisationName && (
@@ -441,14 +441,14 @@ export default function MonthlyStatementReport() {
                           )}
                         </div>
                       </td>
-                      <td className="border border-gray-200 px-4 py-2 font-medium text-green-600">
+                      <td className="border border-gray-200 px-2 sm:px-4 py-2 font-medium text-green-600 whitespace-nowrap">
                         {formatCurrency(payment.amount)}
                       </td>
-                      <td className="border border-gray-200 px-4 py-2">
+                      <td className="border border-gray-200 px-2 sm:px-4 py-2 whitespace-nowrap">
                         {formatDate(payment.createdAt)}
                       </td>
-                      <td className="border border-gray-200 px-4 py-2">
-                        <Badge variant="outline">
+                      <td className="border border-gray-200 px-2 sm:px-4 py-2">
+                        <Badge variant="outline" className="text-xs">
                           {payment.paymentMethod || 'N/A'}
                         </Badge>
                       </td>
@@ -456,17 +456,17 @@ export default function MonthlyStatementReport() {
                   ))}
                 </tbody>
               </table>
-              <div className="mt-4 p-4 bg-green-50 rounded-lg">
+              <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-green-50 rounded-lg">
                 <div className="flex justify-between items-center">
-                  <span className="font-medium text-green-800">Total Payments:</span>
-                  <span className="text-xl font-bold text-green-600">
+                  <span className="font-medium text-green-800 text-sm sm:text-base">Total Payments:</span>
+                  <span className="text-lg sm:text-xl font-bold text-green-600">
                     {formatCurrency(monthlyData.totalPayments)}
                   </span>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-6 sm:py-8 text-gray-500 text-sm">
               No payments received in {getMonthName(selectedMonth)}
             </div>
           )}
