@@ -285,7 +285,7 @@ export default function CaseSummaryReport() {
                   return `
                     <tr>
                       <td>${caseItem.accountNumber || ''}</td>
-                      <td>${caseItem.caseName || ''}</td>
+                      <td>${caseItem.caseName || ''}${caseItem.organisationName ? ` <span style="font-size: 10px; color: #666;">(${caseItem.organisationName})</span>` : ''}</td>
                       <td><span class="status-${caseItem.status}">${caseItem.status === 'Closed' ? 'Closed' : (caseItem.status || '').charAt(0).toUpperCase() + (caseItem.status || '').slice(1)}</span></td>
                       <td>${caseItem.stage ? caseItem.stage.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 'Not specified'}</td>
                       <td class="currency">${formatCurrency(caseItem.originalAmount || 0)}</td>
@@ -381,7 +381,7 @@ export default function CaseSummaryReport() {
       filteredCases.forEach((caseItem: any) => {
         const row = worksheet.addRow({
           accountNumber: caseItem.accountNumber,
-          caseName: caseItem.caseName,
+          caseName: caseItem.organisationName ? `${caseItem.caseName} (${caseItem.organisationName})` : caseItem.caseName,
           status: caseItem.status === 'Closed' ? 'Closed' : caseItem.status.charAt(0).toUpperCase() + caseItem.status.slice(1),
           stage: caseItem.stage.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
           originalAmount: parseFloat(caseItem.originalAmount),
@@ -699,7 +699,12 @@ export default function CaseSummaryReport() {
                       {caseItem.accountNumber}
                     </td>
                     <td className="border border-gray-200 px-4 py-3 text-sm text-gray-900">
-                      {caseItem.caseName}
+                      <div>
+                        {caseItem.caseName}
+                        {caseItem.organisationName && (
+                          <div className="text-xs text-gray-500">({caseItem.organisationName})</div>
+                        )}
+                      </div>
                     </td>
                     <td className="border border-gray-200 px-4 py-3 text-sm">
                       {getStatusBadge(caseItem.status)}

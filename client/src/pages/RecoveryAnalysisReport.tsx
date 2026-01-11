@@ -279,7 +279,7 @@ export default function RecoveryAnalysisReport() {
 
         const row = caseSheet.addRow({
           accountNumber: caseItem.accountNumber,
-          caseName: caseItem.caseName,
+          caseName: caseItem.organisationName ? `${caseItem.caseName} (${caseItem.organisationName})` : caseItem.caseName,
           status: caseItem.status?.toLowerCase() === 'closed' ? 'Closed' : caseItem.status?.charAt(0).toUpperCase() + caseItem.status?.slice(1),
           stage: caseItem.stage ? caseItem.stage.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 'Not specified',
           originalAmount,
@@ -580,7 +580,7 @@ export default function RecoveryAnalysisReport() {
                   return `
                     <tr>
                       <td>${caseItem.accountNumber || ''}</td>
-                      <td>${caseItem.caseName || ''}</td>
+                      <td>${caseItem.caseName || ''}${caseItem.organisationName ? ` <span style="font-size: 10px; color: #666;">(${caseItem.organisationName})</span>` : ''}</td>
                       <td>${caseItem.status?.toLowerCase() === 'closed' ? 'Closed' : (caseItem.status || '').charAt(0).toUpperCase() + (caseItem.status || '').slice(1)}</td>
                       <td>${caseItem.stage ? caseItem.stage.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 'Not specified'}</td>
                       <td class="currency">${formatCurrency(originalAmount)}</td>
@@ -833,7 +833,12 @@ export default function RecoveryAnalysisReport() {
                         {caseItem.accountNumber}
                       </td>
                       <td className="border border-gray-200 px-4 py-3 text-sm text-gray-900">
-                        {caseItem.caseName}
+                        <div>
+                          {caseItem.caseName}
+                          {caseItem.organisationName && (
+                            <div className="text-xs text-gray-500">({caseItem.organisationName})</div>
+                          )}
+                        </div>
                       </td>
                       <td className="border border-gray-200 px-4 py-3 text-sm">
                         {getStatusBadge(caseItem.status)}
