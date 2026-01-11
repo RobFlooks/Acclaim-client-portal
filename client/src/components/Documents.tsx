@@ -81,7 +81,8 @@ export default function Documents() {
       (docData.fileName && docData.fileName.toLowerCase().includes(searchLower)) ||
       (docData.fileType && docData.fileType.toLowerCase().includes(searchLower)) ||
       (caseDetails && caseDetails.accountNumber && caseDetails.accountNumber.toLowerCase().includes(searchLower)) ||
-      (caseDetails && caseDetails.caseName && caseDetails.caseName.toLowerCase().includes(searchLower))
+      (caseDetails && caseDetails.caseName && caseDetails.caseName.toLowerCase().includes(searchLower)) ||
+      (caseDetails && caseDetails.organisationName && caseDetails.organisationName.toLowerCase().includes(searchLower))
     );
   }) || [];
 
@@ -343,7 +344,7 @@ export default function Documents() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               type="text"
-              placeholder="Search documents..."
+              placeholder="Search by filename, case or organisation..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
