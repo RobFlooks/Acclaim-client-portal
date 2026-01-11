@@ -270,12 +270,16 @@ export default function Messages() {
     if (!messages) return [];
     
     return messages.filter((message: any) => {
-      // Text search in subject and content
+      // Text search in subject, content, and organisation
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
+        // Get case data to check organisation name
+        const caseData = message.caseId ? cases?.find((c: any) => c.id === message.caseId) : null;
         const matchesText = 
           message.subject?.toLowerCase().includes(searchLower) ||
-          message.content?.toLowerCase().includes(searchLower);
+          message.content?.toLowerCase().includes(searchLower) ||
+          caseData?.organisationName?.toLowerCase().includes(searchLower) ||
+          caseData?.caseName?.toLowerCase().includes(searchLower);
         if (!matchesText) return false;
       }
       
@@ -524,7 +528,7 @@ export default function Messages() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Search messages..."
+                  placeholder="Search by subject, content, case or organisation..."
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
