@@ -270,7 +270,7 @@ export default function Cases() {
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-gray-900 truncate">{case_.caseName}</p>
                       <p className="text-sm text-gray-600 truncate">Account: {case_.accountNumber}</p>
-                      {user?.isAdmin && case_.organisationName && (
+                      {case_.organisationName && (
                         <p className="text-sm text-blue-600 font-medium truncate">
                           <Building className="inline w-3 h-3 mr-1" />
                           {case_.organisationName}
