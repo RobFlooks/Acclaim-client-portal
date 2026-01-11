@@ -810,13 +810,20 @@ export default function Messages() {
                         </div>
                         <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-[10px] sm:text-xs text-gray-500">
                           <span>{formatDate(message.createdAt)}</span>
-                          {message.caseId && (
-                            <>
-                              <span className="text-gray-400">•</span>
-                              <span className="hidden sm:inline">Related to case</span>
-                              <span className="sm:hidden">Case linked</span>
-                            </>
-                          )}
+                          {message.caseId && (() => {
+                            const caseData = cases?.find((c: any) => c.id === message.caseId);
+                            return (
+                              <>
+                                <span className="text-gray-400">•</span>
+                                <span className="text-acclaim-teal font-medium truncate max-w-[150px] sm:max-w-[250px]">
+                                  {caseData?.caseName || getCaseAccountNumber(message.caseId)}
+                                  {caseData?.organisationName && (
+                                    <span className="text-gray-500 font-normal"> ({caseData.organisationName})</span>
+                                  )}
+                                </span>
+                              </>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>
