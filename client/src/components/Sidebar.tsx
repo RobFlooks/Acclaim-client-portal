@@ -39,9 +39,9 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
   ];
 
   return (
-    <div className="w-64 h-screen bg-acclaim-teal shadow-lg flex flex-col">
+    <div className="w-64 h-[100dvh] max-h-screen bg-acclaim-teal shadow-lg flex flex-col overflow-hidden">
       {/* Brand Header */}
-      <div className="flex items-center justify-center h-16 bg-acclaim-teal border-b border-teal-700">
+      <div className="flex-shrink-0 flex items-center justify-center h-16 bg-acclaim-teal border-b border-teal-700">
         <button 
           onClick={() => setActiveSection('dashboard')}
           className="flex items-center hover:bg-teal-700 px-3 py-2 rounded-lg transition-colors"
@@ -54,7 +54,7 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
         </button>
       </div>
       {/* Navigation Menu */}
-      <nav className="flex-1 px-4 py-6 space-y-2">
+      <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeSection === item.id;
@@ -87,7 +87,7 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
         })}
       </nav>
       {/* User Profile */}
-      <div className="p-4 border-t border-teal-700">
+      <div className="flex-shrink-0 p-4 border-t border-teal-700">
         <div className="flex items-center mb-3">
           <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
             <User className="text-acclaim-teal h-5 w-5" />
