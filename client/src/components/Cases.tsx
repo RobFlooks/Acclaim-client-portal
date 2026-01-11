@@ -79,7 +79,8 @@ export default function Cases() {
     const matchesSearch = (
       case_.caseName.toLowerCase().includes(searchLower) ||
       case_.accountNumber.toLowerCase().includes(searchLower) ||
-      case_.debtorEmail?.toLowerCase().includes(searchLower)
+      case_.debtorEmail?.toLowerCase().includes(searchLower) ||
+      case_.organisationName?.toLowerCase().includes(searchLower)
     );
     
     // If there's a search term, search across all cases regardless of status filter
@@ -192,7 +193,7 @@ export default function Cases() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 type="text"
-                placeholder="Search by debtor name, account number, or email..."
+                placeholder="Search by name, account, email or organisation..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
