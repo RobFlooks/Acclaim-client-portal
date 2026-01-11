@@ -267,12 +267,12 @@ export default function Documents() {
     <div className="space-y-6">
       {/* Search and Actions */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Document Library</CardTitle>
+        <CardHeader className="pb-3 sm:pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <CardTitle className="text-lg sm:text-xl">Document Library</CardTitle>
             <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-acclaim-teal hover:bg-acclaim-teal/90">
+                <Button className="bg-acclaim-teal hover:bg-acclaim-teal/90 w-full sm:w-auto" size="sm">
                   <Upload className="h-4 w-4 mr-2" />
                   Upload Document
                 </Button>
@@ -343,81 +343,81 @@ export default function Documents() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               type="text"
-              placeholder="Search documents by name, type, account number, or debtor name..."
+              placeholder="Search documents..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
                 resetPagination();
               }}
-              className="pl-10"
+              className="pl-10 text-sm"
             />
           </div>
         </CardContent>
       </Card>
 
       {/* Document Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Documents</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-xs sm:text-sm text-gray-600">Total</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900">
                   {isLoading ? "..." : documents?.length || 0}
                 </p>
               </div>
-              <FileText className="h-8 w-8 text-acclaim-teal" />
+              <FileText className="h-5 w-5 sm:h-8 sm:w-8 text-acclaim-teal hidden sm:block" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">PDF Files</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-xs sm:text-sm text-gray-600">PDF</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900">
                   {isLoading ? "..." : documents?.filter((d: any) => {
                     const docData = d.documents || d;
                     return docData.fileType?.includes('pdf');
                   }).length || 0}
                 </p>
               </div>
-              <FileText className="h-8 w-8 text-red-500" />
+              <FileText className="h-5 w-5 sm:h-8 sm:w-8 text-red-500 hidden sm:block" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Word Documents</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-xs sm:text-sm text-gray-600">Word</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900">
                   {isLoading ? "..." : documents?.filter((d: any) => {
                     const docData = d.documents || d;
                     return docData.fileType?.includes('word') || docData.fileType?.includes('document');
                   }).length || 0}
                 </p>
               </div>
-              <FileText className="h-8 w-8 text-blue-500" />
+              <FileText className="h-5 w-5 sm:h-8 sm:w-8 text-blue-500 hidden sm:block" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Other Files</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-xs sm:text-sm text-gray-600">Other</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900">
                   {isLoading ? "..." : documents?.filter((d: any) => {
                     const docData = d.documents || d;
                     return !docData.fileType?.includes('pdf') && !docData.fileType?.includes('word') && !docData.fileType?.includes('document');
                   }).length || 0}
                 </p>
               </div>
-              <FileText className="h-8 w-8 text-green-500" />
+              <FileText className="h-5 w-5 sm:h-8 sm:w-8 text-green-500 hidden sm:block" />
             </div>
           </CardContent>
         </Card>
@@ -425,16 +425,16 @@ export default function Documents() {
 
       {/* Documents List */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>
+        <CardHeader className="pb-2 sm:pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+            <CardTitle className="text-base sm:text-lg">
               All Documents ({filteredDocuments.length})
-              {filteredDocuments.length > documentsPerPage && (
-                <span className="text-sm text-gray-500 font-normal ml-2">
-                  Page {currentPage} of {totalPages} (showing {paginatedDocuments.length} of {filteredDocuments.length})
-                </span>
-              )}
             </CardTitle>
+            {filteredDocuments.length > documentsPerPage && (
+              <span className="text-xs sm:text-sm text-gray-500 font-normal">
+                Page {currentPage} of {totalPages}
+              </span>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -464,16 +464,15 @@ export default function Documents() {
                     {caseDocuments.map((doc: any) => (
                       <div
                         key={doc.id}
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border"
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border gap-2 sm:gap-4"
                       >
-                        <div className="flex items-center space-x-4">
-                          <div className="flex-shrink-0">
+                        <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
+                          <div className="flex-shrink-0 mt-0.5 sm:mt-0">
                             {getFileIcon(doc.fileType)}
                           </div>
-                          <div>
-                            <p className="font-medium text-gray-900">{doc.fileName}</p>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <Calendar className="h-3 w-3 text-gray-400" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{doc.fileName}</p>
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1">
                               <span className="text-xs text-gray-500">{formatDate(doc.createdAt)}</span>
                               {doc.fileSize && (
                                 <>
@@ -486,8 +485,7 @@ export default function Documents() {
                               const caseDetails = getCaseDetails(doc.caseId);
                               if (caseDetails) {
                                 return (
-                                  <div className="flex items-center space-x-2 mt-1">
-                                    <User className="h-3 w-3 text-gray-400" />
+                                  <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 mt-1">
                                     <span className="text-xs text-gray-500">Case:</span>
                                     <button
                                       onClick={() => handleCaseClick(doc.caseId)}
@@ -495,8 +493,6 @@ export default function Documents() {
                                     >
                                       {caseDetails.accountNumber}
                                     </button>
-                                    <span className="text-xs text-gray-400">•</span>
-                                    <span className="text-xs text-gray-500">{caseDetails.caseName}</span>
                                   </div>
                                 );
                               }
@@ -505,39 +501,30 @@ export default function Documents() {
                           </div>
                         </div>
                         
-                        <div className="flex items-center space-x-3">
-                          <div className="text-right">
-                            <p className="text-sm text-gray-600">{doc.fileType}</p>
-                            {doc.uploadedBy && (
-                              <div className="flex items-center space-x-1 mt-1">
-                                <User className="h-3 w-3 text-gray-400" />
-                                <span className="text-xs text-gray-500">
-                                  Uploaded by {doc.uploaderFirstName && doc.uploaderLastName 
-                                    ? `${doc.uploaderFirstName} ${doc.uploaderLastName}` 
-                                    : 'system'}
-                                </span>
-                              </div>
-                            )}
+                        <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 pl-8 sm:pl-0">
+                          <div className="text-left sm:text-right hidden sm:block">
+                            <p className="text-xs sm:text-sm text-gray-600">{doc.fileType}</p>
                           </div>
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center gap-1 sm:gap-2">
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="sm"
                               onClick={() => handleDownload(doc.id)}
-                              className="text-acclaim-teal hover:text-acclaim-teal"
+                              className="text-acclaim-teal hover:text-acclaim-teal h-8 px-2 sm:px-3"
                             >
                               <Download className="h-4 w-4" />
+                              <span className="ml-1 text-xs sm:hidden">Download</span>
                             </Button>
                             {user?.isAdmin && (
                               <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
                                 onClick={() => {
                                   if (confirm("Are you sure you want to delete this document?")) {
                                     deleteDocumentMutation.mutate(doc.id);
                                   }
                                 }}
-                                className="text-red-600 hover:text-red-700"
+                                className="text-red-600 hover:text-red-700 h-8 px-2"
                                 disabled={deleteDocumentMutation.isPending}
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -552,13 +539,13 @@ export default function Documents() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">
+            <div className="text-center py-8 sm:py-12">
+              <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+              <p className="text-gray-500 text-sm sm:text-base">
                 {searchTerm ? "No documents match your search" : "No documents found"}
               </p>
-              <p className="text-sm text-gray-400 mt-2">
-                Documents will appear here once they are uploaded to your cases.
+              <p className="text-xs sm:text-sm text-gray-400 mt-2">
+                Documents will appear here once uploaded.
               </p>
             </div>
           )}
@@ -567,30 +554,32 @@ export default function Documents() {
 
       {/* Pagination Controls */}
       {filteredDocuments.length > documentsPerPage && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-500">
-            Showing {startIndex + 1} to {Math.min(endIndex, filteredDocuments.length)} of {filteredDocuments.length} documents
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-xs sm:text-sm text-gray-500 text-center sm:text-left">
+            Showing {startIndex + 1}-{Math.min(endIndex, filteredDocuments.length)} of {filteredDocuments.length}
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
+              className="h-8 px-2 sm:px-3"
             >
               <ChevronLeft className="h-4 w-4" />
-              Previous
+              <span className="hidden sm:inline ml-1">Previous</span>
             </Button>
-            <span className="text-sm text-gray-600">
-              Page {currentPage} of {totalPages}
+            <span className="text-xs sm:text-sm text-gray-600 px-2">
+              {currentPage} / {totalPages}
             </span>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
+              className="h-8 px-2 sm:px-3"
             >
-              Next
+              <span className="hidden sm:inline mr-1">Next</span>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
