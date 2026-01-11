@@ -430,12 +430,14 @@ export default function PaymentPerformanceReport() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button onClick={handleExportExcel} variant="outline" size="sm" className="flex-1 sm:flex-none">
-            <FileSpreadsheet className="h-4 w-4 sm:mr-2" />
+          <Button onClick={handleExportExcel} variant="outline" size="sm" className="flex-1 sm:flex-none bg-emerald-50 hover:bg-emerald-100 border-emerald-300 text-emerald-700">
+            <FileSpreadsheet className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="sm:hidden text-xs font-semibold">XLS</span>
             <span className="hidden sm:inline">Export to Excel</span>
           </Button>
-          <Button onClick={handleDownloadPDF} variant="outline" size="sm" className="flex-1 sm:flex-none">
-            <FileText className="h-4 w-4 sm:mr-2" />
+          <Button onClick={handleDownloadPDF} variant="outline" size="sm" className="flex-1 sm:flex-none bg-rose-50 hover:bg-rose-100 border-rose-300 text-rose-700">
+            <FileText className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="sm:hidden text-xs font-semibold">PDF</span>
             <span className="hidden sm:inline">View PDF Report</span>
           </Button>
         </div>
