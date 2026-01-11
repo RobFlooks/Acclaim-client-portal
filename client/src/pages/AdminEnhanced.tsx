@@ -2553,11 +2553,10 @@ export default function AdminEnhanced() {
                       </div>
                     </div>
                     
-                    <div className="flex gap-2 pt-2">
+                    <div className="grid grid-cols-4 gap-2 pt-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1"
                         onClick={() => {
                           setSelectedUser(user);
                           setShowAssignUser(true);
@@ -2570,7 +2569,6 @@ export default function AdminEnhanced() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1"
                         onClick={() => resetPasswordMutation.mutate(user.id)}
                         disabled={resetPasswordMutation.isPending}
                         title="Reset user password"
@@ -2581,7 +2579,6 @@ export default function AdminEnhanced() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1"
                         onClick={() => {
                           const hasTemporaryPassword = (user as any).temporaryPassword;
                           const message = hasTemporaryPassword
@@ -2597,13 +2594,12 @@ export default function AdminEnhanced() {
                         title="Send welcome email with login details"
                       >
                         <Mail className="h-3 w-3 mr-1" />
-                        Welcome
+                        Email
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          // Check if trying to grant admin to non-chadlaw email
                           if (!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk')) {
                             alert('Admin privileges can only be granted to @chadlaw.co.uk email addresses.');
                             return;
@@ -2627,6 +2623,7 @@ export default function AdminEnhanced() {
                         ) : (
                           <Shield className="h-3 w-3" />
                         )}
+                        Admin
                       </Button>
                       <Button
                         variant="outline"
@@ -2650,6 +2647,7 @@ export default function AdminEnhanced() {
                         ) : (
                           <FileX className="h-3 w-3 text-gray-400" />
                         )}
+                        Cases
                       </Button>
                       <Button
                         variant="outline"
@@ -2664,7 +2662,8 @@ export default function AdminEnhanced() {
                         className="text-red-600 hover:text-red-700"
                         title="Delete user permanently"
                       >
-                        <Trash2 className="h-3 w-3" />
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Delete
                       </Button>
                     </div>
                   </div>
