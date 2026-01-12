@@ -27,6 +27,22 @@ interface CrossOrgPerformance {
   userCount: number;
 }
 
+// Support both British and American spellings from API
+interface CrossOrgPerformanceAPI {
+  organisationId?: number;
+  organizationId?: number;
+  organisationName?: string;
+  organizationName?: string;
+  totalCases: number;
+  activeCases: number;
+  closedCases: number;
+  totalOutstanding: string;
+  totalRecovered: string;
+  recoveryRate: number;
+  averageCaseAge: number;
+  userCount: number;
+}
+
 interface UserActivity {
   userId: string;
   userEmail: string;
@@ -242,19 +258,23 @@ export default function AdvancedReports() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {crossOrgData?.map((org: CrossOrgPerformance) => (
-                        <TableRow key={org.organisationId}>
-                          <TableCell className="font-medium">{org.organisationName}</TableCell>
-                          <TableCell>{org.totalCases}</TableCell>
-                          <TableCell>{org.activeCases}</TableCell>
-                          <TableCell>{org.closedCases}</TableCell>
-                          <TableCell>£{parseFloat(org.totalOutstanding).toLocaleString()}</TableCell>
-                          <TableCell>£{parseFloat(org.totalRecovered).toLocaleString()}</TableCell>
-                          <TableCell>{org.recoveryRate.toFixed(1)}%</TableCell>
-                          <TableCell>{Math.round(org.averageCaseAge)} days</TableCell>
-                          <TableCell>{org.userCount}</TableCell>
-                        </TableRow>
-                      ))}
+                      {crossOrgData?.map((org: CrossOrgPerformanceAPI) => {
+                        const orgId = org.organisationId ?? org.organizationId ?? 0;
+                        const orgName = org.organisationName ?? org.organizationName ?? 'Unknown';
+                        return (
+                          <TableRow key={orgId}>
+                            <TableCell className="font-medium">{orgName}</TableCell>
+                            <TableCell>{org.totalCases}</TableCell>
+                            <TableCell>{org.activeCases}</TableCell>
+                            <TableCell>{org.closedCases}</TableCell>
+                            <TableCell>£{parseFloat(org.totalOutstanding || '0').toLocaleString()}</TableCell>
+                            <TableCell>£{parseFloat(org.totalRecovered || '0').toLocaleString()}</TableCell>
+                            <TableCell>{(org.recoveryRate || 0).toFixed(1)}%</TableCell>
+                            <TableCell>{Math.round(org.averageCaseAge || 0)} days</TableCell>
+                            <TableCell>{org.userCount}</TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>

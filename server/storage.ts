@@ -1867,38 +1867,72 @@ export class DatabaseStorage implements IStorage {
     averageCaseAge: number;
     userCount: number;
   }[]> {
-    const results = await db
+    // Get case and payment data per organisation
+    const caseResults = await db
       .select({
-        organizationId: organisations.id,
-        organizationName: organisations.name,
-        totalCases: sql<number>`COUNT(${cases.id})`,
-        activeCases: sql<number>`COUNT(CASE WHEN LOWER(${cases.status}) != 'closed' THEN 1 END)`,
-        closedCases: sql<number>`COUNT(CASE WHEN LOWER(${cases.status}) = 'closed' THEN 1 END)`,
-        totalOutstanding: sql<string>`COALESCE(SUM(CASE WHEN LOWER(${cases.status}) != 'closed' THEN ${cases.outstandingAmount} ELSE 0 END), 0)`,
-        totalRecovered: sql<string>`COALESCE(SUM(${payments.amount}), 0)`,
+        organisationId: organisations.id,
+        organisationName: organisations.name,
+        totalCases: sql<number>`COUNT(DISTINCT ${cases.id})`,
+        activeCases: sql<number>`COUNT(DISTINCT CASE WHEN LOWER(${cases.status}) != 'closed' THEN ${cases.id} END)`,
+        closedCases: sql<number>`COUNT(DISTINCT CASE WHEN LOWER(${cases.status}) = 'closed' THEN ${cases.id} END)`,
+        totalOutstanding: sql<string>`COALESCE(SUM(DISTINCT ${cases.outstandingAmount}), 0)`,
+        totalOriginalAmount: sql<string>`COALESCE(SUM(DISTINCT ${cases.originalAmount}), 0)`,
         averageCaseAge: sql<number>`COALESCE(AVG(EXTRACT(DAYS FROM NOW() - ${cases.createdAt})), 0)`,
-        userCount: sql<number>`COUNT(DISTINCT ${users.id})`,
       })
       .from(organisations)
       .leftJoin(cases, and(eq(cases.organisationId, organisations.id), eq(cases.isArchived, false)))
-      .leftJoin(payments, eq(payments.caseId, cases.id))
-      .leftJoin(users, eq(users.organisationId, organisations.id))
       .groupBy(organisations.id, organisations.name)
       .orderBy(organisations.name);
 
-    return results.map(result => ({
-      organizationId: result.organizationId,
-      organizationName: result.organizationName,
-      totalCases: result.totalCases,
-      activeCases: result.activeCases,
-      closedCases: result.closedCases,
-      totalOutstanding: result.totalOutstanding,
-      totalRecovered: result.totalRecovered,
-      recoveryRate: result.totalOutstanding === "0" ? 0 : 
-        (parseFloat(result.totalRecovered) / parseFloat(result.totalOutstanding)) * 100,
-      averageCaseAge: result.averageCaseAge,
-      userCount: result.userCount,
-    }));
+    // Get payment totals per organisation
+    const paymentResults = await db
+      .select({
+        organisationId: cases.organisationId,
+        totalRecovered: sql<string>`COALESCE(SUM(${payments.amount}), 0)`,
+      })
+      .from(payments)
+      .innerJoin(cases, eq(payments.caseId, cases.id))
+      .where(eq(cases.isArchived, false))
+      .groupBy(cases.organisationId);
+
+    const paymentMap = new Map(paymentResults.map(p => [p.organisationId, p.totalRecovered]));
+
+    // Get user counts per organisation (including multi-org users)
+    const userCounts = await db
+      .select({
+        organisationId: sql<number>`org_id`,
+        userCount: sql<number>`COUNT(DISTINCT user_id)`,
+      })
+      .from(sql`(
+        SELECT ${users.id} as user_id, ${users.organisationId} as org_id FROM ${users}
+        UNION
+        SELECT ${userOrganisations.userId} as user_id, ${userOrganisations.organisationId} as org_id FROM ${userOrganisations}
+      ) AS all_user_orgs`)
+      .groupBy(sql`org_id`);
+
+    const userCountMap = new Map(userCounts.map(u => [u.organisationId, u.userCount]));
+
+    return caseResults.map(result => {
+      const totalRecovered = paymentMap.get(result.organisationId) || "0";
+      const originalAmount = parseFloat(result.totalOriginalAmount) || 0;
+      const recoveredAmount = parseFloat(totalRecovered) || 0;
+      
+      // Recovery rate = (amount recovered / original debt amount) * 100
+      const recoveryRate = originalAmount > 0 ? (recoveredAmount / originalAmount) * 100 : 0;
+
+      return {
+        organisationId: result.organisationId,
+        organisationName: result.organisationName,
+        totalCases: result.totalCases || 0,
+        activeCases: result.activeCases || 0,
+        closedCases: result.closedCases || 0,
+        totalOutstanding: result.totalOutstanding,
+        totalRecovered: totalRecovered,
+        recoveryRate: Math.min(recoveryRate, 100), // Cap at 100%
+        averageCaseAge: result.averageCaseAge || 0,
+        userCount: userCountMap.get(result.organisationId) || 0,
+      };
+    });
   }
 
   async getUserActivityReport(startDate?: Date, endDate?: Date): Promise<{
