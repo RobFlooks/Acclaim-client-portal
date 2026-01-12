@@ -1740,6 +1740,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/admin/users/:userId/make-admin', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const { userId } = req.params;
+      const currentUser = req.user;
+
+      // Check if current admin has permission to manage admins
+      if (!currentUser.canManageAdmins) {
+        return res.status(403).json({ message: "You do not have permission to manage admin privileges" });
+      }
       
       // Check if user has @chadlaw.co.uk email
       const existingUser = await storage.getUser(userId);
@@ -1765,11 +1771,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/admin/users/:userId/remove-admin', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const { userId } = req.params;
+      const currentUser = req.user;
+
+      // Check if current admin has permission to manage admins
+      if (!currentUser.canManageAdmins) {
+        return res.status(403).json({ message: "You do not have permission to manage admin privileges" });
+      }
+
+      // Prevent removing your own admin privileges
+      if (currentUser.id === userId) {
+        return res.status(400).json({ message: "You cannot remove your own admin privileges" });
+      }
+
       const user = await storage.removeUserAdmin(userId);
       res.json({ user, message: "Admin privileges removed" });
     } catch (error) {
       console.error("Error removing admin privileges:", error);
       res.status(500).json({ message: "Failed to remove admin privileges" });
+    }
+  });
+
+  // Update admin permissions (super admin settings)
+  app.put('/api/admin/users/:userId/permissions', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const currentUser = req.user;
+      const { canDeleteCases, canDeleteUsers, canDeleteOrganisations, canManageAdmins } = req.body;
+
+      // Check if current admin has permission to manage admins
+      if (!currentUser.canManageAdmins) {
+        return res.status(403).json({ message: "You do not have permission to manage admin permissions" });
+      }
+
+      // Prevent modifying your own permissions
+      if (currentUser.id === userId) {
+        return res.status(400).json({ message: "You cannot modify your own permissions" });
+      }
+
+      // Check that target user exists and is an admin
+      const targetUser = await storage.getUser(userId);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      if (!targetUser.isAdmin) {
+        return res.status(400).json({ message: "Permissions can only be set for admin users" });
+      }
+
+      const user = await storage.updateAdminPermissions(userId, {
+        canDeleteCases,
+        canDeleteUsers,
+        canDeleteOrganisations,
+        canManageAdmins,
+      });
+
+      res.json({ user, message: "Admin permissions updated successfully" });
+    } catch (error) {
+      console.error("Error updating admin permissions:", error);
+      res.status(500).json({ message: "Failed to update admin permissions" });
     }
   });
 
@@ -1989,6 +2048,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { userId } = req.params;
       const currentUser = req.user;
 
+      // Check if admin has permission to delete users
+      if (!currentUser.canDeleteUsers) {
+        return res.status(403).json({ message: "You do not have permission to delete users" });
+      }
+
       if (currentUser.id === userId) {
         return res.status(400).json({ message: "You cannot delete your own account" });
       }
@@ -2049,6 +2113,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete organisation
   app.delete('/api/admin/organisations/:id', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
+      const currentUser = req.user;
+
+      // Check if admin has permission to delete organisations
+      if (!currentUser.canDeleteOrganisations) {
+        return res.status(403).json({ message: "You do not have permission to delete organisations" });
+      }
+
       const orgId = parseInt(req.params.id);
       await storage.deleteOrganisation(orgId);
       res.status(204).send();
@@ -3664,6 +3735,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/admin/cases/:id", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
+      const currentUser = req.user;
+
+      // Check if admin has permission to delete cases
+      if (!currentUser.canDeleteCases) {
+        return res.status(403).json({ message: "You do not have permission to delete cases" });
+      }
+
       const caseId = parseInt(req.params.id);
       
       // Get case details before deletion for logging
