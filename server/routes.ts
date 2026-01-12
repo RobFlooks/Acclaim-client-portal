@@ -3211,7 +3211,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         contentType: req.get('Content-Type')
       });
       
-      const { organisation_id, username, password, external_case_ref, balance, original_amount, outstanding_amount, status, stage, notes, costs_added, interest_added, fees_added } = req.body;
+      const { organisation_id, username, password, external_case_ref, balance, original_amount, outstanding_amount, status, stage, notes, costs_added, interest_added, fees_added, assigned_to } = req.body;
       
       if (!organisation_id || !username || !password || !external_case_ref) {
         return res.status(400).json({ 
@@ -3276,6 +3276,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (stage) {
         updates.stage = stage;
         activities.push(`stage changed to ${stage}`);
+      }
+      
+      if (assigned_to !== undefined) {
+        updates.assignedTo = assigned_to;
+        activities.push(`matter handler updated to ${assigned_to}`);
       }
       
       // Update case if there are changes
