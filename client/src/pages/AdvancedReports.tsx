@@ -7,41 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Link } from "wouter";
-import { ArrowLeft, Download, FileText, Users, Building, Activity, AlertCircle, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, Download, FileText, Users, Activity, AlertCircle, CheckCircle, XCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-
-interface CrossOrgPerformance {
-  organisationId: number;
-  organisationName: string;
-  totalCases: number;
-  activeCases: number;
-  closedCases: number;
-  totalOutstanding: string;
-  totalRecovered: string;
-  recoveryRate: number;
-  averageCaseAge: number;
-  userCount: number;
-}
-
-// Support both British and American spellings from API
-interface CrossOrgPerformanceAPI {
-  organisationId?: number;
-  organizationId?: number;
-  organisationName?: string;
-  organizationName?: string;
-  totalCases: number;
-  activeCases: number;
-  closedCases: number;
-  totalOutstanding: string;
-  totalRecovered: string;
-  recoveryRate: number;
-  averageCaseAge: number;
-  userCount: number;
-}
 
 interface UserActivity {
   userId: string;
@@ -94,28 +65,6 @@ export default function AdvancedReports() {
       return;
     }
   }, [isLoading, user]);
-
-  // Get organisations for name lookup
-  const { data: organisations = [] } = useQuery<any[]>({
-    queryKey: ['/api/admin/organisations'],
-    retry: false
-  });
-
-  // Cross-organisation performance query
-  const { data: rawCrossOrgData = [], isLoading: isLoadingCrossOrg } = useQuery({
-    queryKey: ['/api/admin/reports/cross-organisation'],
-    retry: false
-  });
-
-  // Merge organisation names from organisations endpoint
-  const crossOrgData = rawCrossOrgData.map((item: any) => {
-    const orgId = item.organisationId ?? item.organizationId;
-    const org = organisations.find((o: any) => o.id === orgId);
-    return {
-      ...item,
-      organisationName: org?.name || item.organisationName || item.organizationName || 'Unknown'
-    };
-  });
 
   // User activity report query
   const { data: userActivityData = [], isLoading: isLoadingUserActivity } = useQuery({
@@ -221,85 +170,12 @@ export default function AdvancedReports() {
       </div>
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue="cross-org" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="cross-org">Cross-Organisation</TabsTrigger>
+      <Tabs defaultValue="user-activity" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="user-activity">User Activity</TabsTrigger>
           <TabsTrigger value="system-health">System Health</TabsTrigger>
           <TabsTrigger value="custom-reports">Custom Reports</TabsTrigger>
         </TabsList>
-
-        {/* Cross-Organisation Performance */}
-        <TabsContent value="cross-org" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center">
-                    <Building className="h-5 w-5 mr-2" />
-                    Cross-Organisation Performance
-                  </CardTitle>
-                  <CardDescription>Compare performance metrics across all organisations</CardDescription>
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => exportToJSON(crossOrgData, 'cross-organisation-performance')}
-                  disabled={!crossOrgData}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export JSON
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {isLoadingCrossOrg ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-acclaim-teal"></div>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Organisation</TableHead>
-                        <TableHead>Total Cases</TableHead>
-                        <TableHead>Active Cases</TableHead>
-                        <TableHead>Closed Cases</TableHead>
-                        <TableHead>Outstanding</TableHead>
-                        <TableHead>Recovered</TableHead>
-                        <TableHead>Recovery Rate</TableHead>
-                        <TableHead>Avg Case Age</TableHead>
-                        <TableHead>Users</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {crossOrgData?.map((org: CrossOrgPerformanceAPI, index: number) => {
-                        const orgId = org.organisationId ?? org.organizationId ?? 0;
-                        const orgName = org.organisationName ?? org.organizationName ?? 'Unknown';
-                        return (
-                          <TableRow key={orgId || index}>
-                            <TableCell className="font-medium">
-                              <span style={{ color: 'red' }}>[{orgId}]</span> {String(orgName)}
-                            </TableCell>
-                            <TableCell>{org.totalCases}</TableCell>
-                            <TableCell>{org.activeCases}</TableCell>
-                            <TableCell>{org.closedCases}</TableCell>
-                            <TableCell>£{parseFloat(org.totalOutstanding || '0').toLocaleString()}</TableCell>
-                            <TableCell>£{parseFloat(org.totalRecovered || '0').toLocaleString()}</TableCell>
-                            <TableCell>{(org.recoveryRate || 0).toFixed(1)}%</TableCell>
-                            <TableCell>{Math.round(org.averageCaseAge || 0)} days</TableCell>
-                            <TableCell>{org.userCount}</TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         {/* User Activity Report */}
         <TabsContent value="user-activity" className="space-y-4">
