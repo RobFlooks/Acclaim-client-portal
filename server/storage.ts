@@ -1912,6 +1912,8 @@ export class DatabaseStorage implements IStorage {
 
     const userCountMap = new Map(userCounts.map(u => [u.organisationId, u.userCount]));
 
+    console.log('Cross-org case results:', JSON.stringify(caseResults[0], null, 2));
+    
     return caseResults.map(result => {
       const totalRecovered = paymentMap.get(result.organisationId) || "0";
       const originalAmount = parseFloat(result.totalOriginalAmount) || 0;
@@ -1922,7 +1924,7 @@ export class DatabaseStorage implements IStorage {
 
       return {
         organisationId: result.organisationId,
-        organisationName: result.organisationName,
+        organisationName: result.organisationName || 'Unknown',
         totalCases: result.totalCases || 0,
         activeCases: result.activeCases || 0,
         closedCases: result.closedCases || 0,
