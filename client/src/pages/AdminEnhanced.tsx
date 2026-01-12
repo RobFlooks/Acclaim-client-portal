@@ -238,12 +238,62 @@ interface CaseSubmission {
   processedBy?: string;
 }
 
+const ITEMS_PER_PAGE = 20;
+
+function Pagination({ currentPage, totalPages, onPageChange }: { currentPage: number; totalPages: number; onPageChange: (page: number) => void }) {
+  if (totalPages <= 1) return null;
+  
+  return (
+    <div className="flex items-center justify-between px-2 py-4 border-t">
+      <div className="text-sm text-gray-600">
+        Page {currentPage} of {totalPages}
+      </div>
+      <div className="flex items-center space-x-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(1)}
+          disabled={currentPage === 1}
+        >
+          First
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          Previous
+        </Button>
+        <span className="px-2 text-sm">{currentPage}</span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          Next
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(totalPages)}
+          disabled={currentPage === totalPages}
+        >
+          Last
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function CaseManagementTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [deleteConfirmCase, setDeleteConfirmCase] = useState<Case | null>(null);
   const [archiveConfirmCase, setArchiveConfirmCase] = useState<Case | null>(null);
   const [showNewCaseDialog, setShowNewCaseDialog] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const [newCaseForm, setNewCaseForm] = useState({
     accountNumber: '',
     caseName: '',
@@ -534,6 +584,10 @@ function CaseManagementTab() {
     },
   });
 
+  // Pagination logic for cases
+  const totalPages = Math.ceil((cases?.length || 0) / ITEMS_PER_PAGE);
+  const paginatedCases = cases.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
   if (isLoading) {
     return <div>Loading cases...</div>;
   }
@@ -551,7 +605,7 @@ function CaseManagementTab() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div className="text-sm text-gray-600 px-1">
-          Total Cases: {cases.length} | Archived: {cases.filter((c: Case) => c.isArchived).length} | Active: {cases.filter((c: Case) => !c.isArchived).length}
+          Total Cases: {cases.length} | Archived: {cases.filter((c: Case) => c.isArchived).length} | Active: {cases.filter((c: Case) => !c.isArchived).length} | Showing: {paginatedCases.length}
         </div>
         <div className="flex gap-2">
           <Button
@@ -579,7 +633,7 @@ function CaseManagementTab() {
       
       {/* Mobile Card Layout */}
       <div className="block sm:hidden space-y-4">
-        {cases.map((case_: Case) => (
+        {paginatedCases.map((case_: Case) => (
           <div key={case_.id} className={`rounded-lg p-4 space-y-3 ${case_.isArchived ? 'bg-gray-50 border' : 'border'}`}>
             <div className="flex justify-between items-start">
               <div>
@@ -671,7 +725,7 @@ function CaseManagementTab() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {cases.map((case_: Case) => (
+            {paginatedCases.map((case_: Case) => (
               <TableRow key={case_.id} className={case_.isArchived ? 'bg-gray-50' : ''}>
                 <TableCell className="font-medium">{case_.accountNumber}</TableCell>
                 <TableCell>{case_.caseName}</TableCell>
@@ -735,6 +789,13 @@ function CaseManagementTab() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Pagination */}
+      <Pagination 
+        currentPage={currentPage} 
+        totalPages={totalPages} 
+        onPageChange={setCurrentPage} 
+      />
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!deleteConfirmCase} onOpenChange={() => setDeleteConfirmCase(null)}>
@@ -1011,6 +1072,7 @@ function CaseSubmissionsTab() {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [selectedSubmissions, setSelectedSubmissions] = useState<Set<number>>(new Set());
   const [selectAll, setSelectAll] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch case submissions
   const { data: submissions = [], isLoading, error } = useQuery({
@@ -1240,6 +1302,10 @@ function CaseSubmissionsTab() {
     }).format(amount);
   };
 
+  // Pagination logic for submissions
+  const totalPages = Math.ceil((submissions?.length || 0) / ITEMS_PER_PAGE);
+  const paginatedSubmissions = submissions.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
   if (isLoading) return <div>Loading case submissions...</div>;
   if (error) return <div>Error loading case submissions</div>;
 
@@ -1327,7 +1393,7 @@ function CaseSubmissionsTab() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {submissions.length === 0 ? (
+            {paginatedSubmissions.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={13} className="text-center py-8">
                   <div className="flex flex-col items-center gap-2">
@@ -1337,7 +1403,7 @@ function CaseSubmissionsTab() {
                 </TableCell>
               </TableRow>
             ) : (
-              submissions.map((submission: CaseSubmission) => (
+              paginatedSubmissions.map((submission: CaseSubmission) => (
                 <TableRow key={submission.id}>
                   <TableCell className="w-[50px]">
                     <input
@@ -1518,6 +1584,13 @@ function CaseSubmissionsTab() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Pagination */}
+      <Pagination 
+        currentPage={currentPage} 
+        totalPages={totalPages} 
+        onPageChange={setCurrentPage} 
+      />
 
       {/* Comprehensive Details Dialog */}
       <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
@@ -1760,6 +1833,10 @@ export default function AdminEnhanced() {
   const [sendingWelcomeEmail, setSendingWelcomeEmail] = useState(false);
   const [sendingPasswordEmail, setSendingPasswordEmail] = useState(false);
   const [isNewUserFlow, setIsNewUserFlow] = useState(false); // true = new user, false = password reset
+
+  // Pagination state
+  const [usersPage, setUsersPage] = useState(1);
+  const [orgsPage, setOrgsPage] = useState(1);
 
   // Fetch users with their organisations
   const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery({
@@ -2291,6 +2368,12 @@ export default function AdminEnhanced() {
     );
   }
 
+  // Pagination calculations
+  const usersTotalPages = Math.ceil((users?.length || 0) / ITEMS_PER_PAGE);
+  const paginatedUsers = users.slice((usersPage - 1) * ITEMS_PER_PAGE, usersPage * ITEMS_PER_PAGE);
+  const orgsTotalPages = Math.ceil((organisations?.length || 0) / ITEMS_PER_PAGE);
+  const paginatedOrgs = organisations.slice((orgsPage - 1) * ITEMS_PER_PAGE, orgsPage * ITEMS_PER_PAGE);
+
   return (
     <div className="space-y-6 p-4 sm:p-6">
       {/* Header */}
@@ -2546,9 +2629,12 @@ export default function AdminEnhanced() {
               </div>
             </CardHeader>
             <CardContent>
+              <div className="text-sm text-gray-600 mb-4">
+                Showing {paginatedUsers.length} of {users?.length || 0} users
+              </div>
               {/* Mobile Card Layout */}
               <div className="block sm:hidden space-y-4">
-                {users?.map((user: User) => (
+                {paginatedUsers?.map((user: User) => (
                   <div key={user.id} className="bg-gray-50 rounded-lg p-4 space-y-3">
                     <div className="flex justify-between items-start">
                       <div>
@@ -2762,7 +2848,7 @@ export default function AdminEnhanced() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {users?.map((user: User) => (
+                    {paginatedUsers?.map((user: User) => (
                       <TableRow key={user.id}>
                         <TableCell>
                           <div className="font-medium">{user.firstName} {user.lastName}</div>
@@ -2946,6 +3032,12 @@ export default function AdminEnhanced() {
                   </TableBody>
                 </Table>
               </div>
+              {/* Pagination */}
+              <Pagination 
+                currentPage={usersPage} 
+                totalPages={usersTotalPages} 
+                onPageChange={setUsersPage} 
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -3026,6 +3118,9 @@ export default function AdminEnhanced() {
               </div>
             </CardHeader>
             <CardContent>
+              <div className="text-sm text-gray-600 mb-4">
+                Showing {paginatedOrgs.length} of {organisations?.length || 0} organisations
+              </div>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -3036,7 +3131,7 @@ export default function AdminEnhanced() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {organisations?.map((org: Organisation) => (
+                  {paginatedOrgs?.map((org: Organisation) => (
                     <TableRow key={org.id}>
                       <TableCell>
                         <div className="font-medium">{org.name}</div>
@@ -3085,6 +3180,12 @@ export default function AdminEnhanced() {
                   ))}
                 </TableBody>
               </Table>
+              {/* Pagination */}
+              <Pagination 
+                currentPage={orgsPage} 
+                totalPages={orgsTotalPages} 
+                onPageChange={setOrgsPage} 
+              />
             </CardContent>
           </Card>
         </TabsContent>
