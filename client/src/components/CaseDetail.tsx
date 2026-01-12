@@ -1076,7 +1076,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                       <strong>Date:</strong> ${formatDate(message.createdAt)} | 
                       <strong>Subject:</strong> ${message.subject || 'No subject'}
                     </div>
-                    <div>${message.content || 'No content'}</div>
+                    <div style="white-space: pre-wrap;">${message.content || 'No content'}</div>
                   </div>
                 `).join('')}
               </div>
@@ -1473,7 +1473,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                         </div>
                       </div>
                       <p className="text-xs text-gray-600 mb-2">From: {message.senderName || 'Unknown'}</p>
-                      <p className="text-sm text-gray-700">{message.content}</p>
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap">{message.content}</p>
                       {message.attachmentFileName && (
                         <div className="mt-2 p-2 bg-gray-50 rounded-md">
                           <div className="flex items-center justify-between">
