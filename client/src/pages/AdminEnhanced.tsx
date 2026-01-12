@@ -11,10 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, Mail, Bell, BellOff, FilePlus, FileX, Settings } from "lucide-react";
+import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, Mail, Bell, BellOff, FilePlus, FileX } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/use-auth";
 import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrganisationSchema } from "@shared/schema";
 import { z } from "zod";
 import { Link } from "wouter";
@@ -137,10 +136,6 @@ interface User {
   createdAt: string;
   isAdmin?: boolean;
   phone?: string;
-  canDeleteCases?: boolean;
-  canDeleteUsers?: boolean;
-  canDeleteOrganisations?: boolean;
-  canManageAdmins?: boolean;
 }
 
 interface Organisation {
@@ -1732,7 +1727,6 @@ function CaseSubmissionsTab() {
 export default function AdminEnhanced() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user: currentUser } = useAuth();
   
   // State for organisation management
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -1766,16 +1760,6 @@ export default function AdminEnhanced() {
   const [sendingWelcomeEmail, setSendingWelcomeEmail] = useState(false);
   const [sendingPasswordEmail, setSendingPasswordEmail] = useState(false);
   const [isNewUserFlow, setIsNewUserFlow] = useState(false); // true = new user, false = password reset
-  
-  // State for admin permissions management
-  const [showPermissionsDialog, setShowPermissionsDialog] = useState(false);
-  const [permissionsUser, setPermissionsUser] = useState<User | null>(null);
-  const [permissionsFormData, setPermissionsFormData] = useState({
-    canDeleteCases: false,
-    canDeleteUsers: false,
-    canDeleteOrganisations: false,
-    canManageAdmins: false,
-  });
 
   // Fetch users with their organisations
   const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery({
@@ -2134,41 +2118,6 @@ export default function AdminEnhanced() {
       toast({
         title: "Error",
         description: error.message || "Failed to update case submission permission",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Update admin permissions mutation
-  const updatePermissionsMutation = useMutation({
-    mutationFn: async ({ userId, permissions }: { userId: string; permissions: { canDeleteCases: boolean; canDeleteUsers: boolean; canDeleteOrganisations: boolean; canManageAdmins: boolean } }) => {
-      const response = await apiRequest("PUT", `/api/admin/users/${userId}/permissions`, permissions);
-      return await response.json();
-    },
-    onSuccess: (data) => {
-      toast({
-        title: "Permissions Updated",
-        description: data.message,
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users-with-orgs"] });
-      setShowPermissionsDialog(false);
-      setPermissionsUser(null);
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update admin permissions",
         variant: "destructive",
       });
     },
@@ -2606,19 +2555,11 @@ export default function AdminEnhanced() {
                         <div className="font-medium">{user.firstName} {user.lastName}</div>
                         <div className="text-sm text-gray-500">{user.id}</div>
                       </div>
-                      <div className="flex gap-1 flex-wrap">
+                      <div className="flex gap-1">
                         {user.isAdmin && (
-                          <>
-                            {user.canDeleteCases && user.canDeleteUsers && user.canDeleteOrganisations && user.canManageAdmins ? (
-                              <Badge variant="default" className="bg-purple-100 text-purple-800 text-xs">
-                                Super Admin
-                              </Badge>
-                            ) : (
-                              <Badge variant="default" className="bg-blue-100 text-blue-800 text-xs">
-                                Admin
-                              </Badge>
-                            )}
-                          </>
+                          <Badge variant="default" className="bg-blue-100 text-blue-800 text-xs">
+                            Admin
+                          </Badge>
                         )}
                         <Badge variant="outline" className="text-xs">Active</Badge>
                       </div>
@@ -2751,9 +2692,9 @@ export default function AdminEnhanced() {
                             });
                           }
                         }}
-                        disabled={toggleAdminMutation.isPending || (!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk')) || !currentUser?.canManageAdmins}
-                        className={(!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk')) || !currentUser?.canManageAdmins ? 'opacity-50 cursor-not-allowed' : ''}
-                        title={!currentUser?.canManageAdmins ? "You do not have permission to manage admins" : user.isAdmin ? "Remove admin privileges" : "Grant admin privileges"}
+                        disabled={toggleAdminMutation.isPending || (!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk'))}
+                        className={(!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk')) ? 'opacity-50 cursor-not-allowed' : ''}
+                        title={user.isAdmin ? "Remove admin privileges" : "Grant admin privileges"}
                       >
                         {user.isAdmin ? (
                           <ShieldCheck className="h-3 w-3 text-blue-600" />
@@ -2762,26 +2703,6 @@ export default function AdminEnhanced() {
                         )}
                         Admin
                       </Button>
-                      {user.isAdmin && currentUser?.canManageAdmins && currentUser?.id !== user.id && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setPermissionsUser(user);
-                            setPermissionsFormData({
-                              canDeleteCases: user.canDeleteCases || false,
-                              canDeleteUsers: user.canDeleteUsers || false,
-                              canDeleteOrganisations: user.canDeleteOrganisations || false,
-                              canManageAdmins: user.canManageAdmins || false,
-                            });
-                            setShowPermissionsDialog(true);
-                          }}
-                          title="Manage admin permissions"
-                        >
-                          <Settings className="h-3 w-3 text-purple-600" />
-                          Perms
-                        </Button>
-                      )}
                       <Button
                         variant="outline"
                         size="sm"
@@ -2815,9 +2736,9 @@ export default function AdminEnhanced() {
                             deleteUserMutation.mutate(user.id);
                           }
                         }}
-                        disabled={deleteUserMutation.isPending || !currentUser?.canDeleteUsers}
-                        className={!currentUser?.canDeleteUsers ? 'opacity-50 cursor-not-allowed text-red-600' : 'text-red-600 hover:text-red-700'}
-                        title={!currentUser?.canDeleteUsers ? "You do not have permission to delete users" : "Delete user permanently"}
+                        disabled={deleteUserMutation.isPending}
+                        className="text-red-600 hover:text-red-700"
+                        title="Delete user permanently"
                       >
                         <Trash2 className="h-3 w-3 mr-1" />
                         Delete
@@ -2901,19 +2822,11 @@ export default function AdminEnhanced() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center space-x-2 flex-wrap gap-1">
+                          <div className="flex items-center space-x-2">
                             {user.isAdmin && (
-                              <>
-                                {user.canDeleteCases && user.canDeleteUsers && user.canDeleteOrganisations && user.canManageAdmins ? (
-                                  <Badge variant="default" className="bg-purple-100 text-purple-800">
-                                    Super Admin
-                                  </Badge>
-                                ) : (
-                                  <Badge variant="default" className="bg-blue-100 text-blue-800">
-                                    Admin
-                                  </Badge>
-                                )}
-                              </>
+                              <Badge variant="default" className="bg-blue-100 text-blue-800">
+                                Admin
+                              </Badge>
                             )}
                             <Badge variant="outline">Active</Badge>
                           </div>
@@ -2978,9 +2891,9 @@ export default function AdminEnhanced() {
                                   });
                                 }
                               }}
-                              disabled={toggleAdminMutation.isPending || (!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk')) || !currentUser?.canManageAdmins}
-                              className={(!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk')) || !currentUser?.canManageAdmins ? 'opacity-50 cursor-not-allowed' : ''}
-                              title={!currentUser?.canManageAdmins ? "You do not have permission to manage admins" : user.isAdmin ? "Remove admin privileges" : "Grant admin privileges"}
+                              disabled={toggleAdminMutation.isPending || (!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk'))}
+                              className={(!user.isAdmin && !user.email?.endsWith('@chadlaw.co.uk')) ? 'opacity-50 cursor-not-allowed' : ''}
+                              title={user.isAdmin ? "Remove admin privileges" : "Grant admin privileges"}
                             >
                               {user.isAdmin ? (
                                 <ShieldCheck className="h-3 w-3 text-blue-600" />
@@ -2988,25 +2901,6 @@ export default function AdminEnhanced() {
                                 <Shield className="h-3 w-3" />
                               )}
                             </Button>
-                            {user.isAdmin && currentUser?.canManageAdmins && currentUser?.id !== user.id && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setPermissionsUser(user);
-                                  setPermissionsFormData({
-                                    canDeleteCases: user.canDeleteCases || false,
-                                    canDeleteUsers: user.canDeleteUsers || false,
-                                    canDeleteOrganisations: user.canDeleteOrganisations || false,
-                                    canManageAdmins: user.canManageAdmins || false,
-                                  });
-                                  setShowPermissionsDialog(true);
-                                }}
-                                title="Manage admin permissions"
-                              >
-                                <Settings className="h-3 w-3 text-purple-600" />
-                              </Button>
-                            )}
                             <Button
                               variant="outline"
                               size="sm"
@@ -3039,9 +2933,9 @@ export default function AdminEnhanced() {
                                   deleteUserMutation.mutate(user.id);
                                 }
                               }}
-                              disabled={deleteUserMutation.isPending || !currentUser?.canDeleteUsers}
-                              className={!currentUser?.canDeleteUsers ? 'opacity-50 cursor-not-allowed text-red-600' : 'text-red-600 hover:text-red-700'}
-                              title={!currentUser?.canDeleteUsers ? "You do not have permission to delete users" : "Delete user permanently"}
+                              disabled={deleteUserMutation.isPending}
+                              className="text-red-600 hover:text-red-700"
+                              title="Delete user permanently"
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
@@ -3537,105 +3431,6 @@ export default function AdminEnhanced() {
               setIsNewUserFlow(false);
             }}>
               Close
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Admin Permissions Dialog */}
-      <Dialog open={showPermissionsDialog} onOpenChange={(open) => {
-        if (!open) {
-          setShowPermissionsDialog(false);
-          setPermissionsUser(null);
-        }
-      }}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              Manage Admin Permissions
-            </DialogTitle>
-            <DialogDescription>
-              Configure super admin permissions for {permissionsUser?.firstName} {permissionsUser?.lastName}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-2">
-              <p className="text-sm text-blue-700">
-                Super admins have additional permissions to delete records and manage other admin accounts.
-              </p>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex-1">
-                  <Label htmlFor="canDeleteCases" className="font-medium">Delete Cases</Label>
-                  <p className="text-xs text-gray-500">Permanently delete cases and all associated data</p>
-                </div>
-                <Checkbox
-                  id="canDeleteCases"
-                  checked={permissionsFormData.canDeleteCases}
-                  onCheckedChange={(checked) => setPermissionsFormData(prev => ({ ...prev, canDeleteCases: checked as boolean }))}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex-1">
-                  <Label htmlFor="canDeleteUsers" className="font-medium">Delete Users</Label>
-                  <p className="text-xs text-gray-500">Permanently delete user accounts</p>
-                </div>
-                <Checkbox
-                  id="canDeleteUsers"
-                  checked={permissionsFormData.canDeleteUsers}
-                  onCheckedChange={(checked) => setPermissionsFormData(prev => ({ ...prev, canDeleteUsers: checked as boolean }))}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex-1">
-                  <Label htmlFor="canDeleteOrganisations" className="font-medium">Delete Organisations</Label>
-                  <p className="text-xs text-gray-500">Permanently delete organisations</p>
-                </div>
-                <Checkbox
-                  id="canDeleteOrganisations"
-                  checked={permissionsFormData.canDeleteOrganisations}
-                  onCheckedChange={(checked) => setPermissionsFormData(prev => ({ ...prev, canDeleteOrganisations: checked as boolean }))}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex-1">
-                  <Label htmlFor="canManageAdmins" className="font-medium">Manage Admins</Label>
-                  <p className="text-xs text-gray-500">Promote/demote admins and manage their permissions</p>
-                </div>
-                <Checkbox
-                  id="canManageAdmins"
-                  checked={permissionsFormData.canManageAdmins}
-                  onCheckedChange={(checked) => setPermissionsFormData(prev => ({ ...prev, canManageAdmins: checked as boolean }))}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => {
-              setShowPermissionsDialog(false);
-              setPermissionsUser(null);
-            }}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                if (permissionsUser) {
-                  updatePermissionsMutation.mutate({
-                    userId: permissionsUser.id,
-                    permissions: permissionsFormData,
-                  });
-                }
-              }}
-              disabled={updatePermissionsMutation.isPending}
-              className="bg-acclaim-teal hover:bg-acclaim-teal/90"
-            >
-              {updatePermissionsMutation.isPending ? "Saving..." : "Save Permissions"}
             </Button>
           </div>
         </DialogContent>

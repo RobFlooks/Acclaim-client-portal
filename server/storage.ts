@@ -197,12 +197,6 @@ export interface IStorage {
   
   makeUserAdmin(userId: string): Promise<User | null>;
   removeUserAdmin(userId: string): Promise<User | null>;
-  updateAdminPermissions(userId: string, permissions: {
-    canDeleteCases?: boolean;
-    canDeleteUsers?: boolean;
-    canDeleteOrganisations?: boolean;
-    canManageAdmins?: boolean;
-  }): Promise<User | null>;
   
   resetUserPassword(userId: string): Promise<string>; // Returns temp password
   
@@ -1620,27 +1614,6 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db
       .update(users)
       .set({ isAdmin: false, updatedAt: new Date() })
-      .where(eq(users.id, userId))
-      .returning();
-
-    return user || null;
-  }
-
-  async updateAdminPermissions(userId: string, permissions: {
-    canDeleteCases?: boolean;
-    canDeleteUsers?: boolean;
-    canDeleteOrganisations?: boolean;
-    canManageAdmins?: boolean;
-  }): Promise<User | null> {
-    const [user] = await db
-      .update(users)
-      .set({
-        canDeleteCases: permissions.canDeleteCases,
-        canDeleteUsers: permissions.canDeleteUsers,
-        canDeleteOrganisations: permissions.canDeleteOrganisations,
-        canManageAdmins: permissions.canManageAdmins,
-        updatedAt: new Date(),
-      })
       .where(eq(users.id, userId))
       .returning();
 

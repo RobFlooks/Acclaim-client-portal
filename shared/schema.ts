@@ -44,11 +44,6 @@ export const users = pgTable("users", {
   emailNotifications: boolean("email_notifications").default(true), // User preference for email notifications
   pushNotifications: boolean("push_notifications").default(true), // User preference for push notifications
   canSubmitCases: boolean("can_submit_cases").default(true), // Admin-controlled permission to submit new cases
-  // Super admin permissions (only applicable to admin users)
-  canDeleteCases: boolean("can_delete_cases").default(false), // Permission to delete cases
-  canDeleteUsers: boolean("can_delete_users").default(false), // Permission to delete users
-  canDeleteOrganisations: boolean("can_delete_organisations").default(false), // Permission to delete organisations
-  canManageAdmins: boolean("can_manage_admins").default(false), // Permission to create/modify admin users and their permissions
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
