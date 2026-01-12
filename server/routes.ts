@@ -2317,6 +2317,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Advanced reporting endpoints
   app.get("/api/admin/reports/cross-organisation", isAuthenticated, isAdmin, async (req, res) => {
     try {
+      // Prevent browser caching for fresh data
+      res.set('Cache-Control', 'no-store, must-revalidate');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
       const performance = await storage.getCrossOrganizationPerformance();
       res.json(performance);
     } catch (error) {
