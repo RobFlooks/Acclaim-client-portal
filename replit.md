@@ -30,6 +30,7 @@ Language preference: British English (organisation not organization, colour not 
 - **Session Storage**: PostgreSQL-backed sessions with 1-week TTL, secured with HTTP-only cookies and CSRF protection.
 - **Security Features**: Temporary passwords with forced change on first login. **PASSWORD RESET VIA EMAIL** - Users can reset forgotten passwords through a secure two-step process: request a 6-digit one-time code via email, then enter the code to log in with forced password change. OTP tokens are bcrypt-hashed, expire in 15 minutes, are single-use, and responses are generic to prevent email enumeration.
 - **Admin Controls**: Email domain restrictions for admin privileges.
+- **Super Admin Permissions**: Granular permission system for administrators with 4 permission levels: canDeleteCases, canDeleteUsers, canDeleteOrganisations, and canManageAdmins. Super admins (with all 4 permissions) are distinguished with purple badge in admin panel. Regular admins have limited deletion capabilities. Permissions are managed through the admin panel with dedicated permissions dialog. Self-modification is prevented for security.
 - **Access Control**: Comprehensive real-time access control for multi-organisation users, ensuring users can access cases, messages, and documents from all assigned organisations while maintaining security restrictions.
 
 ### Key Features
