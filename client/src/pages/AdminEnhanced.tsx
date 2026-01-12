@@ -1923,7 +1923,9 @@ export default function AdminEnhanced() {
       });
       setShowCreateUser(false);
       setTempPassword(data.tempPassword || "");
-      setCreatedUserId(data.user?.id || null);
+      // Handle nested user structure from API: data.user.user.id or data.user.id
+      const userId = data.user?.user?.id || data.user?.id || null;
+      setCreatedUserId(userId);
       setShowPasswordDialog(true);
     },
     onError: (error) => {
