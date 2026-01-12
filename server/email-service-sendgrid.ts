@@ -328,7 +328,7 @@ class SendGridEmailService {
               <table style="width: 100%; border-spacing: 0;">
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 140px;">From:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.senderName} (External System)</td>
+                  <td style="padding: 8px 0; color: #1e293b;">Acclaim</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; color: #475569;">Organisation:</td>
@@ -412,7 +412,7 @@ class SendGridEmailService {
       `;
 
       const textContent = `
-New case update from ${data.senderName}
+New case update from Acclaim
 
 Organisation: ${data.organisationName}
 ${data.caseReference ? `Case Reference: ${data.caseReference}` : ''}
