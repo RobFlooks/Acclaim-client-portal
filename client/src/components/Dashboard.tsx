@@ -171,10 +171,15 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    if (diffDays === 1) {
+    // Compare calendar dates, not time differences
+    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const diffDays = Math.round((todayOnly.getTime() - dateOnly.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      return 'Today';
+    } else if (diffDays === 1) {
       return 'Yesterday';
     } else if (diffDays <= 7) {
       return `${diffDays} days ago`;
