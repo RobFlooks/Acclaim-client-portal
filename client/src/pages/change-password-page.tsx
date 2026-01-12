@@ -62,6 +62,30 @@ export default function ChangePasswordPage() {
       return;
     }
 
+    if (!/[A-Z]/.test(newPassword)) {
+      setError("Password must contain at least one uppercase letter");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!/[a-z]/.test(newPassword)) {
+      setError("Password must contain at least one lowercase letter");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!/[0-9]/.test(newPassword)) {
+      setError("Password must contain at least one number");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!/[^A-Za-z0-9]/.test(newPassword)) {
+      setError("Password must contain at least one special character");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       await apiRequest("POST", "/api/user/set-password", {
         newPassword,
@@ -156,7 +180,7 @@ export default function ChangePasswordPage() {
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Password must be at least 8 characters long
+                  Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character
                 </p>
               </div>
 

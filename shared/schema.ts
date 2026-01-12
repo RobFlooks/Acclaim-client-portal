@@ -499,9 +499,25 @@ export const updateNotificationPreferencesSchema = z.object({
   pushNotifications: z.boolean(),
 });
 
+// Password complexity validation - must include uppercase, lowercase, numeric, and special character
+const passwordComplexitySchema = z.string()
+  .min(8, "Password must be at least 8 characters")
+  .refine((password) => /[A-Z]/.test(password), {
+    message: "Password must contain at least one uppercase letter",
+  })
+  .refine((password) => /[a-z]/.test(password), {
+    message: "Password must contain at least one lowercase letter",
+  })
+  .refine((password) => /[0-9]/.test(password), {
+    message: "Password must contain at least one number",
+  })
+  .refine((password) => /[^A-Za-z0-9]/.test(password), {
+    message: "Password must contain at least one special character",
+  });
+
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, "Current password is required"),
-  newPassword: z.string().min(8, "Password must be at least 8 characters"),
+  newPassword: passwordComplexitySchema,
   confirmPassword: z.string().min(1, "Password confirmation is required"),
 }).refine((data) => data.newPassword === data.confirmPassword, {
   message: "Passwords don't match",
@@ -509,7 +525,7 @@ export const changePasswordSchema = z.object({
 });
 
 export const resetPasswordSchema = z.object({
-  newPassword: z.string().min(8, "Password must be at least 8 characters"),
+  newPassword: passwordComplexitySchema,
   confirmPassword: z.string().min(1, "Password confirmation is required"),
 }).refine((data) => data.newPassword === data.confirmPassword, {
   message: "Passwords don't match",

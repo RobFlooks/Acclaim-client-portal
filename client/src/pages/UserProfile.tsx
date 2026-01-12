@@ -456,7 +456,7 @@ export default function UserProfile() {
                     <p className="text-sm text-red-600">{passwordErrors.newPassword}</p>
                   )}
                   <p className="text-sm text-gray-500">
-                    Password must be at least 8 characters long.
+                    Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character.
                   </p>
                 </div>
                 <div className="space-y-2">

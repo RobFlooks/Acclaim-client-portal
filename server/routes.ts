@@ -111,9 +111,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const hasUppercase = /[A-Z]/.test(password);
       const hasLowercase = /[a-z]/.test(password);
       const hasNumber = /[0-9]/.test(password);
-      if (!hasUppercase || !hasLowercase || !hasNumber) {
+      const hasSpecial = /[^A-Za-z0-9]/.test(password);
+      if (!hasUppercase || !hasLowercase || !hasNumber || !hasSpecial) {
         return res.status(400).json({ 
-          message: "Password must contain at least one uppercase letter, one lowercase letter, and one number" 
+          message: "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character" 
         });
       }
 
