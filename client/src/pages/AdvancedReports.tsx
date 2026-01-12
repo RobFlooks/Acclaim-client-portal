@@ -274,12 +274,14 @@ export default function AdvancedReports() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {crossOrgData?.map((org: CrossOrgPerformanceAPI) => {
+                      {crossOrgData?.map((org: CrossOrgPerformanceAPI, index: number) => {
                         const orgId = org.organisationId ?? org.organizationId ?? 0;
                         const orgName = org.organisationName ?? org.organizationName ?? 'Unknown';
                         return (
-                          <TableRow key={orgId}>
-                            <TableCell className="font-medium">{orgName}</TableCell>
+                          <TableRow key={orgId || index}>
+                            <TableCell className="font-medium">
+                              <span style={{ color: 'red' }}>[{orgId}]</span> {String(orgName)}
+                            </TableCell>
                             <TableCell>{org.totalCases}</TableCell>
                             <TableCell>{org.activeCases}</TableCell>
                             <TableCell>{org.closedCases}</TableCell>
