@@ -1819,9 +1819,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Get user's organisation
+      // Get user's organisation - check both junction table and legacy organisationId field
       const userOrgs = await storage.getUserOrganisations(userId);
-      if (!userOrgs || userOrgs.length === 0) {
+      let organisation = null;
+      
+      if (userOrgs && userOrgs.length > 0) {
+        // Use first organisation from junction table
+        organisation = userOrgs[0];
+      } else if (user.organisationId) {
+        // Fall back to legacy organisationId on user record
+        organisation = await storage.getOrganisation(user.organisationId);
+      }
+      
+      if (!organisation) {
         return res.status(400).json({ message: "User must be assigned to an organisation before sending welcome email" });
       }
 
@@ -1830,9 +1840,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!admin) {
         return res.status(500).json({ message: "Admin user not found" });
       }
-
-      // Use the first organisation (most users are in one organisation)
-      const organisation = userOrgs[0];
 
       // Determine password to use: passed from request, or stored temporary password
       const passwordToSend = temporaryPassword || user.temporaryPassword;
