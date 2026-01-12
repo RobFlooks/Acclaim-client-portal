@@ -399,7 +399,7 @@ class SendGridEmailService {
               <p style="margin: 0 0 15px 0; color: #64748b;">
                 Please log in to the Acclaim Portal to view and respond to this message.
               </p>
-              <a href="#" style="background: #14b8a6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+              <a href="https://acclaim-api.azurewebsites.net/auth" style="display: inline-block; background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 16px;">
                 View in Portal
               </a>
             </div>
@@ -432,6 +432,7 @@ Message:
 ${data.messageContent}
 
 Please log in to the Acclaim Portal to view and respond to this message.
+Portal: https://acclaim-api.azurewebsites.net/auth
       `;
 
       // Prepare attachments for APIM
@@ -702,6 +703,7 @@ Please log in to the Acclaim Portal to view and respond to this message.
               <p style="margin: 0 0 15px 0; color: #64748b;">
                 Please log in to the Acclaim Portal to view this message and respond if needed.
               </p>
+              <a href="https://acclaim-api.azurewebsites.net/auth" style="display: inline-block; background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 16px;">View Message</a>
             </div>
           </div>
 
@@ -720,6 +722,7 @@ Message:
 ${data.messageContent}
 
 Please log in to the Acclaim Portal to view this message and respond if needed.
+Portal: https://acclaim-api.azurewebsites.net/auth
       `;
 
       // Prepare attachments for APIM
