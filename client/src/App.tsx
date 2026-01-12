@@ -52,7 +52,7 @@ function App() {
       <AuthProvider>
         <TooltipProvider>
           <Toaster />
-          <InactivityMonitor timeoutMinutes={15} warningSeconds={60} />
+          <InactivityMonitor timeoutMinutes={1} warningSeconds={15} />
           <Router />
         </TooltipProvider>
       </AuthProvider>
