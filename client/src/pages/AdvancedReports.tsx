@@ -264,8 +264,8 @@ export default function AdvancedReports() {
                         console.log('Org data:', org, 'Name:', orgName);
                         return (
                           <TableRow key={orgId}>
-                            <TableCell className="font-medium">{orgName}</TableCell>
-                            <TableCell>{org.totalCases}</TableCell>
+                            <TableCell className="font-medium">{orgName || `ID:${orgId}`}</TableCell>
+                            <TableCell>{`${org.totalCases} (${orgName})`}</TableCell>
                             <TableCell>{org.activeCases}</TableCell>
                             <TableCell>{org.closedCases}</TableCell>
                             <TableCell>£{parseFloat(org.totalOutstanding || '0').toLocaleString()}</TableCell>
