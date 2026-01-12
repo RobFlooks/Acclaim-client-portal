@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
-import { useInactivityTimeout } from '@/hooks/use-inactivity-timeout';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/use-auth';
+import { useLocation } from 'wouter';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,27 +22,94 @@ export function InactivityMonitor({
   warningSeconds = 60,
 }: InactivityMonitorProps) {
   const { user } = useAuth();
+  const [, navigate] = useLocation();
   const [showWarning, setShowWarning] = useState(false);
+  
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const warningShownRef = useRef<boolean>(false);
 
-  const handleWarning = useCallback(() => {
-    setShowWarning(true);
-  }, []);
+  const timeoutMs = timeoutMinutes * 60 * 1000;
+  const warningMs = warningSeconds * 1000;
 
-  const handleLogout = useCallback(() => {
+  const handleLogout = useCallback(async () => {
+    try {
+      await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
+    warningShownRef.current = false;
     setShowWarning(false);
-  }, []);
+    navigate('/auth');
+  }, [navigate]);
 
-  const { resetTimer } = useInactivityTimeout({
-    timeoutMs: timeoutMinutes * 60 * 1000,
-    warningMs: warningSeconds * 1000,
-    onWarning: handleWarning,
-    onLogout: handleLogout,
-    enabled: !!user,
-  });
+  const resetTimer = useCallback((force = false) => {
+    if (warningShownRef.current && !force) {
+      return;
+    }
+
+    warningShownRef.current = false;
+    setShowWarning(false);
+
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    if (warningTimeoutRef.current) {
+      clearTimeout(warningTimeoutRef.current);
+    }
+
+    if (!user) return;
+
+    warningTimeoutRef.current = setTimeout(() => {
+      warningShownRef.current = true;
+      setShowWarning(true);
+    }, timeoutMs - warningMs);
+
+    timeoutRef.current = setTimeout(() => {
+      handleLogout();
+    }, timeoutMs);
+  }, [user, timeoutMs, warningMs, handleLogout]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const events = [
+      'mousedown',
+      'mousemove', 
+      'keydown',
+      'scroll',
+      'touchstart',
+      'click',
+      'wheel',
+    ];
+
+    const handleActivity = () => {
+      if (!warningShownRef.current) {
+        resetTimer();
+      }
+    };
+
+    events.forEach((event) => {
+      document.addEventListener(event, handleActivity, { passive: true });
+    });
+
+    resetTimer();
+
+    return () => {
+      events.forEach((event) => {
+        document.removeEventListener(event, handleActivity);
+      });
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      if (warningTimeoutRef.current) {
+        clearTimeout(warningTimeoutRef.current);
+      }
+    };
+  }, [user, resetTimer]);
 
   const handleStayLoggedIn = () => {
-    setShowWarning(false);
-    resetTimer();
+    resetTimer(true);
   };
 
   if (!user) {
@@ -50,7 +117,11 @@ export function InactivityMonitor({
   }
 
   return (
-    <AlertDialog open={showWarning} onOpenChange={setShowWarning}>
+    <AlertDialog open={showWarning} onOpenChange={(open) => {
+      if (!open) {
+        handleStayLoggedIn();
+      }
+    }}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <div className="flex items-center gap-3">
