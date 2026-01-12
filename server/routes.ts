@@ -3798,6 +3798,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch('/api/admin/external-credentials/:id/reset-password', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const credentialId = parseInt(req.params.id);
+      const { newPassword } = req.body;
+
+      if (!newPassword) {
+        return res.status(400).json({ message: "New password is required" });
+      }
+
+      if (newPassword.length < 8) {
+        return res.status(400).json({ message: "Password must be at least 8 characters long" });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      
+      await storage.updateExternalApiCredential(credentialId, {
+        hashedPassword
+      });
+
+      res.json({ message: "Password reset successfully" });
+    } catch (error) {
+      console.error("Error resetting external API credential password:", error);
+      res.status(500).json({ message: "Failed to reset password" });
+    }
+  });
+
   // Download User Guide
   app.get('/api/download/user-guide', async (req, res) => {
     try {

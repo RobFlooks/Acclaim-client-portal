@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Trash2, Plus, Key, Building, User, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { Trash2, Plus, Key, Building, User, AlertCircle, Eye, EyeOff, RefreshCw } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -31,14 +31,23 @@ interface OrganisationCredentials {
 export default function ExternalApiCredentialsManager() {
   const { toast } = useToast();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showResetDialog, setShowResetDialog] = useState(false);
+  const [resetCredentialId, setResetCredentialId] = useState<number | null>(null);
+  const [resetCredentialUsername, setResetCredentialUsername] = useState<string>('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [showResetConfirmPassword, setShowResetConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     organisationId: '',
     username: '',
     password: '',
     confirmPassword: '',
     description: ''
+  });
+  const [resetFormData, setResetFormData] = useState({
+    newPassword: '',
+    confirmNewPassword: ''
   });
 
   const { data: credentialsData, isLoading } = useQuery<OrganisationCredentials[]>({
@@ -93,6 +102,34 @@ export default function ExternalApiCredentialsManager() {
     },
   });
 
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (data: { id: number; newPassword: string }) => {
+      return apiRequest('PATCH', `/api/admin/external-credentials/${data.id}/reset-password`, { 
+        newPassword: data.newPassword 
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/external-credentials'] });
+      setShowResetDialog(false);
+      setResetCredentialId(null);
+      setResetCredentialUsername('');
+      setResetFormData({ newPassword: '', confirmNewPassword: '' });
+      setShowResetPassword(false);
+      setShowResetConfirmPassword(false);
+      toast({
+        title: "Success",
+        description: "Password reset successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reset password",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCreateCredential = () => {
     if (!formData.organisationId || !formData.username || !formData.password) {
       toast({
@@ -121,9 +158,67 @@ export default function ExternalApiCredentialsManager() {
       return;
     }
 
-    // Remove confirmPassword from the data sent to the server
     const { confirmPassword, ...dataToSend } = formData;
     createCredentialMutation.mutate(dataToSend);
+  };
+
+  const handleResetPassword = () => {
+    if (!resetFormData.newPassword) {
+      toast({
+        title: "Error",
+        description: "Please enter a new password",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (resetFormData.newPassword !== resetFormData.confirmNewPassword) {
+      toast({
+        title: "Error",
+        description: "Passwords do not match",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (resetFormData.newPassword.length < 8) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 8 characters long",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const hasUppercase = /[A-Z]/.test(resetFormData.newPassword);
+    const hasLowercase = /[a-z]/.test(resetFormData.newPassword);
+    const hasNumber = /[0-9]/.test(resetFormData.newPassword);
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(resetFormData.newPassword);
+
+    if (!hasUppercase || !hasLowercase || !hasNumber || !hasSpecial) {
+      toast({
+        title: "Error",
+        description: "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (resetCredentialId) {
+      resetPasswordMutation.mutate({ 
+        id: resetCredentialId, 
+        newPassword: resetFormData.newPassword 
+      });
+    }
+  };
+
+  const openResetDialog = (credential: ExternalApiCredential) => {
+    setResetCredentialId(credential.id);
+    setResetCredentialUsername(credential.username);
+    setResetFormData({ newPassword: '', confirmNewPassword: '' });
+    setShowResetPassword(false);
+    setShowResetConfirmPassword(false);
+    setShowResetDialog(true);
   };
 
   if (isLoading) {
@@ -259,6 +354,85 @@ export default function ExternalApiCredentialsManager() {
         </Dialog>
       </div>
 
+      {/* Reset Password Dialog */}
+      <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset API Password</DialogTitle>
+            <DialogDescription>
+              Reset the password for <span className="font-medium">{resetCredentialUsername}</span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">New Password *</Label>
+              <div className="relative">
+                <Input
+                  id="newPassword"
+                  type={showResetPassword ? "text" : "password"}
+                  value={resetFormData.newPassword}
+                  onChange={(e) => setResetFormData({ ...resetFormData, newPassword: e.target.value })}
+                  placeholder="Enter new password (min 8 characters)"
+                  className="pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowResetPassword(!showResetPassword)}
+                >
+                  {showResetPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmNewPassword">Confirm New Password *</Label>
+              <div className="relative">
+                <Input
+                  id="confirmNewPassword"
+                  type={showResetConfirmPassword ? "text" : "password"}
+                  value={resetFormData.confirmNewPassword}
+                  onChange={(e) => setResetFormData({ ...resetFormData, confirmNewPassword: e.target.value })}
+                  placeholder="Confirm new password"
+                  className="pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowResetConfirmPassword(!showResetConfirmPassword)}
+                >
+                  {showResetConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <div className="flex items-start space-x-2">
+                <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5" />
+                <div className="text-sm text-amber-800">
+                  <p className="font-medium">Important:</p>
+                  <p>After resetting, update the password in your case management system (SOS) to match.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => setShowResetDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleResetPassword}
+              disabled={resetPasswordMutation.isPending}
+              className="bg-acclaim-teal hover:bg-acclaim-teal/90"
+            >
+              {resetPasswordMutation.isPending ? "Resetting..." : "Reset Password"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Credentials by Organisation */}
       <div className="space-y-4">
         {credentialsData?.map((orgData) => (
@@ -320,15 +494,27 @@ export default function ExternalApiCredentialsManager() {
                           {new Date(credential.createdAt).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => deleteCredentialMutation.mutate(credential.id)}
-                            disabled={deleteCredentialMutation.isPending}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openResetDialog(credential)}
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              title="Reset Password"
+                            >
+                              <RefreshCw className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => deleteCredentialMutation.mutate(credential.id)}
+                              disabled={deleteCredentialMutation.isPending}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              title="Delete Credential"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
