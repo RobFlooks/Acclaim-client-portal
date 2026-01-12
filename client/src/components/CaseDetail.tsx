@@ -19,7 +19,8 @@ import {
   PoundSterling,
   Printer,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  Search
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
@@ -38,6 +39,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [messageAttachment, setMessageAttachment] = useState<File | null>(null);
   const [activeTab, setActiveTab] = useState("timeline");
+  const [messageSearch, setMessageSearch] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -1413,27 +1415,38 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
         <TabsContent value="messages" className="space-y-4" data-tab="messages">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <CardTitle>Messages</CardTitle>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const sendMessageSection = document.getElementById('send-message-section');
-                    if (sendMessageSection) {
-                      sendMessageSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      // Focus on the message textarea after scrolling
-                      setTimeout(() => {
-                        const textarea = document.getElementById('message');
-                        if (textarea) textarea.focus();
-                      }, 500);
-                    }
-                  }}
-                  className="bg-acclaim-teal text-white hover:bg-acclaim-teal/90"
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  Send Message
-                </Button>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <div className="relative flex-1 sm:flex-initial">
+                    <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      type="text"
+                      placeholder="Search messages..."
+                      value={messageSearch}
+                      onChange={(e) => setMessageSearch(e.target.value)}
+                      className="pl-8 h-9 w-full sm:w-48"
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const sendMessageSection = document.getElementById('send-message-section');
+                      if (sendMessageSection) {
+                        sendMessageSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        setTimeout(() => {
+                          const textarea = document.getElementById('message');
+                          if (textarea) textarea.focus();
+                        }, 500);
+                      }
+                    }}
+                    className="bg-acclaim-teal text-white hover:bg-acclaim-teal/90 flex-shrink-0"
+                  >
+                    <Send className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Send Message</span>
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -1447,7 +1460,17 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                 </div>
               ) : messages && messages.length > 0 ? (
                 <div className="space-y-4 max-h-64 overflow-y-auto">
-                  {messages.map((message: any) => (
+                  {messages
+                    .filter((message: any) => {
+                      if (!messageSearch.trim()) return true;
+                      const searchLower = messageSearch.toLowerCase();
+                      return (
+                        message.subject?.toLowerCase().includes(searchLower) ||
+                        message.content?.toLowerCase().includes(searchLower) ||
+                        message.senderName?.toLowerCase().includes(searchLower)
+                      );
+                    })
+                    .map((message: any) => (
                     <div key={message.id} className="p-3 border rounded-lg bg-gray-50 border-gray-200">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
