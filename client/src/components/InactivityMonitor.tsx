@@ -22,9 +22,11 @@ export function InactivityMonitor({
 }: InactivityMonitorProps) {
   const { user } = useAuth();
   const [showWarning, setShowWarning] = useState(false);
+  const [countdown, setCountdown] = useState(warningSeconds);
   
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const warningShownRef = useRef<boolean>(false);
 
   const timeoutMs = timeoutMinutes * 60 * 1000;
@@ -38,9 +40,30 @@ export function InactivityMonitor({
     }
     warningShownRef.current = false;
     setShowWarning(false);
-    // Force a full page reload to ensure clean state
+    setCountdown(warningSeconds);
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+    }
     window.location.href = '/auth';
-  }, []);
+  }, [warningSeconds]);
+
+  const startCountdown = useCallback(() => {
+    setCountdown(warningSeconds);
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+    }
+    countdownIntervalRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          if (countdownIntervalRef.current) {
+            clearInterval(countdownIntervalRef.current);
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, [warningSeconds]);
 
   const resetTimer = useCallback((force = false) => {
     if (warningShownRef.current && !force) {
@@ -49,6 +72,7 @@ export function InactivityMonitor({
 
     warningShownRef.current = false;
     setShowWarning(false);
+    setCountdown(warningSeconds);
 
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -56,18 +80,22 @@ export function InactivityMonitor({
     if (warningTimeoutRef.current) {
       clearTimeout(warningTimeoutRef.current);
     }
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+    }
 
     if (!user) return;
 
     warningTimeoutRef.current = setTimeout(() => {
       warningShownRef.current = true;
       setShowWarning(true);
+      startCountdown();
     }, timeoutMs - warningMs);
 
     timeoutRef.current = setTimeout(() => {
       handleLogout();
     }, timeoutMs);
-  }, [user, timeoutMs, warningMs, handleLogout]);
+  }, [user, timeoutMs, warningMs, warningSeconds, handleLogout, startCountdown]);
 
   useEffect(() => {
     if (!user) return;
@@ -104,10 +132,16 @@ export function InactivityMonitor({
       if (warningTimeoutRef.current) {
         clearTimeout(warningTimeoutRef.current);
       }
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
     };
   }, [user, resetTimer]);
 
   const handleStayLoggedIn = () => {
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+    }
     resetTimer(true);
   };
 
@@ -130,7 +164,9 @@ export function InactivityMonitor({
             <AlertDialogTitle>Session About to Expire</AlertDialogTitle>
           </div>
           <AlertDialogDescription className="pt-2">
-            You will be logged out due to inactivity in about {warningSeconds} seconds. 
+            You will be logged out due to inactivity in{' '}
+            <span className="font-bold text-amber-600">{countdown}</span>{' '}
+            {countdown === 1 ? 'second' : 'seconds'}. 
             Click below to stay logged in.
           </AlertDialogDescription>
         </AlertDialogHeader>
