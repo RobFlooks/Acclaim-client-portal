@@ -73,6 +73,7 @@ interface EmailNotificationData {
     outstandingAmount: string;
     status: string;
     stage: string;
+    assignedTo?: string | null;
   };
   attachment?: {
     fileName: string;
@@ -523,6 +524,12 @@ Please log in to the Acclaim Portal to view and respond to this message.
                   <td style="padding: 4px 0; font-weight: bold; color: #475569;">Current Stage:</td>
                   <td style="padding: 4px 0; color: #1e293b;">${data.caseDetails.stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</td>
                 </tr>
+                ${data.caseDetails.assignedTo ? `
+                <tr>
+                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Case Handler:</td>
+                  <td style="padding: 4px 0; color: #1e293b;">${data.caseDetails.assignedTo}</td>
+                </tr>
+                ` : ''}
                 ` : ''}
                 ${data.messageSubject ? `
                 <tr>
@@ -562,7 +569,8 @@ CASE DETAILS:
 - Original Amount: £${data.caseDetails.originalAmount}
 - Outstanding Amount: £${data.caseDetails.outstandingAmount}
 - Status: ${data.caseDetails.status.toUpperCase()}
-- Current Stage: ${data.caseDetails.stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+- Current Stage: ${data.caseDetails.stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}${data.caseDetails.assignedTo ? `
+- Case Handler: ${data.caseDetails.assignedTo}` : ''}
 ` : ''}
 ${data.messageSubject ? `Subject: ${data.messageSubject}` : ''}
 

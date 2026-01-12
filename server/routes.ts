@@ -1082,6 +1082,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   outstandingAmount: messageCase.outstandingAmount.toString(),
                   status: messageCase.status,
                   stage: messageCase.stage,
+                  assignedTo: messageCase.assignedTo,
                 };
               }
             }
@@ -1145,7 +1146,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     originalAmount: messageCase.originalAmount,
                     outstandingAmount: messageCase.outstandingAmount,
                     status: messageCase.status,
-                    stage: messageCase.stage
+                    stage: messageCase.stage,
+                    assignedTo: messageCase.assignedTo,
                   };
                 }
               }
@@ -1204,7 +1206,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     originalAmount: messageCase.originalAmount,
                     outstandingAmount: messageCase.outstandingAmount,
                     status: messageCase.status,
-                    stage: messageCase.stage
+                    stage: messageCase.stage,
+                    assignedTo: messageCase.assignedTo,
                   };
                 }
               }
