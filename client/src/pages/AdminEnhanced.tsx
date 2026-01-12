@@ -3329,6 +3329,11 @@ export default function AdminEnhanced() {
                   <li>Welcome email with portal link</li>
                   <li>Separate email with temporary password</li>
                 </ul>
+                <div className="bg-amber-50 border border-amber-200 rounded p-2 mb-3">
+                  <p className="text-xs text-amber-700">
+                    <strong>Note:</strong> The user must be assigned to an organisation before sending welcome emails. Close this dialog and assign them first if needed.
+                  </p>
+                </div>
                 <Button
                   onClick={handleSendWelcomeEmail}
                   disabled={sendingWelcomeEmail || !tempPassword}
