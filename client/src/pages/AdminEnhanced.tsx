@@ -1758,6 +1758,8 @@ export default function AdminEnhanced() {
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [createdUserId, setCreatedUserId] = useState<number | null>(null);
   const [sendingWelcomeEmail, setSendingWelcomeEmail] = useState(false);
+  const [sendingPasswordEmail, setSendingPasswordEmail] = useState(false);
+  const [isNewUserFlow, setIsNewUserFlow] = useState(false); // true = new user, false = password reset
 
   // Fetch users with their organisations
   const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery({
@@ -1926,6 +1928,7 @@ export default function AdminEnhanced() {
       // Handle nested user structure from API: data.user.user.id or data.user.id
       const userId = data.user?.user?.id || data.user?.id || null;
       setCreatedUserId(userId);
+      setIsNewUserFlow(true); // This is a new user creation
       setShowPasswordDialog(true);
     },
     onError: (error) => {
@@ -1962,6 +1965,7 @@ export default function AdminEnhanced() {
       });
       setTempPassword(data.tempPassword || "");
       setCreatedUserId(parseInt(userId));
+      setIsNewUserFlow(false); // This is a password reset, not new user
       setShowPasswordDialog(true);
     },
     onError: (error) => {
@@ -2223,6 +2227,38 @@ export default function AdminEnhanced() {
       });
     } finally {
       setSendingWelcomeEmail(false);
+    }
+  };
+
+  const handleSendPasswordEmail = async () => {
+    if (!createdUserId || !tempPassword) {
+      toast({
+        title: "Error",
+        description: "Unable to send password email - missing user information",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSendingPasswordEmail(true);
+    try {
+      const response = await apiRequest("POST", `/api/admin/users/${createdUserId}/send-password-email`, {
+        temporaryPassword: tempPassword
+      });
+      const result = await response.json();
+      
+      toast({
+        title: "Success",
+        description: result.message || "Password email sent successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send password email",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingPasswordEmail(false);
     }
   };
 
@@ -3319,7 +3355,7 @@ export default function AdminEnhanced() {
               </div>
             </div>
 
-            {createdUserId && (
+            {createdUserId && isNewUserFlow && (
               <div className="bg-blue-50 border border-blue-200 rounded p-4">
                 <p className="text-sm text-blue-700 mb-3">
                   <strong>Send Welcome Emails</strong><br />
@@ -3353,11 +3389,38 @@ export default function AdminEnhanced() {
                 </Button>
               </div>
             )}
+
+            {createdUserId && !isNewUserFlow && (
+              <div className="bg-green-50 border border-green-200 rounded p-4">
+                <p className="text-sm text-green-700 mb-3">
+                  <strong>Send Password Email</strong><br />
+                  Click below to email the new temporary password to the user.
+                </p>
+                <Button
+                  onClick={handleSendPasswordEmail}
+                  disabled={sendingPasswordEmail || !tempPassword}
+                  className="w-full bg-green-600 hover:bg-green-700"
+                >
+                  {sendingPasswordEmail ? (
+                    <>
+                      <Mail className="h-4 w-4 mr-2 animate-pulse" />
+                      Sending Email...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="h-4 w-4 mr-2" />
+                      Send Password Email
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
           <div className="flex justify-end">
             <Button onClick={() => {
               setShowPasswordDialog(false);
               setCreatedUserId(null);
+              setIsNewUserFlow(false);
             }}>
               Close
             </Button>

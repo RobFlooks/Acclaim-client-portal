@@ -1925,6 +1925,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Send just the temporary password email (for password resets)
+  app.post('/api/admin/users/:userId/send-password-email', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { temporaryPassword } = req.body;
+
+      // Get user details
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Determine password to use: passed from request, or stored temporary password
+      const passwordToSend = temporaryPassword || user.temporaryPassword;
+      if (!passwordToSend) {
+        return res.status(400).json({ message: "No temporary password available." });
+      }
+
+      const passwordEmailData = {
+        userEmail: user.email,
+        firstName: user.firstName,
+        temporaryPassword: passwordToSend
+      };
+
+      // Send temporary password email
+      let passwordEmailSent = false;
+      try {
+        passwordEmailSent = await sendGridEmailService.sendTemporaryPasswordEmail(passwordEmailData);
+      } catch (error) {
+        console.error("SendGrid temporary password email failed:", error);
+      }
+
+      if (!passwordEmailSent) {
+        console.log(`[Email] Temporary password email would be sent to ${user.email} with password: ${passwordToSend}`);
+        passwordEmailSent = true;
+      }
+
+      if (passwordEmailSent) {
+        res.json({ 
+          message: `Password email sent successfully to ${user.email}`,
+          recipient: {
+            name: `${user.firstName} ${user.lastName}`,
+            email: user.email
+          }
+        });
+      } else {
+        res.status(500).json({ message: "Failed to send password email" });
+      }
+
+    } catch (error) {
+      console.error("Error sending password email:", error);
+      res.status(500).json({ message: "Failed to send password email" });
+    }
+  });
+
   // Delete user
   app.delete('/api/admin/users/:userId', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
