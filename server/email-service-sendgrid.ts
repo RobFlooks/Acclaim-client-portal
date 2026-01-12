@@ -812,6 +812,9 @@ Please log in to the Acclaim Portal to view this message and respond if needed.
               <p style="color: #0369a1; margin: 0; font-size: 14px;">
                 <strong>📧 Note:</strong> Your temporary password will be sent in a separate email for security purposes.
               </p>
+              <p style="color: #0369a1; margin: 10px 0 0 0; font-size: 13px;">
+                <strong>⚠️ Important:</strong> If you don't receive the password email within 5 minutes, please check your spam or junk folder.
+              </p>
             </div>
 
             <div style="background: #f8fafc; padding: 15px; border-radius: 8px; text-align: center;">
@@ -841,6 +844,8 @@ What you can do in the portal:
 - Track payment history
 
 Note: Your temporary password will be sent in a separate email for security purposes.
+
+Important: If you don't receive the password email within 5 minutes, please check your spam or junk folder.
 
 If you have any questions, please contact our support team.
       `;
