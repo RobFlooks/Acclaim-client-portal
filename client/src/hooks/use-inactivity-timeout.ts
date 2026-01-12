@@ -23,6 +23,7 @@ export function useInactivityTimeout({
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastActivityRef = useRef<number>(Date.now());
+  const warningShownRef = useRef<boolean>(false);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -33,11 +34,18 @@ export function useInactivityTimeout({
     if (onLogout) {
       onLogout();
     }
+    warningShownRef.current = false;
     navigate('/auth');
   }, [navigate, onLogout]);
 
-  const resetTimer = useCallback(() => {
+  const resetTimer = useCallback((force = false) => {
+    // Don't reset if warning is already showing (unless forced by user action)
+    if (warningShownRef.current && !force) {
+      return;
+    }
+
     lastActivityRef.current = Date.now();
+    warningShownRef.current = false;
 
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -49,6 +57,7 @@ export function useInactivityTimeout({
     if (!enabled) return;
 
     warningTimeoutRef.current = setTimeout(() => {
+      warningShownRef.current = true;
       if (onWarning) {
         onWarning();
       }
@@ -73,7 +82,10 @@ export function useInactivityTimeout({
     ];
 
     const handleActivity = () => {
-      resetTimer();
+      // Only reset if warning is not showing
+      if (!warningShownRef.current) {
+        resetTimer();
+      }
     };
 
     events.forEach((event) => {
@@ -96,7 +108,7 @@ export function useInactivityTimeout({
   }, [enabled, resetTimer]);
 
   return {
-    resetTimer,
+    resetTimer: () => resetTimer(true), // Force reset when called externally
     getLastActivity: () => lastActivityRef.current,
   };
 }
