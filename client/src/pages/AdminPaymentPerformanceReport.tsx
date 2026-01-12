@@ -418,25 +418,25 @@ export default function AdminPaymentPerformanceReport() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col space-y-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
           <Link href="/admin">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="w-full sm:w-auto">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Admin
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Admin Payment Performance Report</h1>
-            <p className="text-gray-600">Generated on {new Date().toLocaleDateString('en-GB')}</p>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Payment Performance Report</h1>
+            <p className="text-sm text-gray-600">Generated on {new Date().toLocaleDateString('en-GB')}</p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={handleExportExcel} variant="outline">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button onClick={handleExportExcel} variant="outline" className="w-full sm:w-auto">
             <Download className="h-4 w-4 mr-2" />
             Export to Excel
           </Button>
-          <Button onClick={handleDownloadPDF} variant="outline">
+          <Button onClick={handleDownloadPDF} variant="outline" className="w-full sm:w-auto">
             <FileText className="h-4 w-4 mr-2" />
             View PDF Report
           </Button>
@@ -444,14 +444,14 @@ export default function AdminPaymentPerformanceReport() {
       </div>
 
       {/* Organisation Filter */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Filter by Organisation</CardTitle>
+      <Card className="mb-6">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base sm:text-lg">Filter by Organisation</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <Select value={selectedOrganisation} onValueChange={setSelectedOrganisation}>
-              <SelectTrigger className="w-64">
+              <SelectTrigger className="w-full sm:w-64">
                 <SelectValue placeholder="Select organisation" />
               </SelectTrigger>
               <SelectContent>
@@ -463,7 +463,7 @@ export default function AdminPaymentPerformanceReport() {
                 ))}
               </SelectContent>
             </Select>
-            <Badge variant="outline" className="text-sm">
+            <Badge variant="outline" className="text-sm w-fit">
               {filteredPayments?.length || 0} payments found
             </Badge>
           </div>
@@ -471,14 +471,14 @@ export default function AdminPaymentPerformanceReport() {
       </Card>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Payments</CardTitle>
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics?.totalPayments || 0}</div>
+            <div className="text-xl sm:text-2xl font-bold">{metrics?.totalPayments || 0}</div>
             <p className="text-xs text-muted-foreground">All time</p>
           </CardContent>
         </Card>
@@ -489,69 +489,67 @@ export default function AdminPaymentPerformanceReport() {
             <PoundSterling className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(metrics?.totalAmount || 0)}</div>
+            <div className="text-xl sm:text-2xl font-bold">{formatCurrency(metrics?.totalAmount || 0)}</div>
             <p className="text-xs text-muted-foreground">All payments</p>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="sm:col-span-2 lg:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Average Payment</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(metrics?.averageAmount || 0)}</div>
+            <div className="text-xl sm:text-2xl font-bold">{formatCurrency(metrics?.averageAmount || 0)}</div>
             <p className="text-xs text-muted-foreground">Per payment</p>
           </CardContent>
         </Card>
-        
-
       </div>
 
       {/* Recent Activity */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Recent Payment Activity</CardTitle>
+      <Card className="mb-6">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base sm:text-lg">Recent Payment Activity</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{metrics?.payments30Days || 0}</div>
-              <div className="text-sm text-gray-600">Last 30 Days</div>
-              <div className="text-lg font-semibold">{formatCurrency(metrics?.amount30Days || 0)}</div>
+          <div className="grid grid-cols-3 gap-2 sm:gap-6">
+            <div className="text-center p-2 sm:p-4 bg-green-50 rounded-lg">
+              <div className="text-lg sm:text-2xl font-bold text-green-600">{metrics?.payments30Days || 0}</div>
+              <div className="text-xs sm:text-sm text-gray-600">Last 30 Days</div>
+              <div className="text-sm sm:text-lg font-semibold">{formatCurrency(metrics?.amount30Days || 0)}</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{metrics?.payments60Days || 0}</div>
-              <div className="text-sm text-gray-600">Last 60 Days</div>
-              <div className="text-lg font-semibold">{formatCurrency(metrics?.amount60Days || 0)}</div>
+            <div className="text-center p-2 sm:p-4 bg-blue-50 rounded-lg">
+              <div className="text-lg sm:text-2xl font-bold text-blue-600">{metrics?.payments60Days || 0}</div>
+              <div className="text-xs sm:text-sm text-gray-600">Last 60 Days</div>
+              <div className="text-sm sm:text-lg font-semibold">{formatCurrency(metrics?.amount60Days || 0)}</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">{metrics?.payments90Days || 0}</div>
-              <div className="text-sm text-gray-600">Last 90 Days</div>
-              <div className="text-lg font-semibold">{formatCurrency(metrics?.amount90Days || 0)}</div>
+            <div className="text-center p-2 sm:p-4 bg-purple-50 rounded-lg">
+              <div className="text-lg sm:text-2xl font-bold text-purple-600">{metrics?.payments90Days || 0}</div>
+              <div className="text-xs sm:text-sm text-gray-600">Last 90 Days</div>
+              <div className="text-sm sm:text-lg font-semibold">{formatCurrency(metrics?.amount90Days || 0)}</div>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Payment Method Breakdown */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Payment Method Breakdown</CardTitle>
+      <Card className="mb-6">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base sm:text-lg">Payment Method Breakdown</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {Object.entries(methodBreakdown)
               .sort(([a], [b]) => a.localeCompare(b))
               .map(([method, data]) => (
-              <div key={method} className="flex items-center justify-between p-4 border rounded-lg">
+              <div key={method} className="flex items-center justify-between p-3 sm:p-4 border rounded-lg">
                 <div>
-                  <div className="font-medium">{method}</div>
-                  <div className="text-sm text-gray-600">{data.count} payments</div>
+                  <div className="text-sm sm:text-base font-medium">{method}</div>
+                  <div className="text-xs sm:text-sm text-gray-600">{data.count} payments</div>
                 </div>
                 <div className="text-right">
-                  <div className="font-semibold">{formatCurrency(data.amount)}</div>
-                  <div className="text-sm text-gray-600">Avg: {formatCurrency(data.amount / data.count)}</div>
+                  <div className="text-sm sm:text-base font-semibold">{formatCurrency(data.amount)}</div>
+                  <div className="text-xs sm:text-sm text-gray-600">Avg: {formatCurrency(data.amount / data.count)}</div>
                 </div>
               </div>
             ))}
@@ -561,20 +559,20 @@ export default function AdminPaymentPerformanceReport() {
 
       {/* Monthly Trends */}
       <Card>
-        <CardHeader>
-          <CardTitle>Monthly Payment Trends</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base sm:text-lg">Monthly Payment Trends</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {monthlyTrends.map((trend) => (
-              <div key={trend.month} className="flex items-center justify-between p-4 border rounded-lg">
+              <div key={trend.month} className="flex items-center justify-between p-3 sm:p-4 border rounded-lg">
                 <div>
-                  <div className="font-medium">{trend.month}</div>
-                  <div className="text-sm text-gray-600">{trend.count} payments</div>
+                  <div className="text-sm sm:text-base font-medium">{trend.month}</div>
+                  <div className="text-xs sm:text-sm text-gray-600">{trend.count} payments</div>
                 </div>
                 <div className="text-right">
-                  <div className="font-semibold">{formatCurrency(trend.amount)}</div>
-                  <div className="text-sm text-gray-600">Avg: {formatCurrency(trend.amount / trend.count)}</div>
+                  <div className="text-sm sm:text-base font-semibold">{formatCurrency(trend.amount)}</div>
+                  <div className="text-xs sm:text-sm text-gray-600">Avg: {formatCurrency(trend.amount / trend.count)}</div>
                 </div>
               </div>
             ))}
