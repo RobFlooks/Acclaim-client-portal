@@ -48,7 +48,7 @@ export function setupAuth(app: Express) {
     cookie: {
       secure: false, // Disable secure for development
       httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+      maxAge: 1000 * 60 * 60 * 4, // 4 hours
       sameSite: 'lax'
     },
     rolling: true, // Reset expiry on each request
