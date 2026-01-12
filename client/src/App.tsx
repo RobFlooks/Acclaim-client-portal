@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
+import { InactivityMonitor } from "@/components/InactivityMonitor";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import ChangePasswordPage from "@/pages/change-password-page";
@@ -51,6 +52,7 @@ function App() {
       <AuthProvider>
         <TooltipProvider>
           <Toaster />
+          <InactivityMonitor timeoutMinutes={15} warningSeconds={60} />
           <Router />
         </TooltipProvider>
       </AuthProvider>
