@@ -40,6 +40,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   const [messageAttachment, setMessageAttachment] = useState<File | null>(null);
   const [activeTab, setActiveTab] = useState("timeline");
   const [messageSearch, setMessageSearch] = useState("");
+  const [documentSearch, setDocumentSearch] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -1312,7 +1313,19 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
         <TabsContent value="documents" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Documents</CardTitle>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <CardTitle>Documents</CardTitle>
+                <div className="relative w-full sm:w-auto">
+                  <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    type="text"
+                    placeholder="Search documents..."
+                    value={documentSearch}
+                    onChange={(e) => setDocumentSearch(e.target.value)}
+                    className="pl-8 h-9 w-full sm:w-48"
+                  />
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               {documentsLoading ? (
@@ -1325,7 +1338,13 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                 </div>
               ) : documents && documents.length > 0 ? (
                 <div className="space-y-3">
-                  {documents.map((doc: any) => (
+                  {documents
+                    .filter((doc: any) => {
+                      if (!documentSearch.trim()) return true;
+                      const searchLower = documentSearch.toLowerCase();
+                      return doc.fileName?.toLowerCase().includes(searchLower);
+                    })
+                    .map((doc: any) => (
                     <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div className="flex items-center space-x-3">
                         <FileText className="h-5 w-5 text-acclaim-teal" />
