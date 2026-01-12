@@ -1756,7 +1756,7 @@ export default function AdminEnhanced() {
   });
   const [tempPassword, setTempPassword] = useState("");
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
-  const [createdUserId, setCreatedUserId] = useState<number | null>(null);
+  const [createdUserId, setCreatedUserId] = useState<string | null>(null);
   const [sendingWelcomeEmail, setSendingWelcomeEmail] = useState(false);
   const [sendingPasswordEmail, setSendingPasswordEmail] = useState(false);
   const [isNewUserFlow, setIsNewUserFlow] = useState(false); // true = new user, false = password reset
@@ -1964,7 +1964,7 @@ export default function AdminEnhanced() {
         description: "Password reset successfully",
       });
       setTempPassword(data.tempPassword || "");
-      setCreatedUserId(parseInt(userId));
+      setCreatedUserId(userId);
       setIsNewUserFlow(false); // This is a password reset, not new user
       setShowPasswordDialog(true);
     },
