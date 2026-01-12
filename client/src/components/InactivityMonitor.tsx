@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { useLocation } from 'wouter';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,7 +21,6 @@ export function InactivityMonitor({
   warningSeconds = 60,
 }: InactivityMonitorProps) {
   const { user } = useAuth();
-  const [, navigate] = useLocation();
   const [showWarning, setShowWarning] = useState(false);
   
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -40,8 +38,9 @@ export function InactivityMonitor({
     }
     warningShownRef.current = false;
     setShowWarning(false);
-    navigate('/auth');
-  }, [navigate]);
+    // Force a full page reload to ensure clean state
+    window.location.href = '/auth';
+  }, []);
 
   const resetTimer = useCallback((force = false) => {
     if (warningShownRef.current && !force) {
