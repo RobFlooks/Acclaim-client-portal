@@ -95,10 +95,26 @@ export default function AdvancedReports() {
     }
   }, [isLoading, user]);
 
+  // Get organisations for name lookup
+  const { data: organisations = [] } = useQuery<any[]>({
+    queryKey: ['/api/admin/organisations'],
+    retry: false
+  });
+
   // Cross-organisation performance query
-  const { data: crossOrgData = [], isLoading: isLoadingCrossOrg } = useQuery({
+  const { data: rawCrossOrgData = [], isLoading: isLoadingCrossOrg } = useQuery({
     queryKey: ['/api/admin/reports/cross-organisation'],
     retry: false
+  });
+
+  // Merge organisation names from organisations endpoint
+  const crossOrgData = rawCrossOrgData.map((item: any) => {
+    const orgId = item.organisationId ?? item.organizationId;
+    const org = organisations.find((o: any) => o.id === orgId);
+    return {
+      ...item,
+      organisationName: org?.name || item.organisationName || item.organizationName || 'Unknown'
+    };
   });
 
   // User activity report query
@@ -261,11 +277,10 @@ export default function AdvancedReports() {
                       {crossOrgData?.map((org: CrossOrgPerformanceAPI) => {
                         const orgId = org.organisationId ?? org.organizationId ?? 0;
                         const orgName = org.organisationName ?? org.organizationName ?? 'Unknown';
-                        console.log('Org data:', org, 'Name:', orgName);
                         return (
                           <TableRow key={orgId}>
-                            <TableCell className="font-medium">{orgName || `ID:${orgId}`}</TableCell>
-                            <TableCell>{`${org.totalCases} (${orgName})`}</TableCell>
+                            <TableCell className="font-medium">{orgName}</TableCell>
+                            <TableCell>{org.totalCases}</TableCell>
                             <TableCell>{org.activeCases}</TableCell>
                             <TableCell>{org.closedCases}</TableCell>
                             <TableCell>£{parseFloat(org.totalOutstanding || '0').toLocaleString()}</TableCell>
