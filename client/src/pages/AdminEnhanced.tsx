@@ -1756,6 +1756,8 @@ export default function AdminEnhanced() {
   });
   const [tempPassword, setTempPassword] = useState("");
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [createdUserId, setCreatedUserId] = useState<number | null>(null);
+  const [sendingWelcomeEmail, setSendingWelcomeEmail] = useState(false);
 
   // Fetch users with their organisations
   const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery({
@@ -1921,6 +1923,7 @@ export default function AdminEnhanced() {
       });
       setShowCreateUser(false);
       setTempPassword(data.tempPassword || "");
+      setCreatedUserId(data.user?.id || null);
       setShowPasswordDialog(true);
     },
     onError: (error) => {
@@ -1949,13 +1952,14 @@ export default function AdminEnhanced() {
       const response = await apiRequest("POST", `/api/admin/users/${userId}/reset-password`);
       return await response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: (data, userId) => {
       console.log("Reset password response:", data);
       toast({
         title: "Success",
         description: "Password reset successfully",
       });
       setTempPassword(data.tempPassword || "");
+      setCreatedUserId(parseInt(userId));
       setShowPasswordDialog(true);
     },
     onError: (error) => {
@@ -2186,6 +2190,38 @@ export default function AdminEnhanced() {
       title: "Copied",
       description: "Temporary password copied to clipboard",
     });
+  };
+
+  const handleSendWelcomeEmail = async () => {
+    if (!createdUserId || !tempPassword) {
+      toast({
+        title: "Error",
+        description: "Unable to send welcome email - missing user information",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSendingWelcomeEmail(true);
+    try {
+      const response = await apiRequest("POST", `/api/admin/users/${createdUserId}/send-welcome-email`, {
+        temporaryPassword: tempPassword
+      });
+      const result = await response.json();
+      
+      toast({
+        title: "Success",
+        description: result.message || "Welcome emails sent successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send welcome emails",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingWelcomeEmail(false);
+    }
   };
 
   // Check for admin access errors
@@ -3280,9 +3316,42 @@ export default function AdminEnhanced() {
                 </p>
               </div>
             </div>
+
+            {createdUserId && (
+              <div className="bg-blue-50 border border-blue-200 rounded p-4">
+                <p className="text-sm text-blue-700 mb-3">
+                  <strong>Send Welcome Emails</strong><br />
+                  Click below to send two emails to the user:
+                </p>
+                <ul className="text-sm text-blue-600 mb-3 ml-4 list-disc">
+                  <li>Welcome email with portal link</li>
+                  <li>Separate email with temporary password</li>
+                </ul>
+                <Button
+                  onClick={handleSendWelcomeEmail}
+                  disabled={sendingWelcomeEmail || !tempPassword}
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                >
+                  {sendingWelcomeEmail ? (
+                    <>
+                      <Mail className="h-4 w-4 mr-2 animate-pulse" />
+                      Sending Emails...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="h-4 w-4 mr-2" />
+                      Send Welcome Emails
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
           <div className="flex justify-end">
-            <Button onClick={() => setShowPasswordDialog(false)}>
+            <Button onClick={() => {
+              setShowPasswordDialog(false);
+              setCreatedUserId(null);
+            }}>
               Close
             </Button>
           </div>

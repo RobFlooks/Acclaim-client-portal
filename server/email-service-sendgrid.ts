@@ -117,6 +117,13 @@ interface WelcomeEmailData {
   temporaryPassword: string;
   organisationName: string;
   adminName: string;
+  portalUrl?: string;
+}
+
+interface TemporaryPasswordEmailData {
+  userEmail: string;
+  firstName: string;
+  temporaryPassword: string;
 }
 
 interface ExternalMessageNotificationData {
@@ -758,6 +765,7 @@ Please log in to the Acclaim Portal to view this message and respond if needed.
     }
 
     try {
+      const portalUrl = data.portalUrl || 'https://acclaim-api.azurewebsites.net/auth';
       const subject = `Welcome to the Acclaim Credit Management & Recovery Portal!`;
 
       const htmlContent = `
@@ -772,35 +780,38 @@ Please log in to the Acclaim Portal to view this message and respond if needed.
           
           <div style="padding: 30px;">
             <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h2 style="color: #1e293b; margin-top: 0;">Account Details</h2>
               <p style="color: #475569; margin-bottom: 20px;">Hello ${data.firstName},</p>
-              <p style="color: #475569; margin-bottom: 20px;">Welcome to the Acclaim Credit Management & Recovery Portal! Your account has been created and you can now access the system.</p>
+              <p style="color: #475569; margin-bottom: 20px;">Welcome to the Acclaim Credit Management & Recovery Portal! Your account has been created and you can now access the system to view and manage your cases.</p>
               
               <table style="width: 100%; border-spacing: 0; margin: 20px 0;">
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 140px;">Username:</td>
                   <td style="padding: 8px 0; color: #1e293b; font-family: monospace; background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">${data.userEmail}</td>
                 </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Temporary Password:</td>
-                  <td style="padding: 8px 0; color: #1e293b; font-family: monospace; background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">${data.temporaryPassword}</td>
-                </tr>
               </table>
-            </div>
-
-            <div style="background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-              <h3 style="color: #92400e; margin-top: 0; margin-bottom: 10px;">⚠️ Important Security Notice</h3>
-              <p style="color: #92400e; margin: 0; font-size: 14px;">This is a temporary password. You will be required to change it when you first log in for security purposes.</p>
+              
+              <div style="text-align: center; margin: 25px 0;">
+                <a href="${portalUrl}" style="display: inline-block; background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 16px;">Access the Portal</a>
+              </div>
+              <p style="color: #94a3b8; font-size: 12px; text-align: center; margin-top: 10px;">
+                Or copy this link: <a href="${portalUrl}" style="color: #14b8a6;">${portalUrl}</a>
+              </p>
             </div>
 
             <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h3 style="color: #1e293b; margin-top: 0;">Getting Started</h3>
-              <ol style="color: #475569; line-height: 1.6; padding-left: 20px;">
-                <li>Visit the Acclaim Portal login page</li>
-                <li>Enter your username and temporary password</li>
-                <li>Create a new secure password when prompted</li>
-                <li>Explore your dashboard and case management tools</li>
-              </ol>
+              <h3 style="color: #1e293b; margin-top: 0;">What you can do in the portal:</h3>
+              <ul style="color: #475569; line-height: 1.8; padding-left: 20px;">
+                <li>View and track your cases</li>
+                <li>Send and receive messages with our team</li>
+                <li>Access and download case documents</li>
+                <li>Track payment history</li>
+              </ul>
+            </div>
+
+            <div style="background: #e0f2fe; border: 1px solid #0284c7; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+              <p style="color: #0369a1; margin: 0; font-size: 14px;">
+                <strong>📧 Note:</strong> Your temporary password will be sent in a separate email for security purposes.
+              </p>
             </div>
 
             <div style="background: #f8fafc; padding: 15px; border-radius: 8px; text-align: center;">
@@ -817,19 +828,19 @@ Welcome to the Acclaim Credit Management & Recovery Portal!
 
 Hello ${data.firstName},
 
-Your account has been created and you can now access the system.
+Welcome to the Acclaim Credit Management & Recovery Portal! Your account has been created and you can now access the system to view and manage your cases.
 
-Account Details:
 Username: ${data.userEmail}
-Temporary Password: ${data.temporaryPassword}
 
-IMPORTANT: This is a temporary password. You will be required to change it when you first log in.
+Access the portal here: ${portalUrl}
 
-Getting Started:
-1. Visit the Acclaim Portal login page
-2. Enter your username and temporary password
-3. Create a new secure password when prompted
-4. Explore your dashboard and case management tools
+What you can do in the portal:
+- View and track your cases
+- Send and receive messages with our team
+- Access and download case documents
+- Track payment history
+
+Note: Your temporary password will be sent in a separate email for security purposes.
 
 If you have any questions, please contact our support team.
       `;
@@ -850,6 +861,110 @@ If you have any questions, please contact our support team.
       });
     } catch (error) {
       console.error('❌ Failed to send welcome email via SendGrid:', error);
+      return false;
+    }
+  }
+
+  async sendTemporaryPasswordEmail(data: TemporaryPasswordEmailData): Promise<boolean> {
+    if (!this.initialized) {
+      console.log('❌ SendGrid not configured - temporary password email not sent');
+      return false;
+    }
+
+    try {
+      const subject = `Your Temporary Password - Acclaim Portal`;
+
+      const htmlContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
+          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 30px; text-align: center;">
+            <div style="margin-bottom: 10px;">
+              <img src="cid:logo" alt="Acclaim Credit Management & Recovery" style="height: 40px; width: auto;" />
+            </div>
+            <p style="margin: 0; opacity: 0.9; font-size: 16px;">Your Temporary Password</p>
+          </div>
+          
+          <div style="padding: 30px;">
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <p style="color: #475569; margin-bottom: 20px;">Hello ${data.firstName},</p>
+              <p style="color: #475569; margin-bottom: 20px;">Here is your temporary password to access the Acclaim Credit Management & Recovery Portal:</p>
+              
+              <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+                <p style="color: #475569; margin: 0 0 10px 0; font-size: 14px;">Your temporary password:</p>
+                <div style="font-size: 24px; font-weight: bold; color: #1e293b; font-family: monospace; letter-spacing: 2px; background: white; padding: 15px; border-radius: 6px; border: 2px dashed #14b8a6;">
+                  ${data.temporaryPassword}
+                </div>
+              </div>
+            </div>
+
+            <div style="background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+              <h3 style="color: #92400e; margin-top: 0; margin-bottom: 10px;">⚠️ Important Security Notice</h3>
+              <p style="color: #92400e; margin: 0; font-size: 14px;">This is a temporary password. <strong>You will be required to change it when you first log in</strong> for security purposes.</p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <h3 style="color: #1e293b; margin-top: 0;">Getting Started</h3>
+              <ol style="color: #475569; line-height: 1.8; padding-left: 20px;">
+                <li>Go to the Acclaim Portal login page</li>
+                <li>Enter your email address as your username</li>
+                <li>Enter this temporary password</li>
+                <li>You will be prompted to create a new secure password</li>
+              </ol>
+            </div>
+
+            <div style="background: #fee2e2; border: 1px solid #ef4444; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+              <p style="color: #dc2626; margin: 0; font-size: 14px;">
+                <strong>🔒 Security Tip:</strong> Please delete this email after you have logged in and changed your password.
+              </p>
+            </div>
+
+            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; text-align: center;">
+              <p style="color: #64748b; margin: 0; font-size: 12px;">
+                If you have any questions, please contact our support team.
+              </p>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const textContent = `
+Your Temporary Password - Acclaim Portal
+
+Hello ${data.firstName},
+
+Here is your temporary password to access the Acclaim Credit Management & Recovery Portal:
+
+Temporary Password: ${data.temporaryPassword}
+
+IMPORTANT SECURITY NOTICE:
+This is a temporary password. You will be required to change it when you first log in for security purposes.
+
+Getting Started:
+1. Go to the Acclaim Portal login page
+2. Enter your email address as your username
+3. Enter this temporary password
+4. You will be prompted to create a new secure password
+
+Security Tip: Please delete this email after you have logged in and changed your password.
+
+If you have any questions, please contact our support team.
+      `;
+
+      // Prepare attachments for APIM
+      const attachments: Array<{ content: string; filename: string; type: string; disposition?: string; content_id?: string }> = [];
+      const logoBase64 = getLogoBase64();
+      if (logoBase64) {
+        attachments.push(logoBase64);
+      }
+
+      return await this.sendViaAPIM({
+        to: data.userEmail,
+        subject: subject,
+        textContent: textContent,
+        htmlContent: htmlContent,
+        attachments: attachments
+      });
+    } catch (error) {
+      console.error('❌ Failed to send temporary password email via SendGrid:', error);
       return false;
     }
   }
