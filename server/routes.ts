@@ -1124,7 +1124,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // If admin is sending to a specific user, notify them
           if (recipientType === 'user') {
             const recipientUser = await storage.getUser(recipientId);
-            if (recipientUser && recipientUser.email && !recipientUser.isAdmin && recipientUser.emailNotifications !== false) {
+            // Only send emails to users who have logged in (mustChangePassword = false) and have notifications enabled
+            if (recipientUser && recipientUser.email && !recipientUser.isAdmin && recipientUser.emailNotifications !== false && !recipientUser.mustChangePassword) {
               // Get organisation name
               let organisationName = "Unknown Organisation";
               if (recipientUser.organisationId) {
@@ -1182,8 +1183,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Admin sending to organisation - notify all non-admin users in that organisation
             // Use getUsersByOrganisationId which properly checks both legacy organisationId and junction table
             const orgUsers = await storage.getUsersByOrganisationId(parseInt(recipientId));
+            // Only send emails to users who have logged in (mustChangePassword = false) and have notifications enabled
             const organisationUsers = orgUsers.filter(u => 
-              !u.isAdmin && u.email && u.emailNotifications !== false
+              !u.isAdmin && u.email && u.emailNotifications !== false && !u.mustChangePassword
             );
 
             if (organisationUsers.length > 0) {
@@ -2494,8 +2496,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const organisation = await storage.getOrganisation(case_.organisationId);
           
           for (const user of organisationUsers) {
-            // Check user's email notification preferences
-            if (user.emailNotifications && user.email) {
+            // Check user's email notification preferences and that they have logged in at least once
+            if (user.emailNotifications && user.email && !user.mustChangePassword) {
               try {
                 // Send email notification to user via SendGrid (for real delivery)
                 const emailSent = await sendGridEmailService.sendExternalMessageNotification({
