@@ -261,6 +261,7 @@ export default function AdvancedReports() {
                       {crossOrgData?.map((org: CrossOrgPerformanceAPI) => {
                         const orgId = org.organisationId ?? org.organizationId ?? 0;
                         const orgName = org.organisationName ?? org.organizationName ?? 'Unknown';
+                        console.log('Org data:', org, 'Name:', orgName);
                         return (
                           <TableRow key={orgId}>
                             <TableCell className="font-medium">{orgName}</TableCell>
