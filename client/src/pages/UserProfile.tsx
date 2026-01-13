@@ -11,7 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 import { useQueryClient } from "@tanstack/react-query";
-import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft, Bell, Scale, ExternalLink, Building2, Briefcase, Users, FileText, Gavel, AlertTriangle, Megaphone, Home, Trophy } from "lucide-react";
+import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft, Bell, ExternalLink, Building2, Briefcase, Users, FileText, Gavel, AlertTriangle, Megaphone, Home, Trophy } from "lucide-react";
+import chadwickLawrenceLogo from "@assets/CL_long_logo_1768312503635.png";
 import { useAuth } from "@/hooks/use-auth";
 import { updateUserSchema, changePasswordSchema } from "@shared/schema";
 import { z } from "zod";
@@ -538,15 +539,13 @@ export default function UserProfile() {
         {/* Legal Support Tab */}
         <TabsContent value="legal-support">
           <Card>
-            <CardHeader className="bg-gradient-to-r from-[#1a3a52] to-[#2d5a7b] text-white rounded-t-lg">
-              <div className="flex items-center space-x-3">
-                <Scale className="h-8 w-8" />
-                <div>
-                  <CardTitle className="text-xl text-white">Legal Support Services</CardTitle>
-                  <CardDescription className="text-gray-200">
-                    Chadwick Lawrence - Yorkshire's Legal People
-                  </CardDescription>
-                </div>
+            <CardHeader className="bg-white border-b rounded-t-lg">
+              <div className="flex items-center justify-center py-2">
+                <img 
+                  src={chadwickLawrenceLogo} 
+                  alt="Chadwick Lawrence - Yorkshire's Legal People" 
+                  className="h-16 object-contain"
+                />
               </div>
             </CardHeader>
             <CardContent className="pt-6">
