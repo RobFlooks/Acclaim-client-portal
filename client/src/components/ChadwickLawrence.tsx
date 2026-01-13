@@ -230,6 +230,18 @@ export default function ChadwickLawrence() {
               </a>
             </div>
 
+            <div className="mt-6 flex justify-center">
+              <a 
+                href="https://www.chadwicklawrence.co.uk/business-services/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-[#ba1b6e] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#a01860] transition-colors"
+              >
+                View all services on our website
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </div>
+
             <div className="mt-8 p-6 bg-gradient-to-r from-[#ba1b6e] to-[#2e3192] rounded-lg text-white">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 bg-white/20 rounded-lg">
@@ -271,16 +283,7 @@ export default function ChadwickLawrence() {
                   <a href="mailto:info@chadlaw.co.uk" className="text-white font-medium hover:underline">info@chadlaw.co.uk</a>
                 </div>
               </div>
-              <div className="mt-4 pt-4 border-t border-white/20 flex items-center justify-between">
-                <a 
-                  href="https://www.chadwicklawrence.co.uk/business-services/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center text-white hover:underline"
-                >
-                  <span>View all services on our website</span>
-                  <ExternalLink className="h-4 w-4 ml-2" />
-                </a>
+              <div className="mt-4 pt-4 border-t border-white/20 flex items-center justify-end">
                 <img 
                   src={chadwickLawrenceLogo} 
                   alt="Chadwick Lawrence" 
