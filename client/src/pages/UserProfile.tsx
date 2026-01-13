@@ -799,7 +799,7 @@ export default function UserProfile() {
                   <img 
                     src={chadwickLawrenceLogo} 
                     alt="Chadwick Lawrence" 
-                    className="h-8 opacity-90"
+                    className="h-8 brightness-0 invert"
                   />
                 </div>
               </div>
