@@ -484,8 +484,8 @@ export default function Messages() {
                       </SelectContent>
                     </Select>
                     {linkedCaseId && linkedCaseId !== "none" ? (
-                      <p className="text-sm text-gray-600 mt-1">
-                        Message will be stored against the selected case
+                      <p className="text-xs text-gray-600 mt-1">
+                        Message will be stored against the selected case and visible to others in your organisation with access to this case.
                       </p>
                     ) : (
                       <p className="text-xs text-amber-600 mt-1">
