@@ -6,7 +6,7 @@ import Messages from "@/components/Messages";
 import Reports from "@/components/Reports";
 import Documents from "@/components/Documents";
 
-import { Bell, Menu, X, Scale } from "lucide-react";
+import { Bell, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
@@ -16,7 +16,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 export default function Home() {
   const [activeSection, setActiveSection] = useState("dashboard");
   const { user } = useAuth();
-  const [location, setLocation] = useLocation();
+  const [location] = useLocation();
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -145,14 +145,6 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
-              <button
-                onClick={() => setLocation("/profile?tab=legal-support")}
-                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#2e3192] transition-colors"
-                title="Other Legal Services"
-              >
-                <Scale className="h-4 w-4" />
-                <span className="hidden sm:inline">Other Legal Services by Chadwick Lawrence</span>
-              </button>
               <Button variant="ghost" size="icon" className="relative" onClick={handleNotificationClick}>
                 <Bell className="h-5 w-5" />
               </Button>
