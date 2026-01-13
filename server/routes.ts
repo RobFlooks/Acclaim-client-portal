@@ -1536,16 +1536,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.organisationId) {
-        return res.status(404).json({ message: "User organisation not found" });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
       }
 
       const documentId = parseInt(req.params.id);
-      const documents = await storage.getDocumentsForOrganisation(user.organisationId);
-      const document = documents.find(doc => doc.id === documentId);
+      
+      // Get all user's organisation IDs (both legacy and junction table)
+      const userOrgs = await storage.getUserOrganisations(userId);
+      const allUserOrgIds = new Set<number>();
+      if (user.organisationId) {
+        allUserOrgIds.add(user.organisationId);
+      }
+      userOrgs.forEach(uo => allUserOrgIds.add(uo.organisationId));
 
+      // Get the document directly
+      const document = await storage.getDocumentById(documentId);
+      
       if (!document) {
         return res.status(404).json({ message: "Document not found" });
+      }
+
+      // Check access: admin can access all, regular users need org match
+      if (!user.isAdmin) {
+        if (document.organisationId && !allUserOrgIds.has(document.organisationId)) {
+          return res.status(403).json({ message: "Access denied" });
+        }
       }
 
       // Check if file exists
@@ -1731,34 +1747,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating payment:", error);
       res.status(500).json({ message: "Failed to create payment" });
-    }
-  });
-
-  app.get('/api/documents/:id/download', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.id;
-      const user = await storage.getUser(userId);
-      
-      if (!user || !user.organisationId) {
-        return res.status(404).json({ message: "User organisation not found" });
-      }
-
-      const documentId = parseInt(req.params.id);
-      const documents = await storage.getDocumentsForOrganisation(user.organisationId);
-      const document = documents.find(d => d.id === documentId);
-      
-      if (!document) {
-        return res.status(404).json({ message: "Document not found" });
-      }
-
-      if (!fs.existsSync(document.filePath)) {
-        return res.status(404).json({ message: "File not found on disk" });
-      }
-
-      res.download(document.filePath, document.fileName);
-    } catch (error) {
-      console.error("Error downloading document:", error);
-      res.status(500).json({ message: "Failed to download document" });
     }
   });
 

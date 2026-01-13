@@ -136,6 +136,7 @@ export interface IStorage {
   deleteMessage(id: number): Promise<void>; // Admin only - delete message by ID
   
   // Document operations
+  getDocumentById(id: number): Promise<Document | undefined>;
   getDocumentsForCase(caseId: number): Promise<Document[]>;
   getDocumentsForOrganisation(organisationId: number): Promise<Document[]>;
   getOrganisationOnlyDocuments(organisationId: number): Promise<Document[]>; // Get documents not linked to any case
@@ -1072,6 +1073,11 @@ export class DatabaseStorage implements IStorage {
   async deleteMessage(id: number): Promise<void> {
     // Admin only - delete message by ID
     await db.delete(messages).where(eq(messages.id, id));
+  }
+
+  async getDocumentById(id: number): Promise<Document | undefined> {
+    const [document] = await db.select().from(documents).where(eq(documents.id, id)).limit(1);
+    return document;
   }
 
   async getDocumentsForCase(caseId: number): Promise<any[]> {
