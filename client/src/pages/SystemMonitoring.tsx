@@ -137,10 +137,11 @@ export default function SystemMonitoring() {
     retry: false,
   });
 
-  // Fetch system health metrics (from Advanced Reports)
+  // Fetch system health metrics (from Advanced Reports) - auto-refresh every 30 seconds
   const { data: systemHealthData = [], isLoading: isLoadingSystemHealth } = useQuery<SystemHealth[]>({
     queryKey: ['/api/admin/reports/system-health'],
-    retry: false
+    retry: false,
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   const getHealthBadgeColor = (health: string) => {
