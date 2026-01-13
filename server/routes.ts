@@ -1333,7 +1333,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.organisationId) {
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Get all organisation IDs the user has access to (both legacy and junction table)
+      const userOrgs = await storage.getUserOrganisations(userId);
+      const allUserOrgIds = new Set<number>();
+      
+      // Add legacy organisation if exists
+      if (user.organisationId) {
+        allUserOrgIds.add(user.organisationId);
+      }
+      
+      // Add junction table organisations
+      userOrgs.forEach(uo => allUserOrgIds.add(uo.organisationId));
+      
+      if (allUserOrgIds.size === 0) {
         return res.status(404).json({ message: "User organisation not found" });
       }
 
@@ -1346,8 +1362,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Case ID is required" });
       }
 
-      // Verify case belongs to user's organisation
-      const case_ = await storage.getCase(caseId, user.organisationId);
+      // Verify case belongs to any of the user's organisations
+      let case_ = null;
+      let caseOrgId = null;
+      for (const orgId of allUserOrgIds) {
+        case_ = await storage.getCase(caseId, orgId);
+        if (case_) {
+          caseOrgId = orgId;
+          break;
+        }
+      }
+      
       if (!case_) {
         return res.status(404).json({ message: "Case not found" });
       }
@@ -1359,7 +1384,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fileType: req.file.mimetype,
         filePath: req.file.path,
         uploadedBy: userId,
-        organisationId: user.organisationId,
+        organisationId: caseOrgId!,
       });
 
       res.json(document);
