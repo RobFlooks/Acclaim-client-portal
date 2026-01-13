@@ -2489,10 +2489,6 @@ export default function AdminEnhanced() {
               <span className="hidden sm:inline">Integration</span>
               <span className="sm:hidden">API</span>
             </TabsTrigger>
-            <TabsTrigger value="user-guide" className="flex-1 text-xs sm:text-sm">
-              <span className="hidden sm:inline">User Guide</span>
-              <span className="sm:hidden">Guide</span>
-            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -3224,14 +3220,6 @@ export default function AdminEnhanced() {
           <CaseManagementGuideDownload />
         </TabsContent>
 
-        <TabsContent value="user-guide">
-          <div className="flex justify-center">
-            <div className="space-y-6 max-w-4xl">
-              <UserGuideDownload />
-              <UserGuideWordDownload />
-            </div>
-          </div>
-        </TabsContent>
       </Tabs>
 
       {/* Edit Organization Dialog */}
