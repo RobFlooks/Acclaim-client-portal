@@ -26,7 +26,7 @@ export default function ChadwickLawrence() {
             </div>
 
             <h3 className="text-lg font-semibold mb-2 text-[#2e3192]">Our Business Services</h3>
-            <p className="text-sm text-gray-500 mb-4">Select a service below to view more information on our website.</p>
+            <p className="text-sm mb-4 text-[#ba1b6e]">Select a service below to view more information on our website.</p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <a 
