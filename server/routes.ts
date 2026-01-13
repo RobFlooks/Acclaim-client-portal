@@ -1358,7 +1358,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const caseId = parseInt(req.body.caseId);
-      if (!caseId) {
+      console.log("[Document Upload] Received caseId:", req.body.caseId, "parsed:", caseId);
+      console.log("[Document Upload] User org IDs:", Array.from(allUserOrgIds));
+      
+      if (!caseId || isNaN(caseId)) {
         return res.status(400).json({ message: "Case ID is required" });
       }
 
@@ -1366,14 +1369,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let case_ = null;
       let caseOrgId = null;
       for (const orgId of allUserOrgIds) {
+        console.log("[Document Upload] Checking case", caseId, "in org", orgId);
         case_ = await storage.getCase(caseId, orgId);
         if (case_) {
+          console.log("[Document Upload] Found case in org", orgId);
           caseOrgId = orgId;
           break;
         }
       }
       
       if (!case_) {
+        console.log("[Document Upload] Case not found in any user org");
         return res.status(404).json({ message: "Case not found" });
       }
 
