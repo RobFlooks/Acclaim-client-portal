@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Building2, Briefcase, Users, FileText, Gavel, AlertTriangle, Megaphone, Shield, Home, Trophy, ExternalLink } from "lucide-react";
+import { Building2, Briefcase, Users, FileText, Gavel, AlertTriangle, Megaphone, Shield, Home, Trophy, ExternalLink, Calendar, Clock, MapPin } from "lucide-react";
 import chadwickLawrenceLogo from "@assets/CL_long_logo_1768312503635.png";
 
 export default function ChadwickLawrence() {
@@ -227,6 +227,90 @@ export default function ChadwickLawrence() {
                     <p className="text-sm text-gray-600 mt-1">Specialist support for players, clubs and representatives.</p>
                   </div>
                 </div>
+              </a>
+            </div>
+
+            <div className="mt-8 p-6 bg-gradient-to-r from-[#ba1b6e] to-[#2e3192] rounded-lg text-white">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Calendar className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold">Free Training, Events & Seminars</h3>
+                  <p className="text-sm text-white/80">Join our free sessions delivered by experienced legal professionals</p>
+                </div>
+              </div>
+              
+              <p className="text-white/90 text-sm mb-4">
+                At Chadwick Lawrence, we believe that access to clear, reliable legal information is vital. 
+                Our free seminars cover employment law, social housing, and other key business topics.
+              </p>
+
+              <div className="space-y-3 mb-4">
+                <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h4 className="font-medium text-white">Managing Poor Performance</h4>
+                      <div className="flex flex-wrap gap-3 mt-1 text-sm text-white/80">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5" />
+                          Thu 26th Feb 2026, 8:30am
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3.5 w-3.5" />
+                          Wakefield Office
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h4 className="font-medium text-white">Managing Flexible Working Requests</h4>
+                      <div className="flex flex-wrap gap-3 mt-1 text-sm text-white/80">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5" />
+                          Thu 19th Mar 2026, 8:30am
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3.5 w-3.5" />
+                          Huddersfield Office
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h4 className="font-medium text-white">Employment Law Update</h4>
+                      <div className="flex flex-wrap gap-3 mt-1 text-sm text-white/80">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5" />
+                          Thu 23rd Apr 2026, 8:30am
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3.5 w-3.5" />
+                          Location TBC
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <a 
+                href="https://www.chadwicklawrence.co.uk/seminars/business-services-seminars/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-white text-[#2e3192] px-4 py-2 rounded-lg font-medium hover:bg-white/90 transition-colors"
+              >
+                <Calendar className="h-4 w-4" />
+                View Full Events Calendar
+                <ExternalLink className="h-4 w-4" />
               </a>
             </div>
 
