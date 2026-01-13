@@ -775,14 +775,7 @@ export default function UserProfile() {
 
               {/* Contact Section */}
               <div className="mt-8 p-6 bg-[#2e3192] rounded-lg text-white">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">Get in Touch</h3>
-                  <img 
-                    src={chadwickLawrenceLogo} 
-                    alt="Chadwick Lawrence" 
-                    className="h-8 bg-white rounded px-2 py-1"
-                  />
-                </div>
+                <h3 className="text-lg font-semibold mb-3">Get in Touch</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <p className="text-gray-200 text-sm mb-1">Freephone</p>
@@ -793,7 +786,7 @@ export default function UserProfile() {
                     <a href="mailto:info@chadlaw.co.uk" className="text-white font-medium hover:underline">info@chadlaw.co.uk</a>
                   </div>
                 </div>
-                <div className="mt-4 pt-4 border-t border-white/20">
+                <div className="mt-4 pt-4 border-t border-white/20 flex items-center justify-between">
                   <a 
                     href="https://www.chadwicklawrence.co.uk/business-services/" 
                     target="_blank" 
@@ -803,6 +796,11 @@ export default function UserProfile() {
                     <span>View all services on our website</span>
                     <ExternalLink className="h-4 w-4 ml-2" />
                   </a>
+                  <img 
+                    src={chadwickLawrenceLogo} 
+                    alt="Chadwick Lawrence" 
+                    className="h-8 opacity-90"
+                  />
                 </div>
               </div>
             </CardContent>
