@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
-import { FolderOpen, CheckCircle, PoundSterling, TrendingUp, User, Building, Clock, FileText, Check, AlertTriangle, Store, UserCheck, Plus, Scale } from "lucide-react";
+import { FolderOpen, CheckCircle, PoundSterling, TrendingUp, User, Building, Clock, FileText, Check, AlertTriangle, Store, UserCheck, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -226,24 +226,15 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600 mt-1">Welcome to your debt recovery portal</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setLocation("/profile?tab=legal-support")}
-            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#2e3192] transition-colors"
+        {user?.canSubmitCases !== false && (
+          <Button 
+            className="bg-acclaim-teal hover:bg-acclaim-teal/90 text-white"
+            onClick={() => setLocation("/submit-case")}
           >
-            <Scale className="h-4 w-4" />
-            <span className="hidden sm:inline">Other Legal Services</span>
-          </button>
-          {user?.canSubmitCases !== false && (
-            <Button 
-              className="bg-acclaim-teal hover:bg-acclaim-teal/90 text-white"
-              onClick={() => setLocation("/submit-case")}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Submit New Case
-            </Button>
-          )}
-        </div>
+            <Plus className="h-4 w-4 mr-2" />
+            Submit New Case
+          </Button>
+        )}
       </div>
 
       {/* Live Cases Statistics */}
