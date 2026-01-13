@@ -21,6 +21,7 @@ import PaymentPerformanceReport from "@/pages/PaymentPerformanceReport";
 import AdminPaymentPerformanceReport from "@/pages/AdminPaymentPerformanceReport";
 import SimpleReports from "@/pages/SimpleReports";
 import AuditManagement from "@/pages/AuditManagement";
+import ChadwickLawrence from "@/pages/ChadwickLawrence";
 
 function Router() {
   return (
@@ -39,6 +40,7 @@ function Router() {
       <ProtectedRoute path="/monthly-statement-report" component={MonthlyStatementReport} />
       <ProtectedRoute path="/payment-performance-report" component={PaymentPerformanceReport} />
       <ProtectedRoute path="/admin-payment-performance-report" component={AdminPaymentPerformanceReport} />
+      <ProtectedRoute path="/chadwick-lawrence" component={ChadwickLawrence} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/change-password" component={ChangePasswordPage} />
       <Route component={NotFound} />

@@ -89,7 +89,7 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
         {/* Other Legal Services - separate from main nav */}
         <div className="pt-4 mt-4 border-t border-teal-700/50">
           <button
-            onClick={() => setLocation("/profile?tab=legal-support")}
+            onClick={() => setLocation("/chadwick-lawrence")}
             className="flex items-center w-full px-4 py-2 text-teal-200 text-sm rounded-lg transition-colors hover:bg-teal-700 hover:text-white"
           >
             <Scale className="w-4 h-4 mr-3" />
