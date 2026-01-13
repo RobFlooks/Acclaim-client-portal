@@ -11,7 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 import { useQueryClient } from "@tanstack/react-query";
-import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft, Bell, Building2, FileText, Upload, Download, Trash2 } from "lucide-react";
+import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft, Bell, Building2, FileText, Upload, Download, Trash2, Search } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
 import { updateUserSchema, changePasswordSchema } from "@shared/schema";
 import { z } from "zod";
@@ -75,6 +76,8 @@ export default function UserProfile() {
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedOrgForUpload, setSelectedOrgForUpload] = useState<string>("");
+  const [documentSearch, setDocumentSearch] = useState("");
 
   // Fetch user profile data
   const { data: userProfile, isLoading: profileLoading } = useQuery<UserData>({
@@ -91,6 +94,12 @@ export default function UserProfile() {
   // Fetch organisation documents
   const { data: orgDocuments, isLoading: documentsLoading } = useQuery<any[]>({
     queryKey: ["/api/organisation/documents"],
+    retry: false,
+  });
+
+  // Fetch user's organisations
+  const { data: userOrganisations } = useQuery<any[]>({
+    queryKey: ["/api/user/organisations"],
     retry: false,
   });
 
@@ -269,11 +278,23 @@ export default function UserProfile() {
       return;
     }
 
+    if (!selectedOrgForUpload && userOrganisations && userOrganisations.length > 1) {
+      toast({
+        title: "No Organisation Selected",
+        description: "Please select an organisation to upload to",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsUploading(true);
     
     try {
       const formData = new FormData();
       formData.append("file", selectedFile);
+      if (selectedOrgForUpload) {
+        formData.append("organisationId", selectedOrgForUpload);
+      }
 
       const response = await fetch("/api/organisation/documents/upload", {
         method: "POST",
@@ -301,6 +322,27 @@ export default function UserProfile() {
       setIsUploading(false);
     }
   };
+
+  // Filter documents by search term
+  const filteredDocuments = orgDocuments?.filter((doc: any) => {
+    if (!documentSearch) return true;
+    const searchLower = documentSearch.toLowerCase();
+    return (
+      doc.fileName?.toLowerCase().includes(searchLower) ||
+      doc.organisationName?.toLowerCase().includes(searchLower) ||
+      `${doc.uploaderFirstName} ${doc.uploaderLastName}`.toLowerCase().includes(searchLower)
+    );
+  });
+
+  // Group documents by organisation
+  const documentsByOrg = filteredDocuments?.reduce((acc: Record<string, any[]>, doc: any) => {
+    const orgName = doc.organisationName || "Unknown Organisation";
+    if (!acc[orgName]) {
+      acc[orgName] = [];
+    }
+    acc[orgName].push(doc);
+    return acc;
+  }, {} as Record<string, any[]>);
 
   // Handle document download
   const handleDocumentDownload = async (doc: any) => {
@@ -699,7 +741,24 @@ export default function UserProfile() {
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Upload Section */}
-                <div className="p-4 border-2 border-dashed border-gray-200 rounded-lg">
+                <div className="p-4 border-2 border-dashed border-gray-200 rounded-lg space-y-4">
+                  {userOrganisations && userOrganisations.length > 1 && (
+                    <div>
+                      <Label htmlFor="uploadOrg">Upload to Organisation</Label>
+                      <Select value={selectedOrgForUpload} onValueChange={setSelectedOrgForUpload}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select organisation..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {userOrganisations.map((org: any) => (
+                            <SelectItem key={org.id} value={org.id.toString()}>
+                              {org.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                   <div className="flex flex-col sm:flex-row items-center gap-4">
                     <Input
                       type="file"
@@ -709,7 +768,7 @@ export default function UserProfile() {
                     />
                     <Button
                       onClick={handleDocumentUpload}
-                      disabled={!selectedFile || isUploading}
+                      disabled={!selectedFile || isUploading || (userOrganisations && userOrganisations.length > 1 && !selectedOrgForUpload)}
                       className="bg-acclaim-teal hover:bg-acclaim-teal/90 w-full sm:w-auto"
                     >
                       <Upload className="h-4 w-4 mr-2" />
@@ -717,56 +776,85 @@ export default function UserProfile() {
                     </Button>
                   </div>
                   {selectedFile && (
-                    <p className="text-sm text-gray-600 mt-2">
+                    <p className="text-sm text-gray-600">
                       Selected: {selectedFile.name} ({formatFileSize(selectedFile.size)})
                     </p>
                   )}
                 </div>
 
-                {/* Documents List */}
+                {/* Search Section */}
+                {orgDocuments && orgDocuments.length > 0 && (
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Search documents by name, organisation, or uploader..."
+                      value={documentSearch}
+                      onChange={(e) => setDocumentSearch(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                )}
+
+                {/* Documents List - Grouped by Organisation */}
                 <div>
                   {documentsLoading ? (
                     <div className="text-center py-8">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto"></div>
                       <p className="mt-2 text-gray-500">Loading documents...</p>
                     </div>
-                  ) : orgDocuments && orgDocuments.length > 0 ? (
-                    <div className="space-y-2">
-                      {orgDocuments.map((doc: any) => (
-                        <div
-                          key={doc.id}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                        >
-                          <div className="flex items-center space-x-3 min-w-0 flex-1">
-                            <FileText className="h-5 w-5 text-gray-400 flex-shrink-0" />
-                            <div className="min-w-0">
-                              <p className="font-medium truncate">{doc.fileName}</p>
-                              <p className="text-xs text-gray-500">
-                                {doc.uploaderFirstName} {doc.uploaderLastName} • {new Date(doc.createdAt).toLocaleDateString()} • {formatFileSize(doc.fileSize || 0)}
-                              </p>
-                            </div>
+                  ) : documentsByOrg && Object.keys(documentsByOrg).length > 0 ? (
+                    <div className="space-y-6">
+                      {Object.entries(documentsByOrg).map(([orgName, docs]) => (
+                        <div key={orgName}>
+                          <div className="flex items-center space-x-2 mb-3">
+                            <Building2 className="h-4 w-4 text-acclaim-teal" />
+                            <h4 className="font-semibold text-gray-700">{orgName}</h4>
+                            <Badge variant="outline" className="text-xs">{(docs as any[]).length}</Badge>
                           </div>
-                          <div className="flex items-center space-x-2 flex-shrink-0">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDocumentDownload(doc)}
-                              title="Download"
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDocumentDelete(doc.id)}
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                              title="Delete"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                          <div className="space-y-2 ml-6">
+                            {(docs as any[]).map((doc: any) => (
+                              <div
+                                key={doc.id}
+                                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                              >
+                                <div className="flex items-center space-x-3 min-w-0 flex-1">
+                                  <FileText className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                                  <div className="min-w-0">
+                                    <p className="font-medium truncate">{doc.fileName}</p>
+                                    <p className="text-xs text-gray-500">
+                                      {doc.uploaderFirstName} {doc.uploaderLastName} • {new Date(doc.createdAt).toLocaleDateString()} • {formatFileSize(doc.fileSize || 0)}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2 flex-shrink-0">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDocumentDownload(doc)}
+                                    title="Download"
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDocumentDelete(doc.id)}
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    title="Delete"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       ))}
+                    </div>
+                  ) : documentSearch ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <Search className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+                      <p>No documents match your search.</p>
                     </div>
                   ) : (
                     <div className="text-center py-8 text-gray-500">
