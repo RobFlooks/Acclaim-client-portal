@@ -1,25 +1,11 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Building2, Briefcase, Users, FileText, Gavel, AlertTriangle, Megaphone, Shield, Home, Trophy, ExternalLink } from "lucide-react";
+import { Building2, Briefcase, Users, FileText, Gavel, AlertTriangle, Megaphone, Shield, Home, Trophy, ExternalLink } from "lucide-react";
 import chadwickLawrenceLogo from "@assets/CL_long_logo_1768312503635.png";
-import { useLocation } from "wouter";
 
 export default function ChadwickLawrence() {
-  const [, setLocation] = useLocation();
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
-        <Button
-          variant="ghost"
-          onClick={() => setLocation("/")}
-          className="mb-4 text-gray-600 hover:text-gray-900"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Dashboard
-        </Button>
-
-        <Card>
+    <div className="space-y-6">
+      <Card>
           <CardHeader className="bg-white border-b rounded-t-lg">
             <div className="flex items-center justify-center py-2">
               <img 
@@ -275,7 +261,6 @@ export default function ChadwickLawrence() {
             </div>
           </CardContent>
         </Card>
-      </div>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import Cases from "@/components/Cases";
 import Messages from "@/components/Messages";
 import Reports from "@/components/Reports";
 import Documents from "@/components/Documents";
+import ChadwickLawrence from "@/components/ChadwickLawrence";
 
 import { Bell, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -69,6 +70,8 @@ export default function Home() {
         return <Reports />;
       case "documents":
         return <Documents />;
+      case "chadwick-lawrence":
+        return <ChadwickLawrence />;
       default:
         return <Dashboard setActiveSection={setActiveSection} />;
     }
@@ -86,6 +89,8 @@ export default function Home() {
         return "Reports";
       case "documents":
         return "Documents";
+      case "chadwick-lawrence":
+        return "Chadwick Lawrence";
       default:
         return "Dashboard";
     }
@@ -103,6 +108,8 @@ export default function Home() {
         return "Download and view detailed reports";
       case "documents":
         return "Manage case documents and files";
+      case "chadwick-lawrence":
+        return "Other legal services from Chadwick Lawrence";
       default:
         return `Welcome, ${user?.firstName ? `${user.firstName}` : 'User'}`;
     }
