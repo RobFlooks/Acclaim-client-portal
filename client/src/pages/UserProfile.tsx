@@ -774,7 +774,7 @@ export default function UserProfile() {
               </div>
 
               {/* Contact Section */}
-              <div className="mt-8 p-6 bg-gradient-to-r from-[#1a3a52] to-[#2d5a7b] rounded-lg text-white">
+              <div className="mt-8 p-6 bg-gradient-to-r from-[#2e3b7c] to-[#4a5ba8] rounded-lg text-white">
                 <h3 className="text-lg font-semibold mb-3">Get in Touch</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
