@@ -489,7 +489,7 @@ export default function Messages() {
                       </p>
                     ) : (
                       <p className="text-sm text-amber-600 mt-1">
-                        This message is only visible to you and Acclaim - it will not be visible to others in your organisation.
+                        As this message is not linked to a case, it will only be visible to you and Acclaim - not others in your organisation.
                       </p>
                     )}
                   </div>
