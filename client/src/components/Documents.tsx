@@ -75,7 +75,13 @@ export default function Documents() {
     
     // Handle nested document structure
     const docData = doc.documents || doc;
-    const caseDetails = docData.caseId ? getCaseDetails(docData.caseId) : null;
+    
+    // Exclude documents without a caseId (general documents)
+    if (!docData.caseId) {
+      return false;
+    }
+    
+    const caseDetails = getCaseDetails(docData.caseId);
     
     return (
       (docData.fileName && docData.fileName.toLowerCase().includes(searchLower)) ||
@@ -252,7 +258,11 @@ export default function Documents() {
   const groupDocumentsByCase = (docs: any[]) => {
     const grouped = docs.reduce((acc: any, doc: any) => {
       const docData = doc.documents || doc;
-      const caseId = docData.caseId || 'general';
+      // Only include documents that have a caseId (exclude general documents)
+      if (!docData.caseId) {
+        return acc;
+      }
+      const caseId = docData.caseId;
       if (!acc[caseId]) {
         acc[caseId] = [];
       }
@@ -453,7 +463,7 @@ export default function Documents() {
                 <div key={caseId} className="space-y-3">
                   <div className="flex items-center space-x-2">
                     <Badge variant="outline" className="text-acclaim-teal border-acclaim-teal">
-                      {caseId === 'general' ? 'General Documents' : (() => {
+                      {(() => {
                         const caseDetails = getCaseDetails(parseInt(caseId));
                         return caseDetails ? `${caseDetails.accountNumber} - ${caseDetails.caseName}` : 'Case Documents';
                       })()}
