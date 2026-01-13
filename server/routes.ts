@@ -29,8 +29,15 @@ import ExcelJS from "exceljs";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Ensure uploads directory exists
+const uploadsDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('Created uploads directory:', uploadsDir);
+}
+
 const upload = multer({
-  dest: "uploads/",
+  dest: uploadsDir,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
 });
 
