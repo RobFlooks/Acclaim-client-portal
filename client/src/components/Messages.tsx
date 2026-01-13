@@ -483,9 +483,13 @@ export default function Messages() {
                         ))}
                       </SelectContent>
                     </Select>
-                    {linkedCaseId && linkedCaseId !== "none" && (
+                    {linkedCaseId && linkedCaseId !== "none" ? (
                       <p className="text-sm text-gray-600 mt-1">
                         Message will be stored against the selected case
+                      </p>
+                    ) : (
+                      <p className="text-sm text-amber-600 mt-1">
+                        This message is only visible to you and Acclaim - it will not be visible to others in your organisation.
                       </p>
                     )}
                   </div>
