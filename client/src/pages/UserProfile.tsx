@@ -775,7 +775,14 @@ export default function UserProfile() {
 
               {/* Contact Section */}
               <div className="mt-8 p-6 bg-[#2e3192] rounded-lg text-white">
-                <h3 className="text-lg font-semibold mb-3">Get in Touch</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Get in Touch</h3>
+                  <img 
+                    src={chadwickLawrenceLogo} 
+                    alt="Chadwick Lawrence" 
+                    className="h-8 bg-white rounded px-2 py-1"
+                  />
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <p className="text-gray-200 text-sm mb-1">Freephone</p>
