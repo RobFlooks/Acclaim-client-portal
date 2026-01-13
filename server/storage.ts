@@ -1001,7 +1001,16 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(cases, eq(messages.caseId, cases.id))
       .where(and(
         or(
-          eq(messages.senderId, userId), // Messages sent by this user
+          // Messages sent by this user - but only if:
+          // 1. Not tied to a case (general message sent to admin), OR
+          // 2. Tied to a case in one of user's current organisations
+          and(
+            eq(messages.senderId, userId),
+            or(
+              isNull(messages.caseId), // General message not tied to a case
+              inArray(cases.organisationId, orgIdArray) // Case belongs to user's current organisations
+            )
+          ),
           eq(messages.recipientId, userId), // Messages sent directly to this user
           and(
             eq(messages.recipientType, 'organization'),
