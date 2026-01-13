@@ -294,7 +294,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
-      res.json(user);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Get organisation name if user has one
+      let organisationName = null;
+      if (user.organisationId) {
+        const organisation = await storage.getOrganisation(user.organisationId);
+        if (organisation) {
+          organisationName = organisation.name;
+        }
+      }
+      
+      res.json({ ...user, organisationName });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
