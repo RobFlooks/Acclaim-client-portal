@@ -42,7 +42,7 @@ export default function ChadwickLawrence() {
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <h4 className="font-semibold text-[#2e3192]">Business Property</h4>
-                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#2e3192]" />
+                      <ExternalLink className="h-4 w-4 text-[#f0a0c0] group-hover:text-[#ba1b6e]" />
                     </div>
                     <p className="text-sm text-gray-600 mt-1">Commercial property solicitors for leases, portfolios and disposals.</p>
                   </div>
@@ -62,7 +62,7 @@ export default function ChadwickLawrence() {
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <h4 className="font-semibold text-[#2e3192]">Corporate & Contracts</h4>
-                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#2e3192]" />
+                      <ExternalLink className="h-4 w-4 text-[#f0a0c0] group-hover:text-[#ba1b6e]" />
                     </div>
                     <p className="text-sm text-gray-600 mt-1">Practical, accurate and cost-effective advice for transactions and contracts.</p>
                   </div>
@@ -82,7 +82,7 @@ export default function ChadwickLawrence() {
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <h4 className="font-semibold text-[#2e3192]">Recovery & Insolvency</h4>
-                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#2e3192]" />
+                      <ExternalLink className="h-4 w-4 text-[#f0a0c0] group-hover:text-[#ba1b6e]" />
                     </div>
                     <p className="text-sm text-gray-600 mt-1">Realistic commercial solutions for business and personal financial affairs.</p>
                   </div>
@@ -102,7 +102,7 @@ export default function ChadwickLawrence() {
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <h4 className="font-semibold text-[#2e3192]">Employment Law</h4>
-                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#2e3192]" />
+                      <ExternalLink className="h-4 w-4 text-[#f0a0c0] group-hover:text-[#ba1b6e]" />
                     </div>
                     <p className="text-sm text-gray-600 mt-1">Employment law, health & safety, HR support and litigation services.</p>
                   </div>
@@ -122,7 +122,7 @@ export default function ChadwickLawrence() {
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <h4 className="font-semibold text-[#2e3192]">Intellectual Property</h4>
-                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#2e3192]" />
+                      <ExternalLink className="h-4 w-4 text-[#f0a0c0] group-hover:text-[#ba1b6e]" />
                     </div>
                     <p className="text-sm text-gray-600 mt-1">Protect your business information and data assets.</p>
                   </div>
@@ -142,7 +142,7 @@ export default function ChadwickLawrence() {
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <h4 className="font-semibold text-[#2e3192]">Litigation</h4>
-                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#2e3192]" />
+                      <ExternalLink className="h-4 w-4 text-[#f0a0c0] group-hover:text-[#ba1b6e]" />
                     </div>
                     <p className="text-sm text-gray-600 mt-1">Proactive problem-solving with expertise and value.</p>
                   </div>
@@ -162,7 +162,7 @@ export default function ChadwickLawrence() {
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <h4 className="font-semibold text-[#2e3192]">Media Law & Reputation</h4>
-                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#2e3192]" />
+                      <ExternalLink className="h-4 w-4 text-[#f0a0c0] group-hover:text-[#ba1b6e]" />
                     </div>
                     <p className="text-sm text-gray-600 mt-1">Protect and manage your media presence and reputation.</p>
                   </div>
@@ -182,7 +182,7 @@ export default function ChadwickLawrence() {
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <h4 className="font-semibold text-[#2e3192]">Regulatory Services</h4>
-                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#2e3192]" />
+                      <ExternalLink className="h-4 w-4 text-[#f0a0c0] group-hover:text-[#ba1b6e]" />
                     </div>
                     <p className="text-sm text-gray-600 mt-1">Navigate regulatory investigations and compliance.</p>
                   </div>
@@ -202,7 +202,7 @@ export default function ChadwickLawrence() {
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <h4 className="font-semibold text-[#2e3192]">Social Housing</h4>
-                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#2e3192]" />
+                      <ExternalLink className="h-4 w-4 text-[#f0a0c0] group-hover:text-[#ba1b6e]" />
                     </div>
                     <p className="text-sm text-gray-600 mt-1">Specialist legal support for housing management.</p>
                   </div>
@@ -222,7 +222,7 @@ export default function ChadwickLawrence() {
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <h4 className="font-semibold text-[#2e3192]">Sports Law</h4>
-                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#2e3192]" />
+                      <ExternalLink className="h-4 w-4 text-[#f0a0c0] group-hover:text-[#ba1b6e]" />
                     </div>
                     <p className="text-sm text-gray-600 mt-1">Specialist support for players, clubs and representatives.</p>
                   </div>
