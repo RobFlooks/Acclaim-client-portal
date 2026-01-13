@@ -951,18 +951,14 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                 <thead>
                   <tr>
                     <th>Date</th>
-                    <th>Activity Type</th>
                     <th>Description</th>
-                    <th>Outcome</th>
                   </tr>
                 </thead>
                 <tbody>
                   ${activities.map((activity: any) => `
                     <tr>
                       <td class="date">${formatDate(activity.createdAt)}</td>
-                      <td>${activity.activityType || 'N/A'}</td>
                       <td>${activity.description || 'N/A'}</td>
-                      <td>${activity.outcome || 'N/A'}</td>
                     </tr>
                   `).join('')}
                 </tbody>
