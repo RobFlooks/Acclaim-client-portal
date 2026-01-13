@@ -16,7 +16,7 @@ import chadwickLawrenceLogo from "@assets/CL_long_logo_1768312503635.png";
 import { useAuth } from "@/hooks/use-auth";
 import { updateUserSchema, changePasswordSchema } from "@shared/schema";
 import { z } from "zod";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 
 type UpdateProfileForm = z.infer<typeof updateUserSchema>;
 type ChangePasswordForm = z.infer<typeof changePasswordSchema>;
@@ -42,6 +42,19 @@ export default function UserProfile() {
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const searchString = useSearch();
+  
+  // Get tab from URL query parameter
+  const getInitialTab = () => {
+    const params = new URLSearchParams(searchString);
+    const tab = params.get("tab");
+    if (tab && ["profile", "security", "notifications", "legal-support"].includes(tab)) {
+      return tab;
+    }
+    return "profile";
+  };
+  
+  const [activeTab, setActiveTab] = useState(getInitialTab);
   
   const [profileData, setProfileData] = useState<UpdateProfileForm>({
     firstName: "",
@@ -345,7 +358,7 @@ export default function UserProfile() {
         </CardContent>
       </Card>
       {/* Main Settings Tabs */}
-      <Tabs defaultValue="profile" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
