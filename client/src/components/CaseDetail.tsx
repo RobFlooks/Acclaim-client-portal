@@ -518,7 +518,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               title: activity.description || 'Activity',
               description: activity.activityType || '',
               icon: '⚡',
-              color: '#14b8a6'
+              color: '#6366f1'
             });
           }
         });
@@ -543,7 +543,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
               margin: 0;
               padding: 20px;
-              background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+              background: linear-gradient(135deg, #475569 0%, #64748b 100%);
               min-height: 100vh;
             }
             .container {
@@ -555,7 +555,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               overflow: hidden;
             }
             .header {
-              background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+              background: linear-gradient(135deg, #475569 0%, #64748b 100%);
               color: white;
               padding: 40px 30px;
               text-align: center;
@@ -601,19 +601,19 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
               gap: 20px;
               padding: 30px;
-              background: #f0fdfa;
-              border-bottom: 1px solid #14b8a6;
+              background: #f8fafc;
+              border-bottom: 1px solid #cbd5e1;
             }
             .summary-card {
               background: white;
               padding: 20px;
               border-radius: 12px;
               box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-              border-left: 4px solid #0d9488;
+              border-left: 4px solid #6366f1;
             }
             .summary-card h3 {
               margin: 0 0 5px 0;
-              color: #0d9488;
+              color: #64748b;
               font-size: 0.9em;
               text-transform: uppercase;
               letter-spacing: 0.5px;
@@ -648,7 +648,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               top: 0;
               bottom: 0;
               width: 4px;
-              background: linear-gradient(to bottom, #0d9488, #14b8a6);
+              background: linear-gradient(to bottom, #6366f1, #818cf8);
               border-radius: 2px;
             }
             .timeline-item {
@@ -663,7 +663,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               top: 8px;
               width: 16px;
               height: 16px;
-              background: var(--item-color, #0d9488);
+              background: var(--item-color, #6366f1);
               border-radius: 50%;
               border: 3px solid white;
               box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -693,10 +693,10 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               display: flex;
               align-items: center;
               justify-content: center;
-              background: var(--item-color, #0d9488);
+              background: var(--item-color, #6366f1);
               color: white;
               border-radius: 50%;
-              box-shadow: 0 2px 6px rgba(13, 148, 136, 0.3);
+              box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
             }
             .timeline-title-text {
               font-size: 1.1em;
@@ -717,9 +717,9 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
             .footer {
               text-align: center;
               padding: 30px;
-              background: #f0fdfa;
-              color: #0d9488;
-              border-top: 1px solid #14b8a6;
+              background: #f8fafc;
+              color: #64748b;
+              border-top: 1px solid #cbd5e1;
             }
             .footer-logo {
               width: 24px;
