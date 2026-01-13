@@ -114,7 +114,6 @@ export default function Home() {
       <div className={`${isMobile ? 'hidden' : 'block'}`}>
         <Sidebar activeSection={activeSection} setActiveSection={handleSectionChange} />
       </div>
-      
       {/* Mobile Sidebar Overlay */}
       {isMobile && mobileMenuOpen && (
         <>
@@ -124,7 +123,6 @@ export default function Home() {
           </div>
         </>
       )}
-      
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <header className="bg-white shadow-sm border-b border-gray-200 px-4 sm:px-6 py-4">
@@ -153,7 +151,7 @@ export default function Home() {
                 title="Other Legal Services"
               >
                 <Scale className="h-4 w-4" />
-                <span className="hidden sm:inline">Other Legal Services</span>
+                <span className="hidden sm:inline">Other Legal Services by Chadwick Lawrence</span>
               </button>
               <Button variant="ghost" size="icon" className="relative" onClick={handleNotificationClick}>
                 <Bell className="h-5 w-5" />
