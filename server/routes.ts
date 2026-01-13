@@ -1408,6 +1408,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Organisation-level documents (not linked to any case)
+  app.get('/api/organisation/documents', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Get all organisation IDs the user has access to
+      const userOrgs = await storage.getUserOrganisations(userId);
+      const allUserOrgIds: number[] = [];
+      
+      if (user.organisationId) {
+        allUserOrgIds.push(user.organisationId);
+      }
+      userOrgs.forEach(uo => allUserOrgIds.push(uo.organisationId));
+      
+      if (allUserOrgIds.length === 0 && !user.isAdmin) {
+        return res.json([]);
+      }
+
+      // For admins, get all org documents; for regular users, get from their orgs
+      let allDocs: any[] = [];
+      
+      if (user.isAdmin) {
+        const allOrgs = await storage.getAllOrganisations();
+        for (const org of allOrgs) {
+          const docs = await storage.getOrganisationOnlyDocuments(org.id);
+          allDocs = allDocs.concat(docs.map(d => ({ ...d, organisationName: org.name })));
+        }
+      } else {
+        for (const orgId of allUserOrgIds) {
+          const org = await storage.getOrganisation(orgId);
+          const docs = await storage.getOrganisationOnlyDocuments(orgId);
+          allDocs = allDocs.concat(docs.map(d => ({ ...d, organisationName: org?.name || 'Unknown' })));
+        }
+      }
+      
+      // Sort by creation date
+      allDocs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      res.json(allDocs);
+    } catch (error) {
+      console.error("Error fetching organisation documents:", error);
+      res.status(500).json({ message: "Failed to fetch organisation documents" });
+    }
+  });
+
+  app.post('/api/organisation/documents/upload', isAuthenticated, upload.single('file'), async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Get all organisation IDs the user has access to
+      const userOrgs = await storage.getUserOrganisations(userId);
+      const allUserOrgIds: number[] = [];
+      
+      if (user.organisationId) {
+        allUserOrgIds.push(user.organisationId);
+      }
+      userOrgs.forEach(uo => allUserOrgIds.push(uo.organisationId));
+      
+      if (allUserOrgIds.length === 0 && !user.isAdmin) {
+        return res.status(400).json({ message: "No organisation assigned to user" });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      // Determine which organisation to upload to
+      let targetOrgId: number;
+      const requestedOrgId = req.body.organisationId ? parseInt(req.body.organisationId) : null;
+      
+      if (requestedOrgId) {
+        // User specified an org - verify they have access
+        if (user.isAdmin || allUserOrgIds.includes(requestedOrgId)) {
+          targetOrgId = requestedOrgId;
+        } else {
+          return res.status(403).json({ message: "You don't have access to this organisation" });
+        }
+      } else {
+        // Use the first available org
+        targetOrgId = allUserOrgIds[0];
+      }
+
+      const document = await storage.createDocument({
+        caseId: null, // No case - organisation-level document
+        fileName: req.file.originalname,
+        fileSize: req.file.size,
+        fileType: req.file.mimetype,
+        filePath: req.file.path,
+        uploadedBy: userId,
+        organisationId: targetOrgId,
+      });
+
+      res.json(document);
+    } catch (error) {
+      console.error("Error uploading organisation document:", error);
+      res.status(500).json({ message: "Failed to upload organisation document" });
+    }
+  });
+
   app.get('/api/documents/:id/download', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;

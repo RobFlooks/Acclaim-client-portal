@@ -138,6 +138,7 @@ export interface IStorage {
   // Document operations
   getDocumentsForCase(caseId: number): Promise<Document[]>;
   getDocumentsForOrganisation(organisationId: number): Promise<Document[]>;
+  getOrganisationOnlyDocuments(organisationId: number): Promise<Document[]>; // Get documents not linked to any case
   getDocumentsForUser(userId: string): Promise<Document[]>; // Returns all documents for user (admin gets all, regular user gets org-filtered)
   createDocument(document: InsertDocument): Promise<Document>;
   deleteDocument(id: number, organisationId: number): Promise<void>;
@@ -1204,6 +1205,33 @@ export class DatabaseStorage implements IStorage {
           isNull(documents.caseId), // General org documents not tied to a case
           eq(cases.isArchived, false) // Documents for non-archived cases only
         )
+      ))
+      .orderBy(desc(documents.createdAt));
+    
+    return results;
+  }
+
+  async getOrganisationOnlyDocuments(organisationId: number): Promise<any[]> {
+    // Return only documents that are not linked to any case (organisation-level docs)
+    const results = await db
+      .select({
+        id: documents.id,
+        caseId: documents.caseId,
+        fileName: documents.fileName,
+        fileSize: documents.fileSize,
+        fileType: documents.fileType,
+        filePath: documents.filePath,
+        uploadedBy: documents.uploadedBy,
+        organisationId: documents.organisationId,
+        createdAt: documents.createdAt,
+        uploaderFirstName: users.firstName,
+        uploaderLastName: users.lastName,
+      })
+      .from(documents)
+      .leftJoin(users, eq(documents.uploadedBy, users.id))
+      .where(and(
+        eq(documents.organisationId, organisationId),
+        isNull(documents.caseId)
       ))
       .orderBy(desc(documents.createdAt));
     
