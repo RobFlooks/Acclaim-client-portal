@@ -148,7 +148,7 @@ export default function Home() {
               )}
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold text-[#111827]">{getSectionTitle()}</h1>
-                <p className="text-sm sm:text-base hidden sm:block font-semibold text-[#6b7280]">{getSectionDescription()}</p>
+                <p className="text-sm sm:text-base hidden sm:block font-semibold text-[#4b5563]">{getSectionDescription()}</p>
               </div>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
