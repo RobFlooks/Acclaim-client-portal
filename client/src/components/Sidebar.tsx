@@ -93,7 +93,7 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
             className="flex items-center w-full px-4 py-2 text-teal-200 text-sm rounded-lg transition-colors hover:bg-teal-700 hover:text-white"
           >
             <Scale className="w-4 h-4 mr-3" />
-            Other Legal Services
+            Chadwick Lawrence
           </button>
         </div>
       </nav>
