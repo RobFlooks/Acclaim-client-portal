@@ -350,7 +350,7 @@ export default function UserProfile() {
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="legal-support" className="bg-[#ba1b6e] text-[#ffffff]">Chadwick Lawrence Support</TabsTrigger>
+          <TabsTrigger value="legal-support" className="bg-[#ba1b6e] text-white hover:bg-[#a01860] data-[state=active]:bg-[#ba1b6e] data-[state=active]:text-white">Other Legal Services</TabsTrigger>
         </TabsList>
 
         {/* Profile Information Tab */}
