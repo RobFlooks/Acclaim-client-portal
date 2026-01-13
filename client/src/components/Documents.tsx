@@ -192,18 +192,16 @@ export default function Documents() {
   };
 
   const handleUpload = () => {
-    if (!selectedFile) {
+    if (!selectedFile || !selectedCaseId) {
       toast({
         title: "Error",
-        description: "Please select a file before uploading",
+        description: "Please select a file and case before uploading",
         variant: "destructive",
       });
       return;
     }
 
-    // Use "general" if no case is selected
-    const caseIdToUse = selectedCaseId || "general";
-    uploadDocumentMutation.mutate({ file: selectedFile, caseId: caseIdToUse });
+    uploadDocumentMutation.mutate({ file: selectedFile, caseId: selectedCaseId });
   };
 
   const handleCloseUploadDialog = () => {
@@ -286,15 +284,12 @@ export default function Documents() {
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="case-select">Select Case (Optional)</Label>
+                    <Label htmlFor="case-select">Select Case</Label>
                     <Select value={selectedCaseId} onValueChange={setSelectedCaseId}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a case or leave for general..." />
+                        <SelectValue placeholder="Select a case..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="general">
-                          General Documents (No Case)
-                        </SelectItem>
                         {cases?.map((caseItem: any) => (
                           <SelectItem key={caseItem.id} value={caseItem.id.toString()}>
                             {caseItem.accountNumber} - {caseItem.caseName}
@@ -330,7 +325,7 @@ export default function Documents() {
                   <div className="flex items-center space-x-2">
                     <Button
                       onClick={handleUpload}
-                      disabled={uploadDocumentMutation.isPending || !selectedFile}
+                      disabled={uploadDocumentMutation.isPending || !selectedFile || !selectedCaseId}
                       className="bg-acclaim-teal hover:bg-acclaim-teal/90"
                     >
                       {uploadDocumentMutation.isPending ? "Uploading..." : "Upload Document"}

@@ -1357,67 +1357,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const caseIdRaw = req.body.caseId;
-      const caseId = caseIdRaw && caseIdRaw !== 'general' ? parseInt(caseIdRaw) : null;
+      const caseId = parseInt(req.body.caseId);
       
-      // Determine the organisation ID for the document
-      let documentOrgId: number;
+      if (!caseId || isNaN(caseId)) {
+        return res.status(400).json({ message: "Case ID is required" });
+      }
+
+      // For admins, find the case in any organisation
+      // For regular users, verify case belongs to one of their organisations
+      let case_ = null;
+      let caseOrgId = null;
       
-      if (caseId && !isNaN(caseId)) {
-        // Case-specific document - find the case and its organisation
-        let case_ = null;
-        
-        if (user.isAdmin) {
-          // Admins can upload to any case - search all organisations
-          const allOrgs = await storage.getAllOrganisations();
-          for (const org of allOrgs) {
-            case_ = await storage.getCase(caseId, org.id);
-            if (case_) {
-              documentOrgId = org.id;
-              break;
-            }
+      if (user.isAdmin) {
+        // Admins can upload to any case - search all organisations
+        const allOrgs = await storage.getAllOrganisations();
+        for (const org of allOrgs) {
+          case_ = await storage.getCase(caseId, org.id);
+          if (case_) {
+            caseOrgId = org.id;
+            break;
           }
-        } else {
-          // Regular users - check their assigned organisations
-          for (const orgId of allUserOrgIds) {
-            case_ = await storage.getCase(caseId, orgId);
-            if (case_) {
-              documentOrgId = orgId;
-              break;
-            }
-          }
-        }
-        
-        if (!case_) {
-          return res.status(404).json({ message: "Case not found" });
         }
       } else {
-        // General document (no case) - use user's primary organisation
-        // For admins without org, use the first available org
-        if (user.organisationId) {
-          documentOrgId = user.organisationId;
-        } else if (allUserOrgIds.size > 0) {
-          documentOrgId = Array.from(allUserOrgIds)[0];
-        } else if (user.isAdmin) {
-          const allOrgs = await storage.getAllOrganisations();
-          if (allOrgs.length > 0) {
-            documentOrgId = allOrgs[0].id;
-          } else {
-            return res.status(400).json({ message: "No organisation available for document" });
+        // Regular users - check their assigned organisations
+        for (const orgId of allUserOrgIds) {
+          case_ = await storage.getCase(caseId, orgId);
+          if (case_) {
+            caseOrgId = orgId;
+            break;
           }
-        } else {
-          return res.status(400).json({ message: "No organisation available for document" });
         }
+      }
+      
+      if (!case_) {
+        return res.status(404).json({ message: "Case not found" });
       }
 
       const document = await storage.createDocument({
-        caseId: caseId || null,
+        caseId,
         fileName: req.file.originalname,
         fileSize: req.file.size,
         fileType: req.file.mimetype,
         filePath: req.file.path,
         uploadedBy: userId,
-        organisationId: documentOrgId!,
+        organisationId: caseOrgId!,
       });
 
       res.json(document);
