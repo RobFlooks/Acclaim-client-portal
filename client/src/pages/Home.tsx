@@ -147,7 +147,7 @@ export default function Home() {
                 </Button>
               )}
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{getSectionTitle()}</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-[#2e3192]">{getSectionTitle()}</h1>
                 <p className="text-sm sm:text-base text-gray-600 hidden sm:block">{getSectionDescription()}</p>
               </div>
             </div>
