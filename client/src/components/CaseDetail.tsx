@@ -918,8 +918,6 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                     <th>Date</th>
                     <th>Amount</th>
                     <th>Method</th>
-                    <th>Reference</th>
-                    <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -928,11 +926,9 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                     
                     return `
                       <tr>
-                        <td class="date">${formatDate(payment.paymentDate || payment.createdAt)}</td>
+                        <td class="date">${formatDateOnly(payment.paymentDate || payment.createdAt)}</td>
                         <td class="currency">${formatCurrency(isNaN(numericAmount) ? 0 : numericAmount)}</td>
                         <td>${payment.paymentMethod || 'N/A'}</td>
-                        <td>${payment.reference || 'N/A'}</td>
-                        <td>Completed</td>
                       </tr>
                     `;
                   }).join('')}
