@@ -697,7 +697,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
           <div class="page">
             <div class="header">
               <div class="header-top">
-                <div class="company-name">Acclaim Credit Management</div>
+                <div class="company-name">Acclaim</div>
                 <div class="report-date">Generated: ${currentDate}</div>
               </div>
               <h1 class="case-title">${caseData.caseName}</h1>
