@@ -4742,16 +4742,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const isJunctionOrg = userOrgs.some(uo => uo.organisationId === parseInt(organisationId));
       
       if (isLegacyOrg && !isJunctionOrg) {
-        // This is a legacy organisation - need to change the user's primary organisation
-        // For now, we'll clear it (set to null) or set to another org if they have one
+        // This is only a legacy organisation - need to change the user's primary organisation
+        // Clear it (set to null) or set to another org if they have one
         const otherOrgs = userOrgs.filter(uo => uo.organisationId !== parseInt(organisationId));
         const newPrimaryOrgId = otherOrgs.length > 0 ? otherOrgs[0].organisationId : null;
         
         await storage.updateUserOrganisation(userId, newPrimaryOrgId);
-        res.status(200).json({ message: "User removed from organisation successfully (legacy org updated)" });
+        res.status(200).json({ message: "User removed from organisation successfully" });
       } else if (isJunctionOrg) {
         // Remove from junction table
         await storage.removeUserFromOrganisation(userId, parseInt(organisationId));
+        
+        // Also clear the legacy organisationId if it matches this organisation
+        if (isLegacyOrg) {
+          const remainingOrgs = userOrgs.filter(uo => uo.organisationId !== parseInt(organisationId));
+          const newPrimaryOrgId = remainingOrgs.length > 0 ? remainingOrgs[0].organisationId : null;
+          await storage.updateUserOrganisation(userId, newPrimaryOrgId);
+        }
+        
         res.status(200).json({ message: "User removed from organisation successfully" });
       } else {
         res.status(404).json({ message: "User is not assigned to this organisation" });
