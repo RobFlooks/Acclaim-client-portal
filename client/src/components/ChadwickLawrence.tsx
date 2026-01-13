@@ -33,16 +33,16 @@ export default function ChadwickLawrence() {
                 href="https://www.chadwicklawrence.co.uk/business-services/property/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="group block p-4 border rounded-lg hover:border-[#1a3a52] hover:shadow-md transition-all"
+                className="group block p-4 border rounded-lg hover:border-[#2e3192] hover:shadow-md transition-all"
               >
                 <div className="flex items-start space-x-3">
-                  <div className="p-2 bg-[#1a3a52]/10 rounded-lg group-hover:bg-[#1a3a52]/20 transition-colors">
-                    <Building2 className="h-5 w-5 text-[#1a3a52]" />
+                  <div className="p-2 bg-[#2e3192]/10 rounded-lg group-hover:bg-[#2e3192]/20 transition-colors">
+                    <Building2 className="h-5 w-5 text-[#2e3192]" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-gray-900 group-hover:text-[#1a3a52]">Business Property</h4>
-                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#1a3a52]" />
+                      <h4 className="font-semibold text-[#2e3192]">Business Property</h4>
+                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#2e3192]" />
                     </div>
                     <p className="text-sm text-gray-600 mt-1">Commercial property solicitors for leases, portfolios and disposals.</p>
                   </div>
@@ -53,16 +53,16 @@ export default function ChadwickLawrence() {
                 href="https://www.chadwicklawrence.co.uk/business-services/corporate-and-contracts/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="group block p-4 border rounded-lg hover:border-[#1a3a52] hover:shadow-md transition-all"
+                className="group block p-4 border rounded-lg hover:border-[#2e3192] hover:shadow-md transition-all"
               >
                 <div className="flex items-start space-x-3">
-                  <div className="p-2 bg-[#1a3a52]/10 rounded-lg group-hover:bg-[#1a3a52]/20 transition-colors">
-                    <Briefcase className="h-5 w-5 text-[#1a3a52]" />
+                  <div className="p-2 bg-[#2e3192]/10 rounded-lg group-hover:bg-[#2e3192]/20 transition-colors">
+                    <Briefcase className="h-5 w-5 text-[#2e3192]" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-gray-900 group-hover:text-[#1a3a52]">Corporate & Contracts</h4>
-                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#1a3a52]" />
+                      <h4 className="font-semibold text-[#2e3192]">Corporate & Contracts</h4>
+                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#2e3192]" />
                     </div>
                     <p className="text-sm text-gray-600 mt-1">Practical, accurate and cost-effective advice for transactions and contracts.</p>
                   </div>
@@ -73,16 +73,16 @@ export default function ChadwickLawrence() {
                 href="https://www.chadwicklawrence.co.uk/business-services/corporate-recovery-insolvency/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="group block p-4 border rounded-lg hover:border-[#1a3a52] hover:shadow-md transition-all"
+                className="group block p-4 border rounded-lg hover:border-[#2e3192] hover:shadow-md transition-all"
               >
                 <div className="flex items-start space-x-3">
-                  <div className="p-2 bg-[#1a3a52]/10 rounded-lg group-hover:bg-[#1a3a52]/20 transition-colors">
-                    <AlertTriangle className="h-5 w-5 text-[#1a3a52]" />
+                  <div className="p-2 bg-[#2e3192]/10 rounded-lg group-hover:bg-[#2e3192]/20 transition-colors">
+                    <AlertTriangle className="h-5 w-5 text-[#2e3192]" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-gray-900 group-hover:text-[#1a3a52]">Recovery & Insolvency</h4>
-                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#1a3a52]" />
+                      <h4 className="font-semibold text-[#2e3192]">Recovery & Insolvency</h4>
+                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#2e3192]" />
                     </div>
                     <p className="text-sm text-gray-600 mt-1">Realistic commercial solutions for business and personal financial affairs.</p>
                   </div>
@@ -93,16 +93,16 @@ export default function ChadwickLawrence() {
                 href="https://www.chadwicklawrence.co.uk/business-services/employment-law/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="group block p-4 border rounded-lg hover:border-[#1a3a52] hover:shadow-md transition-all"
+                className="group block p-4 border rounded-lg hover:border-[#2e3192] hover:shadow-md transition-all"
               >
                 <div className="flex items-start space-x-3">
-                  <div className="p-2 bg-[#1a3a52]/10 rounded-lg group-hover:bg-[#1a3a52]/20 transition-colors">
-                    <Users className="h-5 w-5 text-[#1a3a52]" />
+                  <div className="p-2 bg-[#2e3192]/10 rounded-lg group-hover:bg-[#2e3192]/20 transition-colors">
+                    <Users className="h-5 w-5 text-[#2e3192]" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-gray-900 group-hover:text-[#1a3a52]">Employment Law</h4>
-                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#1a3a52]" />
+                      <h4 className="font-semibold text-[#2e3192]">Employment Law</h4>
+                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#2e3192]" />
                     </div>
                     <p className="text-sm text-gray-600 mt-1">Employment law, health & safety, HR support and litigation services.</p>
                   </div>
@@ -113,16 +113,16 @@ export default function ChadwickLawrence() {
                 href="https://www.chadwicklawrence.co.uk/business-services/intellectual-property/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="group block p-4 border rounded-lg hover:border-[#1a3a52] hover:shadow-md transition-all"
+                className="group block p-4 border rounded-lg hover:border-[#2e3192] hover:shadow-md transition-all"
               >
                 <div className="flex items-start space-x-3">
-                  <div className="p-2 bg-[#1a3a52]/10 rounded-lg group-hover:bg-[#1a3a52]/20 transition-colors">
-                    <FileText className="h-5 w-5 text-[#1a3a52]" />
+                  <div className="p-2 bg-[#2e3192]/10 rounded-lg group-hover:bg-[#2e3192]/20 transition-colors">
+                    <FileText className="h-5 w-5 text-[#2e3192]" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-gray-900 group-hover:text-[#1a3a52]">Intellectual Property</h4>
-                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#1a3a52]" />
+                      <h4 className="font-semibold text-[#2e3192]">Intellectual Property</h4>
+                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#2e3192]" />
                     </div>
                     <p className="text-sm text-gray-600 mt-1">Protect your business information and data assets.</p>
                   </div>
@@ -133,16 +133,16 @@ export default function ChadwickLawrence() {
                 href="https://www.chadwicklawrence.co.uk/business-services/litigation-in-business/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="group block p-4 border rounded-lg hover:border-[#1a3a52] hover:shadow-md transition-all"
+                className="group block p-4 border rounded-lg hover:border-[#2e3192] hover:shadow-md transition-all"
               >
                 <div className="flex items-start space-x-3">
-                  <div className="p-2 bg-[#1a3a52]/10 rounded-lg group-hover:bg-[#1a3a52]/20 transition-colors">
-                    <Gavel className="h-5 w-5 text-[#1a3a52]" />
+                  <div className="p-2 bg-[#2e3192]/10 rounded-lg group-hover:bg-[#2e3192]/20 transition-colors">
+                    <Gavel className="h-5 w-5 text-[#2e3192]" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-gray-900 group-hover:text-[#1a3a52]">Litigation</h4>
-                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#1a3a52]" />
+                      <h4 className="font-semibold text-[#2e3192]">Litigation</h4>
+                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#2e3192]" />
                     </div>
                     <p className="text-sm text-gray-600 mt-1">Proactive problem-solving with expertise and value.</p>
                   </div>
@@ -153,16 +153,16 @@ export default function ChadwickLawrence() {
                 href="https://www.chadwicklawrence.co.uk/business-services/media-law-and-reputation/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="group block p-4 border rounded-lg hover:border-[#1a3a52] hover:shadow-md transition-all"
+                className="group block p-4 border rounded-lg hover:border-[#2e3192] hover:shadow-md transition-all"
               >
                 <div className="flex items-start space-x-3">
-                  <div className="p-2 bg-[#1a3a52]/10 rounded-lg group-hover:bg-[#1a3a52]/20 transition-colors">
-                    <Megaphone className="h-5 w-5 text-[#1a3a52]" />
+                  <div className="p-2 bg-[#2e3192]/10 rounded-lg group-hover:bg-[#2e3192]/20 transition-colors">
+                    <Megaphone className="h-5 w-5 text-[#2e3192]" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-gray-900 group-hover:text-[#1a3a52]">Media Law & Reputation</h4>
-                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#1a3a52]" />
+                      <h4 className="font-semibold text-[#2e3192]">Media Law & Reputation</h4>
+                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#2e3192]" />
                     </div>
                     <p className="text-sm text-gray-600 mt-1">Protect and manage your media presence and reputation.</p>
                   </div>
@@ -173,16 +173,16 @@ export default function ChadwickLawrence() {
                 href="https://www.chadwicklawrence.co.uk/business-services/regulatory-services-solicitors/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="group block p-4 border rounded-lg hover:border-[#1a3a52] hover:shadow-md transition-all"
+                className="group block p-4 border rounded-lg hover:border-[#2e3192] hover:shadow-md transition-all"
               >
                 <div className="flex items-start space-x-3">
-                  <div className="p-2 bg-[#1a3a52]/10 rounded-lg group-hover:bg-[#1a3a52]/20 transition-colors">
-                    <Shield className="h-5 w-5 text-[#1a3a52]" />
+                  <div className="p-2 bg-[#2e3192]/10 rounded-lg group-hover:bg-[#2e3192]/20 transition-colors">
+                    <Shield className="h-5 w-5 text-[#2e3192]" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-gray-900 group-hover:text-[#1a3a52]">Regulatory Services</h4>
-                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#1a3a52]" />
+                      <h4 className="font-semibold text-[#2e3192]">Regulatory Services</h4>
+                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#2e3192]" />
                     </div>
                     <p className="text-sm text-gray-600 mt-1">Navigate regulatory investigations and compliance.</p>
                   </div>
@@ -193,16 +193,16 @@ export default function ChadwickLawrence() {
                 href="https://www.chadwicklawrence.co.uk/business-services/social-housing-management/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="group block p-4 border rounded-lg hover:border-[#1a3a52] hover:shadow-md transition-all"
+                className="group block p-4 border rounded-lg hover:border-[#2e3192] hover:shadow-md transition-all"
               >
                 <div className="flex items-start space-x-3">
-                  <div className="p-2 bg-[#1a3a52]/10 rounded-lg group-hover:bg-[#1a3a52]/20 transition-colors">
-                    <Home className="h-5 w-5 text-[#1a3a52]" />
+                  <div className="p-2 bg-[#2e3192]/10 rounded-lg group-hover:bg-[#2e3192]/20 transition-colors">
+                    <Home className="h-5 w-5 text-[#2e3192]" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-gray-900 group-hover:text-[#1a3a52]">Social Housing</h4>
-                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#1a3a52]" />
+                      <h4 className="font-semibold text-[#2e3192]">Social Housing</h4>
+                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#2e3192]" />
                     </div>
                     <p className="text-sm text-gray-600 mt-1">Specialist legal support for housing management.</p>
                   </div>
@@ -213,16 +213,16 @@ export default function ChadwickLawrence() {
                 href="https://www.chadwicklawrence.co.uk/business-services/sports-law/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="group block p-4 border rounded-lg hover:border-[#1a3a52] hover:shadow-md transition-all"
+                className="group block p-4 border rounded-lg hover:border-[#2e3192] hover:shadow-md transition-all"
               >
                 <div className="flex items-start space-x-3">
-                  <div className="p-2 bg-[#1a3a52]/10 rounded-lg group-hover:bg-[#1a3a52]/20 transition-colors">
-                    <Trophy className="h-5 w-5 text-[#1a3a52]" />
+                  <div className="p-2 bg-[#2e3192]/10 rounded-lg group-hover:bg-[#2e3192]/20 transition-colors">
+                    <Trophy className="h-5 w-5 text-[#2e3192]" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-semibold text-gray-900 group-hover:text-[#1a3a52]">Sports Law</h4>
-                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#1a3a52]" />
+                      <h4 className="font-semibold text-[#2e3192]">Sports Law</h4>
+                      <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-[#2e3192]" />
                     </div>
                     <p className="text-sm text-gray-600 mt-1">Specialist support for players, clubs and representatives.</p>
                   </div>
