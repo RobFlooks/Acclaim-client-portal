@@ -953,7 +953,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                 <tbody>
                   ${activities.map((activity: any) => `
                     <tr>
-                      <td class="date">${formatDate(activity.createdAt)}</td>
+                      <td class="date">${formatDateOnly(activity.createdAt)}</td>
                       <td>${activity.description || 'N/A'}</td>
                     </tr>
                   `).join('')}
@@ -977,7 +977,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                   ${documents.map((doc: any) => `
                     <tr>
                       <td>${doc.fileName || 'N/A'}</td>
-                      <td class="date">${formatDate(doc.createdAt)}</td>
+                      <td class="date">${formatDateOnly(doc.createdAt)}</td>
                       <td>${doc.fileSize ? `${Math.round(doc.fileSize / 1024)} KB` : 'N/A'}</td>
                     </tr>
                   `).join('')}
