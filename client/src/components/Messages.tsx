@@ -488,7 +488,7 @@ export default function Messages() {
                         Message will be stored against the selected case
                       </p>
                     ) : (
-                      <p className="text-sm text-amber-600 mt-1">
+                      <p className="text-xs text-amber-600 mt-1">
                         As this message is not linked to a case, it will only be visible to you and Acclaim - not others in your organisation.
                       </p>
                     )}
