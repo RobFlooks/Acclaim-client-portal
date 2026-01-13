@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Activity, Users, AlertTriangle, Shield, Clock, Download, Search, Filter } from "lucide-react";
+import { ArrowLeft, Activity, Users, AlertTriangle, Shield, Clock, Download, Search, Filter, CheckCircle, AlertCircle, XCircle } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
 
@@ -51,6 +51,13 @@ interface SystemMetric {
   metricName: string;
   metricValue: number;
   recordedAt: string;
+}
+
+interface SystemHealth {
+  metric: string;
+  value: number;
+  status: string;
+  timestamp: Date;
 }
 
 export default function SystemMonitoring() {
@@ -130,6 +137,12 @@ export default function SystemMonitoring() {
     retry: false,
   });
 
+  // Fetch system health metrics (from Advanced Reports)
+  const { data: systemHealthData = [], isLoading: isLoadingSystemHealth } = useQuery<SystemHealth[]>({
+    queryKey: ['/api/admin/reports/system-health'],
+    retry: false
+  });
+
   const getHealthBadgeColor = (health: string) => {
     switch (health) {
       case 'healthy':
@@ -140,6 +153,32 @@ export default function SystemMonitoring() {
         return 'bg-red-500';
       default:
         return 'bg-gray-500';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'healthy':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'warning':
+        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+      case 'critical':
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      default:
+        return <AlertCircle className="h-4 w-4 text-gray-500" />;
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'healthy':
+        return <Badge className="bg-green-100 text-green-800">Healthy</Badge>;
+      case 'warning':
+        return <Badge className="bg-yellow-100 text-yellow-800">Warning</Badge>;
+      case 'critical':
+        return <Badge className="bg-red-100 text-red-800">Critical</Badge>;
+      default:
+        return <Badge className="bg-gray-100 text-gray-800">Unknown</Badge>;
     }
   };
 
@@ -550,12 +589,92 @@ export default function SystemMonitoring() {
             </div>
           </TabsContent>
 
-          <TabsContent value="metrics">
+          <TabsContent value="metrics" className="space-y-6">
+            {/* System Health Dashboard */}
             <Card>
               <CardHeader>
-                <CardTitle>System Metrics</CardTitle>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <CardTitle className="flex items-center">
+                      <Activity className="h-5 w-5 mr-2" />
+                      System Health Dashboard
+                    </CardTitle>
+                    <CardDescription>Monitor system performance and health metrics</CardDescription>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => exportData(systemHealthData, 'system-health-metrics')}
+                    disabled={!systemHealthData || systemHealthData.length === 0}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Health Data
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {isLoadingSystemHealth ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  </div>
+                ) : systemHealthData.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    No system health metrics available
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {systemHealthData.map((metric: SystemHealth, index: number) => (
+                        <Card key={index}>
+                          <CardContent className="pt-6">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-2">
+                                {getStatusIcon(metric.status)}
+                                <div>
+                                  <p className="text-sm font-medium">{metric.metric}</p>
+                                  <p className="text-2xl font-bold">{metric.value}</p>
+                                </div>
+                              </div>
+                              {getStatusBadge(metric.status)}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                    
+                    <div className="overflow-x-auto rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Metric</TableHead>
+                            <TableHead>Value</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Last Updated</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {systemHealthData.map((metric: SystemHealth, index: number) => (
+                            <TableRow key={index}>
+                              <TableCell className="font-medium">{metric.metric}</TableCell>
+                              <TableCell>{metric.value}</TableCell>
+                              <TableCell>{getStatusBadge(metric.status)}</TableCell>
+                              <TableCell>{new Date(metric.timestamp).toLocaleString()}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* System Metrics Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Historical System Metrics</CardTitle>
                 <CardDescription>
-                  Performance and system health metrics over time
+                  Performance and system metrics recorded over time
                 </CardDescription>
                 <div className="flex items-center gap-4 mt-4">
                   <Button 
@@ -564,7 +683,7 @@ export default function SystemMonitoring() {
                     size="sm"
                   >
                     <Download className="w-4 h-4 mr-2" />
-                    Export
+                    Export Metrics
                   </Button>
                 </div>
               </CardHeader>

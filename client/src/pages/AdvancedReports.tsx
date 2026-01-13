@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Link } from "wouter";
-import { ArrowLeft, Download, FileText, Users, Activity, AlertCircle, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, Download, FileText, Users } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
@@ -26,13 +26,6 @@ interface UserActivity {
   casesCreated: number;
   messagesSent: number;
   documentsUploaded: number;
-}
-
-interface SystemHealth {
-  metric: string;
-  value: number;
-  status: string;
-  timestamp: Date;
 }
 
 interface CustomReportConfig {
@@ -67,14 +60,8 @@ export default function AdvancedReports() {
   }, [isLoading, user]);
 
   // User activity report query
-  const { data: userActivityData = [], isLoading: isLoadingUserActivity } = useQuery({
+  const { data: userActivityData = [], isLoading: isLoadingUserActivity } = useQuery<UserActivity[]>({
     queryKey: ['/api/admin/reports/user-activity', dateRange],
-    retry: false
-  });
-
-  // System health metrics query
-  const { data: systemHealthData = [], isLoading: isLoadingSystemHealth } = useQuery({
-    queryKey: ['/api/admin/reports/system-health'],
     retry: false
   });
 
@@ -112,34 +99,6 @@ export default function AdvancedReports() {
     URL.revokeObjectURL(url);
   };
 
-
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'healthy':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'warning':
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
-      case 'critical':
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return <Activity className="h-4 w-4" />;
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'healthy':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Healthy</Badge>;
-      case 'warning':
-        return <Badge variant="default" className="bg-yellow-100 text-yellow-800">Warning</Badge>;
-      case 'critical':
-        return <Badge variant="destructive">Critical</Badge>;
-      default:
-        return <Badge variant="outline">Unknown</Badge>;
-    }
-  };
-
   if (isLoading || !user?.isAdmin) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -171,9 +130,8 @@ export default function AdvancedReports() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="user-activity" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="user-activity">User Activity</TabsTrigger>
-          <TabsTrigger value="system-health">System Health</TabsTrigger>
           <TabsTrigger value="custom-reports">Custom Reports</TabsTrigger>
         </TabsList>
 
@@ -258,83 +216,6 @@ export default function AdvancedReports() {
                       ))}
                     </TableBody>
                   </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* System Health Dashboard */}
-        <TabsContent value="system-health" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center">
-                    <Activity className="h-5 w-5 mr-2" />
-                    System Health Dashboard
-                  </CardTitle>
-                  <CardDescription>Monitor system performance and health metrics</CardDescription>
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => exportToJSON(systemHealthData, 'system-health-metrics')}
-                  disabled={!systemHealthData}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export JSON
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {isLoadingSystemHealth ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-acclaim-teal"></div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {systemHealthData?.map((metric: SystemHealth, index: number) => (
-                      <Card key={index}>
-                        <CardContent className="pt-6">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              {getStatusIcon(metric.status)}
-                              <div>
-                                <p className="text-sm font-medium">{metric.metric}</p>
-                                <p className="text-2xl font-bold">{metric.value}</p>
-                              </div>
-                            </div>
-                            {getStatusBadge(metric.status)}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                  
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Metric</TableHead>
-                          <TableHead>Value</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Last Updated</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {systemHealthData?.map((metric: SystemHealth, index: number) => (
-                          <TableRow key={index}>
-                            <TableCell className="font-medium">{metric.metric}</TableCell>
-                            <TableCell>{metric.value}</TableCell>
-                            <TableCell>{getStatusBadge(metric.status)}</TableCell>
-                            <TableCell>{new Date(metric.timestamp).toLocaleString()}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
                 </div>
               )}
             </CardContent>
