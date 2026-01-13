@@ -1054,66 +1054,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Send email notifications
       if (!user.isAdmin) {
-        // User-to-admin notification (existing functionality)
+        // User-to-admin notification - only send to email@acclaim.law
+        // Do NOT notify other users associated with the case - only admin receives user messages
         try {
-          // Get the main admin user
-          const adminUser = await storage.getUser("admin_1753292574.014698");
+          const adminEmail = "email@acclaim.law";
           
-          if (adminUser && adminUser.email) {
-            // Get organisation name
-            let organisationName = "Unknown Organisation";
-            if (user.organisationId) {
-              const organisation = await storage.getOrganisation(user.organisationId);
-              if (organisation) {
-                organisationName = organisation.name;
-              }
+          // Get organisation name
+          let organisationName = "Unknown Organisation";
+          if (user.organisationId) {
+            const organisation = await storage.getOrganisation(user.organisationId);
+            if (organisation) {
+              organisationName = organisation.name;
             }
+          }
 
-            // Get case reference and details if this is a case-specific message
-            let caseReference = undefined;
-            let caseDetails = undefined;
-            if (messageData.caseId) {
-              const messageCase = await storage.getCaseById(messageData.caseId);
-              if (messageCase) {
-                caseReference = messageCase.accountNumber;
-                caseDetails = {
-                  caseName: messageCase.caseName,
-                  debtorType: messageCase.debtorType,
-                  originalAmount: messageCase.originalAmount.toString(),
-                  outstandingAmount: messageCase.outstandingAmount.toString(),
-                  status: messageCase.status,
-                  stage: messageCase.stage,
-                  assignedTo: messageCase.assignedTo,
-                };
-              }
-            }
-
-            // Prepare attachment data if present
-            let attachmentData = undefined;
-            if (messageData.attachmentFileName && messageData.attachmentFilePath) {
-              attachmentData = {
-                fileName: messageData.attachmentFileName,
-                filePath: messageData.attachmentFilePath,
-                fileSize: messageData.attachmentFileSize || 0,
-                fileType: messageData.attachmentFileType || 'application/octet-stream',
+          // Get case reference and details if this is a case-specific message
+          let caseReference = undefined;
+          let caseDetails = undefined;
+          if (messageData.caseId) {
+            const messageCase = await storage.getCaseById(messageData.caseId);
+            if (messageCase) {
+              caseReference = messageCase.accountNumber;
+              caseDetails = {
+                caseName: messageCase.caseName,
+                debtorType: messageCase.debtorType,
+                originalAmount: messageCase.originalAmount.toString(),
+                outstandingAmount: messageCase.outstandingAmount.toString(),
+                status: messageCase.status,
+                stage: messageCase.stage,
+                assignedTo: messageCase.assignedTo,
               };
             }
-
-            // Send email notification
-            await sendGridEmailService.sendMessageNotification(
-              {
-                userEmail: user.email || '',
-                userName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || '',
-                messageSubject: messageData.subject || '',
-                messageContent: messageData.content,
-                caseReference,
-                caseDetails,
-                organisationName,
-                attachment: attachmentData,
-              },
-              adminUser.email
-            );
           }
+
+          // Prepare attachment data if present
+          let attachmentData = undefined;
+          if (messageData.attachmentFileName && messageData.attachmentFilePath) {
+            attachmentData = {
+              fileName: messageData.attachmentFileName,
+              filePath: messageData.attachmentFilePath,
+              fileSize: messageData.attachmentFileSize || 0,
+              fileType: messageData.attachmentFileType || 'application/octet-stream',
+            };
+          }
+
+          // Send email notification only to admin email - no other users
+          await sendGridEmailService.sendMessageNotification(
+            {
+              userEmail: user.email || '',
+              userName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || '',
+              messageSubject: messageData.subject || '',
+              messageContent: messageData.content,
+              caseReference,
+              caseDetails,
+              organisationName,
+              attachment: attachmentData,
+            },
+            adminEmail
+          );
         } catch (emailError) {
           // Log email error but don't fail the message creation
           console.error("Failed to send user-to-admin email notification:", emailError);
