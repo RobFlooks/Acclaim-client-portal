@@ -702,6 +702,21 @@ export default function UserProfile() {
         {/* Organisation Tab */}
         <TabsContent value="organisation">
           <div className="space-y-6">
+            {/* Admin explanation */}
+            {userProfile?.isAdmin && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Building2 className="h-5 w-5" />
+                    <span>Organisation Documents</span>
+                  </CardTitle>
+                  <CardDescription>
+                    As an administrator, you have access to documents from all organisations. Use this section to view and manage documents shared across organisations.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            )}
+
             {/* Organisation Info - only show for non-admin users */}
             {!userProfile?.isAdmin && (
               <Card>
