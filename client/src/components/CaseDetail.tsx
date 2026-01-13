@@ -516,9 +516,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               date: activity.createdAt,
               type: 'activity',
               title: activity.description || 'Activity',
-              description: activity.activityType || '',
-              icon: '⚡',
-              color: '#6366f1'
+              description: activity.activityType || ''
             });
           }
         });
@@ -537,289 +535,217 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
         <!DOCTYPE html>
         <html>
         <head>
-          <title>Visual Timeline - Case ${caseData.accountNumber}</title>
+          <title>Case Timeline - ${caseData.accountNumber}</title>
           <style>
+            * {
+              box-sizing: border-box;
+            }
             body {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
               margin: 0;
-              padding: 20px;
-              background: linear-gradient(135deg, #475569 0%, #64748b 100%);
-              min-height: 100vh;
+              padding: 40px;
+              background: #f8f9fa;
+              color: #1f2937;
             }
-            .container {
-              max-width: 1200px;
+            .page {
+              max-width: 900px;
               margin: 0 auto;
               background: white;
-              border-radius: 16px;
-              box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-              overflow: hidden;
+              padding: 50px;
+              box-shadow: 0 1px 3px rgba(0,0,0,0.08);
             }
             .header {
-              background: linear-gradient(135deg, #475569 0%, #64748b 100%);
-              color: white;
-              padding: 40px 30px;
-              text-align: center;
-              position: relative;
+              border-bottom: 2px solid #0d9488;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
             }
-            .logo {
-              width: 60px;
-              height: 60px;
-              margin: 0 auto 20px auto;
-              background: white;
-              border-radius: 50%;
+            .header-top {
               display: flex;
-              align-items: center;
-              justify-content: center;
-              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            }
-            .logo-icon {
-              width: 40px;
-              height: 40px;
-              background-image: url('/attached_assets/Acclaim rose.Cur_1752277774829.png');
-              background-size: contain;
-              background-repeat: no-repeat;
-              background-position: center;
-            }
-            .header h1 {
-              margin: 0;
-              font-size: 2.5em;
-              font-weight: 700;
-            }
-            .header p {
-              margin: 10px 0 0 0;
-              font-size: 1.1em;
-              opacity: 0.9;
+              justify-content: space-between;
+              align-items: flex-start;
+              margin-bottom: 15px;
             }
             .company-name {
-              font-size: 1.2em;
+              font-size: 1.1em;
               font-weight: 600;
-              margin-bottom: 10px;
-              color: rgba(255, 255, 255, 0.95);
+              color: #0d9488;
             }
-            .case-summary {
-              display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-              gap: 20px;
-              padding: 30px;
-              background: #f8fafc;
-              border-bottom: 1px solid #cbd5e1;
+            .report-date {
+              font-size: 0.85em;
+              color: #6b7280;
             }
-            .summary-card {
-              background: white;
-              padding: 20px;
-              border-radius: 12px;
-              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-              border-left: 4px solid #6366f1;
+            .case-title {
+              font-size: 1.5em;
+              font-weight: 600;
+              color: #1f2937;
+              margin: 0;
             }
-            .summary-card h3 {
-              margin: 0 0 5px 0;
-              color: #64748b;
-              font-size: 0.9em;
+            .case-ref {
+              font-size: 0.95em;
+              color: #6b7280;
+              margin-top: 5px;
+            }
+            .summary-row {
+              display: flex;
+              gap: 40px;
+              padding: 20px 0;
+              border-bottom: 1px solid #e5e7eb;
+              margin-bottom: 30px;
+            }
+            .summary-item {
+              flex: 1;
+            }
+            .summary-label {
+              font-size: 0.75em;
               text-transform: uppercase;
               letter-spacing: 0.5px;
+              color: #6b7280;
+              margin-bottom: 4px;
             }
-            .summary-card p {
-              margin: 0;
-              font-size: 1.2em;
+            .summary-value {
+              font-size: 1.1em;
               font-weight: 600;
               color: #1f2937;
             }
-            .timeline-container {
-              padding: 40px;
-              position: relative;
+            .timeline-section {
+              margin-top: 30px;
             }
-            .timeline-title {
-              text-align: center;
-              margin-bottom: 40px;
-            }
-            .timeline-title h2 {
-              font-size: 2em;
-              color: #1f2937;
-              margin: 0;
+            .timeline-heading {
+              font-size: 1em;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              color: #6b7280;
+              margin-bottom: 25px;
+              padding-bottom: 10px;
+              border-bottom: 1px solid #e5e7eb;
             }
             .timeline {
               position: relative;
-              padding-left: 40px;
+              padding-left: 30px;
             }
             .timeline::before {
               content: '';
               position: absolute;
-              left: 20px;
-              top: 0;
-              bottom: 0;
-              width: 4px;
-              background: linear-gradient(to bottom, #6366f1, #818cf8);
-              border-radius: 2px;
+              left: 6px;
+              top: 5px;
+              bottom: 5px;
+              width: 2px;
+              background: #d1d5db;
             }
             .timeline-item {
               position: relative;
-              margin-bottom: 30px;
-              padding-left: 40px;
+              padding-bottom: 25px;
             }
-            .timeline-item::before {
-              content: '';
+            .timeline-item:last-child {
+              padding-bottom: 0;
+            }
+            .timeline-marker {
               position: absolute;
-              left: -8px;
-              top: 8px;
-              width: 16px;
-              height: 16px;
-              background: var(--item-color, #6366f1);
+              left: -26px;
+              top: 5px;
+              width: 10px;
+              height: 10px;
+              background: #0d9488;
               border-radius: 50%;
-              border: 3px solid white;
-              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            }
-            .timeline-card {
-              background: white;
-              border-radius: 12px;
-              padding: 20px;
-              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-              border: 1px solid #e2e8f0;
-              transition: all 0.3s ease;
-            }
-            .timeline-card:hover {
-              transform: translateY(-2px);
-              box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-            }
-            .timeline-header {
-              display: flex;
-              align-items: center;
-              gap: 12px;
-              margin-bottom: 12px;
-            }
-            .timeline-icon {
-              font-size: 1.5em;
-              width: 40px;
-              height: 40px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              background: var(--item-color, #6366f1);
-              color: white;
-              border-radius: 50%;
-              box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
-            }
-            .timeline-title-text {
-              font-size: 1.1em;
-              font-weight: 600;
-              color: #1f2937;
-              margin: 0;
+              border: 2px solid white;
+              box-shadow: 0 0 0 2px #0d9488;
             }
             .timeline-date {
-              font-size: 0.9em;
+              font-size: 0.8em;
+              color: #0d9488;
+              font-weight: 500;
+              margin-bottom: 4px;
+            }
+            .timeline-title {
+              font-size: 0.95em;
+              font-weight: 600;
+              color: #1f2937;
+              margin-bottom: 3px;
+            }
+            .timeline-desc {
+              font-size: 0.85em;
               color: #6b7280;
-              margin-left: auto;
-            }
-            .timeline-description {
-              color: #4b5563;
               line-height: 1.5;
-              margin: 0;
-            }
-            .footer {
-              text-align: center;
-              padding: 30px;
-              background: #f8fafc;
-              color: #64748b;
-              border-top: 1px solid #cbd5e1;
-            }
-            .footer-logo {
-              width: 24px;
-              height: 24px;
-              display: inline-block;
-              margin-right: 8px;
-              vertical-align: middle;
-              background-image: url('/attached_assets/Acclaim rose.Cur_1752277774829.png');
-              background-size: contain;
-              background-repeat: no-repeat;
-              background-position: center;
             }
             .no-events {
               text-align: center;
-              padding: 60px 20px;
+              padding: 40px 20px;
               color: #6b7280;
+              font-style: italic;
             }
-            .no-events-icon {
-              font-size: 4em;
-              margin-bottom: 20px;
+            .footer {
+              margin-top: 40px;
+              padding-top: 20px;
+              border-top: 1px solid #e5e7eb;
+              font-size: 0.8em;
+              color: #9ca3af;
+              text-align: center;
             }
             @media print {
               body {
                 background: white;
+                padding: 0;
               }
-              .container {
+              .page {
                 box-shadow: none;
-              }
-              .timeline-card:hover {
-                transform: none;
+                padding: 30px;
               }
             }
           </style>
         </head>
         <body>
-          <div class="container">
+          <div class="page">
             <div class="header">
-              <div class="logo">
-                <div class="logo-icon"></div>
+              <div class="header-top">
+                <div class="company-name">Acclaim Credit Management</div>
+                <div class="report-date">Generated: ${currentDate}</div>
               </div>
-              <div class="company-name">Acclaim Credit Management & Recovery</div>
-              <h1>📊 Visual Timeline Report</h1>
-              <p>Case: ${caseData.caseName} (${caseData.accountNumber})</p>
+              <h1 class="case-title">${caseData.caseName}</h1>
+              <div class="case-ref">Account: ${caseData.accountNumber}</div>
             </div>
             
-            <div class="case-summary">
-              <div class="summary-card">
-                <h3>Case Status</h3>
-                <p>${caseData.status || 'Active'}</p>
+            <div class="summary-row">
+              <div class="summary-item">
+                <div class="summary-label">Status</div>
+                <div class="summary-value">${caseData.status || 'Active'}</div>
               </div>
-              <div class="summary-card">
-                <h3>Outstanding Amount</h3>
-                <p>${formatCurrency(outstandingAmount)}</p>
+              <div class="summary-item">
+                <div class="summary-label">Outstanding</div>
+                <div class="summary-value">${formatCurrency(outstandingAmount)}</div>
               </div>
-              <div class="summary-card">
-                <h3>Total Payments</h3>
-                <p>${formatCurrency(totalPayments)}</p>
+              <div class="summary-item">
+                <div class="summary-label">Payments</div>
+                <div class="summary-value">${formatCurrency(totalPayments)}</div>
               </div>
-              <div class="summary-card">
-                <h3>Total Events</h3>
-                <p>${timelineEvents.length}</p>
+              <div class="summary-item">
+                <div class="summary-label">Events</div>
+                <div class="summary-value">${timelineEvents.length}</div>
               </div>
             </div>
-            
-            <div class="timeline-container">
-              <div class="timeline-title">
-                <h2>🕐 Case Timeline</h2>
-              </div>
+
+            <div class="timeline-section">
+              <div class="timeline-heading">Case Timeline</div>
               
               ${timelineEvents.length > 0 ? `
                 <div class="timeline">
                   ${timelineEvents.map(event => `
-                    <div class="timeline-item" style="--item-color: ${event.color}">
-                      <div class="timeline-card">
-                        <div class="timeline-header">
-                          <div class="timeline-icon" style="background: ${event.color}">
-                            ${event.icon}
-                          </div>
-                          <h3 class="timeline-title-text">${event.title}</h3>
-                          <span class="timeline-date">${formatDate(event.date)}</span>
-                        </div>
-                        <p class="timeline-description">${event.description}</p>
-                      </div>
+                    <div class="timeline-item">
+                      <div class="timeline-marker"></div>
+                      <div class="timeline-date">${formatDate(event.date)}</div>
+                      <div class="timeline-title">${event.title}</div>
+                      ${event.description ? `<div class="timeline-desc">${event.description}</div>` : ''}
                     </div>
                   `).join('')}
                 </div>
               ` : `
                 <div class="no-events">
-                  <div class="no-events-icon">📅</div>
-                  <h3>No Timeline Events</h3>
-                  <p>No events have been recorded for this case yet.</p>
+                  No timeline events have been recorded for this case.
                 </div>
               `}
             </div>
             
             <div class="footer">
-              <p><span class="footer-logo"></span><strong>Acclaim Credit Management & Recovery</strong></p>
-              <p>Generated on ${currentDate}</p>
-              <p>This report contains ${timelineEvents.length} timeline events</p>
-              <p style="margin-top: 15px; font-size: 0.9em; opacity: 0.8;">Professional debt recovery and credit management services</p>
+              Acclaim Credit Management & Recovery
             </div>
           </div>
         </body>
