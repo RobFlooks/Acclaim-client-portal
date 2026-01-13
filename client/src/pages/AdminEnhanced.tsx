@@ -2403,13 +2403,6 @@ export default function AdminEnhanced() {
               <span className="sm:hidden">Payments</span>
             </Button>
           </Link>
-          <Link href="/advanced-reports">
-            <Button variant="outline" size="sm">
-              <FileText className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Advanced Reports</span>
-              <span className="sm:hidden">Reports</span>
-            </Button>
-          </Link>
           <Link href="/audit-management">
             <Button variant="outline" size="sm">
               <Shield className="h-4 w-4 mr-2" />
