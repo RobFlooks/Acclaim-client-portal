@@ -707,20 +707,24 @@ export default function UserProfile() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Building2 className="h-5 w-5" />
-                  <span>Your Organisation</span>
+                  <span>{userOrganisations && userOrganisations.length > 1 ? "Your Organisations" : "Your Organisation"}</span>
                 </CardTitle>
                 <CardDescription>View your organisation details and shared documents.</CardDescription>
               </CardHeader>
               <CardContent>
-                {userProfile?.organisationName ? (
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <Building2 className="h-5 w-5 text-acclaim-teal" />
-                      <div>
-                        <p className="font-medium text-lg">{userProfile.organisationName}</p>
-                        <p className="text-sm text-gray-500">You are a member of this organisation</p>
+                {userOrganisations && userOrganisations.length > 0 ? (
+                  <div className="space-y-3">
+                    {userOrganisations.map((org: any) => (
+                      <div key={org.id} className="p-4 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <Building2 className="h-5 w-5 text-acclaim-teal" />
+                          <div>
+                            <p className="font-medium text-lg">{org.name}</p>
+                            <p className="text-sm text-gray-500">You are a member of this organisation</p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
                 ) : (
                   <p className="text-gray-500">You are not currently assigned to any organisation.</p>
