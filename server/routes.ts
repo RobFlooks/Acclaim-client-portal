@@ -1576,6 +1576,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete document (with permission check)
+  app.delete('/api/documents/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const documentId = parseInt(req.params.id);
+      
+      // Get all user's organisation IDs (both legacy and junction table)
+      const userOrgs = await storage.getUserOrganisations(userId);
+      const allUserOrgIds = new Set<number>();
+      if (user.organisationId) {
+        allUserOrgIds.add(user.organisationId);
+      }
+      userOrgs.forEach(uo => allUserOrgIds.add(uo.organisationId));
+
+      // Get the document directly
+      const document = await storage.getDocumentById(documentId);
+      
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+
+      // Check access: admin can delete all, regular users need org match
+      if (!user.isAdmin) {
+        if (document.organisationId && !allUserOrgIds.has(document.organisationId)) {
+          return res.status(403).json({ message: "Access denied" });
+        }
+      }
+
+      // Delete the file from disk if it exists
+      if (document.filePath && fs.existsSync(document.filePath)) {
+        fs.unlinkSync(document.filePath);
+      }
+
+      // Delete from database
+      await storage.deleteDocumentById(documentId);
+
+      res.status(200).json({ message: "Document deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting document:", error);
+      res.status(500).json({ message: "Failed to delete document" });
+    }
+  });
+
   app.get('/api/cases/:id/documents', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
