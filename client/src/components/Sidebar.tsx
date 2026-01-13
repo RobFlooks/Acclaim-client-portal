@@ -88,12 +88,17 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
         
         {/* Other Legal Services - separate from main nav */}
         <div className="pt-4 mt-4 border-t border-teal-700/50">
+          <p className="px-4 text-xs text-teal-300 mb-2 uppercase tracking-wide">Legal Services</p>
           <button
             onClick={() => setActiveSection("chadwick-lawrence")}
-            className="flex items-center w-full px-4 py-2 text-teal-200 text-sm rounded-lg transition-colors hover:bg-teal-700 hover:text-white"
+            className={`flex items-center w-full px-4 py-3 rounded-lg transition-all ${
+              activeSection === "chadwick-lawrence"
+                ? "bg-[#2e3192] text-white shadow-md"
+                : "bg-teal-700/50 text-white hover:bg-[#2e3192] hover:shadow-md"
+            }`}
           >
-            <Scale className="w-4 h-4 mr-3" />
-            Chadwick Lawrence
+            <Scale className="w-5 h-5 mr-3" />
+            <span className="font-medium">Chadwick Lawrence</span>
           </button>
         </div>
       </nav>
