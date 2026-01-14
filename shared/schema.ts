@@ -72,6 +72,17 @@ export const userOrganisations = pgTable("user_organisations", {
   index("idx_user_organisations_org_id").on(table.organisationId),
 ]);
 
+// Muted cases - allows users to mute notifications for specific cases
+export const mutedCases = pgTable("muted_cases", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  caseId: integer("case_id").notNull().references(() => cases.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_muted_cases_user_id").on(table.userId),
+  index("idx_muted_cases_case_id").on(table.caseId),
+]);
+
 // Case submissions table (for capturing submissions before they become actual cases)
 export const caseSubmissions = pgTable("case_submissions", {
   id: serial("id").primaryKey(),
