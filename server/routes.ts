@@ -467,6 +467,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Case mute/unmute endpoints
+  app.get('/api/cases/:id/muted', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const caseId = parseInt(req.params.id);
+      const isMuted = await storage.isCaseMuted(userId, caseId);
+      res.json({ muted: isMuted });
+    } catch (error) {
+      console.error("Error checking case mute status:", error);
+      res.status(500).json({ message: "Failed to check mute status" });
+    }
+  });
+
+  app.post('/api/cases/:id/mute', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const caseId = parseInt(req.params.id);
+      await storage.muteCase(userId, caseId);
+      res.json({ success: true, muted: true });
+    } catch (error) {
+      console.error("Error muting case:", error);
+      res.status(500).json({ message: "Failed to mute case" });
+    }
+  });
+
+  app.post('/api/cases/:id/unmute', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const caseId = parseInt(req.params.id);
+      await storage.unmuteCase(userId, caseId);
+      res.json({ success: true, muted: false });
+    } catch (error) {
+      console.error("Error unmuting case:", error);
+      res.status(500).json({ message: "Failed to unmute case" });
+    }
+  });
+
+  app.get('/api/user/muted-cases', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const mutedCaseIds = await storage.getMutedCasesForUser(userId);
+      res.json({ mutedCaseIds });
+    } catch (error) {
+      console.error("Error fetching muted cases:", error);
+      res.status(500).json({ message: "Failed to fetch muted cases" });
+    }
+  });
+
   // Case submission routes
   app.post('/api/case-submissions', isAuthenticated, upload.array('documents'), async (req: any, res) => {
     try {
