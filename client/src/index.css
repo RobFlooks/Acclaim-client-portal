@@ -240,3 +240,99 @@
 .dark .bg-white {
   background-color: hsl(220, 22%, 11%);
 }
+
+/* Dark mode text color fixes */
+.dark .text-black {
+  color: hsl(210, 15%, 90%);
+}
+
+.dark .text-slate-900,
+.dark .text-zinc-900,
+.dark .text-neutral-900 {
+  color: hsl(210, 15%, 90%);
+}
+
+.dark .text-slate-800,
+.dark .text-zinc-800,
+.dark .text-neutral-800 {
+  color: hsl(210, 12%, 85%);
+}
+
+.dark .text-slate-700,
+.dark .text-zinc-700,
+.dark .text-neutral-700 {
+  color: hsl(210, 12%, 78%);
+}
+
+.dark .text-slate-600,
+.dark .text-zinc-600,
+.dark .text-neutral-600 {
+  color: hsl(215, 12%, 65%);
+}
+
+.dark .text-slate-500,
+.dark .text-zinc-500,
+.dark .text-neutral-500 {
+  color: hsl(215, 12%, 58%);
+}
+
+/* Improve text-acclaim-teal visibility in dark mode */
+.dark .text-acclaim-teal {
+  color: hsl(174, 70%, 50%);
+}
+
+/* Fix red text colors */
+.dark .text-red-500,
+.dark .text-red-600 {
+  color: hsl(0, 75%, 65%);
+}
+
+/* Fix blue text colors */
+.dark .text-blue-500,
+.dark .text-blue-600 {
+  color: hsl(210, 85%, 68%);
+}
+
+/* Fix green text colors */
+.dark .text-green-500,
+.dark .text-green-600 {
+  color: hsl(140, 65%, 55%);
+}
+
+/* Fix emerald text/bg */
+.dark .text-emerald-600,
+.dark .text-emerald-700 {
+  color: hsl(160, 65%, 55%);
+}
+
+.dark .bg-emerald-600 {
+  background-color: hsl(160, 60%, 40%);
+}
+
+/* Fix orange colors */
+.dark .text-orange-500,
+.dark .text-orange-600 {
+  color: hsl(25, 85%, 60%);
+}
+
+.dark .bg-orange-600 {
+  background-color: hsl(25, 75%, 45%);
+}
+
+/* Table styles for dark mode */
+.dark table {
+  border-color: hsl(220, 18%, 22%);
+}
+
+.dark th {
+  background-color: hsl(220, 20%, 14%);
+  color: hsl(210, 15%, 88%);
+}
+
+.dark td {
+  border-color: hsl(220, 18%, 20%);
+}
+
+.dark tr:hover {
+  background-color: hsl(220, 20%, 14%);
+}
