@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Download, FileText, TrendingUp, Calendar, PoundSterling, User, CreditCard } from "lucide-react";
+import { ArrowLeft, Download, FileText, TrendingUp, Calendar, PoundSterling, User, CreditCard, Building2, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Link } from "wouter";
@@ -16,6 +16,7 @@ export default function MonthlyStatementReport() {
   const { toast } = useToast();
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7)); // YYYY-MM format
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  const [orgFilter, setOrgFilter] = useState<string>("all");
 
   const { data: cases, isLoading: casesLoading } = useQuery({
     queryKey: ["/api/cases"],
@@ -61,6 +62,21 @@ export default function MonthlyStatementReport() {
     },
   });
 
+  // Fetch user's organisations for filtering
+  const { data: userOrganisations } = useQuery<any[]>({
+    queryKey: ["/api/user/organisations"],
+  });
+
+  // Check if user has multiple organisations
+  const hasMultipleOrgs = userOrganisations && userOrganisations.length > 1;
+
+  // Filter cases based on organisation filter
+  const filteredCases = useMemo(() => {
+    if (!cases) return [];
+    if (orgFilter === "all") return cases;
+    return cases.filter((c: any) => c.organisationId === parseInt(orgFilter));
+  }, [cases, orgFilter]);
+
   const formatCurrency = (amount: string | number) => {
     const num = typeof amount === 'string' ? parseFloat(amount) : amount;
     return new Intl.NumberFormat('en-GB', {
@@ -101,19 +117,19 @@ export default function MonthlyStatementReport() {
 
   // Filter cases and activities for selected month
   const monthlyData = useMemo(() => {
-    if (!cases || !selectedMonth) return null;
+    if (!filteredCases || !selectedMonth) return null;
 
     // Parse selected month and create date range using UTC to avoid timezone issues
     const [year, month] = selectedMonth.split('-').map(Number);
     const startDate = new Date(Date.UTC(year, month - 1, 1)); // month - 1 because JS months are 0-indexed
     const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59)); // Last day of the month
 
-    const filteredCases = cases.filter((case_: any) => {
+    const casesThisMonth = filteredCases.filter((case_: any) => {
       const caseDate = new Date(case_.createdAt);
       return caseDate >= startDate && caseDate <= endDate;
     });
 
-    const paymentsInMonth = cases.reduce((acc: any[], case_: any) => {
+    const paymentsInMonth = filteredCases.reduce((acc: any[], case_: any) => {
       if (case_.payments) {
         const monthlyPayments = case_.payments.filter((payment: any) => {
           // Try different date fields for payments
@@ -134,14 +150,14 @@ export default function MonthlyStatementReport() {
       sum + parseFloat(payment.amount), 0);
 
     return {
-      filteredCases,
+      casesThisMonth,
       paymentsInMonth,
       totalPayments,
       paymentsCount: paymentsInMonth.length,
       startDate,
       endDate
     };
-  }, [cases, selectedMonth]);
+  }, [filteredCases, selectedMonth]);
 
   const handleExportExcel = () => {
     if (!monthlyData) return;
@@ -343,19 +359,40 @@ export default function MonthlyStatementReport() {
         </div>
       </div>
 
-      {/* Month Selection */}
+      {/* Filters */}
       <Card className="mb-4 sm:mb-6">
         <CardHeader className="pb-2 sm:pb-4">
           <CardTitle className="flex items-center text-base sm:text-lg">
-            <Calendar className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-            Select Month
+            <Filter className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+            Filters
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center">
-            <div className="flex-1 sm:max-w-xs">
+            {hasMultipleOrgs && (
+              <div className="flex items-center gap-2 flex-1 sm:max-w-xs">
+                <Building2 className="h-4 w-4 text-gray-500" />
+                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Organisation:</label>
+                <Select value={orgFilter} onValueChange={setOrgFilter}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="All Organisations" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Organisations</SelectItem>
+                    {userOrganisations?.map((org: any) => (
+                      <SelectItem key={org.id} value={String(org.id)}>
+                        {org.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className="flex items-center gap-2 flex-1 sm:max-w-xs">
+              <Calendar className="h-4 w-4 text-gray-500" />
+              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Month:</label>
               <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select month" />
                 </SelectTrigger>
                 <SelectContent>

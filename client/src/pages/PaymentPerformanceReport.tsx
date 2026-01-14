@@ -1,8 +1,10 @@
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Download, FileSpreadsheet, FileText, TrendingUp, Calendar, Clock, CreditCard } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Download, FileSpreadsheet, FileText, TrendingUp, Calendar, Clock, CreditCard, Building2, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Link } from "wouter";
@@ -10,6 +12,7 @@ import * as XLSX from 'xlsx';
 
 export default function PaymentPerformanceReport() {
   const { toast } = useToast();
+  const [orgFilter, setOrgFilter] = useState<string>("all");
 
   const { data: cases, isLoading: casesLoading } = useQuery({
     queryKey: ["/api/cases"],
@@ -55,6 +58,29 @@ export default function PaymentPerformanceReport() {
     },
   });
 
+  // Fetch user's organisations for filtering
+  const { data: userOrganisations } = useQuery<any[]>({
+    queryKey: ["/api/user/organisations"],
+  });
+
+  // Check if user has multiple organisations
+  const hasMultipleOrgs = userOrganisations && userOrganisations.length > 1;
+
+  // Filter cases based on organisation filter
+  const filteredCases = useMemo(() => {
+    if (!cases) return [];
+    if (orgFilter === "all") return cases;
+    return cases.filter((c: any) => c.organisationId === parseInt(orgFilter));
+  }, [cases, orgFilter]);
+
+  // Filter payments based on filtered cases
+  const filteredPayments = useMemo(() => {
+    if (!payments) return [];
+    if (orgFilter === "all") return payments;
+    const caseIds = new Set(filteredCases.map((c: any) => c.id));
+    return payments.filter((p: any) => caseIds.has(p.caseId));
+  }, [payments, filteredCases, orgFilter]);
+
   const formatCurrency = (amount: string | number) => {
     const num = typeof amount === 'string' ? parseFloat(amount) : amount;
     return new Intl.NumberFormat('en-GB', {
@@ -68,30 +94,29 @@ export default function PaymentPerformanceReport() {
   };
 
   const getPaymentMetrics = () => {
-    if (!payments || !cases) return null;
+    if (!filteredPayments || !filteredCases) return null;
 
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
     const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
 
-    const recentPayments = payments.filter((p: any) => new Date(p.createdAt) >= thirtyDaysAgo);
-    const last30Days = payments.filter((p: any) => new Date(p.createdAt) >= thirtyDaysAgo);
-    const last60Days = payments.filter((p: any) => new Date(p.createdAt) >= sixtyDaysAgo);
-    const last90Days = payments.filter((p: any) => new Date(p.createdAt) >= ninetyDaysAgo);
+    const last30Days = filteredPayments.filter((p: any) => new Date(p.createdAt) >= thirtyDaysAgo);
+    const last60Days = filteredPayments.filter((p: any) => new Date(p.createdAt) >= sixtyDaysAgo);
+    const last90Days = filteredPayments.filter((p: any) => new Date(p.createdAt) >= ninetyDaysAgo);
 
-    const totalPayments = payments.reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0);
-    const avgPaymentAmount = payments.length > 0 ? totalPayments / payments.length : 0;
+    const totalPayments = filteredPayments.reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0);
+    const avgPaymentAmount = filteredPayments.length > 0 ? totalPayments / filteredPayments.length : 0;
 
     // Payment method breakdown
-    const methodBreakdown = payments.reduce((acc: any, payment: any) => {
+    const methodBreakdown = filteredPayments.reduce((acc: any, payment: any) => {
       const method = payment.paymentMethod || 'Not Specified';
       acc[method] = (acc[method] || 0) + parseFloat(payment.amount);
       return acc;
     }, {});
 
     // Monthly payment trends
-    const monthlyTrends = payments.reduce((acc: any, payment: any) => {
+    const monthlyTrends = filteredPayments.reduce((acc: any, payment: any) => {
       const month = new Date(payment.createdAt).toLocaleString('en-GB', { month: 'short', year: 'numeric' });
       if (!acc[month]) {
         acc[month] = { total: 0, count: 0 };
@@ -105,7 +130,7 @@ export default function PaymentPerformanceReport() {
 
     return {
       totalPayments,
-      totalPaymentCount: payments.length,
+      totalPaymentCount: filteredPayments.length,
       avgPaymentAmount,
       last30DaysTotal: last30Days.reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0),
       last30DaysCount: last30Days.length,
@@ -118,7 +143,7 @@ export default function PaymentPerformanceReport() {
   };
 
   const handleExportExcel = () => {
-    if (!payments || !cases) {
+    if (!filteredPayments || filteredPayments.length === 0) {
       toast({
         title: "No Data",
         description: "No payment data available to export.",
@@ -131,8 +156,8 @@ export default function PaymentPerformanceReport() {
       const metrics = getPaymentMetrics();
       
       // Payment details sheet
-      const paymentDetailsData = payments.map((payment: any) => {
-        const case_ = cases.find((c: any) => c.id === payment.caseId);
+      const paymentDetailsData = filteredPayments.map((payment: any) => {
+        const case_ = filteredCases.find((c: any) => c.id === payment.caseId);
         return {
           'Account Number': case_?.accountNumber || 'N/A',
           'Case Name': case_?.organisationName ? `${case_.caseName} (${case_.organisationName})` : (case_?.caseName || 'N/A'),
@@ -442,6 +467,42 @@ export default function PaymentPerformanceReport() {
           </Button>
         </div>
       </div>
+
+      {/* Organisation Filter - Only show for multi-org users */}
+      {hasMultipleOrgs && (
+        <Card className="mb-4 sm:mb-6">
+          <CardHeader className="pb-2 sm:pb-4">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Filter className="h-4 w-4 sm:h-5 sm:w-5" />
+              Filter by Organisation
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+              <div className="flex items-center gap-2 flex-1">
+                <Building2 className="h-4 w-4 text-gray-500" />
+                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Organisation:</label>
+                <Select value={orgFilter} onValueChange={setOrgFilter}>
+                  <SelectTrigger className="w-full sm:w-48">
+                    <SelectValue placeholder="All Organisations" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Organisations</SelectItem>
+                    {userOrganisations?.map((org: any) => (
+                      <SelectItem key={org.id} value={String(org.id)}>
+                        {org.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="text-xs sm:text-sm text-gray-600">
+                Showing {filteredPayments?.length || 0} payments
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Key Metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6 mb-4 sm:mb-8">
