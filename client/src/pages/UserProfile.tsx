@@ -100,7 +100,7 @@ export default function UserProfile() {
 
   // Fetch organisation documents (documents without case association)
   const { data: orgDocuments, isLoading: documentsLoading } = useQuery<any[]>({
-    queryKey: ["/api/documents/organisation"],
+    queryKey: ["/api/organisation/documents"],
     retry: false,
   });
 
@@ -306,7 +306,7 @@ export default function UserProfile() {
       formData.append("file", selectedFile);
       formData.append("organisationId", orgId.toString());
 
-      const response = await fetch("/api/documents/organisation", {
+      const response = await fetch("/api/organisation/documents/upload", {
         method: "POST",
         body: formData,
         credentials: "include",
@@ -322,7 +322,7 @@ export default function UserProfile() {
         description: "Document uploaded successfully",
       });
       setSelectedFile(null);
-      queryClient.invalidateQueries({ queryKey: ["/api/documents/organisation"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/organisation/documents"] });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -376,7 +376,7 @@ export default function UserProfile() {
         title: "Success",
         description: "Document deleted successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/documents/organisation"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/organisation/documents"] });
     } catch (error) {
       toast({
         title: "Error",
