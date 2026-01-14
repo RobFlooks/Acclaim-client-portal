@@ -94,6 +94,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Azure Entra External ID authentication (optional - only if configured)
   setupAzureAuth(app);
   
+  // Diagnostic endpoint for upload testing
+  app.get('/api/diagnostics/uploads', async (req, res) => {
+    try {
+      const testFile = path.join(uploadsDir, '.diagnostic-test-' + Date.now());
+      fs.writeFileSync(testFile, 'test');
+      fs.unlinkSync(testFile);
+      res.json({
+        status: 'ok',
+        uploadsDir,
+        writable: true,
+        cwd: process.cwd(),
+        home: process.env.HOME,
+        nodeVersion: process.version
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        status: 'error',
+        uploadsDir,
+        writable: false,
+        error: error.message,
+        cwd: process.cwd(),
+        home: process.env.HOME
+      });
+    }
+  });
+  
   // Initial setup routes (only available when no admin exists)
   app.get('/api/setup/status', async (req, res) => {
     try {
