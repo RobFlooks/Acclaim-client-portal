@@ -322,7 +322,10 @@ export default function Reports() {
       {/* View Reports */}
       <Card>
         <CardHeader>
-          <CardTitle>View Reports</CardTitle>
+          <CardTitle className="flex items-center">
+            <BarChart3 className="h-5 w-5 mr-2 text-acclaim-teal" />
+            View Reports
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
