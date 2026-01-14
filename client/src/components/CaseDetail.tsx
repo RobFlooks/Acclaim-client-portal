@@ -1509,7 +1509,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                     type="file"
                     onChange={(e) => setMessageAttachment(e.target.files?.[0] || null)}
                     accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar,.xls,.xlsx,.csv"
-                    className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-acclaim-teal file:text-white hover:file:bg-acclaim-teal/90"
+                    className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 file:cursor-pointer cursor-pointer"
                   />
                   {messageAttachment && (
                     <p className="text-sm text-gray-600 mt-1">
