@@ -15,6 +15,7 @@ import {
   auditLog,
   externalApiCredentials,
   userOrganisations,
+  mutedCases,
   type User,
   type UpsertUser,
   type Organization,
@@ -308,6 +309,12 @@ export interface IStorage {
   getValidPasswordResetToken(userId: string): Promise<PasswordResetToken | undefined>;
   markPasswordResetTokenUsed(tokenId: number): Promise<void>;
   invalidatePasswordResetTokensForUser(userId: string): Promise<void>;
+
+  // Muted cases operations
+  muteCase(userId: string, caseId: number): Promise<void>;
+  unmuteCase(userId: string, caseId: number): Promise<void>;
+  isCaseMuted(userId: string, caseId: number): Promise<boolean>;
+  getMutedCasesForUser(userId: string): Promise<number[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2519,6 +2526,39 @@ export class DatabaseStorage implements IStorage {
           isNull(passwordResetTokens.usedAt)
         )
       );
+  }
+
+  // Muted cases operations
+  async muteCase(userId: string, caseId: number): Promise<void> {
+    // Check if already muted to avoid duplicates
+    const existing = await db.select()
+      .from(mutedCases)
+      .where(and(eq(mutedCases.userId, userId), eq(mutedCases.caseId, caseId)))
+      .limit(1);
+    
+    if (existing.length === 0) {
+      await db.insert(mutedCases).values({ userId, caseId });
+    }
+  }
+
+  async unmuteCase(userId: string, caseId: number): Promise<void> {
+    await db.delete(mutedCases)
+      .where(and(eq(mutedCases.userId, userId), eq(mutedCases.caseId, caseId)));
+  }
+
+  async isCaseMuted(userId: string, caseId: number): Promise<boolean> {
+    const [result] = await db.select()
+      .from(mutedCases)
+      .where(and(eq(mutedCases.userId, userId), eq(mutedCases.caseId, caseId)))
+      .limit(1);
+    return !!result;
+  }
+
+  async getMutedCasesForUser(userId: string): Promise<number[]> {
+    const results = await db.select({ caseId: mutedCases.caseId })
+      .from(mutedCases)
+      .where(eq(mutedCases.userId, userId));
+    return results.map(r => r.caseId);
   }
 }
 
