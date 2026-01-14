@@ -14,8 +14,11 @@ import 'jspdf-autotable';
 
 export default function MonthlyStatementReport() {
   const { toast } = useToast();
-  const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7)); // YYYY-MM format
-  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  // Default to current month range
+  const currentDate = new Date();
+  const firstOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+  const [startDate, setStartDate] = useState<string>(firstOfMonth.toISOString().slice(0, 10)); // YYYY-MM-DD format
+  const [endDate, setEndDate] = useState<string>(currentDate.toISOString().slice(0, 10)); // YYYY-MM-DD format
   const [orgFilter, setOrgFilter] = useState<string>("all");
 
   const { data: cases, isLoading: casesLoading } = useQuery({
@@ -93,50 +96,34 @@ export default function MonthlyStatementReport() {
     });
   };
 
-  const getMonthName = (monthStr: string) => {
-    const date = new Date(monthStr + '-01');
-    return date.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  const getDateRangeLabel = () => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    return `${start.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} - ${end.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`;
   };
 
-  // Generate available months (last 24 months)
-  const availableMonths = useMemo(() => {
-    const months = [];
-    const currentDate = new Date();
-    for (let i = 0; i < 24; i++) {
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth() - i;
-      const date = new Date(year, month, 1);
-      const monthStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      months.push({
-        value: monthStr,
-        label: date.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
-      });
-    }
-    return months;
-  }, []);
+  // Filter cases and payments for selected date range
+  const statementData = useMemo(() => {
+    if (!filteredCases || !startDate || !endDate) return null;
 
-  // Filter cases and activities for selected month
-  const monthlyData = useMemo(() => {
-    if (!filteredCases || !selectedMonth) return null;
+    // Parse dates and create range
+    const rangeStart = new Date(startDate);
+    rangeStart.setHours(0, 0, 0, 0);
+    const rangeEnd = new Date(endDate);
+    rangeEnd.setHours(23, 59, 59, 999);
 
-    // Parse selected month and create date range using UTC to avoid timezone issues
-    const [year, month] = selectedMonth.split('-').map(Number);
-    const startDate = new Date(Date.UTC(year, month - 1, 1)); // month - 1 because JS months are 0-indexed
-    const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59)); // Last day of the month
-
-    const casesThisMonth = filteredCases.filter((case_: any) => {
+    const casesInRange = filteredCases.filter((case_: any) => {
       const caseDate = new Date(case_.createdAt);
-      return caseDate >= startDate && caseDate <= endDate;
+      return caseDate >= rangeStart && caseDate <= rangeEnd;
     });
 
-    const paymentsInMonth = filteredCases.reduce((acc: any[], case_: any) => {
+    const paymentsInRange = filteredCases.reduce((acc: any[], case_: any) => {
       if (case_.payments) {
-        const monthlyPayments = case_.payments.filter((payment: any) => {
-          // Try different date fields for payments
+        const rangePayments = case_.payments.filter((payment: any) => {
           const paymentDate = new Date(payment.paymentDate || payment.createdAt);
-          return paymentDate >= startDate && paymentDate <= endDate;
+          return paymentDate >= rangeStart && paymentDate <= rangeEnd;
         });
-        acc.push(...monthlyPayments.map((payment: any) => ({
+        acc.push(...rangePayments.map((payment: any) => ({
           ...payment,
           accountNumber: case_.accountNumber,
           caseName: case_.caseName,
@@ -146,42 +133,42 @@ export default function MonthlyStatementReport() {
       return acc;
     }, []);
 
-    const totalPayments = paymentsInMonth.reduce((sum: number, payment: any) => 
+    const totalPayments = paymentsInRange.reduce((sum: number, payment: any) => 
       sum + parseFloat(payment.amount), 0);
 
     return {
-      casesThisMonth,
-      paymentsInMonth,
+      casesInRange,
+      paymentsInRange,
       totalPayments,
-      paymentsCount: paymentsInMonth.length,
-      startDate,
-      endDate
+      paymentsCount: paymentsInRange.length,
+      rangeStart,
+      rangeEnd
     };
-  }, [filteredCases, selectedMonth]);
+  }, [filteredCases, startDate, endDate]);
 
   const handleExportExcel = () => {
-    if (!monthlyData) return;
+    if (!statementData) return;
 
     const workbook = XLSX.utils.book_new();
     
-    // Monthly Summary Sheet
+    // Statement Summary Sheet
     const summaryData = [
-      ['Monthly Statement Report'],
-      ['Month:', getMonthName(selectedMonth)],
+      ['Statement Report'],
+      ['Period:', getDateRangeLabel()],
       ['Generated:', new Date().toLocaleDateString('en-GB')],
       [''],
       ['Summary'],
-      ['Total Payments', formatCurrency(monthlyData.totalPayments)],
-      ['Number of Payments', monthlyData.paymentsCount],
+      ['Total Payments', formatCurrency(statementData.totalPayments)],
+      ['Number of Payments', statementData.paymentsCount],
       [''],
-      ['Payments Received This Month']
+      ['Payments Received in Period']
     ];
 
     // Add payment headers
     summaryData.push(['Account Number', 'Case Name', 'Amount', 'Date', 'Method']);
     
     // Add payment data
-    monthlyData.paymentsInMonth.forEach((payment: any) => {
+    statementData.paymentsInRange.forEach((payment: any) => {
       summaryData.push([
         payment.accountNumber,
         payment.organisationName ? `${payment.caseName} (${payment.organisationName})` : payment.caseName,
@@ -194,7 +181,7 @@ export default function MonthlyStatementReport() {
     const worksheet = XLSX.utils.aoa_to_sheet(summaryData);
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Monthly Statement');
     
-    const filename = `monthly-statement-${selectedMonth}.xlsx`;
+    const filename = `statement-${startDate}-to-${endDate}.xlsx`;
     XLSX.writeFile(workbook, filename);
     
     toast({
@@ -204,7 +191,7 @@ export default function MonthlyStatementReport() {
   };
 
   const handleDownloadPDF = () => {
-    if (!monthlyData) return;
+    if (!statementData) return;
 
     try {
       const printWindow = window.open('', '_blank');
@@ -215,7 +202,7 @@ export default function MonthlyStatementReport() {
       const currentDate = new Date().toLocaleDateString('en-GB');
       
       // Generate payments table rows
-      const paymentsTableRows = monthlyData.paymentsInMonth.map((payment: any) => `
+      const paymentsTableRows = statementData.paymentsInRange.map((payment: any) => `
         <tr>
           <td>${payment.accountNumber}</td>
           <td>${payment.caseName}${payment.organisationName ? ` <span style="font-size: 10px; color: #666;">(${payment.organisationName})</span>` : ''}</td>
@@ -253,28 +240,28 @@ export default function MonthlyStatementReport() {
         </head>
         <body>
           <div class="header">
-            <h1>Monthly Statement Report</h1>
-            <p>Month: ${getMonthName(selectedMonth)}</p>
+            <h1>Statement Report</h1>
+            <p>Period: ${getDateRangeLabel()}</p>
             <p>Generated on: ${currentDate}</p>
           </div>
           
           <div class="section">
-            <h2>Monthly Summary</h2>
+            <h2>Summary</h2>
             <div class="metrics-grid">
               <div class="metric-card">
                 <div class="metric-label">Total Payments</div>
-                <div class="metric-value">${formatCurrency(monthlyData.totalPayments)}</div>
+                <div class="metric-value">${formatCurrency(statementData.totalPayments)}</div>
               </div>
               <div class="metric-card">
                 <div class="metric-label">Number of Payments</div>
-                <div class="metric-value">${monthlyData.paymentsCount}</div>
+                <div class="metric-value">${statementData.paymentsCount}</div>
               </div>
             </div>
           </div>
           
           <div class="section">
-            <h2>Payments Received This Month</h2>
-            ${monthlyData.paymentsInMonth.length > 0 ? `
+            <h2>Payments Received in Period</h2>
+            ${statementData.paymentsInRange.length > 0 ? `
               <table>
                 <thead>
                   <tr>
@@ -290,7 +277,7 @@ export default function MonthlyStatementReport() {
                 </tbody>
               </table>
             ` : `
-              <p>No payments received in ${getMonthName(selectedMonth)}</p>
+              <p>No payments received in this period</p>
             `}
           </div>
         </body>
@@ -307,7 +294,7 @@ export default function MonthlyStatementReport() {
       
       toast({
         title: "Report Opened",
-        description: `Monthly statement report for ${getMonthName(selectedMonth)} opened in new tab for viewing`,
+        description: `Statement report for ${getDateRangeLabel()} opened in new tab for viewing`,
       });
     } catch (error) {
       toast({
@@ -390,33 +377,37 @@ export default function MonthlyStatementReport() {
             )}
             <div className="flex items-center gap-2 flex-1 sm:max-w-xs">
               <Calendar className="h-4 w-4 text-gray-500" />
-              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Month:</label>
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select month" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableMonths.map((month, index) => (
-                    <SelectItem key={`${month.value}-${index}`} value={month.value}>
-                      {month.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">From:</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+            <div className="flex items-center gap-2 flex-1 sm:max-w-xs">
+              <Calendar className="h-4 w-4 text-gray-500" />
+              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">To:</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              />
             </div>
             <div className="text-xs sm:text-sm text-gray-600">
-              Showing data for {getMonthName(selectedMonth)}
+              Showing data for {getDateRangeLabel()}
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Monthly Summary */}
+      {/* Summary */}
       <Card className="mb-4 sm:mb-6">
         <CardHeader className="pb-2 sm:pb-4">
           <CardTitle className="flex items-center text-base sm:text-lg">
             <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-            Monthly Summary - {getMonthName(selectedMonth)}
+            Summary - {getDateRangeLabel()}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -426,7 +417,7 @@ export default function MonthlyStatementReport() {
                 <div>
                   <p className="text-xs sm:text-sm text-gray-600">Total Payments</p>
                   <p className="text-lg sm:text-2xl font-bold text-purple-600">
-                    {formatCurrency(monthlyData?.totalPayments || 0)}
+                    {formatCurrency(statementData?.totalPayments || 0)}
                   </p>
                 </div>
                 <PoundSterling className="h-5 w-5 sm:h-8 sm:w-8 text-purple-600 hidden sm:block" />
@@ -438,7 +429,7 @@ export default function MonthlyStatementReport() {
                 <div>
                   <p className="text-xs sm:text-sm text-gray-600">Number of Payments</p>
                   <p className="text-lg sm:text-2xl font-bold text-blue-600">
-                    {monthlyData?.paymentsCount || 0}
+                    {statementData?.paymentsCount || 0}
                   </p>
                 </div>
                 <CreditCard className="h-5 w-5 sm:h-8 sm:w-8 text-blue-600 hidden sm:block" />
@@ -448,13 +439,13 @@ export default function MonthlyStatementReport() {
         </CardContent>
       </Card>
 
-      {/* Payments This Month */}
+      {/* Payments in Period */}
       <Card>
         <CardHeader className="pb-2 sm:pb-4">
-          <CardTitle className="text-base sm:text-lg">Payments Received - {getMonthName(selectedMonth)}</CardTitle>
+          <CardTitle className="text-base sm:text-lg">Payments Received - {getDateRangeLabel()}</CardTitle>
         </CardHeader>
         <CardContent className="p-2 sm:p-6">
-          {monthlyData?.paymentsInMonth.length > 0 ? (
+          {statementData?.paymentsInRange.length > 0 ? (
             <div className="overflow-x-auto -mx-2 sm:mx-0">
               <table className="w-full border-collapse border border-gray-200 text-xs sm:text-sm">
                 <thead>
@@ -467,7 +458,7 @@ export default function MonthlyStatementReport() {
                   </tr>
                 </thead>
                 <tbody>
-                  {monthlyData.paymentsInMonth.map((payment: any, index: number) => (
+                  {statementData.paymentsInRange.map((payment: any, index: number) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="border border-gray-200 px-2 sm:px-4 py-2 font-medium whitespace-nowrap">
                         {payment.accountNumber}
@@ -499,14 +490,14 @@ export default function MonthlyStatementReport() {
                 <div className="flex justify-between items-center">
                   <span className="font-medium text-green-800 text-sm sm:text-base">Total Payments:</span>
                   <span className="text-lg sm:text-xl font-bold text-green-600">
-                    {formatCurrency(monthlyData.totalPayments)}
+                    {formatCurrency(statementData.totalPayments)}
                   </span>
                 </div>
               </div>
             </div>
           ) : (
             <div className="text-center py-6 sm:py-8 text-gray-500 text-sm">
-              No payments received in {getMonthName(selectedMonth)}
+              No payments received in this period
             </div>
           )}
         </CardContent>

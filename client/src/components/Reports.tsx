@@ -1,8 +1,9 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, FileText, TrendingUp, PieChart, CreditCard, Calendar, Lightbulb } from "lucide-react";
+import { BarChart3, FileText, TrendingUp, PieChart, CreditCard, Calendar, PoundSterling } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 
@@ -53,6 +54,10 @@ export default function Reports() {
     },
   });
 
+  const { data: payments } = useQuery({
+    queryKey: ["/api/payments"],
+  });
+
   const formatCurrency = (amount: string | number) => {
     const num = typeof amount === 'string' ? parseFloat(amount) : amount;
     return new Intl.NumberFormat('en-GB', {
@@ -60,6 +65,35 @@ export default function Reports() {
       currency: 'GBP',
     }).format(num);
   };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
+  // Get recent payments with case info
+  const recentPayments = useMemo(() => {
+    if (!payments || !cases) return [];
+    
+    // Sort by date, most recent first, and take top 5
+    const sortedPayments = [...payments].sort((a: any, b: any) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    ).slice(0, 5);
+    
+    // Enrich with case info
+    return sortedPayments.map((payment: any) => {
+      const caseItem = cases.find((c: any) => c.id === payment.caseId);
+      return {
+        ...payment,
+        caseName: caseItem?.caseName || 'Unknown',
+        accountNumber: caseItem?.accountNumber || 'N/A',
+        organisationName: caseItem?.organisationName
+      };
+    });
+  }, [payments, cases]);
 
   const handleViewReport = (reportType: string) => {
     if (reportType === "Case Summary Report") {
@@ -250,37 +284,42 @@ export default function Reports() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Lightbulb className="h-5 w-5 mr-2 text-amber-500" />
-              Portal Tips
+              <PoundSterling className="h-5 w-5 mr-2 text-green-600" />
+              Recent Payments Received
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-xs font-bold text-teal-700">1</span>
-                </div>
-                <p className="text-sm text-gray-600">Use the <strong>Messages</strong> tab or send messages directly from within a case to communicate with our team.</p>
+            {recentPayments.length > 0 ? (
+              <div className="space-y-3">
+                {recentPayments.map((payment: any, index: number) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-gray-900 truncate">
+                        {payment.caseName}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {payment.accountNumber}
+                        {payment.organisationName && (
+                          <span className="ml-1">({payment.organisationName})</span>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-0.5">
+                        {formatDate(payment.createdAt)}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 font-semibold">
+                        {formatCurrency(payment.amount)}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-xs font-bold text-teal-700">2</span>
-                </div>
-                <p className="text-sm text-gray-600">Upload documents directly to cases for faster processing and a complete audit trail.</p>
+            ) : (
+              <div className="text-center py-4 text-gray-500 text-sm">
+                No recent payments to display
               </div>
-              <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-xs font-bold text-teal-700">3</span>
-                </div>
-                <p className="text-sm text-gray-600">Track case progress in real-time through the <strong>Timeline</strong> on each case.</p>
-              </div>
-              <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-xs font-bold text-teal-700">4</span>
-                </div>
-                <p className="text-sm text-gray-600">Download reports and statements anytime from this Reports section.</p>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
