@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Clock, 
@@ -41,6 +42,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   const [activeTab, setActiveTab] = useState("timeline");
   const [messageSearch, setMessageSearch] = useState("");
   const [documentSearch, setDocumentSearch] = useState("");
+  const [notifyOnUpload, setNotifyOnUpload] = useState(true);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -279,10 +281,16 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   });
 
   const uploadDocumentMutation = useMutation({
-    mutationFn: async (file: File) => {
+    mutationFn: async ({ file, notify }: { file: File; notify: boolean }) => {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("caseId", caseData.id.toString());
+      // Admin uploads notify users, regular users notify admin
+      if (user?.isAdmin) {
+        formData.append("notifyUsers", notify.toString());
+      } else {
+        formData.append("notifyAdmin", notify.toString());
+      }
       
       const response = await fetch("/api/documents/upload", {
         method: "POST",
@@ -299,6 +307,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/cases", caseData.id, "documents"] });
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       setSelectedFile(null);
+      setNotifyOnUpload(true);
       // Reset file input
       const fileInput = document.getElementById("file-upload") as HTMLInputElement;
       if (fileInput) fileInput.value = "";
@@ -415,7 +424,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
 
   const handleFileUpload = () => {
     if (!selectedFile) return;
-    uploadDocumentMutation.mutate(selectedFile);
+    uploadDocumentMutation.mutate({ file: selectedFile, notify: notifyOnUpload });
   };
 
   const getStageBadge = (status: string, stage: string) => {
@@ -1259,25 +1268,37 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                     className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 file:cursor-pointer cursor-pointer"
                   />
                   {selectedFile && (
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <FileText className="h-5 w-5 text-acclaim-teal" />
-                        <div>
-                          <p className="font-medium text-sm">{selectedFile.name}</p>
-                          <p className="text-xs text-gray-500">
-                            {Math.round(selectedFile.size / 1024)}KB
-                          </p>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <FileText className="h-5 w-5 text-acclaim-teal" />
+                          <div>
+                            <p className="font-medium text-sm">{selectedFile.name}</p>
+                            <p className="text-xs text-gray-500">
+                              {Math.round(selectedFile.size / 1024)}KB
+                            </p>
+                          </div>
                         </div>
+                        <Button
+                          onClick={handleFileUpload}
+                          disabled={uploadDocumentMutation.isPending}
+                          className="bg-acclaim-teal hover:bg-acclaim-teal/90"
+                          size="sm"
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          {uploadDocumentMutation.isPending ? "Uploading..." : "Upload"}
+                        </Button>
                       </div>
-                      <Button
-                        onClick={handleFileUpload}
-                        disabled={uploadDocumentMutation.isPending}
-                        className="bg-acclaim-teal hover:bg-acclaim-teal/90"
-                        size="sm"
-                      >
-                        <Upload className="h-4 w-4 mr-2" />
-                        {uploadDocumentMutation.isPending ? "Uploading..." : "Upload"}
-                      </Button>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="notify-case-upload"
+                          checked={notifyOnUpload}
+                          onCheckedChange={(checked) => setNotifyOnUpload(checked === true)}
+                        />
+                        <Label htmlFor="notify-case-upload" className="text-sm cursor-pointer">
+                          {user?.isAdmin ? "Notify users" : "Notify admin"}
+                        </Label>
+                      </div>
                     </div>
                   )}
                 </div>

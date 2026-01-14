@@ -1764,12 +1764,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.organisationId) {
-        return res.status(404).json({ message: "User organisation not found" });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
       }
 
       const caseId = parseInt(req.params.id);
-      const case_ = await storage.getCase(caseId, user.organisationId);
+      let case_;
+      let caseOrgId: number | null = null;
+      
+      if (user.isAdmin) {
+        // Admin can access any case across all organisations
+        case_ = await storage.getCaseById(caseId);
+        if (case_) {
+          caseOrgId = case_.organisationId;
+        }
+      } else {
+        // Regular users - check their assigned organisations
+        if (!user.organisationId) {
+          return res.status(404).json({ message: "User organisation not found" });
+        }
+        case_ = await storage.getCase(caseId, user.organisationId);
+        caseOrgId = user.organisationId;
+      }
       
       if (!case_) {
         return res.status(404).json({ message: "Case not found" });
@@ -1786,8 +1802,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fileType: req.file.mimetype,
         filePath: req.file.path,
         uploadedBy: userId,
-        organisationId: user.organisationId,
+        organisationId: caseOrgId!,
       });
+
+      // Handle email notifications
+      const notifyAdmin = req.body.notifyAdmin === 'true' || req.body.notifyAdmin === true;
+      const notifyUsers = req.body.notifyUsers === 'true' || req.body.notifyUsers === true;
+      
+      // Get organisation name for email
+      const org = await storage.getOrganisation(caseOrgId!);
+      const organisationName = org?.name || 'Unknown Organisation';
+      
+      if (!user.isAdmin && notifyAdmin) {
+        // User uploaded - notify admins
+        try {
+          await sendGridEmailService.sendDocumentUploadNotificationToAdmin({
+            uploaderName: `${user.firstName} ${user.lastName}`,
+            uploaderEmail: user.email,
+            organisationName,
+            fileName: req.file.originalname,
+            fileSize: req.file.size,
+            fileType: req.file.mimetype,
+            caseReference: case_.accountNumber,
+            caseName: case_.caseName,
+            uploadedAt: new Date(),
+          }, 'email@acclaim.law');
+          console.log('[Case Documents] Sent document upload notification to admin');
+        } catch (emailError) {
+          console.error('[Case Documents] Failed to send admin notification:', emailError);
+        }
+      } else if (user.isAdmin && notifyUsers) {
+        // Admin uploaded - notify users in the organisation who have notifications enabled
+        try {
+          const orgUsers = await storage.getUsersByOrganisationId(caseOrgId!);
+          for (const orgUser of orgUsers) {
+            if (!orgUser.isAdmin && orgUser.emailNotifications !== false) {
+              await sendGridEmailService.sendDocumentUploadNotificationToUser({
+                uploaderName: 'Acclaim Credit Management',
+                uploaderEmail: 'email@acclaim.law',
+                organisationName,
+                fileName: req.file.originalname,
+                fileSize: req.file.size,
+                fileType: req.file.mimetype,
+                caseReference: case_.accountNumber,
+                caseName: case_.caseName,
+                uploadedAt: new Date(),
+              }, orgUser.email);
+              console.log(`[Case Documents] Sent document upload notification to user: ${orgUser.email}`);
+            }
+          }
+        } catch (emailError) {
+          console.error('[Case Documents] Failed to send user notifications:', emailError);
+        }
+      }
 
       // Timeline activities are only created by SOS pushes, not portal actions
       // Document upload does not create timeline entry
