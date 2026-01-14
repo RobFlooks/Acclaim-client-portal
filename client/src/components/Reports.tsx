@@ -282,41 +282,33 @@ export default function Reports() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <PoundSterling className="h-5 w-5 mr-2 text-green-600" />
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center text-base">
+              <PoundSterling className="h-4 w-4 mr-2 text-green-600" />
               Recent Payments Received
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             {recentPayments.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {recentPayments.map((payment: any, index: number) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors">
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium text-gray-900 truncate">
                         {payment.caseName}
                       </div>
                       <div className="text-xs text-gray-500">
-                        {payment.accountNumber}
-                        {payment.organisationName && (
-                          <span className="ml-1">({payment.organisationName})</span>
-                        )}
-                      </div>
-                      <div className="text-xs text-gray-400 mt-0.5">
-                        {formatDate(payment.createdAt)}
+                        {payment.accountNumber} · {formatDate(payment.createdAt)}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 font-semibold">
-                        {formatCurrency(payment.amount)}
-                      </Badge>
-                    </div>
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 font-semibold text-xs ml-2">
+                      {formatCurrency(payment.amount)}
+                    </Badge>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-4 text-gray-500 text-sm">
+              <div className="text-center py-2 text-gray-500 text-sm">
                 No recent payments to display
               </div>
             )}
