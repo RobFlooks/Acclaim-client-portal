@@ -116,7 +116,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 dark:bg-background">
       {/* Desktop Sidebar */}
       <div className={`${isMobile ? 'hidden' : 'block'}`}>
         <Sidebar activeSection={activeSection} setActiveSection={handleSectionChange} />
@@ -132,7 +132,7 @@ export default function Home() {
       )}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200 px-4 sm:px-6 py-4">
+        <header className="bg-white dark:bg-card shadow-sm border-b border-gray-200 dark:border-border px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               {/* Mobile Menu Button */}
@@ -147,8 +147,8 @@ export default function Home() {
                 </Button>
               )}
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-[#111827]">{getSectionTitle()}</h1>
-                <p className="text-sm sm:text-base hidden sm:block font-semibold text-[#4b5563]">{getSectionDescription()}</p>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-foreground">{getSectionTitle()}</h1>
+                <p className="text-sm sm:text-base hidden sm:block font-semibold text-gray-600 dark:text-muted-foreground">{getSectionDescription()}</p>
               </div>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
@@ -159,7 +159,7 @@ export default function Home() {
           </div>
           {/* Mobile description */}
           {isMobile && (
-            <p className="text-sm text-gray-600 mt-2">{getSectionDescription()}</p>
+            <p className="text-sm text-gray-600 dark:text-muted-foreground mt-2">{getSectionDescription()}</p>
           )}
         </header>
 
