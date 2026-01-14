@@ -247,28 +247,6 @@ export default function Reports() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Recovery Analysis</CardTitle>
-            <p className="text-sm text-gray-600 mt-1">Comprehensive data for all active and closed cases</p>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Total Original Debt</span>
-                <span className="font-medium">{formatCurrency(recoveryAnalysis.totalOriginal)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Amount Recovered</span>
-                <span className="font-medium text-green-600">{formatCurrency(recoveryAnalysis.totalRecovered)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Still Outstanding</span>
-                <span className="font-medium text-orange-600">{formatCurrency(recoveryAnalysis.totalOutstanding)}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
       {/* View Reports */}
       <Card>
@@ -288,23 +266,6 @@ export default function Reports() {
               <Button 
                 onClick={() => handleViewReport("Case Summary Report")}
                 className="w-full bg-acclaim-teal hover:bg-acclaim-teal/90"
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                View Report
-              </Button>
-            </div>
-
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h4 className="font-medium">Recovery Analysis Report</h4>
-                  <p className="text-sm text-gray-600">Detailed breakdown of recovery performance</p>
-                </div>
-                <BarChart3 className="h-8 w-8 text-blue-600" />
-              </div>
-              <Button 
-                onClick={() => handleViewReport("Recovery Analysis")}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <FileText className="h-4 w-4 mr-2" />
                 View Report
