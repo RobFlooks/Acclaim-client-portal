@@ -29,11 +29,37 @@ import ExcelJS from "exceljs";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Ensure uploads directory exists
-const uploadsDir = path.join(process.cwd(), 'uploads');
-if (!fs.existsSync(uploadsDir)) {
+// Ensure uploads directory exists - try multiple locations for Azure compatibility
+let uploadsDir: string;
+const possiblePaths = [
+  process.env.UPLOADS_DIR,                    // Custom env var
+  path.join(process.env.HOME || '', 'uploads'), // Home directory
+  path.join(process.cwd(), 'uploads'),        // Current working directory
+  '/tmp/uploads',                             // Temp directory fallback
+];
+
+for (const testPath of possiblePaths) {
+  if (!testPath) continue;
+  try {
+    if (!fs.existsSync(testPath)) {
+      fs.mkdirSync(testPath, { recursive: true });
+    }
+    // Test write access
+    const testFile = path.join(testPath, '.write-test');
+    fs.writeFileSync(testFile, 'test');
+    fs.unlinkSync(testFile);
+    uploadsDir = testPath;
+    console.log('[Uploads] Using directory:', uploadsDir);
+    break;
+  } catch (e) {
+    console.log('[Uploads] Cannot use path:', testPath, (e as Error).message);
+  }
+}
+
+if (!uploadsDir!) {
+  uploadsDir = '/tmp/uploads';
   fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log('Created uploads directory:', uploadsDir);
+  console.log('[Uploads] Fallback to /tmp/uploads');
 }
 
 const upload = multer({
