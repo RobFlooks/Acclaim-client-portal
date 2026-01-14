@@ -78,10 +78,10 @@ export default function Reports() {
   const recentPayments = useMemo(() => {
     if (!payments || !cases) return [];
     
-    // Sort by date, most recent first, and take top 5
+    // Sort by date, most recent first, and take top 3
     const sortedPayments = [...payments].sort((a: any, b: any) => 
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    ).slice(0, 5);
+    ).slice(0, 3);
     
     // Enrich with case info
     return sortedPayments.map((payment: any) => {

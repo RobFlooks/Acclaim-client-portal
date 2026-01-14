@@ -174,7 +174,7 @@ export default function MonthlyStatementReport() {
         payment.organisationName ? `${payment.caseName} (${payment.organisationName})` : payment.caseName,
         formatCurrency(payment.amount),
         formatDate(payment.createdAt),
-        payment.method || 'N/A'
+        payment.paymentMethod || 'Not specified'
       ]);
     });
 
@@ -208,7 +208,7 @@ export default function MonthlyStatementReport() {
           <td>${payment.caseName}${payment.organisationName ? ` <span style="font-size: 10px; color: #666;">(${payment.organisationName})</span>` : ''}</td>
           <td class="currency">${formatCurrency(payment.amount)}</td>
           <td>${formatDate(payment.createdAt)}</td>
-          <td>${payment.method || 'N/A'}</td>
+          <td>${payment.paymentMethod || 'Not specified'}</td>
         </tr>
       `).join('');
       
@@ -479,7 +479,7 @@ export default function MonthlyStatementReport() {
                       </td>
                       <td className="border border-gray-200 px-2 sm:px-4 py-2">
                         <Badge variant="outline" className="text-xs">
-                          {payment.paymentMethod || 'N/A'}
+                          {payment.paymentMethod || 'Not specified'}
                         </Badge>
                       </td>
                     </tr>
