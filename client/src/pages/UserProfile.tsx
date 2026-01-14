@@ -8,10 +8,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/hooks/use-theme";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 import { useQueryClient } from "@tanstack/react-query";
-import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft, Bell, Building2, FileText, Download, Trash2, Upload, Search } from "lucide-react";
+import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft, Bell, Building2, FileText, Download, Trash2, Upload, Search, Sun, Moon } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
 import { updateUserSchema, changePasswordSchema } from "@shared/schema";
@@ -40,6 +41,7 @@ interface UserData {
 
 export default function UserProfile() {
   const { toast } = useToast();
+  const { theme, toggleTheme } = useTheme();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const searchString = useSearch();
@@ -606,6 +608,34 @@ export default function UserProfile() {
                   </Button>
                 </div>
               </form>
+            </CardContent>
+          </Card>
+
+          {/* Display Preferences */}
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                {theme === "dark" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                <span>Display Preferences</span>
+              </CardTitle>
+              <CardDescription>Customise how the portal looks for you.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between space-x-2">
+                <div className="space-y-1">
+                  <Label htmlFor="darkMode" className="text-base font-medium">
+                    Dark Mode
+                  </Label>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Switch between light and dark theme for easier viewing.
+                  </p>
+                </div>
+                <Switch
+                  id="darkMode"
+                  checked={theme === "dark"}
+                  onCheckedChange={toggleTheme}
+                />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
