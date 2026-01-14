@@ -352,7 +352,7 @@ export default function Documents() {
                           </Button>
                         </div>
                         <div>
-                          <Label htmlFor="custom-filename" className="text-sm">Rename file (optional)</Label>
+                          <Label htmlFor="custom-filename" className="text-sm text-acclaim-teal font-medium">Rename file (optional)</Label>
                           <div className="flex items-center gap-1 mt-1">
                             <Input
                               id="custom-filename"

@@ -1299,7 +1299,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                         </Button>
                       </div>
                       <div>
-                        <Label htmlFor="case-custom-filename" className="text-sm">Rename file (optional)</Label>
+                        <Label htmlFor="case-custom-filename" className="text-sm text-acclaim-teal font-medium">Rename file (optional)</Label>
                         <div className="flex items-center gap-1 mt-1">
                           <Input
                             id="case-custom-filename"
