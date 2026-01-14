@@ -1833,6 +1833,8 @@ export default function AdminEnhanced() {
   const [sendingWelcomeEmail, setSendingWelcomeEmail] = useState(false);
   const [sendingPasswordEmail, setSendingPasswordEmail] = useState(false);
   const [isNewUserFlow, setIsNewUserFlow] = useState(false); // true = new user, false = password reset
+  const [showConfirmCreateUser, setShowConfirmCreateUser] = useState(false);
+  const [orgSearchTerm, setOrgSearchTerm] = useState("");
 
   // Pagination state
   const [usersPage, setUsersPage] = useState(1);
@@ -2501,7 +2503,7 @@ export default function AdminEnhanced() {
                   <CardTitle>User Management</CardTitle>
                   <CardDescription>Create and manage user accounts with comprehensive controls</CardDescription>
                 </div>
-                <Dialog open={showCreateUser} onOpenChange={setShowCreateUser}>
+                <Dialog open={showCreateUser} onOpenChange={(open) => { setShowCreateUser(open); if (!open) setOrgSearchTerm(""); }}>
                   <DialogTrigger asChild>
                     <Button className="bg-acclaim-teal hover:bg-acclaim-teal/90">
                       <UserPlus className="h-4 w-4 mr-2" />
@@ -2568,8 +2570,25 @@ export default function AdminEnhanced() {
                             <SelectValue placeholder="Select organisation (optional)" />
                           </SelectTrigger>
                           <SelectContent>
+                            <div className="px-2 pb-2">
+                              <Input
+                                placeholder="Search organisations..."
+                                value={orgSearchTerm}
+                                onChange={(e) => setOrgSearchTerm(e.target.value)}
+                                className="h-8"
+                                onClick={(e) => e.stopPropagation()}
+                                onKeyDown={(e) => e.stopPropagation()}
+                              />
+                            </div>
                             <SelectItem value="none">No organisation</SelectItem>
-                            {organisations?.map((org: Organisation) => (
+                            {organisations
+                              ?.filter((org: Organisation) => {
+                                if (!orgSearchTerm.trim()) return true;
+                                const search = orgSearchTerm.toLowerCase();
+                                return org.name.toLowerCase().includes(search) || 
+                                       (org.externalRef?.toLowerCase().includes(search) ?? false);
+                              })
+                              .map((org: Organisation) => (
                               <SelectItem key={org.id} value={org.id.toString()}>
                                 <div className="flex flex-col">
                                   <span className="font-medium">{org.name}</span>
@@ -2606,11 +2625,71 @@ export default function AdminEnhanced() {
                         Cancel
                       </Button>
                       <Button
-                        onClick={() => createUserMutation.mutate(userFormData)}
+                        onClick={() => setShowConfirmCreateUser(true)}
+                        disabled={!userFormData.firstName.trim() || !userFormData.lastName.trim() || !userFormData.email.trim()}
+                        className="bg-acclaim-teal hover:bg-acclaim-teal/90 order-1 sm:order-2"
+                      >
+                        Create User
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Confirmation Dialog */}
+                <Dialog open={showConfirmCreateUser} onOpenChange={setShowConfirmCreateUser}>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Confirm User Creation</DialogTitle>
+                      <DialogDescription>
+                        Please review the details before creating this user account.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 space-y-3">
+                      <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Name:</span>
+                          <span className="text-sm font-medium">{userFormData.firstName} {userFormData.lastName}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Email:</span>
+                          <span className="text-sm font-medium">{userFormData.email}</span>
+                        </div>
+                        {userFormData.phone && (
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">Phone:</span>
+                            <span className="text-sm font-medium">{userFormData.phone}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Organisation:</span>
+                          <span className="text-sm font-medium">
+                            {userFormData.organisationId 
+                              ? organisations?.find((o: Organisation) => o.id === userFormData.organisationId)?.name || "Unknown"
+                              : "No organisation"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Admin:</span>
+                          <span className="text-sm font-medium">{userFormData.isAdmin ? "Yes" : "No"}</span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        A temporary password will be generated after confirmation.
+                      </p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row justify-end gap-2 sm:space-x-2">
+                      <Button variant="outline" onClick={() => setShowConfirmCreateUser(false)} className="order-2 sm:order-1">
+                        Go Back
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setShowConfirmCreateUser(false);
+                          createUserMutation.mutate(userFormData);
+                        }}
                         disabled={createUserMutation.isPending}
                         className="bg-acclaim-teal hover:bg-acclaim-teal/90 order-1 sm:order-2"
                       >
-                        {createUserMutation.isPending ? "Creating..." : "Create User"}
+                        {createUserMutation.isPending ? "Creating..." : "Confirm & Create"}
                       </Button>
                     </div>
                   </DialogContent>
