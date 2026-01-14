@@ -47,10 +47,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
-      toast({
-        title: "Welcome back!",
-        description: "You have been signed in successfully.",
-      });
     },
     onError: (error: Error) => {
       toast({
