@@ -369,16 +369,6 @@ export default function Documents() {
                     )}
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="notify-upload"
-                      checked={notifyOnUpload}
-                      onCheckedChange={(checked) => setNotifyOnUpload(checked === true)}
-                    />
-                    <Label htmlFor="notify-upload" className="text-sm cursor-pointer">
-                      {user?.isAdmin ? "Notify users" : "Notify admin"}
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
                     <Button
                       onClick={handleUpload}
                       disabled={uploadDocumentMutation.isPending || !selectedFile || !selectedCaseId}

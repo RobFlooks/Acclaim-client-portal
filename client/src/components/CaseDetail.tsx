@@ -1312,16 +1312,6 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                           <span className="text-sm text-gray-500">.{selectedFile.name.split('.').pop()}</span>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="notify-case-upload"
-                          checked={notifyOnUpload}
-                          onCheckedChange={(checked) => setNotifyOnUpload(checked === true)}
-                        />
-                        <Label htmlFor="notify-case-upload" className="text-sm cursor-pointer">
-                          {user?.isAdmin ? "Notify users" : "Notify admin"}
-                        </Label>
-                      </div>
                     </div>
                   )}
                 </div>

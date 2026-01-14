@@ -903,16 +903,6 @@ export default function UserProfile() {
                       </div>
                     </div>
                   )}
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="notify-org-upload"
-                      checked={notifyOnUpload}
-                      onCheckedChange={(checked) => setNotifyOnUpload(checked === true)}
-                    />
-                    <Label htmlFor="notify-org-upload" className="text-sm cursor-pointer">
-                      {userProfile?.isAdmin ? "Notify users" : "Notify admin"}
-                    </Label>
-                  </div>
                 </div>
 
                 {/* Search Section */}
