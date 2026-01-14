@@ -1481,10 +1481,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/organisation/documents/upload', isAuthenticated, upload.single('file'), async (req: any, res) => {
     try {
+      console.log('[Doc Upload] Starting organisation document upload');
+      console.log('[Doc Upload] Uploads directory:', uploadsDir);
+      console.log('[Doc Upload] Request file:', req.file ? 'Present' : 'Missing');
+      
       const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       if (!user) {
+        console.log('[Doc Upload] User not found:', userId);
         return res.status(404).json({ message: "User not found" });
       }
 
@@ -1497,13 +1502,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       userOrgs.forEach(uo => allUserOrgIds.push(uo.organisationId));
       
+      console.log('[Doc Upload] User org IDs:', allUserOrgIds);
+      
       if (allUserOrgIds.length === 0 && !user.isAdmin) {
+        console.log('[Doc Upload] No organisation assigned to user');
         return res.status(400).json({ message: "No organisation assigned to user" });
       }
 
       if (!req.file) {
+        console.log('[Doc Upload] No file in request');
         return res.status(400).json({ message: "No file uploaded" });
       }
+
+      console.log('[Doc Upload] File received:', req.file.originalname, 'Size:', req.file.size, 'Path:', req.file.path);
 
       // Determine which organisation to upload to
       let targetOrgId: number;
@@ -1514,12 +1525,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (user.isAdmin || allUserOrgIds.includes(requestedOrgId)) {
           targetOrgId = requestedOrgId;
         } else {
+          console.log('[Doc Upload] Access denied to org:', requestedOrgId);
           return res.status(403).json({ message: "You don't have access to this organisation" });
         }
-      } else {
+      } else if (allUserOrgIds.length > 0) {
         // Use the first available org
         targetOrgId = allUserOrgIds[0];
+      } else {
+        // Admin with no org assigned and no org specified - error
+        console.log('[Doc Upload] No target organisation available');
+        return res.status(400).json({ message: "Please select an organisation to upload to" });
       }
+
+      console.log('[Doc Upload] Target org ID:', targetOrgId);
 
       const document = await storage.createDocument({
         caseId: null, // No case - organisation-level document
@@ -1531,10 +1549,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         organisationId: targetOrgId,
       });
 
+      console.log('[Doc Upload] Document created successfully:', document.id);
       res.json(document);
-    } catch (error) {
-      console.error("Error uploading organisation document:", error);
-      res.status(500).json({ message: "Failed to upload organisation document" });
+    } catch (error: any) {
+      console.error("[Doc Upload] Error uploading organisation document:", error);
+      res.status(500).json({ message: "Failed to upload organisation document", error: error.message });
     }
   });
 
@@ -2396,6 +2415,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
+      }
+
+      // Admins get all organisations
+      if (user.isAdmin) {
+        const allOrgs = await storage.getAllOrganisations();
+        return res.json(allOrgs);
       }
 
       const organisations = [];
