@@ -25,6 +25,7 @@ export default function Messages() {
   const [viewingMessage, setViewingMessage] = useState<any>(null);
   const [messageViewOpen, setMessageViewOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [customFileName, setCustomFileName] = useState<string>("");
   const [linkedCaseId, setLinkedCaseId] = useState<string>("");
   const [selectedCase, setSelectedCase] = useState<any>(null);
   const [caseDialogOpen, setCaseDialogOpen] = useState(false);
@@ -99,6 +100,9 @@ export default function Messages() {
       
       if (selectedFile) {
         formData.append("attachment", selectedFile);
+        if (customFileName.trim()) {
+          formData.append("customFileName", customFileName.trim());
+        }
       }
 
       const response = await fetch("/api/messages", {
@@ -218,6 +222,7 @@ export default function Messages() {
     setNewMessage("");
     setNewSubject("");
     setSelectedFile(null);
+    setCustomFileName("");
     setLinkedCaseId("");
   };
 
@@ -498,14 +503,39 @@ export default function Messages() {
                     <input
                       id="attachment"
                       type="file"
-                      onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                      onChange={(e) => {
+                        setSelectedFile(e.target.files?.[0] || null);
+                        setCustomFileName("");
+                      }}
                       accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar,.xls,.xlsx,.csv"
                       className="block w-full text-sm text-gray-500 mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 file:cursor-pointer cursor-pointer"
                     />
                     {selectedFile && (
-                      <p className="text-sm text-gray-600 mt-1">
-                        Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
-                      </p>
+                      <div className="mt-2 space-y-2">
+                        <p className="text-sm text-gray-600">
+                          Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1">
+                            <Label htmlFor="customFileName" className="text-sm font-bold text-acclaim-teal">
+                              Rename file (optional)
+                            </Label>
+                            <div className="flex items-center gap-1 mt-1">
+                              <Input
+                                id="customFileName"
+                                type="text"
+                                placeholder="Enter new filename"
+                                value={customFileName}
+                                onChange={(e) => setCustomFileName(e.target.value)}
+                                className="flex-1"
+                              />
+                              <span className="text-sm text-gray-500">
+                                .{selectedFile.name.split('.').pop()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
                   <Button

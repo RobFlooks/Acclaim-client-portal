@@ -1007,13 +1007,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Handle custom filename for attachment
+      let attachmentFinalFileName = req.file?.originalname;
+      if (req.file && req.body.customFileName) {
+        const originalExtension = req.file.originalname.split('.').pop();
+        attachmentFinalFileName = `${req.body.customFileName}.${originalExtension}`;
+      }
+
       const messageData = insertMessageSchema.parse({
         ...req.body,
         caseId: req.body.caseId ? parseInt(req.body.caseId) : undefined,
         senderId: userId,
         recipientType,
         recipientId,
-        attachmentFileName: req.file?.originalname,
+        attachmentFileName: attachmentFinalFileName,
         attachmentFilePath: req.file?.path,
         attachmentFileSize: req.file?.size,
         attachmentFileType: req.file?.mimetype,
@@ -1050,7 +1057,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (documentOrgId) {
             await storage.createDocument({
               caseId: messageData.caseId || null,
-              fileName: req.file.originalname,
+              fileName: attachmentFinalFileName || req.file.originalname,
               fileSize: req.file.size,
               fileType: req.file.mimetype,
               filePath: req.file.path,
