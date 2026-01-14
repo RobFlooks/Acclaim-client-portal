@@ -364,33 +364,3 @@
   background-color: hsl(25, 35%, 15%);
 }
 
-/* Teal dark mode variants */
-.dark .text-teal-400 {
-  color: hsl(174, 65%, 55%);
-}
-
-.dark .text-teal-700 {
-  color: hsl(174, 65%, 55%);
-}
-
-.dark .bg-teal-900\/30 {
-  background-color: hsla(174, 50%, 20%, 0.3);
-}
-
-/* Blue dark mode */
-.dark .text-blue-400 {
-  color: hsl(210, 85%, 65%);
-}
-
-.dark .bg-blue-900\/30 {
-  background-color: hsla(210, 50%, 20%, 0.3);
-}
-
-/* Orange dark mode */
-.dark .text-orange-400 {
-  color: hsl(25, 85%, 60%);
-}
-
-.dark .bg-orange-900\/30 {
-  background-color: hsla(25, 50%, 18%, 0.3);
-}
