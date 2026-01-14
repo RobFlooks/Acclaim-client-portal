@@ -1406,9 +1406,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Case not found" });
       }
 
+      // Use custom filename if provided, otherwise use original
+      const finalFileName = req.body.customFileName || req.file.originalname;
+
       const document = await storage.createDocument({
         caseId,
-        fileName: req.file.originalname,
+        fileName: finalFileName,
         fileSize: req.file.size,
         fileType: req.file.mimetype,
         filePath: req.file.path,
@@ -1431,7 +1434,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             uploaderName: `${user.firstName} ${user.lastName}`,
             uploaderEmail: user.email,
             organisationName,
-            fileName: req.file.originalname,
+            fileName: finalFileName,
             fileSize: req.file.size,
             fileType: req.file.mimetype,
             caseReference: case_.accountNumber,
@@ -1568,9 +1571,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         targetOrgId = allUserOrgIds[0];
       }
 
+      // Use custom filename if provided, otherwise use original
+      const orgDocFileName = req.body.customFileName || req.file.originalname;
+
       const document = await storage.createDocument({
         caseId: null, // No case - organisation-level document
-        fileName: req.file.originalname,
+        fileName: orgDocFileName,
         fileSize: req.file.size,
         fileType: req.file.mimetype,
         filePath: req.file.path,
@@ -1593,7 +1599,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             uploaderName: `${user.firstName} ${user.lastName}`,
             uploaderEmail: user.email,
             organisationName,
-            fileName: req.file.originalname,
+            fileName: orgDocFileName,
             fileSize: req.file.size,
             fileType: req.file.mimetype,
             uploadedAt: new Date(),
@@ -1612,7 +1618,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 uploaderName: 'Acclaim Credit Management',
                 uploaderEmail: 'email@acclaim.law',
                 organisationName,
-                fileName: req.file.originalname,
+                fileName: orgDocFileName,
                 fileSize: req.file.size,
                 fileType: req.file.mimetype,
                 uploadedAt: new Date(),
@@ -1795,9 +1801,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
+      // Use custom filename if provided, otherwise use original
+      const caseDocFileName = req.body.customFileName || req.file.originalname;
+
       const document = await storage.createDocument({
         caseId,
-        fileName: req.file.originalname,
+        fileName: caseDocFileName,
         fileSize: req.file.size,
         fileType: req.file.mimetype,
         filePath: req.file.path,
@@ -1820,7 +1829,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             uploaderName: `${user.firstName} ${user.lastName}`,
             uploaderEmail: user.email,
             organisationName,
-            fileName: req.file.originalname,
+            fileName: caseDocFileName,
             fileSize: req.file.size,
             fileType: req.file.mimetype,
             caseReference: case_.accountNumber,
@@ -1841,7 +1850,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 uploaderName: 'Acclaim Credit Management',
                 uploaderEmail: 'email@acclaim.law',
                 organisationName,
-                fileName: req.file.originalname,
+                fileName: caseDocFileName,
                 fileSize: req.file.size,
                 fileType: req.file.mimetype,
                 caseReference: case_.accountNumber,

@@ -19,6 +19,7 @@ export default function Documents() {
   const [searchTerm, setSearchTerm] = useState("");
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [customFileName, setCustomFileName] = useState("");
   const [selectedCaseId, setSelectedCaseId] = useState<string>("");
   const [notifyOnUpload, setNotifyOnUpload] = useState(true);
   const [selectedCase, setSelectedCase] = useState<any>(null);
@@ -110,10 +111,13 @@ export default function Documents() {
   }, [searchTerm]);
 
   const uploadDocumentMutation = useMutation({
-    mutationFn: async ({ file, caseId, notify }: { file: File; caseId: string; notify: boolean }) => {
+    mutationFn: async ({ file, caseId, notify, fileName }: { file: File; caseId: string; notify: boolean; fileName: string }) => {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("caseId", caseId);
+      if (fileName && fileName.trim()) {
+        formData.append("customFileName", fileName.trim());
+      }
       // Admin uploads notify users, regular users notify admin
       if (user?.isAdmin) {
         formData.append("notifyUsers", notify.toString());
@@ -136,6 +140,7 @@ export default function Documents() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       setSelectedFile(null);
+      setCustomFileName("");
       setSelectedCaseId("");
       setNotifyOnUpload(true);
       setUploadDialogOpen(false);
@@ -203,6 +208,10 @@ export default function Documents() {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
+      // Pre-populate with original filename (without extension for editing)
+      const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
+      const ext = file.name.split('.').pop();
+      setCustomFileName(nameWithoutExt);
     }
   };
 
@@ -216,12 +225,16 @@ export default function Documents() {
       return;
     }
 
-    uploadDocumentMutation.mutate({ file: selectedFile, caseId: selectedCaseId, notify: notifyOnUpload });
+    // Build final filename with original extension
+    const ext = selectedFile.name.split('.').pop();
+    const finalFileName = customFileName.trim() ? `${customFileName.trim()}.${ext}` : selectedFile.name;
+    uploadDocumentMutation.mutate({ file: selectedFile, caseId: selectedCaseId, notify: notifyOnUpload, fileName: finalFileName });
   };
 
   const handleCloseUploadDialog = () => {
     setUploadDialogOpen(false);
     setSelectedFile(null);
+    setCustomFileName("");
     setSelectedCaseId("");
     setNotifyOnUpload(true);
   };
@@ -328,17 +341,33 @@ export default function Documents() {
                       className="mt-2"
                     />
                     {selectedFile && (
-                      <div className="mt-2 p-2 bg-gray-50 rounded flex items-center justify-between">
-                        <span className="text-sm text-gray-600">
-                          {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSelectedFile(null)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                      <div className="mt-2 space-y-2">
+                        <div className="p-2 bg-gray-50 rounded flex items-center justify-between">
+                          <span className="text-sm text-gray-600">
+                            {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => { setSelectedFile(null); setCustomFileName(""); }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div>
+                          <Label htmlFor="custom-filename" className="text-sm">Rename file (optional)</Label>
+                          <div className="flex items-center gap-1 mt-1">
+                            <Input
+                              id="custom-filename"
+                              type="text"
+                              value={customFileName}
+                              onChange={(e) => setCustomFileName(e.target.value)}
+                              placeholder="Enter new filename"
+                              className="flex-1"
+                            />
+                            <span className="text-sm text-gray-500">.{selectedFile.name.split('.').pop()}</span>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>

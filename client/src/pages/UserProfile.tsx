@@ -79,6 +79,7 @@ export default function UserProfile() {
 
   // Organisation documents state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [customFileName, setCustomFileName] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [documentSearch, setDocumentSearch] = useState("");
   const [selectedOrgForUpload, setSelectedOrgForUpload] = useState<string>("");
@@ -321,6 +322,12 @@ export default function UserProfile() {
       const formData = new FormData();
       formData.append("file", selectedFile);
       formData.append("organisationId", orgId.toString());
+      // Build final filename with original extension
+      const ext = selectedFile.name.split('.').pop();
+      const finalFileName = customFileName.trim() ? `${customFileName.trim()}.${ext}` : selectedFile.name;
+      if (finalFileName !== selectedFile.name) {
+        formData.append("customFileName", finalFileName);
+      }
       // Admin uploads notify users, regular users notify admin
       if (userProfile?.isAdmin) {
         formData.append("notifyUsers", notifyOnUpload.toString());
@@ -344,6 +351,7 @@ export default function UserProfile() {
         description: "Document uploaded successfully",
       });
       setSelectedFile(null);
+      setCustomFileName("");
       setNotifyOnUpload(true);
       queryClient.invalidateQueries({ queryKey: ["/api/organisation/documents"] });
     } catch (error: any) {
@@ -857,7 +865,16 @@ export default function UserProfile() {
                   <div className="flex flex-col sm:flex-row items-center gap-4">
                     <Input
                       type="file"
-                      onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        setSelectedFile(file);
+                        if (file) {
+                          const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
+                          setCustomFileName(nameWithoutExt);
+                        } else {
+                          setCustomFileName("");
+                        }
+                      }}
                       accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.xls,.xlsx,.csv"
                       className="flex-1"
                     />
@@ -870,6 +887,27 @@ export default function UserProfile() {
                       {isUploading ? "Uploading..." : "Upload"}
                     </Button>
                   </div>
+                  {selectedFile && (
+                    <div className="space-y-3">
+                      <p className="text-sm text-gray-600">
+                        Selected: {selectedFile.name} ({formatFileSize(selectedFile.size)})
+                      </p>
+                      <div>
+                        <Label htmlFor="org-custom-filename" className="text-sm">Rename file (optional)</Label>
+                        <div className="flex items-center gap-1 mt-1">
+                          <Input
+                            id="org-custom-filename"
+                            type="text"
+                            value={customFileName}
+                            onChange={(e) => setCustomFileName(e.target.value)}
+                            placeholder="Enter new filename"
+                            className="flex-1"
+                          />
+                          <span className="text-sm text-gray-500">.{selectedFile.name.split('.').pop()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="notify-org-upload"
@@ -880,11 +918,6 @@ export default function UserProfile() {
                       {userProfile?.isAdmin ? "Notify users" : "Notify admin"}
                     </Label>
                   </div>
-                  {selectedFile && (
-                    <p className="text-sm text-gray-600">
-                      Selected: {selectedFile.name} ({formatFileSize(selectedFile.size)})
-                    </p>
-                  )}
                 </div>
 
                 {/* Search Section */}

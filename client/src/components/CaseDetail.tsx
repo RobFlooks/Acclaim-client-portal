@@ -38,6 +38,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   const [newMessage, setNewMessage] = useState("");
   const [messageSubject, setMessageSubject] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [customFileName, setCustomFileName] = useState("");
   const [messageAttachment, setMessageAttachment] = useState<File | null>(null);
   const [activeTab, setActiveTab] = useState("timeline");
   const [messageSearch, setMessageSearch] = useState("");
@@ -281,10 +282,13 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   });
 
   const uploadDocumentMutation = useMutation({
-    mutationFn: async ({ file, notify }: { file: File; notify: boolean }) => {
+    mutationFn: async ({ file, notify, fileName }: { file: File; notify: boolean; fileName: string }) => {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("caseId", caseData.id.toString());
+      if (fileName && fileName.trim()) {
+        formData.append("customFileName", fileName.trim());
+      }
       // Admin uploads notify users, regular users notify admin
       if (user?.isAdmin) {
         formData.append("notifyUsers", notify.toString());
@@ -307,6 +311,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/cases", caseData.id, "documents"] });
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       setSelectedFile(null);
+      setCustomFileName("");
       setNotifyOnUpload(true);
       // Reset file input
       const fileInput = document.getElementById("file-upload") as HTMLInputElement;
@@ -419,12 +424,18 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
+      // Pre-populate with original filename (without extension)
+      const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
+      setCustomFileName(nameWithoutExt);
     }
   };
 
   const handleFileUpload = () => {
     if (!selectedFile) return;
-    uploadDocumentMutation.mutate({ file: selectedFile, notify: notifyOnUpload });
+    // Build final filename with original extension
+    const ext = selectedFile.name.split('.').pop();
+    const finalFileName = customFileName.trim() ? `${customFileName.trim()}.${ext}` : selectedFile.name;
+    uploadDocumentMutation.mutate({ file: selectedFile, notify: notifyOnUpload, fileName: finalFileName });
   };
 
   const getStageBadge = (status: string, stage: string) => {
@@ -1288,6 +1299,20 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                           <Upload className="h-4 w-4 mr-2" />
                           {uploadDocumentMutation.isPending ? "Uploading..." : "Upload"}
                         </Button>
+                      </div>
+                      <div>
+                        <Label htmlFor="case-custom-filename" className="text-sm">Rename file (optional)</Label>
+                        <div className="flex items-center gap-1 mt-1">
+                          <Input
+                            id="case-custom-filename"
+                            type="text"
+                            value={customFileName}
+                            onChange={(e) => setCustomFileName(e.target.value)}
+                            placeholder="Enter new filename"
+                            className="flex-1 h-8 text-sm"
+                          />
+                          <span className="text-sm text-gray-500">.{selectedFile.name.split('.').pop()}</span>
+                        </div>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Checkbox
