@@ -2611,13 +2611,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Case not found" });
       }
       
-      // Create case activity
+      // Create case activity - use provided date or default to now
       const activity = await storage.addCaseActivity({
         caseId: case_.id,
         activityType,
         description,
         performedBy,
-        // activityDate: activityDate ? new Date(activityDate) : new Date(), // Remove non-existent field
+        createdAt: activityDate ? new Date(activityDate) : new Date(),
       });
       
       res.status(201).json({ 
