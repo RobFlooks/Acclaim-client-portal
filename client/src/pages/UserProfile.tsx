@@ -709,6 +709,13 @@ export default function UserProfile() {
                     />
                   </div>
 
+                  {/* Warning note about disabled notifications */}
+                  <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-sm text-amber-800">
+                      <strong>Please note:</strong> If email notifications are switched off, you will not receive updates about your cases or messages from our team. If you require regular updates, please contact us to ensure emails are sent to you directly.
+                    </p>
+                  </div>
+
                 </div>
                 
                 <div className="pt-4 border-t border-gray-200">
