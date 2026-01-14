@@ -21,7 +21,9 @@ import {
   Printer,
   Trash2,
   RefreshCw,
-  Search
+  Search,
+  Bell,
+  BellOff
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
@@ -173,6 +175,62 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
       }
     },
   });
+
+  // Check if this case is muted for the current user
+  const { data: muteStatus, isLoading: muteStatusLoading } = useQuery({
+    queryKey: ["/api/cases", caseData.id, "muted"],
+    enabled: !!caseData.id,
+  });
+
+  const muteCaseMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", `/api/cases/${caseData.id}/mute`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Case Muted",
+        description: "You will no longer receive notifications for this case.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/cases", caseData.id, "muted"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: "Failed to mute case.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const unmuteCaseMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", `/api/cases/${caseData.id}/unmute`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Case Unmuted",
+        description: "You will now receive notifications for this case.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/cases", caseData.id, "muted"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: "Failed to unmute case.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleToggleMute = () => {
+    if (muteStatus?.muted) {
+      unmuteCaseMutation.mutate();
+    } else {
+      muteCaseMutation.mutate();
+    }
+  };
 
   const deleteActivityMutation = useMutation({
     mutationFn: async (activityId: number) => {
@@ -1061,6 +1119,34 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl">{caseData.caseName}</CardTitle>
             <div className="flex items-center gap-2">
+              <Button 
+                onClick={handleToggleMute}
+                variant="outline"
+                size="sm"
+                disabled={muteCaseMutation.isPending || unmuteCaseMutation.isPending || muteStatusLoading}
+                className={muteStatus?.muted 
+                  ? "border-gray-400 text-gray-500 hover:bg-gray-100" 
+                  : "border-acclaim-teal text-acclaim-teal hover:bg-acclaim-teal hover:text-white"
+                }
+                title={muteStatus?.muted ? "Click to unmute notifications for this case" : "Click to mute notifications for this case"}
+              >
+                {muteStatusLoading ? (
+                  <>
+                    <Bell className="h-4 w-4 mr-2 animate-pulse" />
+                    Loading...
+                  </>
+                ) : muteStatus?.muted ? (
+                  <>
+                    <BellOff className="h-4 w-4 mr-2" />
+                    Muted
+                  </>
+                ) : (
+                  <>
+                    <Bell className="h-4 w-4 mr-2" />
+                    Notifications On
+                  </>
+                )}
+              </Button>
               <Button 
                 onClick={handlePrintCase}
                 variant="outline"
