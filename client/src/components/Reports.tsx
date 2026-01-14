@@ -157,15 +157,15 @@ export default function Reports() {
             <BarChart3 className="h-5 w-5 mr-2" />
             Report Summary
           </CardTitle>
-          <p className="text-sm text-gray-600 mt-1">Active cases only</p>
+          <p className="text-sm text-gray-600 dark:text-muted-foreground mt-1">Active cases only</p>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="p-4 rounded-lg bg-[#008a8a57]">
+            <div className="p-4 rounded-lg bg-teal-50 dark:bg-teal-900/30">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-[#313333]">Active Cases</p>
-                  <p className="text-2xl font-bold text-[#0f766e]">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Active Cases</p>
+                  <p className="text-2xl font-bold text-teal-700 dark:text-teal-400">
                     {casesLoading ? "..." : activeCasesAnalysis.totalCases}
                   </p>
                 </div>
@@ -173,27 +173,27 @@ export default function Reports() {
               </div>
             </div>
 
-            <div className="p-4 bg-blue-50 rounded-lg">
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Recovery</p>
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Total Recovery</p>
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {casesLoading ? "..." : formatCurrency(activeCasesAnalysis.totalRecovered)}
                   </p>
                 </div>
-                <PieChart className="h-8 w-8 text-blue-600" />
+                <PieChart className="h-8 w-8 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
 
-            <div className="p-4 bg-orange-50 rounded-lg">
+            <div className="p-4 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Outstanding</p>
-                  <p className="text-2xl font-bold text-orange-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Outstanding</p>
+                  <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                     {casesLoading ? "..." : formatCurrency(activeCasesAnalysis.totalOutstanding)}
                   </p>
                 </div>
-                <Calendar className="h-8 w-8 text-orange-600" />
+                <Calendar className="h-8 w-8 text-orange-600 dark:text-orange-400" />
               </div>
             </div>
           </div>
