@@ -2839,9 +2839,14 @@ export default function AdminEnhanced() {
                             <Shield className="h-3 w-3 text-blue-600" />
                           )}
                           {(user as any).emailNotifications === false ? (
-                            <BellOff className="h-3 w-3 text-gray-400" title="Email notifications disabled" />
+                            <BellOff className="h-3 w-3 text-gray-400" title="Message notifications disabled" />
                           ) : (
-                            <Bell className="h-3 w-3 text-green-500" title="Email notifications enabled" />
+                            <Bell className="h-3 w-3 text-green-500" title="Message notifications enabled" />
+                          )}
+                          {(user as any).documentNotifications === false ? (
+                            <FileX className="h-3 w-3 text-gray-400" title="Document notifications disabled" />
+                          ) : (
+                            <FilePlus className="h-3 w-3 text-green-500" title="Document notifications enabled" />
                           )}
                         </div>
                       </div>
@@ -3040,9 +3045,14 @@ export default function AdminEnhanced() {
                               <Shield className="h-3 w-3 text-blue-600" />
                             )}
                             {(user as any).emailNotifications === false ? (
-                              <BellOff className="h-3 w-3 text-gray-400" title="Email notifications disabled" />
+                              <BellOff className="h-3 w-3 text-gray-400" title="Message notifications disabled" />
                             ) : (
-                              <Bell className="h-3 w-3 text-green-500" title="Email notifications enabled" />
+                              <Bell className="h-3 w-3 text-green-500" title="Message notifications enabled" />
+                            )}
+                            {(user as any).documentNotifications === false ? (
+                              <FileX className="h-3 w-3 text-gray-400" title="Document notifications disabled" />
+                            ) : (
+                              <FilePlus className="h-3 w-3 text-green-500" title="Document notifications enabled" />
                             )}
                           </div>
                         </TableCell>
