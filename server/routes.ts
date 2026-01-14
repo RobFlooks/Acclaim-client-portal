@@ -1455,7 +1455,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 uploaderName: 'Acclaim Credit Management',
                 uploaderEmail: 'email@acclaim.law',
                 organisationName,
-                fileName: req.file.originalname,
+                fileName: finalFileName,
                 fileSize: req.file.size,
                 fileType: req.file.mimetype,
                 caseReference: case_.accountNumber,
