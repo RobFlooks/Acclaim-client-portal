@@ -1445,7 +1445,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else if (user.isAdmin && notifyUsers) {
         // Admin uploaded - notify users in the organisation who have notifications enabled
         try {
-          const orgUsers = await storage.getUsersByOrganisation(caseOrgId!);
+          const orgUsers = await storage.getUsersByOrganisationId(caseOrgId!);
           for (const orgUser of orgUsers) {
             if (!orgUser.isAdmin && orgUser.emailNotifications !== false) {
               await sendGridEmailService.sendDocumentUploadNotificationToUser({
@@ -1605,7 +1605,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else if (user.isAdmin && notifyUsers) {
         // Admin uploaded - notify users in the organisation who have notifications enabled
         try {
-          const orgUsers = await storage.getUsersByOrganisation(targetOrgId);
+          const orgUsers = await storage.getUsersByOrganisationId(targetOrgId);
           for (const orgUser of orgUsers) {
             if (!orgUser.isAdmin && orgUser.emailNotifications !== false) {
               await sendGridEmailService.sendDocumentUploadNotificationToUser({
