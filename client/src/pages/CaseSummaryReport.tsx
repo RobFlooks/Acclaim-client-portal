@@ -252,11 +252,11 @@ export default function CaseSummaryReport() {
               </div>
               <div class="stat-card">
                 <div class="stat-label">Active Cases</div>
-                <div class="stat-value">${stats?.activeCases || 0}</div>
+                <div class="stat-value">${filteredStats?.activeCases || 0}</div>
               </div>
               <div class="stat-card">
                 <div class="stat-label">Closed Cases</div>
-                <div class="stat-value">${stats?.closedCases || 0}</div>
+                <div class="stat-value">${filteredStats?.closedCases || 0}</div>
               </div>
               <div class="stat-card">
                 <div class="stat-label">Total Original Amount</div>
