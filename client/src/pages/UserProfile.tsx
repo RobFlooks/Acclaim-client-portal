@@ -24,6 +24,7 @@ type UpdateProfileForm = z.infer<typeof updateUserSchema>;
 type ChangePasswordForm = z.infer<typeof changePasswordSchema>;
 type NotificationPreferencesForm = {
   emailNotifications: boolean;
+  documentNotifications: boolean;
 };
 
 interface UserData {
@@ -36,6 +37,7 @@ interface UserData {
   organisationName?: string;
   isAdmin?: boolean;
   emailNotifications?: boolean;
+  documentNotifications?: boolean;
   pushNotifications?: boolean;
   createdAt: string;
 }
@@ -75,6 +77,7 @@ export default function UserProfile() {
   
   const [notificationData, setNotificationData] = useState<NotificationPreferencesForm>({
     emailNotifications: true,
+    documentNotifications: true,
   });
 
   // Organisation documents state
@@ -129,6 +132,7 @@ export default function UserProfile() {
       });
       setNotificationData({
         emailNotifications: userProfile.emailNotifications ?? true,
+        documentNotifications: userProfile.documentNotifications ?? true,
       });
     }
   }, [userProfile]);
@@ -171,6 +175,7 @@ export default function UserProfile() {
     mutationFn: async (data: NotificationPreferencesForm) => {
       return await apiRequest("PUT", `/api/user/notifications`, { 
         emailNotifications: data.emailNotifications,
+        documentNotifications: data.documentNotifications,
         pushNotifications: true // Always enable push notifications on backend
       });
     },
@@ -743,7 +748,7 @@ export default function UserProfile() {
                   <div className="flex items-center justify-between space-x-2">
                     <div className="space-y-1">
                       <Label htmlFor="emailNotifications" className="text-base font-medium">
-                        Email Notifications
+                        Message Notifications
                       </Label>
                       <p className="text-sm text-gray-500">Receive email notifications when messages are posted by Acclaim.</p>
                     </div>
@@ -751,7 +756,23 @@ export default function UserProfile() {
                       id="emailNotifications"
                       checked={notificationData.emailNotifications}
                       onCheckedChange={(checked) => 
-                        setNotificationData({ emailNotifications: checked })
+                        setNotificationData(prev => ({ ...prev, emailNotifications: checked }))
+                      }
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between space-x-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="documentNotifications" className="text-base font-medium">
+                        Document Notifications
+                      </Label>
+                      <p className="text-sm text-gray-500">Receive email notifications when new documents are uploaded.</p>
+                    </div>
+                    <Switch
+                      id="documentNotifications"
+                      checked={notificationData.documentNotifications}
+                      onCheckedChange={(checked) => 
+                        setNotificationData(prev => ({ ...prev, documentNotifications: checked }))
                       }
                     />
                   </div>

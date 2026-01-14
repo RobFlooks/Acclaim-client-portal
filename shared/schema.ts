@@ -41,7 +41,8 @@ export const users = pgTable("users", {
   mustChangePassword: boolean("must_change_password").default(false),
   externalRef: varchar("external_ref", { length: 100 }).unique(), // For external system integration
   azureId: varchar("azure_id", { length: 255 }).unique(), // Azure Entra External ID
-  emailNotifications: boolean("email_notifications").default(true), // User preference for email notifications
+  emailNotifications: boolean("email_notifications").default(true), // User preference for email notifications (messages)
+  documentNotifications: boolean("document_notifications").default(true), // User preference for document upload notifications
   pushNotifications: boolean("push_notifications").default(true), // User preference for push notifications
   canSubmitCases: boolean("can_submit_cases").default(true), // Admin-controlled permission to submit new cases
   createdAt: timestamp("created_at").defaultNow(),
@@ -496,6 +497,7 @@ export const updateUserSchema = z.object({
 
 export const updateNotificationPreferencesSchema = z.object({
   emailNotifications: z.boolean(),
+  documentNotifications: z.boolean().optional(),
   pushNotifications: z.boolean(),
 });
 
