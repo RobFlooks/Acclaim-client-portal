@@ -731,7 +731,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                   ${timelineEvents.map(event => `
                     <div class="timeline-item">
                       <div class="timeline-marker"></div>
-                      <div class="timeline-date">${formatDate(event.date)}</div>
+                      <div class="timeline-date">${formatDateOnly(event.date)}</div>
                       <div class="timeline-title">${event.title}</div>
                       ${event.description ? `<div class="timeline-desc">${event.description}</div>` : ''}
                     </div>
@@ -1188,7 +1188,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                             <p className="text-sm font-medium text-gray-900">{activity.description}</p>
                             <div className="flex items-center space-x-2 mt-1">
                               <Calendar className="h-3 w-3 text-gray-400" />
-                              <p className="text-xs text-gray-500">{formatDate(activity.createdAt)}</p>
+                              <p className="text-xs text-gray-500">{formatDateOnly(activity.createdAt)}</p>
                               {activity.performedBy && (
                                 <>
                                   <span className="text-xs text-gray-400">•</span>
