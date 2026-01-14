@@ -218,6 +218,7 @@ interface DocumentUploadNotificationData {
   fileName: string;
   fileSize: number;
   fileType: string;
+  filePath?: string;
   caseReference?: string;
   caseName?: string;
   uploadedAt: Date;
@@ -1723,6 +1724,23 @@ Please log in to the Acclaim Portal to view this document.
         attachments.push(logoBase64);
       }
 
+      // Attach the uploaded document if file path is provided
+      if (data.filePath && fs.existsSync(data.filePath)) {
+        try {
+          const fileContent = fs.readFileSync(data.filePath);
+          const base64Content = fileContent.toString('base64');
+          attachments.push({
+            content: base64Content,
+            filename: data.fileName,
+            type: data.fileType || 'application/octet-stream',
+            disposition: 'attachment'
+          });
+          console.log(`[Email] Attached document: ${data.fileName}`);
+        } catch (attachError) {
+          console.error(`[Email] Failed to attach document: ${attachError}`);
+        }
+      }
+
       return await this.sendViaAPIM({
         to: adminEmail,
         subject: subject,
@@ -1835,6 +1853,23 @@ Portal: https://acclaim-api.azurewebsites.net/auth
       const logoBase64 = getLogoBase64();
       if (logoBase64) {
         attachments.push(logoBase64);
+      }
+
+      // Attach the uploaded document if file path is provided
+      if (data.filePath && fs.existsSync(data.filePath)) {
+        try {
+          const fileContent = fs.readFileSync(data.filePath);
+          const base64Content = fileContent.toString('base64');
+          attachments.push({
+            content: base64Content,
+            filename: data.fileName,
+            type: data.fileType || 'application/octet-stream',
+            disposition: 'attachment'
+          });
+          console.log(`[Email] Attached document for user: ${data.fileName}`);
+        } catch (attachError) {
+          console.error(`[Email] Failed to attach document for user: ${attachError}`);
+        }
       }
 
       return await this.sendViaAPIM({

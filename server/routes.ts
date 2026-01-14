@@ -1444,6 +1444,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             fileName: finalFileName,
             fileSize: req.file.size,
             fileType: req.file.mimetype,
+            filePath: req.file.path,
             caseReference: case_.accountNumber,
             caseName: case_.caseName,
             uploadedAt: new Date(),
@@ -1465,6 +1466,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 fileName: finalFileName,
                 fileSize: req.file.size,
                 fileType: req.file.mimetype,
+                filePath: req.file.path,
                 caseReference: case_.accountNumber,
                 caseName: case_.caseName,
                 uploadedAt: new Date(),
@@ -1609,6 +1611,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             fileName: orgDocFileName,
             fileSize: req.file.size,
             fileType: req.file.mimetype,
+            filePath: req.file.path,
             uploadedAt: new Date(),
           }, 'email@acclaim.law');
           console.log('[OrgDocuments] Sent document upload notification to admin');
@@ -1628,6 +1631,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 fileName: orgDocFileName,
                 fileSize: req.file.size,
                 fileType: req.file.mimetype,
+                filePath: req.file.path,
                 uploadedAt: new Date(),
               }, orgUser.email);
               console.log(`[OrgDocuments] Sent document upload notification to user: ${orgUser.email}`);
@@ -1839,6 +1843,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             fileName: caseDocFileName,
             fileSize: req.file.size,
             fileType: req.file.mimetype,
+            filePath: req.file.path,
             caseReference: case_.accountNumber,
             caseName: case_.caseName,
             uploadedAt: new Date(),
@@ -1860,6 +1865,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 fileName: caseDocFileName,
                 fileSize: req.file.size,
                 fileType: req.file.mimetype,
+                filePath: req.file.path,
                 caseReference: case_.accountNumber,
                 caseName: case_.caseName,
                 uploadedAt: new Date(),
