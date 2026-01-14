@@ -501,15 +501,6 @@ export default function UserProfile() {
               </div>
             </div>
           </div>
-          {userProfile?.organisationName && (
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center space-x-2">
-                <Settings className="h-4 w-4 text-gray-500" />
-                <p className="text-sm text-gray-500">Organisation</p>
-              </div>
-              <p className="font-medium mt-1">{userProfile.organisationName}</p>
-            </div>
-          )}
         </CardContent>
       </Card>
       {/* Main Settings Tabs */}
