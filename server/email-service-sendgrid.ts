@@ -794,7 +794,7 @@ Portal: https://acclaim-api.azurewebsites.net/auth
               </table>
               
               <div style="text-align: center; margin: 25px 0;">
-                <a href="${portalUrl}" style="display: inline-block; background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 16px;">Access the Portal</a>
+                <a href="${portalUrl}" style="display: inline-block; background-color: #0d9488; background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 16px;">Access the Portal</a>
               </div>
               <p style="color: #94a3b8; font-size: 12px; text-align: center; margin-top: 10px;">
                 Or copy this link: <a href="${portalUrl}" style="color: #14b8a6;">${portalUrl}</a>
