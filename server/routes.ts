@@ -1192,7 +1192,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (recipientType === 'user') {
             const recipientUser = await storage.getUser(recipientId);
             // Only send emails to users who have logged in (mustChangePassword = false) and have notifications enabled
-            if (recipientUser && recipientUser.email && !recipientUser.isAdmin && recipientUser.emailNotifications !== false && !recipientUser.mustChangePassword) {
+            // Also check if this case is muted by the user
+            const isCaseMuted = messageData.caseId ? await storage.isCaseMuted(recipientId, messageData.caseId) : false;
+            if (recipientUser && recipientUser.email && !recipientUser.isAdmin && recipientUser.emailNotifications !== false && !recipientUser.mustChangePassword && !isCaseMuted) {
               // Get organisation name
               let organisationName = "Unknown Organisation";
               if (recipientUser.organisationId) {
@@ -1293,8 +1295,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 };
               }
 
-              // Send notification to each user in the organisation
+              // Send notification to each user in the organisation (skip if case is muted)
               for (const orgUser of organisationUsers) {
+                // Check if this case is muted by the user
+                const isCaseMuted = messageData.caseId ? await storage.isCaseMuted(orgUser.id, messageData.caseId) : false;
+                if (isCaseMuted) {
+                  console.log(`Skipping notification for user ${orgUser.id} - case ${messageData.caseId} is muted`);
+                  continue;
+                }
                 await sendGridEmailService.sendAdminToUserNotification({
                   adminName: `${user.firstName} ${user.lastName}`.trim() || user.email,
                   adminEmail: user.email,
@@ -1506,6 +1514,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const orgUsers = await storage.getUsersByOrganisationId(caseOrgId!);
           for (const orgUser of orgUsers) {
+            // Check if this case is muted by the user
+            const isCaseMuted = case_.id ? await storage.isCaseMuted(orgUser.id, case_.id) : false;
+            if (isCaseMuted) {
+              console.log(`[Documents] Skipping notification for user ${orgUser.id} - case ${case_.id} is muted`);
+              continue;
+            }
             if (!orgUser.isAdmin && orgUser.documentNotifications !== false) {
               await sendGridEmailService.sendDocumentUploadNotificationToUser({
                 uploaderName: 'Acclaim Credit Management',
@@ -1905,6 +1919,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const orgUsers = await storage.getUsersByOrganisationId(caseOrgId!);
           for (const orgUser of orgUsers) {
+            // Check if this case is muted by the user
+            const isCaseMuted = case_.id ? await storage.isCaseMuted(orgUser.id, case_.id) : false;
+            if (isCaseMuted) {
+              console.log(`[Case Documents] Skipping notification for user ${orgUser.id} - case ${case_.id} is muted`);
+              continue;
+            }
             if (!orgUser.isAdmin && orgUser.documentNotifications !== false) {
               await sendGridEmailService.sendDocumentUploadNotificationToUser({
                 uploaderName: 'Acclaim Credit Management',
