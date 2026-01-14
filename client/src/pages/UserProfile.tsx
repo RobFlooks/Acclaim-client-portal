@@ -119,6 +119,42 @@ export default function UserProfile() {
     enabled: userProfile?.isAdmin === true,
   });
 
+  // Fetch user's cases for notification settings
+  const { data: userCases, isLoading: casesLoading } = useQuery<any[]>({
+    queryKey: ["/api/cases"],
+    retry: false,
+  });
+
+  // Fetch muted cases
+  const { data: mutedCasesData } = useQuery<{ mutedCaseIds: number[] }>({
+    queryKey: ["/api/user/muted-cases"],
+    retry: false,
+  });
+
+  // Mutation for toggling case mute
+  const toggleCaseMuteMutation = useMutation({
+    mutationFn: async ({ caseId, mute }: { caseId: number; mute: boolean }) => {
+      const endpoint = mute ? `/api/cases/${caseId}/mute` : `/api/cases/${caseId}/unmute`;
+      return await apiRequest("POST", endpoint);
+    },
+    onSuccess: (_, variables) => {
+      toast({
+        title: variables.mute ? "Case Muted" : "Case Unmuted",
+        description: variables.mute 
+          ? "You will no longer receive notifications for this case." 
+          : "You will now receive notifications for this case.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/muted-cases"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: "Failed to update case notification setting.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Get the list of organisations available for upload (all orgs for admin, user's orgs otherwise)
   const availableOrgsForUpload = userProfile?.isAdmin ? allOrganisations : userOrganisations;
 
@@ -798,6 +834,55 @@ export default function UserProfile() {
                   </div>
                 </div>
               </form>
+            </CardContent>
+          </Card>
+
+          {/* Case-Specific Notifications */}
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <FileText className="h-5 w-5" />
+                <span>Case Notifications</span>
+              </CardTitle>
+              <CardDescription>
+                Control notifications for individual cases. Muted cases won't send you email notifications even if your general notifications are enabled.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {casesLoading ? (
+                <p className="text-sm text-gray-500">Loading cases...</p>
+              ) : !userCases || userCases.length === 0 ? (
+                <p className="text-sm text-gray-500">No cases found.</p>
+              ) : (
+                <div className="space-y-3">
+                  {userCases.map((caseItem: any) => {
+                    const isMuted = mutedCasesData?.mutedCaseIds?.includes(caseItem.id);
+                    return (
+                      <div 
+                        key={caseItem.id} 
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100"
+                      >
+                        <div className="flex-1 min-w-0 mr-4">
+                          <p className="font-medium text-sm truncate">{caseItem.caseName}</p>
+                          <p className="text-xs text-gray-500">{caseItem.accountNumber}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500 hidden sm:inline">
+                            {isMuted ? "Muted" : "On"}
+                          </span>
+                          <Switch
+                            checked={!isMuted}
+                            onCheckedChange={(checked) => 
+                              toggleCaseMuteMutation.mutate({ caseId: caseItem.id, mute: !checked })
+                            }
+                            disabled={toggleCaseMuteMutation.isPending}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
