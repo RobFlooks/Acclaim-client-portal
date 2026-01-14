@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, Mail, Bell, BellOff, FilePlus, FileX, BarChart3 } from "lucide-react";
+import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, Mail, Bell, BellOff, FilePlus, FileX, BarChart3, Search } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrganisationSchema } from "@shared/schema";
@@ -294,6 +294,7 @@ function CaseManagementTab() {
   const [archiveConfirmCase, setArchiveConfirmCase] = useState<Case | null>(null);
   const [showNewCaseDialog, setShowNewCaseDialog] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [caseSearchFilter, setCaseSearchFilter] = useState("");
   const [newCaseForm, setNewCaseForm] = useState({
     accountNumber: '',
     caseName: '',
@@ -584,9 +585,25 @@ function CaseManagementTab() {
     },
   });
 
+  // Filter cases by search term
+  const filteredCases = caseSearchFilter.trim()
+    ? cases.filter((case_: Case) => {
+        const search = caseSearchFilter.toLowerCase();
+        return (
+          case_.accountNumber?.toLowerCase().includes(search) ||
+          case_.caseName?.toLowerCase().includes(search) ||
+          case_.debtorEmail?.toLowerCase().includes(search) ||
+          case_.organisationName?.toLowerCase().includes(search) ||
+          case_.status?.toLowerCase().includes(search) ||
+          case_.stage?.toLowerCase().includes(search) ||
+          String(case_.id).includes(search)
+        );
+      })
+    : cases;
+
   // Pagination logic for cases
-  const totalPages = Math.ceil((cases?.length || 0) / ITEMS_PER_PAGE);
-  const paginatedCases = cases.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const totalPages = Math.ceil((filteredCases?.length || 0) / ITEMS_PER_PAGE);
+  const paginatedCases = filteredCases.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   if (isLoading) {
     return <div>Loading cases...</div>;
@@ -603,9 +620,19 @@ function CaseManagementTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div className="text-sm text-gray-600 px-1">
-          Total Cases: {cases.length} | Archived: {cases.filter((c: Case) => c.isArchived).length} | Active: {cases.filter((c: Case) => !c.isArchived).length} | Showing: {paginatedCases.length}
+      {/* Search Filter */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search by account, name, email, or organisation..."
+            value={caseSearchFilter}
+            onChange={(e) => {
+              setCaseSearchFilter(e.target.value);
+              setCurrentPage(1); // Reset to first page when searching
+            }}
+            className="pl-10"
+          />
         </div>
         <div className="flex gap-2">
           <Button
@@ -628,6 +655,13 @@ function CaseManagementTab() {
             <Download className="h-4 w-4" />
             Export CSV
           </Button>
+        </div>
+      </div>
+      
+      <div className="flex justify-between items-center">
+        <div className="text-sm text-gray-600 px-1">
+          Total Cases: {cases.length} | Archived: {cases.filter((c: Case) => c.isArchived).length} | Active: {cases.filter((c: Case) => !c.isArchived).length} | Showing: {paginatedCases.length}
+          {caseSearchFilter && ` (filtered from ${cases.length})`}
         </div>
       </div>
       
@@ -1839,6 +1873,10 @@ export default function AdminEnhanced() {
   // Pagination state
   const [usersPage, setUsersPage] = useState(1);
   const [orgsPage, setOrgsPage] = useState(1);
+  
+  // Search filter state
+  const [userSearchFilter, setUserSearchFilter] = useState("");
+  const [orgSearchFilter, setOrgSearchFilter] = useState("");
 
   // Fetch users with their organisations
   const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery({
@@ -2370,11 +2408,38 @@ export default function AdminEnhanced() {
     );
   }
 
+  // Filter users by search term
+  const filteredUsers = userSearchFilter.trim()
+    ? users.filter((user: User) => {
+        const search = userSearchFilter.toLowerCase();
+        return (
+          user.firstName?.toLowerCase().includes(search) ||
+          user.lastName?.toLowerCase().includes(search) ||
+          user.email?.toLowerCase().includes(search) ||
+          user.id?.toLowerCase().includes(search) ||
+          user.organisationName?.toLowerCase().includes(search) ||
+          (user as any).organisations?.some((org: Organisation) => org.name.toLowerCase().includes(search))
+        );
+      })
+    : users;
+
+  // Filter organisations by search term
+  const filteredOrgs = orgSearchFilter.trim()
+    ? organisations.filter((org: Organisation) => {
+        const search = orgSearchFilter.toLowerCase();
+        return (
+          org.name?.toLowerCase().includes(search) ||
+          org.externalRef?.toLowerCase().includes(search) ||
+          String(org.id).includes(search)
+        );
+      })
+    : organisations;
+
   // Pagination calculations
-  const usersTotalPages = Math.ceil((users?.length || 0) / ITEMS_PER_PAGE);
-  const paginatedUsers = users.slice((usersPage - 1) * ITEMS_PER_PAGE, usersPage * ITEMS_PER_PAGE);
-  const orgsTotalPages = Math.ceil((organisations?.length || 0) / ITEMS_PER_PAGE);
-  const paginatedOrgs = organisations.slice((orgsPage - 1) * ITEMS_PER_PAGE, orgsPage * ITEMS_PER_PAGE);
+  const usersTotalPages = Math.ceil((filteredUsers?.length || 0) / ITEMS_PER_PAGE);
+  const paginatedUsers = filteredUsers.slice((usersPage - 1) * ITEMS_PER_PAGE, usersPage * ITEMS_PER_PAGE);
+  const orgsTotalPages = Math.ceil((filteredOrgs?.length || 0) / ITEMS_PER_PAGE);
+  const paginatedOrgs = filteredOrgs.slice((orgsPage - 1) * ITEMS_PER_PAGE, orgsPage * ITEMS_PER_PAGE);
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
@@ -2704,8 +2769,24 @@ export default function AdminEnhanced() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-sm text-gray-600 mb-4">
-                Showing {paginatedUsers.length} of {users?.length || 0} users
+              {/* Search Filter */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search by name, email, or organisation..."
+                    value={userSearchFilter}
+                    onChange={(e) => {
+                      setUserSearchFilter(e.target.value);
+                      setUsersPage(1); // Reset to first page when searching
+                    }}
+                    className="pl-10"
+                  />
+                </div>
+                <div className="text-sm text-gray-600">
+                  Showing {paginatedUsers.length} of {filteredUsers?.length || 0} users
+                  {userSearchFilter && ` (filtered from ${users?.length || 0})`}
+                </div>
               </div>
               {/* Mobile Card Layout */}
               <div className="block sm:hidden space-y-4">
@@ -3193,8 +3274,24 @@ export default function AdminEnhanced() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-sm text-gray-600 mb-4">
-                Showing {paginatedOrgs.length} of {organisations?.length || 0} organisations
+              {/* Search Filter */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search by name or client code..."
+                    value={orgSearchFilter}
+                    onChange={(e) => {
+                      setOrgSearchFilter(e.target.value);
+                      setOrgsPage(1); // Reset to first page when searching
+                    }}
+                    className="pl-10"
+                  />
+                </div>
+                <div className="text-sm text-gray-600">
+                  Showing {paginatedOrgs.length} of {filteredOrgs?.length || 0} organisations
+                  {orgSearchFilter && ` (filtered from ${organisations?.length || 0})`}
+                </div>
               </div>
               <Table>
                 <TableHeader>
