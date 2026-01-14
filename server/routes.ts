@@ -1361,7 +1361,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add junction table organisations
       userOrgs.forEach(uo => allUserOrgIds.add(uo.organisationId));
       
-      if (allUserOrgIds.size === 0) {
+      // Only require organisations for non-admin users
+      if (!user.isAdmin && allUserOrgIds.size === 0) {
         return res.status(404).json({ message: "User organisation not found" });
       }
 
