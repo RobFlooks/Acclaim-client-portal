@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Download, User, Calendar, Banknote, TrendingUp, FileSpreadsheet, FileText, Filter } from "lucide-react";
+import { ArrowLeft, Download, User, Calendar, Banknote, TrendingUp, FileSpreadsheet, FileText, Filter, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Link } from "wouter";
@@ -16,6 +16,7 @@ import { useState, useMemo } from "react";
 export default function CaseSummaryReport() {
   const { toast } = useToast();
   const [statusFilter, setStatusFilter] = useState<string>("all"); // "all", "live", "closed"
+  const [orgFilter, setOrgFilter] = useState<string>("all");
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/dashboard/stats"],
@@ -61,17 +62,34 @@ export default function CaseSummaryReport() {
     },
   });
 
-  // Filter cases based on status filter
+  // Fetch user's organisations for filtering
+  const { data: userOrganisations } = useQuery<any[]>({
+    queryKey: ["/api/user/organisations"],
+  });
+
+  // Check if user has multiple organisations
+  const hasMultipleOrgs = userOrganisations && userOrganisations.length > 1;
+
+  // Filter cases based on status filter and organisation filter
   const filteredCases = useMemo(() => {
     if (!cases) return [];
     
-    if (statusFilter === "live") {
-      return cases.filter((caseItem: any) => caseItem.status !== "Closed");
-    } else if (statusFilter === "closed") {
-      return cases.filter((caseItem: any) => caseItem.status === "Closed");
+    let result = cases;
+    
+    // Apply organisation filter if not "all"
+    if (orgFilter !== "all") {
+      result = result.filter((caseItem: any) => caseItem.organisationId === parseInt(orgFilter));
     }
-    return cases; // "all" - show both live and closed
-  }, [cases, statusFilter]);
+    
+    // Apply status filter
+    if (statusFilter === "live") {
+      result = result.filter((caseItem: any) => caseItem.status !== "Closed");
+    } else if (statusFilter === "closed") {
+      result = result.filter((caseItem: any) => caseItem.status === "Closed");
+    }
+    
+    return result;
+  }, [cases, statusFilter, orgFilter]);
 
   // Calculate filtered statistics
   const filteredStats = useMemo(() => {
@@ -557,6 +575,25 @@ export default function CaseSummaryReport() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+            {hasMultipleOrgs && (
+              <div className="flex items-center gap-2 flex-1">
+                <Building2 className="h-4 w-4 text-gray-500" />
+                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Organisation:</label>
+                <Select value={orgFilter} onValueChange={setOrgFilter}>
+                  <SelectTrigger className="w-full sm:w-48">
+                    <SelectValue placeholder="All Organisations" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Organisations</SelectItem>
+                    {userOrganisations?.map((org: any) => (
+                      <SelectItem key={org.id} value={String(org.id)}>
+                        {org.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="flex items-center gap-2 flex-1">
               <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Show:</label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
