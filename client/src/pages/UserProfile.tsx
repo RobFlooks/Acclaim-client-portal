@@ -104,6 +104,16 @@ export default function UserProfile() {
     retry: false,
   });
 
+  // Fetch all organisations for admin users
+  const { data: allOrganisations } = useQuery<any[]>({
+    queryKey: ["/api/admin/organisations"],
+    retry: false,
+    enabled: userProfile?.isAdmin === true,
+  });
+
+  // Get the list of organisations available for upload (all orgs for admin, user's orgs otherwise)
+  const availableOrgsForUpload = userProfile?.isAdmin ? allOrganisations : userOrganisations;
+
   // Update form data when user profile is loaded
   useEffect(() => {
     if (userProfile) {
@@ -283,10 +293,12 @@ export default function UserProfile() {
     
     // Determine organisation ID for upload
     let orgId: number | null = null;
-    if (userOrganisations && userOrganisations.length > 1 && selectedOrgForUpload) {
+    
+    // For admins or users with multiple orgs, use selected org
+    if (availableOrgsForUpload && availableOrgsForUpload.length > 1 && selectedOrgForUpload) {
       orgId = parseInt(selectedOrgForUpload);
-    } else if (userOrganisations && userOrganisations.length === 1) {
-      orgId = userOrganisations[0].id;
+    } else if (availableOrgsForUpload && availableOrgsForUpload.length === 1) {
+      orgId = availableOrgsForUpload[0].id;
     } else if (userProfile?.organisationId) {
       orgId = userProfile.organisationId;
     }
@@ -759,7 +771,7 @@ export default function UserProfile() {
               <CardContent className="space-y-6">
                 {/* Upload Section */}
                 <div className="p-4 border-2 border-dashed border-gray-200 rounded-lg space-y-4">
-                  {userOrganisations && userOrganisations.length > 1 && (
+                  {availableOrgsForUpload && availableOrgsForUpload.length > 1 && (
                     <div>
                       <Label htmlFor="uploadOrg">Upload to Organisation</Label>
                       <Select value={selectedOrgForUpload} onValueChange={setSelectedOrgForUpload}>
@@ -767,7 +779,7 @@ export default function UserProfile() {
                           <SelectValue placeholder="Select organisation..." />
                         </SelectTrigger>
                         <SelectContent>
-                          {userOrganisations.map((org: any) => (
+                          {availableOrgsForUpload.map((org: any) => (
                             <SelectItem key={org.id} value={org.id.toString()}>
                               {org.name}
                             </SelectItem>
@@ -785,7 +797,7 @@ export default function UserProfile() {
                     />
                     <Button
                       onClick={handleDocumentUpload}
-                      disabled={!selectedFile || isUploading || (userOrganisations && userOrganisations.length > 1 && !selectedOrgForUpload)}
+                      disabled={!selectedFile || isUploading || (availableOrgsForUpload && availableOrgsForUpload.length > 1 && !selectedOrgForUpload)}
                       className="bg-acclaim-teal hover:bg-acclaim-teal/90 w-full sm:w-auto"
                     >
                       <Upload className="h-4 w-4 mr-2" />
