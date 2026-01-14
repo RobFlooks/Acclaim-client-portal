@@ -1432,14 +1432,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Get all organisation IDs the user has access to
+      // Get all organisation IDs the user has access to (deduplicated)
       const userOrgs = await storage.getUserOrganisations(userId);
-      const allUserOrgIds: number[] = [];
+      const orgIdSet = new Set<number>();
       
       if (user.organisationId) {
-        allUserOrgIds.push(user.organisationId);
+        orgIdSet.add(user.organisationId);
       }
-      userOrgs.forEach(uo => allUserOrgIds.push(uo.organisationId));
+      userOrgs.forEach(uo => orgIdSet.add(uo.organisationId));
+      const allUserOrgIds = Array.from(orgIdSet);
       
       if (allUserOrgIds.length === 0 && !user.isAdmin) {
         return res.json([]);
@@ -1481,14 +1482,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Get all organisation IDs the user has access to
+      // Get all organisation IDs the user has access to (deduplicated)
       const userOrgs = await storage.getUserOrganisations(userId);
-      const allUserOrgIds: number[] = [];
+      const orgIdSet = new Set<number>();
       
       if (user.organisationId) {
-        allUserOrgIds.push(user.organisationId);
+        orgIdSet.add(user.organisationId);
       }
-      userOrgs.forEach(uo => allUserOrgIds.push(uo.organisationId));
+      userOrgs.forEach(uo => orgIdSet.add(uo.organisationId));
+      const allUserOrgIds = Array.from(orgIdSet);
       
       if (allUserOrgIds.length === 0 && !user.isAdmin) {
         return res.status(400).json({ message: "No organisation assigned to user" });
