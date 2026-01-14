@@ -22,9 +22,9 @@ import {
   Trash2,
   RefreshCw,
   Search,
-  Bell,
-  BellOff
+  Bell
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -1119,34 +1119,16 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl">{caseData.caseName}</CardTitle>
             <div className="flex items-center gap-2">
-              <Button 
-                onClick={handleToggleMute}
-                variant="outline"
-                size="sm"
-                disabled={muteCaseMutation.isPending || unmuteCaseMutation.isPending || muteStatusLoading}
-                className={muteStatus?.muted 
-                  ? "border-gray-400 text-gray-500 hover:bg-gray-100" 
-                  : "border-acclaim-teal text-acclaim-teal hover:bg-acclaim-teal hover:text-white"
-                }
-                title={muteStatus?.muted ? "Click to unmute notifications for this case" : "Click to mute notifications for this case"}
-              >
-                {muteStatusLoading ? (
-                  <>
-                    <Bell className="h-4 w-4 mr-2 animate-pulse" />
-                    Loading...
-                  </>
-                ) : muteStatus?.muted ? (
-                  <>
-                    <BellOff className="h-4 w-4 mr-2" />
-                    Muted
-                  </>
-                ) : (
-                  <>
-                    <Bell className="h-4 w-4 mr-2" />
-                    Notifications On
-                  </>
-                )}
-              </Button>
+              <div className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-md bg-gray-50">
+                <Bell className={`h-4 w-4 ${muteStatus?.muted ? 'text-gray-400' : 'text-acclaim-teal'}`} />
+                <span className="text-sm text-gray-600">Notifications</span>
+                <Switch
+                  checked={!muteStatus?.muted}
+                  onCheckedChange={() => handleToggleMute()}
+                  disabled={muteCaseMutation.isPending || unmuteCaseMutation.isPending || muteStatusLoading}
+                  title={muteStatus?.muted ? "Turn on notifications for this case" : "Turn off notifications for this case"}
+                />
+              </div>
               <Button 
                 onClick={handlePrintCase}
                 variant="outline"
