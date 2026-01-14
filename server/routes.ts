@@ -29,41 +29,8 @@ import ExcelJS from "exceljs";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Ensure uploads directory exists - try multiple locations for Azure compatibility
-let uploadsDir: string;
-const possiblePaths = [
-  process.env.UPLOADS_DIR,                    // Custom env var
-  path.join(process.env.HOME || '', 'uploads'), // Home directory
-  path.join(process.cwd(), 'uploads'),        // Current working directory
-  '/tmp/uploads',                             // Temp directory fallback
-];
-
-for (const testPath of possiblePaths) {
-  if (!testPath) continue;
-  try {
-    if (!fs.existsSync(testPath)) {
-      fs.mkdirSync(testPath, { recursive: true });
-    }
-    // Test write access
-    const testFile = path.join(testPath, '.write-test');
-    fs.writeFileSync(testFile, 'test');
-    fs.unlinkSync(testFile);
-    uploadsDir = testPath;
-    console.log('[Uploads] Using directory:', uploadsDir);
-    break;
-  } catch (e) {
-    console.log('[Uploads] Cannot use path:', testPath, (e as Error).message);
-  }
-}
-
-if (!uploadsDir!) {
-  uploadsDir = '/tmp/uploads';
-  fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log('[Uploads] Fallback to /tmp/uploads');
-}
-
 const upload = multer({
-  dest: uploadsDir,
+  dest: "uploads/",
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
 });
 
@@ -93,32 +60,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Azure Entra External ID authentication (optional - only if configured)
   setupAzureAuth(app);
-  
-  // Diagnostic endpoint for upload testing
-  app.get('/api/diagnostics/uploads', async (req, res) => {
-    try {
-      const testFile = path.join(uploadsDir, '.diagnostic-test-' + Date.now());
-      fs.writeFileSync(testFile, 'test');
-      fs.unlinkSync(testFile);
-      res.json({
-        status: 'ok',
-        uploadsDir,
-        writable: true,
-        cwd: process.cwd(),
-        home: process.env.HOME,
-        nodeVersion: process.version
-      });
-    } catch (error: any) {
-      res.status(500).json({
-        status: 'error',
-        uploadsDir,
-        writable: false,
-        error: error.message,
-        cwd: process.cwd(),
-        home: process.env.HOME
-      });
-    }
-  });
   
   // Initial setup routes (only available when no admin exists)
   app.get('/api/setup/status', async (req, res) => {
@@ -1533,15 +1474,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/organisation/documents/upload', isAuthenticated, upload.single('file'), async (req: any, res) => {
     try {
-      console.log('[Doc Upload] Starting organisation document upload');
-      console.log('[Doc Upload] Uploads directory:', uploadsDir);
-      console.log('[Doc Upload] Request file:', req.file ? 'Present' : 'Missing');
-      
       const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       if (!user) {
-        console.log('[Doc Upload] User not found:', userId);
         return res.status(404).json({ message: "User not found" });
       }
 
@@ -1554,19 +1490,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       userOrgs.forEach(uo => allUserOrgIds.push(uo.organisationId));
       
-      console.log('[Doc Upload] User org IDs:', allUserOrgIds);
-      
       if (allUserOrgIds.length === 0 && !user.isAdmin) {
-        console.log('[Doc Upload] No organisation assigned to user');
         return res.status(400).json({ message: "No organisation assigned to user" });
       }
 
       if (!req.file) {
-        console.log('[Doc Upload] No file in request');
         return res.status(400).json({ message: "No file uploaded" });
       }
-
-      console.log('[Doc Upload] File received:', req.file.originalname, 'Size:', req.file.size, 'Path:', req.file.path);
 
       // Determine which organisation to upload to
       let targetOrgId: number;
@@ -1577,19 +1507,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (user.isAdmin || allUserOrgIds.includes(requestedOrgId)) {
           targetOrgId = requestedOrgId;
         } else {
-          console.log('[Doc Upload] Access denied to org:', requestedOrgId);
           return res.status(403).json({ message: "You don't have access to this organisation" });
         }
-      } else if (allUserOrgIds.length > 0) {
+      } else {
         // Use the first available org
         targetOrgId = allUserOrgIds[0];
-      } else {
-        // Admin with no org assigned and no org specified - error
-        console.log('[Doc Upload] No target organisation available');
-        return res.status(400).json({ message: "Please select an organisation to upload to" });
       }
-
-      console.log('[Doc Upload] Target org ID:', targetOrgId);
 
       const document = await storage.createDocument({
         caseId: null, // No case - organisation-level document
@@ -1601,11 +1524,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         organisationId: targetOrgId,
       });
 
-      console.log('[Doc Upload] Document created successfully:', document.id);
       res.json(document);
-    } catch (error: any) {
-      console.error("[Doc Upload] Error uploading organisation document:", error);
-      res.status(500).json({ message: "Failed to upload organisation document", error: error.message });
+    } catch (error) {
+      console.error("Error uploading organisation document:", error);
+      res.status(500).json({ message: "Failed to upload organisation document" });
     }
   });
 
@@ -2467,12 +2389,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
-      }
-
-      // Admins get all organisations
-      if (user.isAdmin) {
-        const allOrgs = await storage.getAllOrganisations();
-        return res.json(allOrgs);
       }
 
       const organisations = [];
