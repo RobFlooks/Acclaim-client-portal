@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, Mail, Bell, BellOff, FilePlus, FileX } from "lucide-react";
+import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, Mail, Bell, BellOff, FilePlus, FileX, BarChart3 } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrganisationSchema } from "@shared/schema";
@@ -2403,6 +2403,13 @@ export default function AdminEnhanced() {
               <CreditCard className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Payment Performance</span>
               <span className="sm:hidden">Payments</span>
+            </Button>
+          </Link>
+          <Link href="/recovery-analysis-report">
+            <Button variant="outline" size="sm">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Recovery Analysis</span>
+              <span className="sm:hidden">Recovery</span>
             </Button>
           </Link>
           <Link href="/audit-management">

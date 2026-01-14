@@ -5,11 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { BarChart3, Download, FileText, TrendingUp, PieChart, CreditCard, Calendar, Lightbulb } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { useAuth } from "@/hooks/use-auth";
 
 export default function Reports() {
   const { toast } = useToast();
-  const { user } = useAuth();
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/dashboard/stats"],
@@ -292,12 +290,12 @@ export default function Reports() {
           <CardTitle>View Reports</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className={`grid grid-cols-1 gap-4 ${user?.isAdmin ? 'sm:grid-cols-2 lg:grid-cols-4' : 'sm:grid-cols-3'}`}>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="p-4 border rounded-lg">
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <h4 className="font-medium">Case Summary Report</h4>
-                  <p className="text-sm text-gray-600">Overview of all cases with key metrics</p>
+                  <p className="text-sm text-gray-600">Overview of all cases</p>
                 </div>
                 <FileText className="h-8 w-8 text-acclaim-teal" />
               </div>
@@ -345,26 +343,6 @@ export default function Reports() {
                 View Report
               </Button>
             </div>
-
-            {user?.isAdmin && (
-              <div className="p-4 border rounded-lg border-amber-200 bg-amber-50/50">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <h4 className="font-medium">Recovery Analysis</h4>
-                    <p className="text-sm text-gray-600">Recovery metrics by organisation</p>
-                  </div>
-                  <BarChart3 className="h-8 w-8 text-amber-600" />
-                </div>
-                <Button 
-                  onClick={() => handleViewReport("Recovery Analysis")}
-                  variant="outline"
-                  className="w-full border-amber-500 text-amber-600 hover:bg-amber-50"
-                >
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  View Report
-                </Button>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
