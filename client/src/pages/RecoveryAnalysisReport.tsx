@@ -1,16 +1,21 @@
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Download, FileSpreadsheet, FileText, BarChart3, TrendingUp, PieChart, Calendar } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Download, FileSpreadsheet, FileText, BarChart3, TrendingUp, PieChart, Calendar, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
 import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
 
 export default function RecoveryAnalysisReport() {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [selectedOrganisation, setSelectedOrganisation] = useState<string>("all");
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/dashboard/stats"],
@@ -35,7 +40,7 @@ export default function RecoveryAnalysisReport() {
   });
 
   const { data: cases, isLoading: casesLoading } = useQuery({
-    queryKey: ["/api/cases"],
+    queryKey: user?.isAdmin ? ["/api/admin/cases"] : ["/api/cases"],
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
@@ -56,6 +61,39 @@ export default function RecoveryAnalysisReport() {
     },
   });
 
+  const { data: organisations, isLoading: organisationsLoading } = useQuery({
+    queryKey: ["/api/admin/organisations"],
+    enabled: user?.isAdmin === true,
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to load organisations",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const filteredCases = useMemo(() => {
+    if (!cases || !Array.isArray(cases)) return [];
+    
+    if (!user?.isAdmin || selectedOrganisation === "all") {
+      return cases;
+    }
+    
+    return cases.filter((c: any) => c.organisationId === parseInt(selectedOrganisation));
+  }, [cases, selectedOrganisation, user?.isAdmin]);
+
   const formatCurrency = (amount: string | number) => {
     const num = typeof amount === 'string' ? parseFloat(amount) : amount;
     return new Intl.NumberFormat('en-GB', {
@@ -74,9 +112,9 @@ export default function RecoveryAnalysisReport() {
 
   // Calculate recovery metrics
   const getRecoveryMetrics = () => {
-    if (!cases || !Array.isArray(cases)) return null;
+    if (!filteredCases || !Array.isArray(filteredCases) || filteredCases.length === 0) return null;
 
-    const metrics = cases.reduce((acc: any, caseItem: any) => {
+    const metrics = filteredCases.reduce((acc: any, caseItem: any) => {
       const originalAmount = parseFloat(caseItem.originalAmount || 0);
       const costsAdded = parseFloat(caseItem.costsAdded || 0);
       const interestAdded = parseFloat(caseItem.interestAdded || 0);
@@ -219,7 +257,7 @@ export default function RecoveryAnalysisReport() {
   };
 
   const handleExportExcel = async () => {
-    if (!cases || cases.length === 0) {
+    if (!filteredCases || filteredCases.length === 0) {
       toast({
         title: "No Data",
         description: "No cases available to export.",
@@ -266,7 +304,7 @@ export default function RecoveryAnalysisReport() {
       });
 
       // Add case data
-      cases.forEach((caseItem: any) => {
+      filteredCases.forEach((caseItem: any) => {
         const originalAmount = parseFloat(caseItem.originalAmount || 0);
         const costsAdded = parseFloat(caseItem.costsAdded || 0);
         const interestAdded = parseFloat(caseItem.interestAdded || 0);
@@ -422,7 +460,7 @@ export default function RecoveryAnalysisReport() {
   };
 
   const handleDownloadPDF = () => {
-    if (!cases || cases.length === 0) {
+    if (!filteredCases || filteredCases.length === 0) {
       toast({
         title: "No Data",
         description: "No cases available to generate PDF.",
@@ -433,6 +471,7 @@ export default function RecoveryAnalysisReport() {
 
     try {
       const metrics = getRecoveryMetrics();
+      const orgName = selectedOrganisation === "all" ? "All Organisations" : organisations?.find((o: any) => o.id === parseInt(selectedOrganisation))?.name || "Unknown";
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
         throw new Error('Could not open print window');
@@ -562,7 +601,7 @@ export default function RecoveryAnalysisReport() {
                 </tr>
               </thead>
               <tbody>
-                ${cases.map((caseItem: any) => {
+                ${filteredCases.map((caseItem: any) => {
                   const originalAmount = parseFloat(caseItem.originalAmount || 0);
                   const costsAdded = parseFloat(caseItem.costsAdded || 0);
                   const interestAdded = parseFloat(caseItem.interestAdded || 0);
@@ -664,6 +703,37 @@ export default function RecoveryAnalysisReport() {
           </Button>
         </div>
       </div>
+
+      {/* Organisation Filter - Admin Only */}
+      {user?.isAdmin && (
+        <Card className="mb-6 border-amber-200 bg-amber-50/50">
+          <CardContent className="py-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-amber-600" />
+                <span className="font-medium text-amber-800">Filter by Organisation</span>
+              </div>
+              <Select value={selectedOrganisation} onValueChange={setSelectedOrganisation}>
+                <SelectTrigger className="w-full sm:w-64">
+                  <SelectValue placeholder="Select organisation" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Organisations</SelectItem>
+                  {organisations?.map((org: any) => (
+                    <SelectItem key={org.id} value={org.id.toString()}>
+                      {org.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Badge variant="outline" className="text-sm w-fit">
+                {filteredCases?.length || 0} cases found
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Key Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 mb-4 sm:mb-8">
         <Card>
