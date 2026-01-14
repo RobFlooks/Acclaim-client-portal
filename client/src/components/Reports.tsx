@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, Download, FileText, TrendingUp, PieChart, CreditCard, Calendar } from "lucide-react";
+import { BarChart3, Download, FileText, TrendingUp, PieChart, CreditCard, Calendar, Lightbulb } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 
@@ -247,6 +247,42 @@ export default function Reports() {
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Lightbulb className="h-5 w-5 mr-2 text-amber-500" />
+              Portal Tips
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <div className="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-teal-700">1</span>
+                </div>
+                <p className="text-sm text-gray-600">Use the <strong>Messages</strong> tab to communicate directly with our team about your cases.</p>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-teal-700">2</span>
+                </div>
+                <p className="text-sm text-gray-600">Upload documents directly to cases for faster processing and a complete audit trail.</p>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-teal-700">3</span>
+                </div>
+                <p className="text-sm text-gray-600">Track case progress in real-time through the <strong>Timeline</strong> on each case.</p>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-bold text-teal-700">4</span>
+                </div>
+                <p className="text-sm text-gray-600">Download reports and statements anytime from this Reports section.</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
       {/* View Reports */}
       <Card>
@@ -254,7 +290,7 @@ export default function Reports() {
           <CardTitle>View Reports</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="p-4 border rounded-lg">
               <div className="flex items-center justify-between mb-3">
                 <div>
@@ -275,8 +311,8 @@ export default function Reports() {
             <div className="p-4 border rounded-lg">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <h4 className="font-medium">Payment Performance Report</h4>
-                  <p className="text-sm text-gray-600">Analysis of payment patterns and trends</p>
+                  <h4 className="font-medium">Payment Performance</h4>
+                  <p className="text-sm text-gray-600">Payment patterns and trends</p>
                 </div>
                 <CreditCard className="h-8 w-8 text-green-600" />
               </div>
@@ -294,7 +330,7 @@ export default function Reports() {
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <h4 className="font-medium">Monthly Statement</h4>
-                  <p className="text-sm text-gray-600">Monthly summary of account activity</p>
+                  <p className="text-sm text-gray-600">Monthly account activity</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-purple-600" />
               </div>
