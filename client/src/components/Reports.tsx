@@ -260,7 +260,7 @@ export default function Reports() {
                 <div className="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                   <span className="text-xs font-bold text-teal-700">1</span>
                 </div>
-                <p className="text-sm text-gray-600">Use the <strong>Messages</strong> tab to communicate directly with our team about your cases.</p>
+                <p className="text-sm text-gray-600">Use the <strong>Messages</strong> tab or send messages directly from within a case to communicate with our team.</p>
               </div>
               <div className="flex items-start space-x-3">
                 <div className="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
