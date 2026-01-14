@@ -357,7 +357,6 @@ export default function RecoveryAnalysisReport() {
         { metric: 'Total Debt (with costs)', value: metrics?.totalDebt || 0 },
         { metric: 'Total Recovered', value: metrics?.totalRecovered || 0 },
         { metric: 'Total Outstanding', value: metrics?.totalOutstanding || 0 },
-        { metric: 'Overall Recovery Rate (%)', value: Math.round(metrics?.totalRecoveryRate || 0) },
       ];
 
       summaryData.forEach((item, index) => {
@@ -484,10 +483,6 @@ export default function RecoveryAnalysisReport() {
           <div class="section">
             <h2>Key Performance Metrics</h2>
             <div class="metrics-grid">
-              <div class="metric-card">
-                <div class="metric-label">Overall Recovery Rate</div>
-                <div class="metric-value">${formatPercentage(metrics?.totalRecoveryRate || 0)}</div>
-              </div>
               <div class="metric-card">
                 <div class="metric-label">Total Amount Recovered</div>
                 <div class="metric-value">${formatCurrency(metrics?.totalRecovered || 0)}</div>
@@ -670,21 +665,7 @@ export default function RecoveryAnalysisReport() {
         </div>
       </div>
       {/* Key Metrics */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-8">
-        <Card>
-          <CardHeader className="pb-2 sm:pb-3">
-            <CardTitle className="text-xs sm:text-sm text-gray-600">Overall Recovery</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="flex items-center space-x-2">
-              <TrendingUp className="h-5 w-5 sm:h-8 sm:w-8 text-green-600 hidden sm:block" />
-              <span className="text-xl sm:text-3xl font-bold text-green-600">
-                {formatPercentage(metrics?.totalRecoveryRate || 0)}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 mb-4 sm:mb-8">
         <Card>
           <CardHeader className="pb-2 sm:pb-3">
             <CardTitle className="text-xs sm:text-sm text-gray-600">Amount Recovered</CardTitle>
