@@ -866,7 +866,7 @@ export default function RecoveryAnalysisReport() {
                 </tr>
               </thead>
               <tbody>
-                {cases?.map((caseItem: any) => {
+                {filteredCases?.map((caseItem: any) => {
                   const originalAmount = parseFloat(caseItem.originalAmount || 0);
                   const costsAdded = parseFloat(caseItem.costsAdded || 0);
                   const interestAdded = parseFloat(caseItem.interestAdded || 0);
