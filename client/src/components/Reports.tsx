@@ -237,7 +237,10 @@ export default function Reports() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Case Stage Breakdown</CardTitle>
+            <CardTitle className="flex items-center">
+              <PieChart className="h-5 w-5 mr-2 text-acclaim-teal" />
+              Case Stage Breakdown
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
