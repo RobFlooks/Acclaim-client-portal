@@ -424,9 +424,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      // Pre-populate with original filename (without extension)
-      const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
-      setCustomFileName(nameWithoutExt);
+      setCustomFileName("");
     }
   };
 

@@ -208,10 +208,7 @@ export default function Documents() {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      // Pre-populate with original filename (without extension for editing)
-      const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
-      const ext = file.name.split('.').pop();
-      setCustomFileName(nameWithoutExt);
+      setCustomFileName("");
     }
   };
 

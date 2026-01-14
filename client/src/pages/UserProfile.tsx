@@ -868,12 +868,7 @@ export default function UserProfile() {
                       onChange={(e) => {
                         const file = e.target.files?.[0] || null;
                         setSelectedFile(file);
-                        if (file) {
-                          const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
-                          setCustomFileName(nameWithoutExt);
-                        } else {
-                          setCustomFileName("");
-                        }
+                        setCustomFileName("");
                       }}
                       accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.xls,.xlsx,.csv"
                       className="flex-1"
