@@ -1256,7 +1256,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                     type="file"
                     onChange={handleFileSelect}
                     accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-acclaim-teal file:text-white hover:file:bg-acclaim-teal/90 file:cursor-pointer cursor-pointer"
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 file:cursor-pointer cursor-pointer"
                   />
                   {selectedFile && (
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
