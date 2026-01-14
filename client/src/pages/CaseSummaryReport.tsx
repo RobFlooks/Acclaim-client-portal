@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Download, User, Calendar, Banknote, TrendingUp, FileSpreadsheet, FileText, Filter, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Link } from "wouter";
 import * as XLSX from 'xlsx';
@@ -15,6 +16,7 @@ import { useState, useMemo } from "react";
 
 export default function CaseSummaryReport() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [statusFilter, setStatusFilter] = useState<string>("all"); // "all", "live", "closed"
   const [orgFilter, setOrgFilter] = useState<string>("all");
 
@@ -41,7 +43,7 @@ export default function CaseSummaryReport() {
   });
 
   const { data: cases, isLoading: casesLoading } = useQuery({
-    queryKey: ["/api/cases"],
+    queryKey: user?.isAdmin ? ["/api/admin/cases"] : ["/api/cases"],
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
@@ -62,13 +64,23 @@ export default function CaseSummaryReport() {
     },
   });
 
-  // Fetch user's organisations for filtering
-  const { data: userOrganisations } = useQuery<any[]>({
-    queryKey: ["/api/user/organisations"],
+  // Fetch all organisations for admin filtering
+  const { data: allOrganisations } = useQuery<any[]>({
+    queryKey: ["/api/admin/organisations"],
+    enabled: user?.isAdmin === true,
   });
 
-  // Check if user has multiple organisations
-  const hasMultipleOrgs = userOrganisations && userOrganisations.length > 1;
+  // Fetch user's organisations for filtering (non-admin users)
+  const { data: userOrganisations } = useQuery<any[]>({
+    queryKey: ["/api/user/organisations"],
+    enabled: user?.isAdmin !== true,
+  });
+
+  // For admin users, show all organisations; for regular users, show their organisations
+  const organisations = user?.isAdmin ? allOrganisations : userOrganisations;
+
+  // Check if organisation filter should be shown (admin users always see it, regular users only if they have multiple orgs)
+  const showOrgFilter = user?.isAdmin || (userOrganisations && userOrganisations.length > 1);
 
   // Filter cases based on status filter and organisation filter
   const filteredCases = useMemo(() => {
@@ -575,7 +587,7 @@ export default function CaseSummaryReport() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-            {hasMultipleOrgs && (
+            {showOrgFilter && (
               <div className="flex items-center gap-2 flex-1">
                 <Building2 className="h-4 w-4 text-gray-500" />
                 <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Organisation:</label>
@@ -585,7 +597,7 @@ export default function CaseSummaryReport() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Organisations</SelectItem>
-                    {userOrganisations?.map((org: any) => (
+                    {organisations?.map((org: any) => (
                       <SelectItem key={org.id} value={String(org.id)}>
                         {org.name}
                       </SelectItem>

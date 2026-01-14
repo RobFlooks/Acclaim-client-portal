@@ -1,14 +1,18 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, FileText, TrendingUp, PieChart, CreditCard, Calendar, PoundSterling } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BarChart3, FileText, TrendingUp, PieChart, CreditCard, Calendar, PoundSterling, Building2, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { isUnauthorizedError } from "@/lib/authUtils";
 
 export default function Reports() {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [orgFilter, setOrgFilter] = useState<string>("all");
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/dashboard/stats"],
@@ -33,7 +37,7 @@ export default function Reports() {
   });
 
   const { data: cases, isLoading: casesLoading } = useQuery({
-    queryKey: ["/api/cases"],
+    queryKey: user?.isAdmin ? ["/api/admin/cases"] : ["/api/cases"],
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
@@ -58,6 +62,31 @@ export default function Reports() {
     queryKey: ["/api/payments"],
   });
 
+  // Fetch all organisations for admin filtering
+  const { data: allOrganisations } = useQuery<any[]>({
+    queryKey: ["/api/admin/organisations"],
+    enabled: user?.isAdmin === true,
+  });
+
+  // Fetch user's organisations for filtering (non-admin users)
+  const { data: userOrganisations } = useQuery<any[]>({
+    queryKey: ["/api/user/organisations"],
+    enabled: user?.isAdmin !== true,
+  });
+
+  // For admin users, show all organisations; for regular users, show their organisations
+  const organisations = user?.isAdmin ? allOrganisations : userOrganisations;
+
+  // Check if organisation filter should be shown (admin users always see it, regular users only if they have multiple orgs)
+  const showOrgFilter = user?.isAdmin || (userOrganisations && userOrganisations.length > 1);
+
+  // Filter cases based on organisation filter
+  const filteredCases = useMemo(() => {
+    if (!cases) return [];
+    if (orgFilter === "all") return cases;
+    return cases.filter((c: any) => c.organisationId === parseInt(orgFilter));
+  }, [cases, orgFilter]);
+
   const formatCurrency = (amount: string | number) => {
     const num = typeof amount === 'string' ? parseFloat(amount) : amount;
     return new Intl.NumberFormat('en-GB', {
@@ -74,18 +103,26 @@ export default function Reports() {
     });
   };
 
+  // Filter payments based on filtered cases
+  const filteredPayments = useMemo(() => {
+    if (!payments) return [];
+    if (orgFilter === "all") return payments;
+    const caseIds = new Set(filteredCases.map((c: any) => c.id));
+    return payments.filter((p: any) => caseIds.has(p.caseId));
+  }, [payments, filteredCases, orgFilter]);
+
   // Get recent payments with case info
   const recentPayments = useMemo(() => {
-    if (!payments || !cases) return [];
+    if (!filteredPayments || !filteredCases) return [];
     
     // Sort by date, most recent first, and take top 3
-    const sortedPayments = [...payments].sort((a: any, b: any) => 
+    const sortedPayments = [...filteredPayments].sort((a: any, b: any) => 
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     ).slice(0, 3);
     
     // Enrich with case info
     return sortedPayments.map((payment: any) => {
-      const caseItem = cases.find((c: any) => c.id === payment.caseId);
+      const caseItem = filteredCases.find((c: any) => c.id === payment.caseId);
       return {
         ...payment,
         caseName: caseItem?.caseName || 'Unknown',
@@ -93,7 +130,7 @@ export default function Reports() {
         organisationName: caseItem?.organisationName
       };
     });
-  }, [payments, cases]);
+  }, [filteredPayments, filteredCases]);
 
   const handleViewReport = (reportType: string) => {
     if (reportType === "Case Summary Report") {
@@ -126,9 +163,9 @@ export default function Reports() {
 
 
   const getStageBreakdown = () => {
-    if (!cases || !Array.isArray(cases)) return { preLegal: 0, claim: 0, judgment: 0, enforcement: 0 };
+    if (!filteredCases || !Array.isArray(filteredCases)) return { preLegal: 0, claim: 0, judgment: 0, enforcement: 0 };
     
-    return cases.reduce((acc: any, case_: any) => {
+    return filteredCases.reduce((acc: any, case_: any) => {
       const stage = case_.stage?.toLowerCase();
       if (stage === 'pre-legal') {
         acc.preLegal++;
@@ -144,9 +181,9 @@ export default function Reports() {
   };
 
   const getRecoveryAnalysis = () => {
-    if (!cases || !Array.isArray(cases)) return { totalOriginal: 0, totalRecovered: 0, totalOutstanding: 0 };
+    if (!filteredCases || !Array.isArray(filteredCases)) return { totalOriginal: 0, totalRecovered: 0, totalOutstanding: 0 };
     
-    return cases.reduce((acc: any, case_: any) => {
+    return filteredCases.reduce((acc: any, case_: any) => {
       const original = parseFloat(case_.originalAmount || 0);
       const outstanding = parseFloat(case_.outstandingAmount || 0);
       // Use actual payments received, not calculated debt reduction
@@ -162,9 +199,9 @@ export default function Reports() {
 
   // Get active cases only for Report Summary
   const getActiveCasesAnalysis = () => {
-    if (!cases || !Array.isArray(cases)) return { totalCases: 0, totalRecovered: 0, totalOutstanding: 0 };
+    if (!filteredCases || !Array.isArray(filteredCases)) return { totalCases: 0, totalRecovered: 0, totalOutstanding: 0 };
     
-    const activeCases = cases.filter((case_: any) => case_.status?.toLowerCase() !== 'closed');
+    const activeCases = filteredCases.filter((case_: any) => case_.status?.toLowerCase() !== 'closed');
     
     return activeCases.reduce((acc: any, case_: any) => {
       const outstanding = parseFloat(case_.outstandingAmount || 0);
@@ -184,6 +221,42 @@ export default function Reports() {
 
   return (
     <div className="space-y-6">
+      {/* Organisation Filter - Show for admin users or multi-org users */}
+      {showOrgFilter && (
+        <Card>
+          <CardHeader className="pb-2 sm:pb-4">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Filter className="h-4 w-4 sm:h-5 sm:w-5" />
+              Filter by Organisation
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+              <div className="flex items-center gap-2 flex-1">
+                <Building2 className="h-4 w-4 text-gray-500" />
+                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Organisation:</label>
+                <Select value={orgFilter} onValueChange={setOrgFilter}>
+                  <SelectTrigger className="w-full sm:w-48">
+                    <SelectValue placeholder="All Organisations" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Organisations</SelectItem>
+                    {organisations?.map((org: any) => (
+                      <SelectItem key={org.id} value={String(org.id)}>
+                        {org.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="text-xs sm:text-sm text-gray-600">
+                Showing {filteredCases?.length || 0} cases
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Report Summary */}
       <Card>
         <CardHeader>
