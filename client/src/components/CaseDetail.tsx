@@ -1245,6 +1245,44 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
               </div>
             </CardHeader>
             <CardContent>
+              {/* Upload Document Section - At Top */}
+              <div className="mb-6 pb-6 border-b">
+                <Label htmlFor="file-upload" className="text-sm font-medium">
+                  Upload Document
+                </Label>
+                <div className="mt-2 space-y-3">
+                  <input
+                    id="file-upload"
+                    type="file"
+                    onChange={handleFileSelect}
+                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-acclaim-teal file:text-white hover:file:bg-acclaim-teal/90 file:cursor-pointer cursor-pointer"
+                  />
+                  {selectedFile && (
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <FileText className="h-5 w-5 text-acclaim-teal" />
+                        <div>
+                          <p className="font-medium text-sm">{selectedFile.name}</p>
+                          <p className="text-xs text-gray-500">
+                            {Math.round(selectedFile.size / 1024)}KB
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={handleFileUpload}
+                        disabled={uploadDocumentMutation.isPending}
+                        className="bg-acclaim-teal hover:bg-acclaim-teal/90"
+                        size="sm"
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        {uploadDocumentMutation.isPending ? "Uploading..." : "Upload"}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {documentsLoading ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
@@ -1307,43 +1345,6 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                 </div>
               )}
               
-              {/* Upload Document Section */}
-              <div className="mt-6 pt-6 border-t">
-                <Label htmlFor="file-upload" className="text-sm font-medium">
-                  Upload Document
-                </Label>
-                <div className="mt-2 space-y-3">
-                  <input
-                    id="file-upload"
-                    type="file"
-                    onChange={handleFileSelect}
-                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-acclaim-teal file:text-white hover:file:bg-acclaim-teal/90"
-                  />
-                  {selectedFile && (
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <FileText className="h-5 w-5 text-acclaim-teal" />
-                        <div>
-                          <p className="font-medium text-sm">{selectedFile.name}</p>
-                          <p className="text-xs text-gray-500">
-                            {Math.round(selectedFile.size / 1024)}KB
-                          </p>
-                        </div>
-                      </div>
-                      <Button
-                        onClick={handleFileUpload}
-                        disabled={uploadDocumentMutation.isPending}
-                        className="bg-acclaim-teal hover:bg-acclaim-teal/90"
-                        size="sm"
-                      >
-                        <Upload className="h-4 w-4 mr-2" />
-                        {uploadDocumentMutation.isPending ? "Uploading..." : "Upload"}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>

@@ -495,11 +495,12 @@ export default function Messages() {
                   </div>
                   <div>
                     <Label htmlFor="attachment">Attachment (optional)</Label>
-                    <Input
+                    <input
                       id="attachment"
                       type="file"
                       onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                       accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar,.xls,.xlsx,.csv"
+                      className="block w-full text-sm text-gray-500 mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-acclaim-teal file:text-white hover:file:bg-acclaim-teal/90 file:cursor-pointer cursor-pointer"
                     />
                     {selectedFile && (
                       <p className="text-sm text-gray-600 mt-1">
