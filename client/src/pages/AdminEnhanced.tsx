@@ -1877,6 +1877,7 @@ export default function AdminEnhanced() {
   // Search filter state
   const [userSearchFilter, setUserSearchFilter] = useState("");
   const [orgSearchFilter, setOrgSearchFilter] = useState("");
+  const [userTypeFilter, setUserTypeFilter] = useState<"all" | "admin" | "user">("all");
 
   // Fetch users with their organisations
   const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery({
@@ -2408,20 +2409,26 @@ export default function AdminEnhanced() {
     );
   }
 
-  // Filter users by search term
-  const filteredUsers = userSearchFilter.trim()
-    ? users.filter((user: User) => {
-        const search = userSearchFilter.toLowerCase();
-        return (
-          user.firstName?.toLowerCase().includes(search) ||
-          user.lastName?.toLowerCase().includes(search) ||
-          user.email?.toLowerCase().includes(search) ||
-          user.id?.toLowerCase().includes(search) ||
-          user.organisationName?.toLowerCase().includes(search) ||
-          (user as any).organisations?.some((org: Organisation) => org.name.toLowerCase().includes(search))
-        );
-      })
-    : users;
+  // Filter users by search term and user type
+  const filteredUsers = users.filter((user: User) => {
+    // Filter by user type
+    if (userTypeFilter === "admin" && !user.isAdmin) return false;
+    if (userTypeFilter === "user" && user.isAdmin) return false;
+    
+    // Filter by search term
+    if (userSearchFilter.trim()) {
+      const search = userSearchFilter.toLowerCase();
+      return (
+        user.firstName?.toLowerCase().includes(search) ||
+        user.lastName?.toLowerCase().includes(search) ||
+        user.email?.toLowerCase().includes(search) ||
+        user.id?.toLowerCase().includes(search) ||
+        user.organisationName?.toLowerCase().includes(search) ||
+        (user as any).organisations?.some((org: Organisation) => org.name.toLowerCase().includes(search))
+      );
+    }
+    return true;
+  });
 
   // Filter organisations by search term
   const filteredOrgs = orgSearchFilter.trim()
@@ -2783,9 +2790,25 @@ export default function AdminEnhanced() {
                     className="pl-10"
                   />
                 </div>
+                <Select 
+                  value={userTypeFilter} 
+                  onValueChange={(value: "all" | "admin" | "user") => {
+                    setUserTypeFilter(value);
+                    setUsersPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-full sm:w-36">
+                    <SelectValue placeholder="All Users" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Users</SelectItem>
+                    <SelectItem value="admin">Admins Only</SelectItem>
+                    <SelectItem value="user">Non-Admins Only</SelectItem>
+                  </SelectContent>
+                </Select>
                 <div className="text-sm text-gray-600">
                   Showing {paginatedUsers.length} of {filteredUsers?.length || 0} users
-                  {userSearchFilter && ` (filtered from ${users?.length || 0})`}
+                  {(userSearchFilter || userTypeFilter !== "all") && ` (filtered from ${users?.length || 0})`}
                 </div>
               </div>
               {/* Mobile Card Layout */}
