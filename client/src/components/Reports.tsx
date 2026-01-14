@@ -283,7 +283,7 @@ export default function Reports() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center text-base">
+            <CardTitle className="font-semibold tracking-tight flex items-center text-[24px]">
               <PoundSterling className="h-4 w-4 mr-2 text-green-600" />
               Recent Payments Received
             </CardTitle>
