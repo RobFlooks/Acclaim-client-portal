@@ -1112,34 +1112,39 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* Case Actions Bar - Mobile Friendly */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+        <div className="flex items-center gap-2">
+          <Bell className={`h-4 w-4 ${muteStatus?.muted ? 'text-gray-400' : 'text-acclaim-teal'}`} />
+          <span className="text-sm font-medium text-gray-700">Case Notifications</span>
+          <Switch
+            checked={!muteStatus?.muted}
+            onCheckedChange={() => handleToggleMute()}
+            disabled={muteCaseMutation.isPending || unmuteCaseMutation.isPending || muteStatusLoading}
+            title={muteStatus?.muted ? "Turn on notifications for this case" : "Turn off notifications for this case"}
+          />
+          <span className="text-xs text-gray-500">
+            {muteStatusLoading ? "Loading..." : muteStatus?.muted ? "Off" : "On"}
+          </span>
+        </div>
+        <Button 
+          onClick={handlePrintCase}
+          variant="outline"
+          size="sm"
+          className="border-acclaim-teal text-acclaim-teal hover:bg-acclaim-teal hover:text-white w-full sm:w-auto"
+        >
+          <Printer className="h-4 w-4 mr-2" />
+          Print Case PDF
+        </Button>
+      </div>
+
       {/* Case Header */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <CardTitle className="text-xl">{caseData.caseName}</CardTitle>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-md bg-gray-50">
-                <Bell className={`h-4 w-4 ${muteStatus?.muted ? 'text-gray-400' : 'text-acclaim-teal'}`} />
-                <span className="text-sm text-gray-600">Notifications</span>
-                <Switch
-                  checked={!muteStatus?.muted}
-                  onCheckedChange={() => handleToggleMute()}
-                  disabled={muteCaseMutation.isPending || unmuteCaseMutation.isPending || muteStatusLoading}
-                  title={muteStatus?.muted ? "Turn on notifications for this case" : "Turn off notifications for this case"}
-                />
-              </div>
-              <Button 
-                onClick={handlePrintCase}
-                variant="outline"
-                size="sm"
-                className="border-acclaim-teal text-acclaim-teal hover:bg-acclaim-teal hover:text-white"
-              >
-                <Printer className="h-4 w-4 mr-2" />
-                Print Case PDF
-              </Button>
-              {getStageBadge(caseData.status, caseData.stage)}
-            </div>
+            {getStageBadge(caseData.status, caseData.stage)}
           </div>
         </CardHeader>
         <CardContent>
