@@ -211,6 +211,18 @@ interface CaseSubmissionNotificationData {
   }>;
 }
 
+interface DocumentUploadNotificationData {
+  uploaderName: string;
+  uploaderEmail: string;
+  organisationName: string;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  caseReference?: string;
+  caseName?: string;
+  uploadedAt: Date;
+}
+
 class SendGridEmailService {
   private initialized = false;
 
@@ -1601,6 +1613,239 @@ A detailed Excel spreadsheet and all uploaded files are attached to this email.
       return result;
     } catch (error) {
       console.error('❌ Failed to send case submission notification via SendGrid:', error);
+      return false;
+    }
+  }
+
+  // Send document upload notification to admin (when user uploads)
+  async sendDocumentUploadNotificationToAdmin(data: DocumentUploadNotificationData, adminEmail: string): Promise<boolean> {
+    if (!this.initialized) {
+      console.log('❌ SendGrid not configured - document upload notification not sent');
+      return false;
+    }
+
+    try {
+      const subject = data.caseReference 
+        ? `New Document Uploaded [${data.caseReference}] - Acclaim Portal`
+        : `New Document Uploaded - ${data.organisationName} - Acclaim Portal`;
+
+      const formatFileSize = (bytes: number) => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+      };
+
+      const htmlContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
+          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 30px; text-align: center;">
+            <div style="margin-bottom: 10px;">
+              <img src="cid:logo" alt="Acclaim Credit Management & Recovery" style="height: 40px; width: auto;" />
+            </div>
+            <p style="margin: 0; opacity: 0.9; font-size: 16px;">New document uploaded</p>
+          </div>
+          
+          <div style="padding: 30px;">
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <h2 style="color: #1e293b; margin-top: 0;">Document Upload Details</h2>
+              <table style="width: 100%; border-spacing: 0;">
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 140px;">Uploaded By:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.uploaderName} (${data.uploaderEmail})</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Organisation:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.organisationName}</td>
+                </tr>
+                ${data.caseReference ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Case Reference:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseReference}</td>
+                </tr>
+                ` : ''}
+                ${data.caseName ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Case Name:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseName}</td>
+                </tr>
+                ` : ''}
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">File Name:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.fileName}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">File Size:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${formatFileSize(data.fileSize)}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">File Type:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.fileType}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Uploaded:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.uploadedAt.toLocaleString('en-GB')}</td>
+                </tr>
+              </table>
+            </div>
+
+            <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; text-align: center;">
+              <p style="margin: 0 0 15px 0; color: #64748b;">
+                Please log in to the Acclaim Portal to view this document.
+              </p>
+            </div>
+          </div>
+
+          <div style="background: #e2e8f0; padding: 20px; text-align: center; color: #64748b; font-size: 14px;">
+            <p style="margin: 0;">This is an automated notification from Acclaim Credit Management & Recovery</p>
+          </div>
+        </div>
+      `;
+
+      const textContent = `
+New Document Uploaded
+
+Uploaded By: ${data.uploaderName} (${data.uploaderEmail})
+Organisation: ${data.organisationName}
+${data.caseReference ? `Case Reference: ${data.caseReference}` : ''}
+${data.caseName ? `Case Name: ${data.caseName}` : ''}
+File Name: ${data.fileName}
+File Size: ${formatFileSize(data.fileSize)}
+File Type: ${data.fileType}
+Uploaded: ${data.uploadedAt.toLocaleString('en-GB')}
+
+Please log in to the Acclaim Portal to view this document.
+      `;
+
+      const attachments: Array<{ content: string; filename: string; type: string; disposition?: string; content_id?: string }> = [];
+      const logoBase64 = getLogoBase64();
+      if (logoBase64) {
+        attachments.push(logoBase64);
+      }
+
+      return await this.sendViaAPIM({
+        to: adminEmail,
+        subject: subject,
+        textContent: textContent,
+        htmlContent: htmlContent,
+        attachments: attachments
+      });
+    } catch (error) {
+      console.error('❌ Failed to send document upload notification to admin:', error);
+      return false;
+    }
+  }
+
+  // Send document upload notification to user (when admin uploads)
+  async sendDocumentUploadNotificationToUser(data: DocumentUploadNotificationData, userEmail: string): Promise<boolean> {
+    if (!this.initialized) {
+      console.log('❌ SendGrid not configured - document upload notification not sent');
+      return false;
+    }
+
+    try {
+      const subject = data.caseReference 
+        ? `New Document Available [${data.caseReference}] - Acclaim Portal`
+        : `New Document Available - Acclaim Portal`;
+
+      const formatFileSize = (bytes: number) => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+      };
+
+      const htmlContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
+          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 30px; text-align: center;">
+            <div style="margin-bottom: 10px;">
+              <img src="cid:logo" alt="Acclaim Credit Management & Recovery" style="height: 40px; width: auto;" />
+            </div>
+            <p style="margin: 0; opacity: 0.9; font-size: 16px;">New document available</p>
+          </div>
+          
+          <div style="padding: 30px;">
+            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+              <h2 style="color: #1e293b; margin-top: 0;">Document Details</h2>
+              <table style="width: 100%; border-spacing: 0;">
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 140px;">From:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">Acclaim Credit Management</td>
+                </tr>
+                ${data.caseReference ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Case Reference:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseReference}</td>
+                </tr>
+                ` : ''}
+                ${data.caseName ? `
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Case Name:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.caseName}</td>
+                </tr>
+                ` : ''}
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">File Name:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.fileName}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">File Size:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${formatFileSize(data.fileSize)}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Uploaded:</td>
+                  <td style="padding: 8px 0; color: #1e293b;">${data.uploadedAt.toLocaleString('en-GB')}</td>
+                </tr>
+              </table>
+            </div>
+
+            <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; text-align: center;">
+              <p style="margin: 0 0 15px 0; color: #64748b;">
+                A new document has been uploaded to your portal. Please log in to view and download it.
+              </p>
+              <a href="https://acclaim-api.azurewebsites.net/auth" style="display: inline-block; background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 16px;">
+                View in Portal
+              </a>
+            </div>
+          </div>
+
+          <div style="background: #e2e8f0; padding: 20px; text-align: center; color: #64748b; font-size: 14px;">
+            <p style="margin: 0;">This is an automated notification from Acclaim Credit Management & Recovery</p>
+          </div>
+        </div>
+      `;
+
+      const textContent = `
+New Document Available
+
+A new document has been uploaded to your portal.
+
+${data.caseReference ? `Case Reference: ${data.caseReference}` : ''}
+${data.caseName ? `Case Name: ${data.caseName}` : ''}
+File Name: ${data.fileName}
+File Size: ${formatFileSize(data.fileSize)}
+Uploaded: ${data.uploadedAt.toLocaleString('en-GB')}
+
+Please log in to the Acclaim Portal to view and download this document.
+Portal: https://acclaim-api.azurewebsites.net/auth
+      `;
+
+      const attachments: Array<{ content: string; filename: string; type: string; disposition?: string; content_id?: string }> = [];
+      const logoBase64 = getLogoBase64();
+      if (logoBase64) {
+        attachments.push(logoBase64);
+      }
+
+      return await this.sendViaAPIM({
+        to: userEmail,
+        subject: subject,
+        textContent: textContent,
+        htmlContent: htmlContent,
+        attachments: attachments
+      });
+    } catch (error) {
+      console.error('❌ Failed to send document upload notification to user:', error);
       return false;
     }
   }

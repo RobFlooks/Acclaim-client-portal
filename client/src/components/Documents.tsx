@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText, Download, Search, Upload, Calendar, User, Trash2, X, ChevronLeft, ChevronRight } from "lucide-react";
@@ -19,6 +20,7 @@ export default function Documents() {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedCaseId, setSelectedCaseId] = useState<string>("");
+  const [notifyOnUpload, setNotifyOnUpload] = useState(true);
   const [selectedCase, setSelectedCase] = useState<any>(null);
   const [caseDetailsOpen, setCaseDetailsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -108,10 +110,16 @@ export default function Documents() {
   }, [searchTerm]);
 
   const uploadDocumentMutation = useMutation({
-    mutationFn: async ({ file, caseId }: { file: File; caseId: string }) => {
+    mutationFn: async ({ file, caseId, notify }: { file: File; caseId: string; notify: boolean }) => {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("caseId", caseId);
+      // Admin uploads notify users, regular users notify admin
+      if (user?.isAdmin) {
+        formData.append("notifyUsers", notify.toString());
+      } else {
+        formData.append("notifyAdmin", notify.toString());
+      }
 
       const response = await fetch("/api/documents/upload", {
         method: "POST",
@@ -129,6 +137,7 @@ export default function Documents() {
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       setSelectedFile(null);
       setSelectedCaseId("");
+      setNotifyOnUpload(true);
       setUploadDialogOpen(false);
       toast({
         title: "Success",
@@ -207,13 +216,14 @@ export default function Documents() {
       return;
     }
 
-    uploadDocumentMutation.mutate({ file: selectedFile, caseId: selectedCaseId });
+    uploadDocumentMutation.mutate({ file: selectedFile, caseId: selectedCaseId, notify: notifyOnUpload });
   };
 
   const handleCloseUploadDialog = () => {
     setUploadDialogOpen(false);
     setSelectedFile(null);
     setSelectedCaseId("");
+    setNotifyOnUpload(true);
   };
 
   const handleCaseClick = (caseId: number) => {
@@ -331,6 +341,16 @@ export default function Documents() {
                         </Button>
                       </div>
                     )}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="notify-upload"
+                      checked={notifyOnUpload}
+                      onCheckedChange={(checked) => setNotifyOnUpload(checked === true)}
+                    />
+                    <Label htmlFor="notify-upload" className="text-sm cursor-pointer">
+                      {user?.isAdmin ? "Notify users" : "Notify admin"}
+                    </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Button

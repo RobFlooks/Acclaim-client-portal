@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/use-theme";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -81,6 +82,7 @@ export default function UserProfile() {
   const [isUploading, setIsUploading] = useState(false);
   const [documentSearch, setDocumentSearch] = useState("");
   const [selectedOrgForUpload, setSelectedOrgForUpload] = useState<string>("");
+  const [notifyOnUpload, setNotifyOnUpload] = useState(true);
 
   // Fetch user profile data
   const { data: userProfile, isLoading: profileLoading } = useQuery<UserData>({
@@ -319,6 +321,12 @@ export default function UserProfile() {
       const formData = new FormData();
       formData.append("file", selectedFile);
       formData.append("organisationId", orgId.toString());
+      // Admin uploads notify users, regular users notify admin
+      if (userProfile?.isAdmin) {
+        formData.append("notifyUsers", notifyOnUpload.toString());
+      } else {
+        formData.append("notifyAdmin", notifyOnUpload.toString());
+      }
 
       const response = await fetch("/api/organisation/documents/upload", {
         method: "POST",
@@ -336,6 +344,7 @@ export default function UserProfile() {
         description: "Document uploaded successfully",
       });
       setSelectedFile(null);
+      setNotifyOnUpload(true);
       queryClient.invalidateQueries({ queryKey: ["/api/organisation/documents"] });
     } catch (error: any) {
       toast({
@@ -860,6 +869,16 @@ export default function UserProfile() {
                       <Upload className="h-4 w-4 mr-2" />
                       {isUploading ? "Uploading..." : "Upload"}
                     </Button>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="notify-org-upload"
+                      checked={notifyOnUpload}
+                      onCheckedChange={(checked) => setNotifyOnUpload(checked === true)}
+                    />
+                    <Label htmlFor="notify-org-upload" className="text-sm cursor-pointer">
+                      {userProfile?.isAdmin ? "Notify users" : "Notify admin"}
+                    </Label>
                   </div>
                   {selectedFile && (
                     <p className="text-sm text-gray-600">

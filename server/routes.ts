@@ -1415,6 +1415,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
         organisationId: caseOrgId!,
       });
 
+      // Handle email notifications
+      const notifyAdmin = req.body.notifyAdmin === 'true' || req.body.notifyAdmin === true;
+      const notifyUsers = req.body.notifyUsers === 'true' || req.body.notifyUsers === true;
+      
+      // Get organisation name for email
+      const org = await storage.getOrganisation(caseOrgId!);
+      const organisationName = org?.name || 'Unknown Organisation';
+      
+      if (!user.isAdmin && notifyAdmin) {
+        // User uploaded - notify admins
+        try {
+          await sendGridEmailService.sendDocumentUploadNotificationToAdmin({
+            uploaderName: `${user.firstName} ${user.lastName}`,
+            uploaderEmail: user.email,
+            organisationName,
+            fileName: req.file.originalname,
+            fileSize: req.file.size,
+            fileType: req.file.mimetype,
+            caseReference: case_.accountNumber,
+            caseName: case_.caseName,
+            uploadedAt: new Date(),
+          }, 'email@acclaim.law');
+          console.log('[Documents] Sent document upload notification to admin');
+        } catch (emailError) {
+          console.error('[Documents] Failed to send admin notification:', emailError);
+        }
+      } else if (user.isAdmin && notifyUsers) {
+        // Admin uploaded - notify users in the organisation who have notifications enabled
+        try {
+          const orgUsers = await storage.getUsersByOrganisation(caseOrgId!);
+          for (const orgUser of orgUsers) {
+            if (!orgUser.isAdmin && orgUser.emailNotifications !== false) {
+              await sendGridEmailService.sendDocumentUploadNotificationToUser({
+                uploaderName: 'Acclaim Credit Management',
+                uploaderEmail: 'email@acclaim.law',
+                organisationName,
+                fileName: req.file.originalname,
+                fileSize: req.file.size,
+                fileType: req.file.mimetype,
+                caseReference: case_.accountNumber,
+                caseName: case_.caseName,
+                uploadedAt: new Date(),
+              }, orgUser.email);
+              console.log(`[Documents] Sent document upload notification to user: ${orgUser.email}`);
+            }
+          }
+        } catch (emailError) {
+          console.error('[Documents] Failed to send user notifications:', emailError);
+        }
+      }
+
       res.json(document);
     } catch (error) {
       console.error("Error uploading document:", error);
@@ -1525,6 +1576,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
         uploadedBy: userId,
         organisationId: targetOrgId,
       });
+
+      // Handle email notifications
+      const notifyAdmin = req.body.notifyAdmin === 'true' || req.body.notifyAdmin === true;
+      const notifyUsers = req.body.notifyUsers === 'true' || req.body.notifyUsers === true;
+      
+      // Get organisation name for email
+      const org = await storage.getOrganisation(targetOrgId);
+      const organisationName = org?.name || 'Unknown Organisation';
+      
+      if (!user.isAdmin && notifyAdmin) {
+        // User uploaded - notify admins
+        try {
+          await sendGridEmailService.sendDocumentUploadNotificationToAdmin({
+            uploaderName: `${user.firstName} ${user.lastName}`,
+            uploaderEmail: user.email,
+            organisationName,
+            fileName: req.file.originalname,
+            fileSize: req.file.size,
+            fileType: req.file.mimetype,
+            uploadedAt: new Date(),
+          }, 'email@acclaim.law');
+          console.log('[OrgDocuments] Sent document upload notification to admin');
+        } catch (emailError) {
+          console.error('[OrgDocuments] Failed to send admin notification:', emailError);
+        }
+      } else if (user.isAdmin && notifyUsers) {
+        // Admin uploaded - notify users in the organisation who have notifications enabled
+        try {
+          const orgUsers = await storage.getUsersByOrganisation(targetOrgId);
+          for (const orgUser of orgUsers) {
+            if (!orgUser.isAdmin && orgUser.emailNotifications !== false) {
+              await sendGridEmailService.sendDocumentUploadNotificationToUser({
+                uploaderName: 'Acclaim Credit Management',
+                uploaderEmail: 'email@acclaim.law',
+                organisationName,
+                fileName: req.file.originalname,
+                fileSize: req.file.size,
+                fileType: req.file.mimetype,
+                uploadedAt: new Date(),
+              }, orgUser.email);
+              console.log(`[OrgDocuments] Sent document upload notification to user: ${orgUser.email}`);
+            }
+          }
+        } catch (emailError) {
+          console.error('[OrgDocuments] Failed to send user notifications:', emailError);
+        }
+      }
 
       res.json(document);
     } catch (error) {
