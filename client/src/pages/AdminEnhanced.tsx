@@ -1997,6 +1997,21 @@ export default function AdminEnhanced() {
     name: "",
     externalRef: "",
   });
+  
+  // Org-level scheduled report state
+  const [showOrgScheduleDialog, setShowOrgScheduleDialog] = useState(false);
+  const [selectedOrgForSchedule, setSelectedOrgForSchedule] = useState<Organisation | null>(null);
+  const [orgScheduleForm, setOrgScheduleForm] = useState({
+    recipientEmail: '',
+    recipientName: '',
+    frequency: 'weekly' as 'daily' | 'weekly' | 'monthly',
+    dayOfWeek: 1,
+    dayOfMonth: 1,
+    timeOfDay: 9,
+    includeCaseSummary: true,
+    includeActivityReport: true,
+    caseStatusFilter: 'active' as 'active' | 'all' | 'closed',
+  });
 
   // State for user management
   const [showCreateUser, setShowCreateUser] = useState(false);
@@ -2154,23 +2169,35 @@ export default function AdminEnhanced() {
     },
   });
 
-  // Toggle scheduled reports for organisation
-  const toggleScheduledReportsMutation = useMutation({
-    mutationFn: async ({ orgId, enabled }: { orgId: number; enabled: boolean }) => {
-      const response = await apiRequest("PUT", `/api/admin/organisations/${orgId}/scheduled-reports`, { enabled });
+  // Create org-level scheduled report with custom email
+  const createOrgScheduledReportMutation = useMutation({
+    mutationFn: async (data: {
+      organisationId: number;
+      recipientEmail: string;
+      recipientName: string;
+      frequency: string;
+      dayOfWeek?: number;
+      dayOfMonth?: number;
+      timeOfDay: number;
+      includeCaseSummary: boolean;
+      includeActivityReport: boolean;
+      caseStatusFilter: string;
+    }) => {
+      const response = await apiRequest("POST", `/api/admin/organisations/${data.organisationId}/scheduled-reports`, data);
       return await response.json();
     },
-    onSuccess: (_, { enabled }) => {
+    onSuccess: () => {
       toast({
         title: "Success",
-        description: `Scheduled reports ${enabled ? 'enabled' : 'disabled'} for this organisation`,
+        description: "Scheduled report created successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/organisations"] });
+      setShowOrgScheduleDialog(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/scheduled-reports"] });
     },
     onError: () => {
       toast({
         title: "Error",
-        description: "Failed to update scheduled reports setting",
+        description: "Failed to create scheduled report",
         variant: "destructive",
       });
     },
@@ -3789,7 +3816,6 @@ export default function AdminEnhanced() {
                   <TableRow>
                     <TableHead>Organisation</TableHead>
                     <TableHead>Users</TableHead>
-                    <TableHead>Scheduled Reports</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -3805,31 +3831,33 @@ export default function AdminEnhanced() {
                         <Badge variant="outline">{org.userCount} users</Badge>
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            toggleScheduledReportsMutation.mutate({ 
-                              orgId: org.id, 
-                              enabled: !(org.scheduledReportsEnabled !== false) 
-                            });
-                          }}
-                          disabled={toggleScheduledReportsMutation.isPending}
-                          title={org.scheduledReportsEnabled !== false ? "Click to disable scheduled reports for this organisation" : "Click to enable scheduled reports for this organisation"}
-                          className={org.scheduledReportsEnabled !== false ? "text-green-600 hover:text-green-700" : "text-gray-400 hover:text-gray-500"}
-                        >
-                          {org.scheduledReportsEnabled !== false ? (
-                            <><Calendar className="h-4 w-4 mr-1" /> Enabled</>
-                          ) : (
-                            <><CalendarOff className="h-4 w-4 mr-1" /> Disabled</>
-                          )}
-                        </Button>
-                      </TableCell>
-                      <TableCell>
                         {new Date(org.createdAt).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedOrgForSchedule(org);
+                              setOrgScheduleForm({
+                                recipientEmail: '',
+                                recipientName: '',
+                                frequency: 'weekly',
+                                dayOfWeek: 1,
+                                dayOfMonth: 1,
+                                timeOfDay: 9,
+                                includeCaseSummary: true,
+                                includeActivityReport: true,
+                                caseStatusFilter: 'active',
+                              });
+                              setShowOrgScheduleDialog(true);
+                            }}
+                            title="Schedule a report for this organisation"
+                            className="text-acclaim-teal hover:text-acclaim-teal/80"
+                          >
+                            <Calendar className="h-3 w-3" />
+                          </Button>
                           <Button 
                             variant="outline" 
                             size="sm"
@@ -3971,6 +3999,178 @@ export default function AdminEnhanced() {
               className="bg-acclaim-teal hover:bg-acclaim-teal/90"
             >
               {updateOrganisationMutation.isPending ? "Updating..." : "Update"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Org-level Scheduled Report Dialog */}
+      <Dialog open={showOrgScheduleDialog} onOpenChange={setShowOrgScheduleDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Schedule Report for {selectedOrgForSchedule?.name}</DialogTitle>
+            <DialogDescription>
+              Create a scheduled report for this organisation. The report will be sent to the email address you specify.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
+            <div className="space-y-2">
+              <Label htmlFor="recipientEmail">Recipient Email *</Label>
+              <Input
+                id="recipientEmail"
+                type="email"
+                value={orgScheduleForm.recipientEmail}
+                onChange={(e) => setOrgScheduleForm({ ...orgScheduleForm, recipientEmail: e.target.value })}
+                placeholder="email@example.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="recipientName">Recipient Name</Label>
+              <Input
+                id="recipientName"
+                value={orgScheduleForm.recipientName}
+                onChange={(e) => setOrgScheduleForm({ ...orgScheduleForm, recipientName: e.target.value })}
+                placeholder="Contact Name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Frequency</Label>
+              <Select 
+                value={orgScheduleForm.frequency} 
+                onValueChange={(value: 'daily' | 'weekly' | 'monthly') => setOrgScheduleForm({ ...orgScheduleForm, frequency: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {orgScheduleForm.frequency === 'weekly' && (
+              <div className="space-y-2">
+                <Label>Day of Week</Label>
+                <Select 
+                  value={String(orgScheduleForm.dayOfWeek)} 
+                  onValueChange={(value) => setOrgScheduleForm({ ...orgScheduleForm, dayOfWeek: parseInt(value) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Sunday</SelectItem>
+                    <SelectItem value="1">Monday</SelectItem>
+                    <SelectItem value="2">Tuesday</SelectItem>
+                    <SelectItem value="3">Wednesday</SelectItem>
+                    <SelectItem value="4">Thursday</SelectItem>
+                    <SelectItem value="5">Friday</SelectItem>
+                    <SelectItem value="6">Saturday</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {orgScheduleForm.frequency === 'monthly' && (
+              <div className="space-y-2">
+                <Label>Day of Month</Label>
+                <Select 
+                  value={String(orgScheduleForm.dayOfMonth)} 
+                  onValueChange={(value) => setOrgScheduleForm({ ...orgScheduleForm, dayOfMonth: parseInt(value) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 28 }, (_, i) => i + 1).map(day => (
+                      <SelectItem key={day} value={String(day)}>{day}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label>Time of Day (Hour)</Label>
+              <Select 
+                value={String(orgScheduleForm.timeOfDay)} 
+                onValueChange={(value) => setOrgScheduleForm({ ...orgScheduleForm, timeOfDay: parseInt(value) })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 24 }, (_, i) => i).map(hour => (
+                    <SelectItem key={hour} value={String(hour)}>
+                      {hour.toString().padStart(2, '0')}:00
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Case Status Filter</Label>
+              <Select 
+                value={orgScheduleForm.caseStatusFilter} 
+                onValueChange={(value: 'active' | 'all' | 'closed') => setOrgScheduleForm({ ...orgScheduleForm, caseStatusFilter: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active Cases Only</SelectItem>
+                  <SelectItem value="all">All Cases</SelectItem>
+                  <SelectItem value="closed">Closed Cases Only</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="includeCaseSummary"
+                checked={orgScheduleForm.includeCaseSummary}
+                onCheckedChange={(checked) => setOrgScheduleForm({ ...orgScheduleForm, includeCaseSummary: checked })}
+              />
+              <Label htmlFor="includeCaseSummary">Include Case Summary</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="includeActivityReport"
+                checked={orgScheduleForm.includeActivityReport}
+                onCheckedChange={(checked) => setOrgScheduleForm({ ...orgScheduleForm, includeActivityReport: checked })}
+              />
+              <Label htmlFor="includeActivityReport">Include Activity Report (Messages)</Label>
+            </div>
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => setShowOrgScheduleDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (!orgScheduleForm.recipientEmail || !selectedOrgForSchedule) {
+                  toast({
+                    title: "Error",
+                    description: "Please enter a recipient email address",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                createOrgScheduledReportMutation.mutate({
+                  organisationId: selectedOrgForSchedule.id,
+                  recipientEmail: orgScheduleForm.recipientEmail,
+                  recipientName: orgScheduleForm.recipientName,
+                  frequency: orgScheduleForm.frequency,
+                  dayOfWeek: orgScheduleForm.frequency === 'weekly' ? orgScheduleForm.dayOfWeek : undefined,
+                  dayOfMonth: orgScheduleForm.frequency === 'monthly' ? orgScheduleForm.dayOfMonth : undefined,
+                  timeOfDay: orgScheduleForm.timeOfDay,
+                  includeCaseSummary: orgScheduleForm.includeCaseSummary,
+                  includeActivityReport: orgScheduleForm.includeActivityReport,
+                  caseStatusFilter: orgScheduleForm.caseStatusFilter,
+                });
+              }}
+              disabled={createOrgScheduledReportMutation.isPending}
+              className="bg-acclaim-teal hover:bg-acclaim-teal/90"
+            >
+              {createOrgScheduledReportMutation.isPending ? "Creating..." : "Create Schedule"}
             </Button>
           </div>
         </DialogContent>
