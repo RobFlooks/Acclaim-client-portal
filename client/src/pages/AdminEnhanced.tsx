@@ -437,7 +437,8 @@ function CaseManagementTab() {
     mutationFn: async ({ caseId, blockedUserIds }: { caseId: number; blockedUserIds: string[] }) => {
       return await apiRequest('POST', `/api/admin/cases/${caseId}/access-restrictions`, { blockedUserIds });
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/cases', variables.caseId, 'access-restrictions'] });
       toast({
         title: "Access Updated",
         description: "Case visibility restrictions have been updated.",
