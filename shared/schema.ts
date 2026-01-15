@@ -83,6 +83,18 @@ export const mutedCases = pgTable("muted_cases", {
   index("idx_muted_cases_case_id").on(table.caseId),
 ]);
 
+// Case access restrictions - allows admins to hide cases from specific users
+export const caseAccessRestrictions = pgTable("case_access_restrictions", {
+  id: serial("id").primaryKey(),
+  caseId: integer("case_id").notNull().references(() => cases.id, { onDelete: "cascade" }),
+  blockedUserId: varchar("blocked_user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdBy: varchar("created_by", { length: 255 }).references(() => users.id), // Admin who created the restriction
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_case_access_restrictions_case_id").on(table.caseId),
+  index("idx_case_access_restrictions_user_id").on(table.blockedUserId),
+]);
+
 // Case submissions table (for capturing submissions before they become actual cases)
 export const caseSubmissions = pgTable("case_submissions", {
   id: serial("id").primaryKey(),
