@@ -426,7 +426,7 @@ class SendGridEmailService {
                       
                       <!-- CTA Button -->
                       <div style="text-align: center;">
-                        <a href="https://acclaim-api.azurewebsites.net/auth" style="display: inline-block; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(0,139,139,0.3);">
+                        <a href="https://acclaim-api.azurewebsites.net/auth" style="display: inline-block; background-color: #008b8b; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); color: #ffffff !important; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(0,139,139,0.3);">
                           View in Portal →
                         </a>
                       </div>
@@ -534,6 +534,13 @@ Portal: https://acclaim-api.azurewebsites.net/auth
                   <!-- Body -->
                   <tr>
                     <td style="padding: 40px;">
+                      
+                      <!-- Email Type Badge -->
+                      <div style="text-align: center; margin-bottom: 30px;">
+                        <span style="display: inline-block; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                          User Message
+                        </span>
+                      </div>
                       
                       <!-- Sender Info Card -->
                       <div style="background: #f8fafb; border-radius: 12px; padding: 24px; margin-bottom: 24px; border-left: 4px solid #008b8b;">
@@ -734,6 +741,13 @@ Please log in to the Acclaim Portal to view and respond to this message.
                   <tr>
                     <td style="padding: 40px;">
                       
+                      <!-- Email Type Badge -->
+                      <div style="text-align: center; margin-bottom: 30px;">
+                        <span style="display: inline-block; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                          Admin Message
+                        </span>
+                      </div>
+                      
                       <!-- Info Card -->
                       <div style="background: #f8fafb; border-radius: 12px; padding: 24px; margin-bottom: 24px; border-left: 4px solid #008b8b;">
                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
@@ -788,7 +802,7 @@ Please log in to the Acclaim Portal to view and respond to this message.
                       
                       <!-- CTA Button -->
                       <div style="text-align: center;">
-                        <a href="https://acclaim-api.azurewebsites.net/auth" style="display: inline-block; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(0,139,139,0.3);">
+                        <a href="https://acclaim-api.azurewebsites.net/auth" style="display: inline-block; background-color: #008b8b; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); color: #ffffff !important; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(0,139,139,0.3);">
                           View in Portal →
                         </a>
                       </div>
@@ -896,6 +910,13 @@ Portal: https://acclaim-api.azurewebsites.net/auth
                   <tr>
                     <td style="padding: 40px;">
                       
+                      <!-- Email Type Badge -->
+                      <div style="text-align: center; margin-bottom: 30px;">
+                        <span style="display: inline-block; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                          New Account
+                        </span>
+                      </div>
+                      
                       <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">Hello ${data.firstName},</p>
                       <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">Welcome to the Acclaim Credit Management & Recovery Portal! Your account has been created and you can now access the system to view and manage your cases.</p>
                       
@@ -911,7 +932,7 @@ Portal: https://acclaim-api.azurewebsites.net/auth
                       
                       <!-- CTA Button -->
                       <div style="text-align: center; margin-bottom: 30px;">
-                        <a href="${portalUrl}" style="display: inline-block; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(0,139,139,0.3);">
+                        <a href="${portalUrl}" style="display: inline-block; background-color: #008b8b; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); color: #ffffff !important; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(0,139,139,0.3);">
                           Access the Portal →
                         </a>
                       </div>
@@ -933,7 +954,7 @@ Portal: https://acclaim-api.azurewebsites.net/auth
                       <!-- Note Card -->
                       <div style="background: #e0f7f6; border-radius: 12px; padding: 20px; margin-bottom: 16px;">
                         <p style="color: #00695c; margin: 0; font-size: 14px; line-height: 1.6;">
-                          <strong>Note:</strong> Your temporary password will be sent in a separate email for security purposes.
+                          <strong>Note:</strong> Your temporary password will be sent in a separate email for security purposes. If you don't receive it within 5 minutes, please check your spam or junk folder.
                         </p>
                       </div>
                       
@@ -1034,15 +1055,20 @@ If you have any questions, please contact our support team.
                   <tr>
                     <td style="padding: 40px;">
                       
+                      <!-- Email Type Badge -->
+                      <div style="text-align: center; margin-bottom: 30px;">
+                        <span style="display: inline-block; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                          Account Setup
+                        </span>
+                      </div>
+                      
                       <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">Hello ${data.firstName},</p>
                       <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">Here is your temporary password to access the Acclaim Portal:</p>
                       
                       <!-- Password Display -->
                       <div style="background: #f8fafb; border-radius: 12px; padding: 30px; margin-bottom: 24px; text-align: center;">
                         <p style="color: #64748b; margin: 0 0 12px 0; font-size: 13px;">Your temporary password:</p>
-                        <div style="font-size: 28px; font-weight: bold; color: #008b8b; font-family: monospace; letter-spacing: 3px; background: white; padding: 20px; border-radius: 8px; border: 2px solid #008b8b;">
-                          ${data.temporaryPassword}
-                        </div>
+                        <div style="font-size: 28px; font-weight: bold; color: #008b8b; font-family: monospace; letter-spacing: 3px; background: white; padding: 20px; border-radius: 8px; border: 2px solid #008b8b;">${data.temporaryPassword}</div>
                       </div>
 
                       <!-- Warning Card -->
@@ -1169,15 +1195,20 @@ If you have any questions, please contact our support team.
                   <tr>
                     <td style="padding: 40px;">
                       
+                      <!-- Email Type Badge -->
+                      <div style="text-align: center; margin-bottom: 30px;">
+                        <span style="display: inline-block; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                          Security
+                        </span>
+                      </div>
+                      
                       <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">Hello ${data.userName},</p>
                       <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">We received a request to reset your password. Use the code below to complete the process:</p>
                       
                       <!-- OTP Code Display -->
                       <div style="background: #f8fafb; border-radius: 12px; padding: 30px; margin-bottom: 24px; text-align: center;">
                         <p style="color: #64748b; margin: 0 0 12px 0; font-size: 13px;">Your one-time code:</p>
-                        <div style="font-size: 36px; font-weight: bold; color: #008b8b; font-family: monospace; letter-spacing: 8px; background: white; padding: 20px; border-radius: 8px; border: 2px solid #008b8b;">
-                          ${data.otp}
-                        </div>
+                        <div style="font-size: 36px; font-weight: bold; color: #008b8b; font-family: monospace; letter-spacing: 8px; background: white; padding: 20px; border-radius: 8px; border: 2px solid #008b8b;">${data.otp}</div>
                         <p style="color: #94a3b8; margin: 16px 0 0 0; font-size: 13px;">
                           Expires in ${data.expiresInMinutes} minutes
                         </p>
@@ -1497,6 +1528,13 @@ Need help? Contact us at email@acclaim.law
                   <!-- Body -->
                   <tr>
                     <td style="padding: 40px;">
+                      
+                      <!-- Email Type Badge -->
+                      <div style="text-align: center; margin-bottom: 30px;">
+                        <span style="display: inline-block; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                          New Case
+                        </span>
+                      </div>
                       
                       <!-- Submitter Info Card -->
                       <div style="background: #f8fafb; border-radius: 12px; padding: 24px; margin-bottom: 24px; border-left: 4px solid #008b8b;">
@@ -1889,6 +1927,13 @@ A detailed Excel spreadsheet and all uploaded files are attached to this email.
                   <tr>
                     <td style="padding: 40px;">
                       
+                      <!-- Email Type Badge -->
+                      <div style="text-align: center; margin-bottom: 30px;">
+                        <span style="display: inline-block; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                          Document
+                        </span>
+                      </div>
+                      
                       <!-- Uploader Info Card -->
                       <div style="background: #f8fafb; border-radius: 12px; padding: 24px; margin-bottom: 24px; border-left: 4px solid #008b8b;">
                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
@@ -2055,6 +2100,13 @@ Please log in to the Acclaim Portal to view this document.
                   <tr>
                     <td style="padding: 40px;">
                       
+                      <!-- Email Type Badge -->
+                      <div style="text-align: center; margin-bottom: 30px;">
+                        <span style="display: inline-block; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                          Document
+                        </span>
+                      </div>
+                      
                       <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">A new document has been added to your portal and is ready for you to view.</p>
                       
                       <!-- Document Details Card -->
@@ -2087,7 +2139,7 @@ Please log in to the Acclaim Portal to view this document.
                       
                       <!-- CTA Button -->
                       <div style="text-align: center;">
-                        <a href="https://acclaim-api.azurewebsites.net/auth" style="display: inline-block; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(0,139,139,0.3);">
+                        <a href="https://acclaim-api.azurewebsites.net/auth" style="display: inline-block; background-color: #008b8b; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); color: #ffffff !important; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(0,139,139,0.3);">
                           View in Portal →
                         </a>
                       </div>
