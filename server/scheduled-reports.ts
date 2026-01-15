@@ -226,13 +226,24 @@ export async function processScheduledReports(): Promise<void> {
   const currentDay = now.getDay();
   const currentDayOfMonth = now.getDate();
   
+  console.log(`Processing scheduled reports at ${now.toISOString()} - Hour: ${currentHour}, Day: ${currentDay}, DayOfMonth: ${currentDayOfMonth}`);
+  
   const allSettings = await storage.getScheduledReportsDue();
+  console.log(`Found ${allSettings.length} scheduled report settings to check`);
   
   for (const settings of allSettings) {
-    if (!settings.enabled) continue;
+    console.log(`Checking report for user ${settings.userId}: enabled=${settings.enabled}, frequency=${settings.frequency}, timeOfDay=${settings.timeOfDay}, lastSent=${settings.lastSentAt}`);
+    
+    if (!settings.enabled) {
+      console.log(`  Skipping - not enabled`);
+      continue;
+    }
 
     const targetHour = settings.timeOfDay ?? 9;
-    if (currentHour !== targetHour) continue;
+    if (currentHour !== targetHour) {
+      console.log(`  Skipping - wrong hour (current: ${currentHour}, target: ${targetHour})`);
+      continue;
+    }
 
     if (settings.frequency === "weekly" && currentDay !== (settings.dayOfWeek ?? 1)) continue;
     if (settings.frequency === "monthly" && currentDayOfMonth !== (settings.dayOfMonth ?? 1)) continue;
@@ -288,7 +299,19 @@ function calculateNextSendDate(settings: any): Date {
 }
 
 export function scheduleReportProcessor(): void {
+  // Run immediately on startup
+  setTimeout(async () => {
+    console.log("Running initial scheduled report check...");
+    try {
+      await processScheduledReports();
+    } catch (error) {
+      console.error("Error processing scheduled reports on startup:", error);
+    }
+  }, 5000); // Wait 5 seconds for server to fully initialize
+
+  // Then run every hour
   setInterval(async () => {
+    console.log("Running hourly scheduled report check...");
     try {
       await processScheduledReports();
     } catch (error) {
