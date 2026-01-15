@@ -4145,6 +4145,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Case access restrictions - admin can hide cases from specific users
+  app.get("/api/admin/cases/:id/access-restrictions", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const caseId = parseInt(req.params.id);
+      const blockedUserIds = await storage.getCaseAccessRestrictions(caseId);
+      res.json({ caseId, blockedUserIds });
+    } catch (error) {
+      console.error("Error getting case access restrictions:", error);
+      res.status(500).json({ message: "Failed to get access restrictions" });
+    }
+  });
+
+  app.post("/api/admin/cases/:id/access-restrictions", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const caseId = parseInt(req.params.id);
+      const { blockedUserIds } = req.body;
+      const adminId = req.user.id;
+
+      if (!Array.isArray(blockedUserIds)) {
+        return res.status(400).json({ message: "blockedUserIds must be an array" });
+      }
+
+      // Get current restrictions
+      const currentRestrictions = await storage.getCaseAccessRestrictions(caseId);
+
+      // Remove restrictions that are no longer in the list
+      for (const userId of currentRestrictions) {
+        if (!blockedUserIds.includes(userId)) {
+          await storage.removeCaseAccessRestriction(caseId, userId);
+        }
+      }
+
+      // Add new restrictions
+      for (const userId of blockedUserIds) {
+        if (!currentRestrictions.includes(userId)) {
+          await storage.addCaseAccessRestriction(caseId, userId, adminId);
+        }
+      }
+
+      res.json({ message: "Access restrictions updated", caseId, blockedUserIds });
+    } catch (error) {
+      console.error("Error updating case access restrictions:", error);
+      res.status(500).json({ message: "Failed to update access restrictions" });
+    }
+  });
+
   // Download API Integration Guide as PDF
   app.get('/api/download/api-guide', async (req, res) => {
     try {
