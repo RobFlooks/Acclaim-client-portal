@@ -1387,7 +1387,7 @@ export default function UserProfile() {
                             {/* Expanded Settings Panel (for owners only) */}
                             {isOwner && isExpanded && (
                               <div className="p-4 border-t bg-white dark:bg-gray-900 space-y-4">
-                                {/* Request New Member Button */}
+                                {/* Request To Add New Member Button */}
                                 <div className="flex justify-between items-center">
                                   <div>
                                     <h4 className="font-medium text-sm">Organisation Settings</h4>
@@ -1611,23 +1611,33 @@ export default function UserProfile() {
                                               {u.firstName?.[0]}{u.lastName?.[0]}
                                             </div>
                                             <div>
-                                              <span className="text-sm font-medium">{u.firstName} {u.lastName}</span>
+                                              <div className="flex items-center gap-2">
+                                                <span className="text-sm font-medium">{u.firstName} {u.lastName}</span>
+                                                {u.isOrgOwner && (
+                                                  <Badge variant="outline" className="h-5 text-[10px] bg-amber-50 text-amber-700 border-amber-300">
+                                                    <Crown className="h-2.5 w-2.5 mr-0.5" />
+                                                    Owner
+                                                  </Badge>
+                                                )}
+                                              </div>
                                               <span className="text-xs text-gray-500 block">{u.email}</span>
                                             </div>
                                           </div>
                                           <div className="flex gap-2">
-                                            <Button
-                                              variant="outline"
-                                              size="sm"
-                                              className="h-7 text-xs text-amber-600 border-amber-300 hover:bg-amber-50"
-                                              onClick={() => {
-                                                setDelegationTarget({ userId: u.id, userName: `${u.firstName} ${u.lastName}`, orgId: org.id });
-                                                setDelegationDialogOpen(true);
-                                              }}
-                                            >
-                                              <Crown className="h-3 w-3 mr-1" />
-                                              Make Owner
-                                            </Button>
+                                            {!u.isOrgOwner && (
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-7 text-xs text-amber-600 border-amber-300 hover:bg-amber-50"
+                                                onClick={() => {
+                                                  setDelegationTarget({ userId: u.id, userName: `${u.firstName} ${u.lastName}`, orgId: org.id });
+                                                  setDelegationDialogOpen(true);
+                                                }}
+                                              >
+                                                <Crown className="h-3 w-3 mr-1" />
+                                                Make Owner
+                                              </Button>
+                                            )}
                                             <Button
                                               variant="outline"
                                               size="sm"

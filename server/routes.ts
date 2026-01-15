@@ -2805,7 +2805,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const users = await storage.getUsersInOrganisation(orgId);
-      res.json(users);
+      
+      // Add isOrgOwner flag to each user
+      const usersWithOwnerStatus = await Promise.all(users.map(async (u) => {
+        const userIsOwner = await storage.isUserOrgOwner(u.id, orgId);
+        return { ...u, isOrgOwner: userIsOwner };
+      }));
+      
+      res.json(usersWithOwnerStatus);
     } catch (error) {
       console.error("Error fetching org users:", error);
       res.status(500).json({ message: "Failed to fetch org users" });
