@@ -1,5 +1,6 @@
 import { Scale, Home, FolderOpen, MessageSquare, BarChart3, FileText, User, LogOut, Settings, Shield, UserCog } from "lucide-react";
 import logoImage from "@assets/cl-bg_1752271318153.png";
+import acclaimRoseLogo from "@assets/Acclaim rose.Cur_1752271300769.png";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
@@ -104,8 +105,12 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
       {/* User Profile */}
       <div className="flex-shrink-0 p-4 border-t border-teal-700">
         <div className="flex items-center mb-3">
-          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-            <User className="text-acclaim-teal h-5 w-5" />
+          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center overflow-hidden">
+            {user?.isAdmin ? (
+              <img src={acclaimRoseLogo} alt="Acclaim" className="w-8 h-8 object-contain" />
+            ) : (
+              <User className="text-acclaim-teal h-5 w-5" />
+            )}
           </div>
           <div className="ml-3">
             <div className="text-white font-medium text-sm">

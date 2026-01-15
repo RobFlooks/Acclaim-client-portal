@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import CaseDetail from "./CaseDetail";
+import acclaimRoseLogo from "@assets/Acclaim rose.Cur_1752271300769.png";
 
 export default function Messages() {
   const [newMessage, setNewMessage] = useState("");
@@ -703,12 +704,16 @@ export default function Messages() {
               <div className="border-b pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-acclaim-teal bg-opacity-10 rounded-full flex items-center justify-center">
-                      <User className="h-5 w-5 text-acclaim-teal" />
+                    <div className="w-10 h-10 bg-acclaim-teal bg-opacity-10 rounded-full flex items-center justify-center overflow-hidden">
+                      {viewingMessage.senderIsAdmin ? (
+                        <img src={acclaimRoseLogo} alt="Acclaim" className="w-8 h-8 object-contain" />
+                      ) : (
+                        <User className="h-5 w-5 text-acclaim-teal" />
+                      )}
                     </div>
                     <div>
                       <div className="flex items-center space-x-2">
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
                           {viewingMessage.senderName || viewingMessage.senderEmail || 'Unknown'}
                         </p>
                         <Badge variant="secondary" className="text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300">
@@ -836,8 +841,12 @@ export default function Messages() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1">
                       <div className="relative flex-shrink-0">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-acclaim-teal bg-opacity-10 rounded-full flex items-center justify-center">
-                          <User className="h-4 w-4 sm:h-5 sm:w-5 text-acclaim-teal" />
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-acclaim-teal bg-opacity-10 rounded-full flex items-center justify-center overflow-hidden">
+                          {message.senderIsAdmin ? (
+                            <img src={acclaimRoseLogo} alt="Acclaim" className="w-6 h-6 sm:w-8 sm:h-8 object-contain" />
+                          ) : (
+                            <User className="h-4 w-4 sm:h-5 sm:w-5 text-acclaim-teal" />
+                          )}
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">

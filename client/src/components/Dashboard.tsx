@@ -11,6 +11,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation } from "wouter";
 import CaseDetail from "./CaseDetail";
 import RefreshIndicator from "./RefreshIndicator";
+import acclaimRoseLogo from "@assets/Acclaim rose.Cur_1752271300769.png";
 
 
 interface DashboardProps {
@@ -414,12 +415,16 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
                       className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100 last:border-b-0"
                       onClick={() => handleMessageClick(message)}
                     >
-                      <div className="w-8 h-8 bg-acclaim-teal bg-opacity-10 rounded-full flex items-center justify-center">
-                        <User className="text-acclaim-teal h-4 w-4" />
+                      <div className="w-8 h-8 bg-acclaim-teal bg-opacity-10 rounded-full flex items-center justify-center overflow-hidden">
+                        {message.senderIsAdmin ? (
+                          <img src={acclaimRoseLogo} alt="Acclaim" className="w-6 h-6 object-contain" />
+                        ) : (
+                          <User className="text-acclaim-teal h-4 w-4" />
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
-                          <p className="text-sm font-medium text-gray-900 truncate">
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                             {message.subject || "System Message"}
                           </p>
                           <p className="text-xs text-gray-500 flex-shrink-0 ml-2">
@@ -430,7 +435,7 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
                           <p className="text-xs text-gray-500">
                             From: {message.senderName || message.senderEmail || 'Unknown'}
                           </p>
-                          <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                          <Badge variant="secondary" className="text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300">
                             {message.senderIsAdmin ? "Acclaim" : (message.senderOrganisationName || "User")}
                           </Badge>
                         </div>
@@ -503,11 +508,15 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
               
               <div className="flex items-center justify-between pt-4 border-t">
                 <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-acclaim-teal bg-opacity-10 rounded-full flex items-center justify-center">
-                    <User className="text-acclaim-teal h-4 w-4" />
+                  <div className="w-8 h-8 bg-acclaim-teal bg-opacity-10 rounded-full flex items-center justify-center overflow-hidden">
+                    {selectedMessage.senderIsAdmin ? (
+                      <img src={acclaimRoseLogo} alt="Acclaim" className="w-6 h-6 object-contain" />
+                    ) : (
+                      <User className="text-acclaim-teal h-4 w-4" />
+                    )}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       {selectedMessage.senderIsAdmin ? 'From Acclaim Team' : 'From You'}
                     </p>
                     <p className="text-xs text-gray-500">
