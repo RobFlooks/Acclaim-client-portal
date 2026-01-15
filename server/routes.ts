@@ -3208,6 +3208,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Remove ownership request (sends email to email@acclaim.law)
+  app.post('/api/org-owner/remove-ownership-request', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { orgId, targetUserId, reason } = req.body;
+
+      if (!orgId || !targetUserId) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const parsedOrgId = parseInt(orgId);
+      const isOwner = await storage.isUserOrgOwner(userId, parsedOrgId);
+      const user = await storage.getUser(userId);
+
+      if (!user?.isAdmin && !isOwner) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const org = await storage.getOrganisation(parsedOrgId);
+      const targetUser = await storage.getUser(targetUserId);
+
+      if (!org || !targetUser) {
+        return res.status(400).json({ message: "Organisation or user not found" });
+      }
+
+      // Check target user is in this org
+      const targetUserOrgs = await storage.getUserOrganisations(targetUserId);
+      const isInOrg = targetUserOrgs.some(uo => uo.organisationId === parsedOrgId);
+      if (!isInOrg) {
+        return res.status(400).json({ message: "User is not in this organisation" });
+      }
+
+      // Check target user is actually an owner
+      const targetIsOwner = await storage.isUserOrgOwner(targetUserId, parsedOrgId);
+      if (!targetIsOwner) {
+        return res.status(400).json({ message: "User is not an owner of this organisation" });
+      }
+
+      const requestedBy = `${user!.firstName} ${user!.lastName}`;
+      const requestedByEmail = user!.email;
+
+      const emailSent = await sendGridEmailService.sendOrgOwnerRequest({
+        type: 'ownership-removal',
+        orgName: org.name,
+        targetUserName: `${targetUser.firstName} ${targetUser.lastName}`,
+        targetUserEmail: targetUser.email,
+        reason: reason || 'No reason provided',
+        requestedBy,
+        requestedByEmail,
+      });
+
+      if (emailSent) {
+        res.json({ success: true, message: "Ownership removal request sent successfully" });
+      } else {
+        throw new Error("Email service failed");
+      }
+    } catch (error) {
+      console.error("Error sending ownership removal request:", error);
+      res.status(500).json({ message: "Failed to send request" });
+    }
+  });
+
   // Admin cases endpoint  
   app.get('/api/admin/cases', isAuthenticated, isAdmin, async (req: any, res) => {
     try {

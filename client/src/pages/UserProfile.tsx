@@ -280,6 +280,12 @@ export default function UserProfile() {
   const [delegationReason, setDelegationReason] = useState("");
   const [delegationSubmitting, setDelegationSubmitting] = useState(false);
 
+  // Remove ownership request state
+  const [removeOwnershipDialogOpen, setRemoveOwnershipDialogOpen] = useState(false);
+  const [removeOwnershipTarget, setRemoveOwnershipTarget] = useState<{ userId: string; userName: string; orgId: number } | null>(null);
+  const [removeOwnershipReason, setRemoveOwnershipReason] = useState("");
+  const [removeOwnershipSubmitting, setRemoveOwnershipSubmitting] = useState(false);
+
   // Bulk member restriction mutation
   const bulkMemberRestrictionMutation = useMutation({
     mutationFn: async ({ orgId, userId, action }: { orgId: number; userId: string; action: 'restrict-all' | 'allow-all' }) => {
@@ -359,6 +365,31 @@ export default function UserProfile() {
       toast({ title: "Error", description: "Failed to send request", variant: "destructive" });
     } finally {
       setDelegationSubmitting(false);
+    }
+  };
+
+  // Handle remove ownership request
+  const handleRemoveOwnershipSubmit = async () => {
+    if (!removeOwnershipTarget) return;
+    setRemoveOwnershipSubmitting(true);
+    try {
+      const response = await apiRequest("POST", "/api/org-owner/remove-ownership-request", {
+        orgId: removeOwnershipTarget.orgId,
+        targetUserId: removeOwnershipTarget.userId,
+        reason: removeOwnershipReason || undefined,
+      });
+      if (response.ok) {
+        toast({ title: "Request Sent", description: "Ownership removal request sent to Acclaim." });
+        setRemoveOwnershipDialogOpen(false);
+        setRemoveOwnershipTarget(null);
+        setRemoveOwnershipReason("");
+      } else {
+        throw new Error("Failed");
+      }
+    } catch {
+      toast({ title: "Error", description: "Failed to send request", variant: "destructive" });
+    } finally {
+      setRemoveOwnershipSubmitting(false);
     }
   };
 
@@ -1626,7 +1657,7 @@ export default function UserProfile() {
                                               <span className="text-xs text-gray-500 block truncate">{u.email}</span>
                                             </div>
                                           </div>
-                                          <div className="flex gap-2 sm:flex-shrink-0">
+                                          <div className="flex gap-2 sm:flex-shrink-0 flex-wrap">
                                             {!u.isOrgOwner && (
                                               <Button
                                                 variant="outline"
@@ -1639,6 +1670,20 @@ export default function UserProfile() {
                                               >
                                                 <Crown className="h-3 w-3 mr-1" />
                                                 Make Owner
+                                              </Button>
+                                            )}
+                                            {u.isOrgOwner && (
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-7 text-xs text-orange-600 border-orange-300 hover:bg-orange-50 flex-1 sm:flex-initial"
+                                                onClick={() => {
+                                                  setRemoveOwnershipTarget({ userId: u.id, userName: `${u.firstName} ${u.lastName}`, orgId: org.id });
+                                                  setRemoveOwnershipDialogOpen(true);
+                                                }}
+                                              >
+                                                <Crown className="h-3 w-3 mr-1" />
+                                                Remove Ownership
                                               </Button>
                                             )}
                                             <Button
@@ -1888,6 +1933,66 @@ export default function UserProfile() {
                       className="bg-amber-600 hover:bg-amber-700"
                     >
                       {delegationSubmitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4 mr-1" />
+                          Send Request
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            {/* Remove Ownership Request Dialog */}
+            <Dialog open={removeOwnershipDialogOpen} onOpenChange={setRemoveOwnershipDialogOpen}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 text-orange-600">
+                    <Crown className="h-5 w-5" />
+                    Request Ownership Removal
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    You are requesting that <strong>{removeOwnershipTarget?.userName}</strong>'s Owner status be removed. 
+                    They will remain a member of the organisation but will no longer be able to manage case access for other team members.
+                  </p>
+                  
+                  <div className="space-y-1">
+                    <Label htmlFor="remove-ownership-reason" className="text-sm">Reason (optional)</Label>
+                    <Input
+                      id="remove-ownership-reason"
+                      value={removeOwnershipReason}
+                      onChange={(e) => setRemoveOwnershipReason(e.target.value)}
+                      placeholder="Why should this member's ownership be removed?"
+                      className="h-9"
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setRemoveOwnershipDialogOpen(false);
+                        setRemoveOwnershipTarget(null);
+                        setRemoveOwnershipReason("");
+                      }}
+                      disabled={removeOwnershipSubmitting}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleRemoveOwnershipSubmit}
+                      disabled={removeOwnershipSubmitting}
+                      className="bg-orange-600 hover:bg-orange-700"
+                    >
+                      {removeOwnershipSubmitting ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                           Sending...

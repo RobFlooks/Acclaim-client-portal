@@ -2357,9 +2357,9 @@ This request was submitted via the Acclaim Client Portal.
     }
   }
 
-  // Send org owner request (member removal or owner delegation)
+  // Send org owner request (member removal, owner delegation, or ownership removal)
   async sendOrgOwnerRequest(data: {
-    type: 'member-removal' | 'owner-delegation';
+    type: 'member-removal' | 'owner-delegation' | 'ownership-removal';
     orgName: string;
     targetUserName: string;
     targetUserEmail: string;
@@ -2374,14 +2374,25 @@ This request was submitted via the Acclaim Client Portal.
 
     try {
       const isRemoval = data.type === 'member-removal';
-      const subject = isRemoval
-        ? `Member Removal Request: ${data.targetUserName} from ${data.orgName}`
-        : `Owner Delegation Request: ${data.targetUserName} for ${data.orgName}`;
+      const isOwnershipRemoval = data.type === 'ownership-removal';
       
-      const headerTitle = isRemoval ? 'Member Removal Request' : 'Owner Delegation Request';
-      const actionDescription = isRemoval
-        ? 'has requested to remove the following member from their organisation'
-        : 'has requested to grant Owner status to the following member';
+      let subject: string;
+      let headerTitle: string;
+      let actionDescription: string;
+      
+      if (isRemoval) {
+        subject = `Member Removal Request: ${data.targetUserName} from ${data.orgName}`;
+        headerTitle = 'Member Removal Request';
+        actionDescription = 'has requested to remove the following member from their organisation';
+      } else if (isOwnershipRemoval) {
+        subject = `Ownership Removal Request: ${data.targetUserName} from ${data.orgName}`;
+        headerTitle = 'Ownership Removal Request';
+        actionDescription = 'has requested to remove Owner status from the following member';
+      } else {
+        subject = `Owner Delegation Request: ${data.targetUserName} for ${data.orgName}`;
+        headerTitle = 'Owner Delegation Request';
+        actionDescription = 'has requested to grant Owner status to the following member';
+      }
 
       const htmlContent = `
         <!DOCTYPE html>
@@ -2398,7 +2409,7 @@ This request was submitted via the Acclaim Client Portal.
                   
                   <!-- Header -->
                   <tr>
-                    <td style="background: linear-gradient(135deg, ${isRemoval ? '#dc2626' : '#f59e0b'} 0%, ${isRemoval ? '#b91c1c' : '#d97706'} 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                    <td style="background: linear-gradient(135deg, ${isRemoval ? '#dc2626' : isOwnershipRemoval ? '#ea580c' : '#f59e0b'} 0%, ${isRemoval ? '#b91c1c' : isOwnershipRemoval ? '#c2410c' : '#d97706'} 100%); padding: 40px 40px 30px 40px; text-align: center;">
                       <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
                       <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">${headerTitle}</h1>
                       <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Organisation: ${data.orgName}</p>
@@ -2429,8 +2440,8 @@ This request was submitted via the Acclaim Client Portal.
                           <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
                             <span style="color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600;">Request Type</span>
                             <p style="margin: 4px 0 0 0;">
-                              <span style="display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 500; ${isRemoval ? 'background-color: #fef2f2; color: #dc2626;' : 'background-color: #fef3c7; color: #92400e;'}">
-                                ${isRemoval ? 'Remove from Organisation' : 'Grant Owner Status'}
+                              <span style="display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 500; ${isRemoval ? 'background-color: #fef2f2; color: #dc2626;' : isOwnershipRemoval ? 'background-color: #fff7ed; color: #c2410c;' : 'background-color: #fef3c7; color: #92400e;'}">
+                                ${isRemoval ? 'Remove from Organisation' : isOwnershipRemoval ? 'Remove Owner Status' : 'Grant Owner Status'}
                               </span>
                             </p>
                           </td>
