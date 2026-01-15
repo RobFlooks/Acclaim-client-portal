@@ -840,7 +840,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.id;
       const messages = await storage.getMessagesForUser(userId);
-      res.json(messages);
+      
+      // Filter out messages for cases the user is blocked from
+      const blockedCaseIds = await storage.getBlockedCasesForUser(userId);
+      const filteredMessages = messages.filter((m: any) => {
+        // If message has no caseId, it's a general message - always show
+        if (!m.caseId) return true;
+        // If user is blocked from this case, hide the message
+        return !blockedCaseIds.includes(m.caseId);
+      });
+      
+      res.json(filteredMessages);
     } catch (error) {
       console.error("Error fetching messages:", error);
       res.status(500).json({ message: "Failed to fetch messages" });
@@ -859,7 +869,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get all messages for the user
-      const allMessages = await storage.getMessagesForUser(userId);
+      const allMessagesRaw = await storage.getMessagesForUser(userId);
+      
+      // Filter out messages for cases the user is blocked from
+      const blockedCaseIds = await storage.getBlockedCasesForUser(userId);
+      const allMessages = allMessagesRaw.filter((m: any) => {
+        if (!m.caseId) return true;
+        return !blockedCaseIds.includes(m.caseId);
+      });
 
       // Filter by date range
       let filteredMessages = allMessages;
