@@ -417,7 +417,7 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
                     >
                       <div className="w-8 h-8 bg-acclaim-teal bg-opacity-10 rounded-full flex items-center justify-center overflow-hidden">
                         {message.senderIsAdmin ? (
-                          <img src={acclaimRoseLogo} alt="Acclaim" className="w-6 h-6 object-contain" />
+                          <img src={acclaimRoseLogo} alt="Acclaim" className="w-6 h-6 object-contain filter brightness-0 sepia saturate-[10000%] hue-rotate-[155deg]" />
                         ) : (
                           <User className="text-acclaim-teal h-4 w-4" />
                         )}
@@ -510,7 +510,7 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 bg-acclaim-teal bg-opacity-10 rounded-full flex items-center justify-center overflow-hidden">
                     {selectedMessage.senderIsAdmin ? (
-                      <img src={acclaimRoseLogo} alt="Acclaim" className="w-6 h-6 object-contain" />
+                      <img src={acclaimRoseLogo} alt="Acclaim" className="w-6 h-6 object-contain filter brightness-0 sepia saturate-[10000%] hue-rotate-[155deg]" />
                     ) : (
                       <User className="text-acclaim-teal h-4 w-4" />
                     )}
