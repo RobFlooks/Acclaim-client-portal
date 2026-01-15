@@ -2569,53 +2569,35 @@ export class DatabaseStorage implements IStorage {
     return results.map(r => r.caseId);
   }
 
-  // Case access restriction operations
+  // Case access restriction operations - now uses muted_cases table for simplicity
+  // When admin restricts a user, it mutes and hides the case
+  // When admin removes restriction, it unmutes the case
   async addCaseAccessRestriction(caseId: number, blockedUserId: string, createdBy: string): Promise<void> {
-    // Check if restriction already exists
-    const existing = await db.select()
-      .from(caseAccessRestrictions)
-      .where(and(
-        eq(caseAccessRestrictions.caseId, caseId),
-        eq(caseAccessRestrictions.blockedUserId, blockedUserId)
-      ))
-      .limit(1);
-    
-    if (existing.length === 0) {
-      await db.insert(caseAccessRestrictions).values({ caseId, blockedUserId, createdBy });
-    }
+    // Use muted_cases table - mute the case for the user
+    await this.muteCaseForUser(blockedUserId, caseId);
   }
 
   async removeCaseAccessRestriction(caseId: number, blockedUserId: string): Promise<void> {
-    await db.delete(caseAccessRestrictions)
-      .where(and(
-        eq(caseAccessRestrictions.caseId, caseId),
-        eq(caseAccessRestrictions.blockedUserId, blockedUserId)
-      ));
+    // Use muted_cases table - unmute the case for the user
+    await this.unmuteCaseForUser(blockedUserId, caseId);
   }
 
   async getCaseAccessRestrictions(caseId: number): Promise<string[]> {
-    const results = await db.select({ blockedUserId: caseAccessRestrictions.blockedUserId })
-      .from(caseAccessRestrictions)
-      .where(eq(caseAccessRestrictions.caseId, caseId));
-    return results.map(r => r.blockedUserId);
+    // Get all users who have this case muted (which now means restricted)
+    const results = await db.select({ userId: mutedCases.userId })
+      .from(mutedCases)
+      .where(eq(mutedCases.caseId, caseId));
+    return results.map(r => r.userId);
   }
 
   async isUserBlockedFromCase(userId: string, caseId: number): Promise<boolean> {
-    const [result] = await db.select()
-      .from(caseAccessRestrictions)
-      .where(and(
-        eq(caseAccessRestrictions.caseId, caseId),
-        eq(caseAccessRestrictions.blockedUserId, userId)
-      ))
-      .limit(1);
-    return !!result;
+    // Use muted_cases table - if case is muted, user is blocked
+    return this.isCaseMuted(userId, caseId);
   }
 
   async getBlockedCasesForUser(userId: string): Promise<number[]> {
-    const results = await db.select({ caseId: caseAccessRestrictions.caseId })
-      .from(caseAccessRestrictions)
-      .where(eq(caseAccessRestrictions.blockedUserId, userId));
-    return results.map(r => r.caseId);
+    // Use muted_cases table - muted cases are now also blocked
+    return this.getMutedCasesForUser(userId);
   }
 }
 
