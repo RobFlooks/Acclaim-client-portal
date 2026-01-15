@@ -1147,7 +1147,7 @@ export class DatabaseStorage implements IStorage {
     const orgNameMap: Record<number, string> = {};
     for (const orgId of caseOrgIds) {
       if (orgId) {
-        const org = await this.getOrganisationById(orgId);
+        const org = await this.getOrganisation(orgId);
         if (org) orgNameMap[orgId] = org.name;
       }
     }
