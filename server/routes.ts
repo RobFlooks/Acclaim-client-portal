@@ -602,20 +602,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Import the function dynamically
       const { generateScheduledReport } = await import("./scheduled-reports");
-      const { sendScheduledReportEmailWithAttachment } = await import("./email-service-sendgrid");
+      const { sendScheduledReportEmailWithAttachments } = await import("./email-service-sendgrid");
       
-      const reportBuffer = await generateScheduledReport(userId, settings as any);
+      const reportBuffers = await generateScheduledReport(userId, settings as any);
       
       const now = new Date();
       const frequencyText = settings.frequency === "daily" ? "Daily" : settings.frequency === "weekly" ? "Weekly" : "Monthly";
-      const fileName = `Acclaim_${frequencyText}_Report_${now.toISOString().split("T")[0]}.xlsx`;
+      const baseFileName = `Acclaim_${frequencyText}_Report_${now.toISOString().split("T")[0]}`;
       
-      await sendScheduledReportEmailWithAttachment(
+      await sendScheduledReportEmailWithAttachments(
         user.email,
         `${user.firstName} ${user.lastName}`,
         frequencyText,
-        reportBuffer,
-        fileName
+        reportBuffers.excel,
+        reportBuffers.pdf,
+        baseFileName
       );
       
       res.json({ message: "Test report sent successfully to " + user.email });

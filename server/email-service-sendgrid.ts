@@ -2512,12 +2512,13 @@ This request was submitted via the Acclaim Client Portal.
 export const sendGridEmailService = new SendGridEmailService();
 
 // Standalone function for sending scheduled reports with Excel attachment
-export async function sendScheduledReportEmailWithAttachment(
+export async function sendScheduledReportEmailWithAttachments(
   recipientEmail: string,
   recipientName: string,
   frequencyText: string,
   excelBuffer: Buffer,
-  fileName: string
+  pdfBuffer: Buffer,
+  baseFileName: string
 ): Promise<boolean> {
   try {
     const APIM_KEY = process.env.APIM_SUBSCRIPTION_KEY;
@@ -2561,11 +2562,17 @@ export async function sendScheduledReportEmailWithAttachment(
                     
                     <ul style="margin: 0 0 24px 0; padding-left: 20px; color: #374151; font-size: 16px; line-height: 28px;">
                       <li><strong>Case Summary</strong> - Overview of your cases including status and amounts</li>
-                      <li><strong>Activity Report</strong> - Recent messages and document activity</li>
+                      <li><strong>Messages Report</strong> - Recent messages and document activity</li>
                     </ul>
                     
                     <p style="margin: 0 0 24px 0; color: #374151; font-size: 16px; line-height: 24px;">
-                      The Excel file attached contains separate tabs for each section. You can adjust your report preferences in your Profile settings.
+                      <strong>Two files are attached:</strong><br>
+                      - <strong>PDF</strong> for quick viewing and printing<br>
+                      - <strong>Excel</strong> for detailed analysis with separate tabs
+                    </p>
+                    
+                    <p style="margin: 0 0 24px 0; color: #374151; font-size: 16px; line-height: 24px;">
+                      You can adjust your report preferences in your Profile settings.
                     </p>
                     
                     <p style="margin: 0; color: #6b7280; font-size: 14px;">
@@ -2598,9 +2605,11 @@ Please find attached your ${frequencyText.toLowerCase()} report from the Acclaim
 
 This report contains:
 - Case Summary: Overview of your cases including status and amounts
-- Activity Report: Recent messages and document activity
+- Messages Report: Recent messages and document activity
 
-The Excel file attached contains separate tabs for each section.
+Two files are attached:
+- PDF for quick viewing and printing
+- Excel for detailed analysis with separate tabs
 
 Kind regards,
 The Acclaim Credit Management Team
@@ -2614,10 +2623,18 @@ The Acclaim Credit Management Team
       attachments.push(logoBase64);
     }
 
+    // Add PDF report first (easier to preview)
+    attachments.push({
+      content: pdfBuffer.toString('base64'),
+      filename: baseFileName + '.pdf',
+      type: 'application/pdf',
+      disposition: 'attachment'
+    });
+
     // Add Excel report
     attachments.push({
       content: excelBuffer.toString('base64'),
-      filename: fileName,
+      filename: baseFileName + '.xlsx',
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       disposition: 'attachment'
     });
