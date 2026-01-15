@@ -92,41 +92,66 @@ async function generatePdfReport(
   const frequencyText = settings.frequency === "daily" ? "Daily" : 
                         settings.frequency === "weekly" ? "Weekly" : "Monthly";
 
-  // Build case summary rows
+  // Build case summary rows - match Excel columns exactly
   let caseSummaryRows = '';
-  let totalOriginal = 0, totalPayments = 0, totalOutstanding = 0;
+  let totalOriginal = 0, totalCosts = 0, totalInterest = 0, totalFees = 0, totalAdditional = 0, totalDebt = 0, totalPayments = 0, totalOutstanding = 0;
   
   cases.forEach((c: any) => {
     const original = parseFloat(c.originalAmount || "0");
+    const costs = parseFloat(c.costsAdded || "0");
+    const interest = parseFloat(c.interestAdded || "0");
+    const fees = parseFloat(c.feesAdded || "0");
+    const additional = costs + interest + fees;
+    const debt = original + additional;
     const payments = parseFloat(c.totalPayments || "0");
     const outstanding = parseFloat(c.outstandingAmount || "0");
+    
     totalOriginal += original;
+    totalCosts += costs;
+    totalInterest += interest;
+    totalFees += fees;
+    totalAdditional += additional;
+    totalDebt += debt;
     totalPayments += payments;
     totalOutstanding += outstanding;
+    
+    const caseName = c.organisationName ? `${c.caseName} (${c.organisationName})` : (c.caseName || '');
     
     caseSummaryRows += `
       <tr>
         <td>${c.accountNumber || ''}</td>
-        <td>${c.caseName || ''}</td>
+        <td>${caseName}</td>
         <td><span class="status-${c.status}">${formatStatus(c.status)}</span></td>
         <td>${formatStage(c.stage)}</td>
         <td class="currency">${formatCurrency(c.originalAmount)}</td>
+        <td class="currency">${formatCurrency(c.costsAdded)}</td>
+        <td class="currency">${formatCurrency(c.interestAdded)}</td>
+        <td class="currency">${formatCurrency(c.feesAdded)}</td>
+        <td class="currency">${formatCurrency(additional.toString())}</td>
+        <td class="currency">${formatCurrency(debt.toString())}</td>
         <td class="currency">${formatCurrency(c.totalPayments)}</td>
         <td class="currency">${formatCurrency(c.outstandingAmount)}</td>
       </tr>
     `;
   });
 
-  // Build messages rows
+  // Build messages rows - match Excel columns exactly
   let messagesRows = '';
   messages.forEach((m: any) => {
+    // Show "Acclaim" for admin senders
+    const sender = m.isAdminSender ? 'Acclaim' : (m.senderName || 'Unknown');
+    const caseName = m.caseOrganisationName ? `${m.caseName || 'General'} (${m.caseOrganisationName})` : (m.caseName || 'General');
+    const hasAttachment = m.attachmentFilename ? `${m.attachmentFilename}` : '';
+    
     messagesRows += `
       <tr>
         <td>${formatDate(m.createdAt)}</td>
-        <td>${m.caseName || 'General'}</td>
-        <td>${m.senderName || ''}</td>
+        <td>${caseName}</td>
+        <td>${m.caseAccountNumber || ''}</td>
+        <td>${sender}</td>
         <td>${m.subject || ''}</td>
-        <td>${truncateMessage(m.content, 100)}</td>
+        <td class="message-preview">${truncateMessage(m.content, 120)}</td>
+        <td>${hasAttachment}</td>
       </tr>
     `;
   });
@@ -194,12 +219,17 @@ async function generatePdfReport(
             <table>
               <thead>
                 <tr>
-                  <th>Account No.</th>
+                  <th>Account Number</th>
                   <th>Case Name</th>
                   <th>Status</th>
                   <th>Stage</th>
-                  <th class="currency">Original</th>
-                  <th class="currency">Payments</th>
+                  <th class="currency">Original Amount</th>
+                  <th class="currency">Costs Added</th>
+                  <th class="currency">Interest Added</th>
+                  <th class="currency">Fees Added</th>
+                  <th class="currency">Total Additional</th>
+                  <th class="currency">Total Debt</th>
+                  <th class="currency">Total Payments</th>
                   <th class="currency">Outstanding</th>
                 </tr>
               </thead>
@@ -208,6 +238,11 @@ async function generatePdfReport(
                 <tr class="totals-row">
                   <td colspan="4">TOTALS</td>
                   <td class="currency">${formatCurrency(totalOriginal.toString())}</td>
+                  <td class="currency">${formatCurrency(totalCosts.toString())}</td>
+                  <td class="currency">${formatCurrency(totalInterest.toString())}</td>
+                  <td class="currency">${formatCurrency(totalFees.toString())}</td>
+                  <td class="currency">${formatCurrency(totalAdditional.toString())}</td>
+                  <td class="currency">${formatCurrency(totalDebt.toString())}</td>
                   <td class="currency">${formatCurrency(totalPayments.toString())}</td>
                   <td class="currency">${formatCurrency(totalOutstanding.toString())}</td>
                 </tr>
@@ -225,10 +260,12 @@ async function generatePdfReport(
               <thead>
                 <tr>
                   <th>Date & Time</th>
-                  <th>Case</th>
+                  <th>Case Name</th>
+                  <th>Account Number</th>
                   <th>From</th>
                   <th>Subject</th>
                   <th>Message</th>
+                  <th>Attachment</th>
                 </tr>
               </thead>
               <tbody>
@@ -259,8 +296,9 @@ async function generatePdfReport(
     
     const pdfBuffer = await page.pdf({
       format: 'A4',
+      landscape: true,
       printBackground: true,
-      margin: { top: '20px', right: '20px', bottom: '20px', left: '20px' }
+      margin: { top: '15px', right: '15px', bottom: '15px', left: '15px' }
     });
     
     return Buffer.from(pdfBuffer);
