@@ -5787,31 +5787,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Admin ${currentUserId} attempting to remove user ${userId} from organisation ${organisationId}`);
       
-      // Additional security check: prevent removing yourself from your primary organisation if it's your only one
+      // Additional security check: prevent non-admin users from removing themselves from their last organisation
+      // Admins can remove themselves from all organisations since they have system-wide access
       if (userId === currentUserId) {
-        // Check if this is the user's last organisation assignment
-        const userOrgs = await storage.getUserOrganisations(userId);
         const user = await storage.getUser(userId);
         
-        // Count total organisation assignments
-        const junctionOrgCount = userOrgs.length;
-        const hasLegacyOrg = user?.organisationId ? 1 : 0;
-        const totalOrgAssignments = junctionOrgCount + hasLegacyOrg;
-        
-        // Check if removing this would leave user with no organisations
-        const isRemovingFromJunction = userOrgs.some(uo => uo.organisationId === parseInt(organisationId));
-        const isRemovingLegacyOrg = user?.organisationId === parseInt(organisationId);
-        
-        let remainingOrgs = totalOrgAssignments;
-        if (isRemovingFromJunction) remainingOrgs -= 1;
-        // Note: we can't remove legacy org through this endpoint, only junction table entries
-        
-        const wouldHaveNoOrgs = remainingOrgs <= 0;
-        
-        if (wouldHaveNoOrgs) {
-          return res.status(403).json({ 
-            message: "Cannot remove yourself from your last organisation. Assign yourself to another organisation first." 
-          });
+        // Only apply this restriction to non-admin users
+        if (!user?.isAdmin) {
+          // Check if this is the user's last organisation assignment
+          const userOrgs = await storage.getUserOrganisations(userId);
+          
+          // Count total organisation assignments
+          const junctionOrgCount = userOrgs.length;
+          const hasLegacyOrg = user?.organisationId ? 1 : 0;
+          const totalOrgAssignments = junctionOrgCount + hasLegacyOrg;
+          
+          // Check if removing this would leave user with no organisations
+          const isRemovingFromJunction = userOrgs.some(uo => uo.organisationId === parseInt(organisationId));
+          
+          let remainingOrgs = totalOrgAssignments;
+          if (isRemovingFromJunction) remainingOrgs -= 1;
+          // Note: we can't remove legacy org through this endpoint, only junction table entries
+          
+          const wouldHaveNoOrgs = remainingOrgs <= 0;
+          
+          if (wouldHaveNoOrgs) {
+            return res.status(403).json({ 
+              message: "Cannot remove yourself from your last organisation. Assign yourself to another organisation first." 
+            });
+          }
         }
       }
       
