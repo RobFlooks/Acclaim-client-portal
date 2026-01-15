@@ -87,8 +87,12 @@ export interface IStorage {
   getCasesForOrganisation(organisationId: number): Promise<Case[]>;
   getCasesForUser(userId: string): Promise<Case[]>;
   getUserOrganisations(userId: string): Promise<UserOrganisation[]>;
-  addUserToOrganisation(userId: string, organisationId: number): Promise<UserOrganisation>;
+  addUserToOrganisation(userId: string, organisationId: number, role?: string): Promise<UserOrganisation>;
   removeUserFromOrganisation(userId: string, organisationId: number): Promise<void>;
+  setUserOrgRole(userId: string, organisationId: number, role: string): Promise<UserOrganisation | null>;
+  isUserOrgOwner(userId: string, organisationId: number): Promise<boolean>;
+  getOrgOwnerships(userId: string): Promise<number[]>; // Returns org IDs where user is owner
+  getUsersInOrganisation(organisationId: number): Promise<User[]>;
   getUsersWithOrganisations(): Promise<(User & { organisations: Organization[] })[]>; // Returns all cases for user (admin gets all, regular user gets org-filtered)
   getAllCases(): Promise<Case[]>; // Admin only - get all cases across all organizations
   getAllCasesIncludingArchived(): Promise<Case[]>; // Admin only - get all cases including archived ones
@@ -525,10 +529,11 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(userOrganisations).where(eq(userOrganisations.userId, userId));
   }
 
-  async addUserToOrganisation(userId: string, organisationId: number): Promise<UserOrganisation> {
+  async addUserToOrganisation(userId: string, organisationId: number, role: string = 'member'): Promise<UserOrganisation> {
     const [userOrg] = await db.insert(userOrganisations).values({
       userId,
       organisationId,
+      role,
     }).returning();
     return userOrg;
   }
@@ -540,6 +545,66 @@ export class DatabaseStorage implements IStorage {
         eq(userOrganisations.organisationId, organisationId)
       )
     );
+  }
+
+  async setUserOrgRole(userId: string, organisationId: number, role: string): Promise<UserOrganisation | null> {
+    const [userOrg] = await db
+      .update(userOrganisations)
+      .set({ role })
+      .where(and(
+        eq(userOrganisations.userId, userId),
+        eq(userOrganisations.organisationId, organisationId)
+      ))
+      .returning();
+    return userOrg || null;
+  }
+
+  async isUserOrgOwner(userId: string, organisationId: number): Promise<boolean> {
+    const [result] = await db
+      .select()
+      .from(userOrganisations)
+      .where(and(
+        eq(userOrganisations.userId, userId),
+        eq(userOrganisations.organisationId, organisationId),
+        eq(userOrganisations.role, 'owner')
+      ))
+      .limit(1);
+    return !!result;
+  }
+
+  async getOrgOwnerships(userId: string): Promise<number[]> {
+    const results = await db
+      .select({ organisationId: userOrganisations.organisationId })
+      .from(userOrganisations)
+      .where(and(
+        eq(userOrganisations.userId, userId),
+        eq(userOrganisations.role, 'owner')
+      ));
+    return results.map(r => r.organisationId);
+  }
+
+  async getUsersInOrganisation(organisationId: number): Promise<User[]> {
+    // Get users from junction table
+    const junctionUsers = await db
+      .select({ user: users })
+      .from(userOrganisations)
+      .leftJoin(users, eq(userOrganisations.userId, users.id))
+      .where(eq(userOrganisations.organisationId, organisationId));
+
+    // Get users from legacy organisationId field
+    const legacyUsers = await db
+      .select()
+      .from(users)
+      .where(eq(users.organisationId, organisationId));
+
+    // Combine and deduplicate
+    const userMap = new Map<string, User>();
+    junctionUsers.forEach(ju => {
+      if (ju.user) userMap.set(ju.user.id, ju.user);
+    });
+    legacyUsers.forEach(u => userMap.set(u.id, u));
+
+    return Array.from(userMap.values());
   }
 
   async getUsersWithOrganisations(): Promise<(User & { organisations: Organization[] })[]> {
