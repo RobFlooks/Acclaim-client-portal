@@ -57,6 +57,7 @@ export const organisations = pgTable("organisations", {
   contactPhone: varchar("contact_phone"),
   address: text("address"),
   externalRef: varchar("external_ref", { length: 100 }).unique(), // For external system integration
+  scheduledReportsEnabled: boolean("scheduled_reports_enabled").notNull().default(true), // Admin can disable scheduled reports for this organisation
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
