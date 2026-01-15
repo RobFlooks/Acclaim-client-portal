@@ -2647,21 +2647,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin: Toggle scheduled reports for an organisation
-  app.put('/api/admin/organisations/:id/scheduled-reports', isAuthenticated, isAdmin, async (req: any, res) => {
+  // Admin: Create org-level scheduled report with custom email recipient
+  app.post('/api/admin/organisations/:id/scheduled-reports', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const orgId = parseInt(req.params.id);
-      const { enabled } = req.body;
+      const adminUserId = req.user.id;
+      const { 
+        recipientEmail, 
+        recipientName, 
+        frequency, 
+        dayOfWeek, 
+        dayOfMonth, 
+        timeOfDay, 
+        includeCaseSummary, 
+        includeActivityReport, 
+        caseStatusFilter 
+      } = req.body;
       
-      if (typeof enabled !== 'boolean') {
-        return res.status(400).json({ message: "enabled must be a boolean" });
+      if (!recipientEmail || typeof recipientEmail !== 'string') {
+        return res.status(400).json({ message: "recipientEmail is required" });
       }
       
-      const updated = await storage.updateOrganisation(orgId, { scheduledReportsEnabled: enabled });
-      res.json(updated);
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(recipientEmail)) {
+        return res.status(400).json({ message: "Invalid email format" });
+      }
+      
+      // Create the scheduled report with the admin as owner but custom recipient
+      const report = await storage.createScheduledReport({
+        userId: adminUserId,
+        organisationId: orgId,
+        enabled: true,
+        frequency: frequency || 'weekly',
+        dayOfWeek: frequency === 'weekly' ? (dayOfWeek ?? 1) : null,
+        dayOfMonth: frequency === 'monthly' ? (dayOfMonth ?? 1) : null,
+        timeOfDay: timeOfDay ?? 9,
+        includeCaseSummary: includeCaseSummary ?? true,
+        includeActivityReport: includeActivityReport ?? true,
+        caseStatusFilter: caseStatusFilter || 'active',
+        recipientEmail: recipientEmail,
+        recipientName: recipientName || null,
+      });
+      
+      res.status(201).json(report);
     } catch (error) {
-      console.error("Error updating organisation scheduled reports:", error);
-      res.status(500).json({ message: "Failed to update organisation scheduled reports" });
+      console.error("Error creating org-level scheduled report:", error);
+      res.status(500).json({ message: "Failed to create scheduled report" });
     }
   });
 

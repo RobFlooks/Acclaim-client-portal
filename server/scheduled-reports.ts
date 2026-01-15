@@ -16,6 +16,8 @@ export interface ScheduledReportSettings {
   includeActivityReport: boolean | null;
   organisationIds: number[] | null; // For combined reports: which orgs to include
   caseStatusFilter: string | null;
+  recipientEmail: string | null; // Custom recipient email for org-level reports
+  recipientName: string | null; // Custom recipient name for email greeting
   lastSentAt: Date | null;
 }
 
@@ -47,9 +49,13 @@ export async function generateScheduledReportForId(reportId: number): Promise<vo
     }
   }
 
+  // Use custom recipient email if available, otherwise use user's email
+  const emailTo = report.recipientEmail || user.email;
+  const recipientName = report.recipientName || `${user.firstName} ${user.lastName}`;
+
   await sendScheduledReportEmailWithAttachments(
-    user.email,
-    `${user.firstName} ${user.lastName}`,
+    emailTo,
+    recipientName,
     frequencyText,
     reportBuffers.excel,
     reportBuffers.pdf,
@@ -730,9 +736,13 @@ export async function processScheduledReports(): Promise<void> {
         }
       }
 
+      // Use custom recipient email if available (for org-level reports), otherwise use user's email
+      const emailTo = (settings as any).recipientEmail || user.email;
+      const recipientName = (settings as any).recipientName || `${user.firstName} ${user.lastName}`;
+
       await sendScheduledReportEmailWithAttachments(
-        user.email,
-        `${user.firstName} ${user.lastName}`,
+        emailTo,
+        recipientName,
         frequencyText,
         reportBuffers.excel,
         reportBuffers.pdf,
@@ -741,7 +751,7 @@ export async function processScheduledReports(): Promise<void> {
 
       await storage.updateScheduledReportLastSent(settings.id);
 
-      console.log(`Sent scheduled report #${settings.id} to ${user.email}`);
+      console.log(`Sent scheduled report #${settings.id} to ${emailTo}`);
     } catch (error) {
       console.error(`Failed to send scheduled report for user ${settings.userId}:`, error);
     }
