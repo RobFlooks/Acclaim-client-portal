@@ -13,7 +13,8 @@ import { useTheme } from "@/hooks/use-theme";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 import { useQueryClient } from "@tanstack/react-query";
-import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft, Bell, Building2, FileText, Download, Trash2, Upload, Search, Sun, Moon } from "lucide-react";
+import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft, Bell, Building2, FileText, Download, Trash2, Upload, Search, Sun, Moon, HelpCircle, Briefcase, MessageSquare, BarChart3 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
 import { updateUserSchema, changePasswordSchema } from "@shared/schema";
@@ -505,10 +506,93 @@ export default function UserProfile() {
               Back to Home
             </Button>
           </Link>
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl font-bold">Profile Settings</h1>
             <p className="text-gray-600">Manage your account information and security settings</p>
           </div>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <HelpCircle className="h-4 w-4" />
+                Portal Guide
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <HelpCircle className="h-5 w-5 text-primary" />
+                  Quick Portal Guide
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-4">
+                <div className="flex gap-3 p-3 bg-muted/50 rounded-lg">
+                  <Briefcase className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-sm">View Your Cases</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Access your debt recovery cases from the Dashboard or Cases page. Click on any case to view full details, history, and documents.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3 p-3 bg-muted/50 rounded-lg">
+                  <MessageSquare className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-sm">Send & Receive Messages</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Use the Messages section to communicate with our team. You can send messages about specific cases or general enquiries. You'll receive email notifications for new messages.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3 p-3 bg-muted/50 rounded-lg">
+                  <FileText className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-sm">Documents</h4>
+                    <p className="text-sm text-muted-foreground">
+                      View and download documents related to your cases. You can also upload supporting documents when needed. Documents can be found in case details or the Documents section.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3 p-3 bg-muted/50 rounded-lg">
+                  <BarChart3 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-sm">Reports</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Access the Reports section to view summaries and statistics about your cases, including payment status and recovery progress.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3 p-3 bg-muted/50 rounded-lg">
+                  <Bell className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-sm">Notification Settings</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Control your email notifications in the Notifications tab. You can toggle message and document alerts separately. You can also mute individual cases if needed.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3 p-3 bg-muted/50 rounded-lg">
+                  <Settings className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-sm">Profile Settings</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Update your personal details, change your password, and manage your account preferences from this page.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="mt-4 p-3 border rounded-lg bg-primary/5">
+                  <p className="text-sm text-center text-muted-foreground">
+                    Need more help? Send us a message through the Messages section and we'll be happy to assist.
+                  </p>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
       {/* Password Change Required Alert */}
