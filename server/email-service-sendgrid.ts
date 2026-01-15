@@ -341,7 +341,7 @@ class SendGridEmailService {
                   <!-- Header -->
                   <tr>
                     <td style="background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
-                      <img src="cid:logo" alt="Acclaim" style="height: 50px; width: auto; margin-bottom: 16px;" />
+                      <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
                       <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Case Update</h1>
                       ${data.caseReference ? `<p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Reference: ${data.caseReference}</p>` : ''}
                     </td>
