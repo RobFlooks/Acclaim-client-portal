@@ -99,6 +99,15 @@ export default function UserProfile() {
   const [casePage, setCasePage] = useState(1);
   const CASES_PER_PAGE = 50;
 
+  // Scheduled reports state
+  const [scheduledReportEnabled, setScheduledReportEnabled] = useState(false);
+  const [scheduledReportFrequency, setScheduledReportFrequency] = useState<"weekly" | "monthly">("weekly");
+  const [scheduledReportDayOfWeek, setScheduledReportDayOfWeek] = useState(1); // Monday
+  const [scheduledReportDayOfMonth, setScheduledReportDayOfMonth] = useState(1);
+  const [scheduledReportCaseSummary, setScheduledReportCaseSummary] = useState(true);
+  const [scheduledReportActivity, setScheduledReportActivity] = useState(true);
+  const [scheduledReportCaseFilter, setScheduledReportCaseFilter] = useState<"active" | "all" | "closed">("active");
+
   // Fetch user profile data
   const { data: userProfile, isLoading: profileLoading } = useQuery<UserData>({
     queryKey: ["/api/auth/user"],
@@ -437,6 +446,46 @@ export default function UserProfile() {
       toast({
         title: "Error",
         description: "Failed to update case notification setting.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Fetch scheduled report settings
+  const { data: scheduledReportData } = useQuery<any>({
+    queryKey: ["/api/user/scheduled-reports"],
+    retry: false,
+  });
+
+  // Populate scheduled report form when data is loaded
+  useEffect(() => {
+    if (scheduledReportData) {
+      setScheduledReportEnabled(scheduledReportData.enabled ?? false);
+      setScheduledReportFrequency(scheduledReportData.frequency ?? "weekly");
+      setScheduledReportDayOfWeek(scheduledReportData.dayOfWeek ?? 1);
+      setScheduledReportDayOfMonth(scheduledReportData.dayOfMonth ?? 1);
+      setScheduledReportCaseSummary(scheduledReportData.includeCaseSummary ?? true);
+      setScheduledReportActivity(scheduledReportData.includeActivityReport ?? true);
+      setScheduledReportCaseFilter(scheduledReportData.caseStatusFilter ?? "active");
+    }
+  }, [scheduledReportData]);
+
+  // Mutation for saving scheduled report settings
+  const saveScheduledReportMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest("POST", "/api/user/scheduled-reports", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Scheduled report settings saved",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/scheduled-reports"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to save scheduled report settings",
         variant: "destructive",
       });
     },
@@ -1330,6 +1379,159 @@ export default function UserProfile() {
                   })()}
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Scheduled Reports */}
+          <Card className="mt-6">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center space-x-2">
+                <Mail className="h-5 w-5" />
+                <span>Scheduled Reports</span>
+              </CardTitle>
+              <CardDescription>
+                Receive periodic email reports with a summary of your cases and activity.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Enable/Disable */}
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="scheduled-reports-enabled" className="font-medium">
+                      Enable Scheduled Reports
+                    </Label>
+                    <p className="text-sm text-gray-500">Receive an Excel report by email with Case Summary and Activity tabs.</p>
+                  </div>
+                  <Switch
+                    id="scheduled-reports-enabled"
+                    checked={scheduledReportEnabled}
+                    onCheckedChange={setScheduledReportEnabled}
+                  />
+                </div>
+
+                {scheduledReportEnabled && (
+                  <>
+                    <Separator />
+                    
+                    {/* Frequency */}
+                    <div className="space-y-2">
+                      <Label className="font-medium">Frequency</Label>
+                      <Select value={scheduledReportFrequency} onValueChange={(v: "weekly" | "monthly") => setScheduledReportFrequency(v)}>
+                        <SelectTrigger className="w-full sm:w-48">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="weekly">Weekly</SelectItem>
+                          <SelectItem value="monthly">Monthly</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Day selection */}
+                    {scheduledReportFrequency === "weekly" && (
+                      <div className="space-y-2">
+                        <Label className="font-medium">Day of Week</Label>
+                        <Select value={String(scheduledReportDayOfWeek)} onValueChange={(v) => setScheduledReportDayOfWeek(parseInt(v))}>
+                          <SelectTrigger className="w-full sm:w-48">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">Sunday</SelectItem>
+                            <SelectItem value="1">Monday</SelectItem>
+                            <SelectItem value="2">Tuesday</SelectItem>
+                            <SelectItem value="3">Wednesday</SelectItem>
+                            <SelectItem value="4">Thursday</SelectItem>
+                            <SelectItem value="5">Friday</SelectItem>
+                            <SelectItem value="6">Saturday</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    {scheduledReportFrequency === "monthly" && (
+                      <div className="space-y-2">
+                        <Label className="font-medium">Day of Month</Label>
+                        <Select value={String(scheduledReportDayOfMonth)} onValueChange={(v) => setScheduledReportDayOfMonth(parseInt(v))}>
+                          <SelectTrigger className="w-full sm:w-48">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
+                              <SelectItem key={day} value={String(day)}>{day}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    <Separator />
+
+                    {/* Report contents */}
+                    <div className="space-y-3">
+                      <Label className="font-medium">Report Contents</Label>
+                      
+                      <div className="flex items-center justify-between py-2">
+                        <div>
+                          <span className="text-sm font-medium">Case Summary</span>
+                          <p className="text-xs text-gray-500">Case name, account number, debtor, status, amounts</p>
+                        </div>
+                        <Switch
+                          checked={scheduledReportCaseSummary}
+                          onCheckedChange={setScheduledReportCaseSummary}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between py-2">
+                        <div>
+                          <span className="text-sm font-medium">Activity Report</span>
+                          <p className="text-xs text-gray-500">Messages received, documents uploaded</p>
+                        </div>
+                        <Switch
+                          checked={scheduledReportActivity}
+                          onCheckedChange={setScheduledReportActivity}
+                        />
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Case filter */}
+                    <div className="space-y-2">
+                      <Label className="font-medium">Include Cases</Label>
+                      <Select value={scheduledReportCaseFilter} onValueChange={(v: "active" | "all" | "closed") => setScheduledReportCaseFilter(v)}>
+                        <SelectTrigger className="w-full sm:w-48">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">Active cases only</SelectItem>
+                          <SelectItem value="all">All cases</SelectItem>
+                          <SelectItem value="closed">Closed cases only</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                )}
+
+                {/* Save button */}
+                <div className="pt-4 border-t">
+                  <Button
+                    onClick={() => saveScheduledReportMutation.mutate({
+                      enabled: scheduledReportEnabled,
+                      frequency: scheduledReportFrequency,
+                      dayOfWeek: scheduledReportDayOfWeek,
+                      dayOfMonth: scheduledReportDayOfMonth,
+                      includeCaseSummary: scheduledReportCaseSummary,
+                      includeActivityReport: scheduledReportActivity,
+                      caseStatusFilter: scheduledReportCaseFilter,
+                    })}
+                    disabled={saveScheduledReportMutation.isPending}
+                    className="bg-acclaim-teal hover:bg-acclaim-teal/90"
+                  >
+                    {saveScheduledReportMutation.isPending ? "Saving..." : "Save Report Settings"}
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

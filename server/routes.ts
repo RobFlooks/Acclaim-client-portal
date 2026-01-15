@@ -549,6 +549,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Scheduled reports endpoints
+  app.get('/api/user/scheduled-reports', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const report = await storage.getScheduledReport(userId);
+      res.json(report || null);
+    } catch (error) {
+      console.error("Error fetching scheduled report settings:", error);
+      res.status(500).json({ message: "Failed to fetch scheduled report settings" });
+    }
+  });
+
+  app.post('/api/user/scheduled-reports', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { enabled, frequency, dayOfWeek, dayOfMonth, includeCaseSummary, includeActivityReport, organisationIds, caseStatusFilter } = req.body;
+      
+      const report = await storage.upsertScheduledReport(userId, {
+        enabled,
+        frequency,
+        dayOfWeek,
+        dayOfMonth,
+        includeCaseSummary,
+        includeActivityReport,
+        organisationIds,
+        caseStatusFilter,
+      });
+      
+      res.json(report);
+    } catch (error) {
+      console.error("Error saving scheduled report settings:", error);
+      res.status(500).json({ message: "Failed to save scheduled report settings" });
+    }
+  });
+
   // Case submission routes
   app.post('/api/case-submissions', isAuthenticated, upload.array('documents'), async (req: any, res) => {
     try {

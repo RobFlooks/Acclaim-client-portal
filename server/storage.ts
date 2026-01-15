@@ -17,6 +17,7 @@ import {
   userOrganisations,
   mutedCases,
   caseAccessRestrictions,
+  scheduledReports,
   type User,
   type UpsertUser,
   type Organization,
@@ -46,6 +47,8 @@ import {
   type InsertExternalApiCredential,
   type UserOrganisation,
   type InsertUserOrganisation,
+  type ScheduledReport,
+  type InsertScheduledReport,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, sql, or, isNull, isNotNull, inArray, notInArray } from "drizzle-orm";
@@ -2681,6 +2684,46 @@ export class DatabaseStorage implements IStorage {
   async getBlockedCasesForUser(userId: string): Promise<number[]> {
     // Use muted_cases table - muted cases are now also blocked
     return this.getMutedCasesForUser(userId);
+  }
+
+  // Scheduled reports operations
+  async getScheduledReport(userId: string): Promise<ScheduledReport | undefined> {
+    const [result] = await db.select()
+      .from(scheduledReports)
+      .where(eq(scheduledReports.userId, userId))
+      .limit(1);
+    return result;
+  }
+
+  async upsertScheduledReport(userId: string, data: Partial<InsertScheduledReport>): Promise<ScheduledReport> {
+    const existing = await this.getScheduledReport(userId);
+    
+    if (existing) {
+      const [updated] = await db.update(scheduledReports)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(scheduledReports.userId, userId))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db.insert(scheduledReports)
+        .values({ userId, ...data })
+        .returning();
+      return created;
+    }
+  }
+
+  async updateScheduledReportLastSent(userId: string): Promise<void> {
+    await db.update(scheduledReports)
+      .set({ lastSentAt: new Date() })
+      .where(eq(scheduledReports.userId, userId));
+  }
+
+  async getScheduledReportsDue(): Promise<ScheduledReport[]> {
+    // Get all enabled scheduled reports
+    const results = await db.select()
+      .from(scheduledReports)
+      .where(eq(scheduledReports.enabled, true));
+    return results;
   }
 }
 
