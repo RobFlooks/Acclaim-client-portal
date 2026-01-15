@@ -1468,8 +1468,9 @@ export default function UserProfile() {
                                             <TableRow className="bg-gray-50 dark:bg-gray-800">
                                               <TableHead className="min-w-[300px] text-xs py-2 font-semibold">Case</TableHead>
                                               {nonAdminOrgUsers.map((u: any) => (
-                                                <TableHead key={u.id} className="text-center min-w-[120px] py-2">
+                                                <TableHead key={u.id} className="text-center min-w-[140px] py-2">
                                                   <div className="font-medium text-xs">{u.firstName} {u.lastName}</div>
+                                                  <div className="text-[10px] text-gray-500 font-normal truncate max-w-[130px]" title={u.email}>{u.email}</div>
                                                   <div className="flex gap-1 mt-1 justify-center">
                                                     <Button
                                                       variant="ghost"
