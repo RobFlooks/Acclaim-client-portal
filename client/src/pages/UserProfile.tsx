@@ -90,6 +90,8 @@ export default function UserProfile() {
   const [documentSearch, setDocumentSearch] = useState("");
   const [selectedOrgForUpload, setSelectedOrgForUpload] = useState<string>("");
   const [notifyOnUpload, setNotifyOnUpload] = useState(true);
+  const [documentPage, setDocumentPage] = useState(1);
+  const DOCS_PER_PAGE = 10;
 
   // Case notifications state
   const [caseSearch, setCaseSearch] = useState("");
@@ -630,12 +632,25 @@ export default function UserProfile() {
     );
   });
 
-  const documentsByOrg = filteredDocuments?.reduce((acc: any, doc: any) => {
+  // Paginate filtered documents
+  const totalDocPages = Math.ceil((filteredDocuments?.length || 0) / DOCS_PER_PAGE);
+  const paginatedDocuments = filteredDocuments?.slice(
+    (documentPage - 1) * DOCS_PER_PAGE,
+    documentPage * DOCS_PER_PAGE
+  );
+
+  const documentsByOrg = paginatedDocuments?.reduce((acc: any, doc: any) => {
     const orgName = doc.organisationName || "Unknown Organisation";
     if (!acc[orgName]) acc[orgName] = [];
     acc[orgName].push(doc);
     return acc;
   }, {});
+
+  // Reset document page when search changes
+  const handleDocumentSearch = (value: string) => {
+    setDocumentSearch(value);
+    setDocumentPage(1);
+  };
 
   if (profileLoading) {
     return (
@@ -1649,9 +1664,16 @@ export default function UserProfile() {
                     <Input
                       placeholder="Search documents by name, organisation, or uploader..."
                       value={documentSearch}
-                      onChange={(e) => setDocumentSearch(e.target.value)}
+                      onChange={(e) => handleDocumentSearch(e.target.value)}
                       className="pl-10"
                     />
+                  </div>
+                )}
+
+                {/* Document count and pagination info */}
+                {filteredDocuments && filteredDocuments.length > 0 && (
+                  <div className="text-sm text-gray-500">
+                    Showing {Math.min((documentPage - 1) * DOCS_PER_PAGE + 1, filteredDocuments.length)}-{Math.min(documentPage * DOCS_PER_PAGE, filteredDocuments.length)} of {filteredDocuments.length} documents
                   </div>
                 )}
 
@@ -1724,6 +1746,31 @@ export default function UserProfile() {
                     </div>
                   )}
                 </div>
+
+                {/* Document Pagination */}
+                {totalDocPages > 1 && (
+                  <div className="flex items-center justify-between pt-4 border-t">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setDocumentPage(p => Math.max(1, p - 1))}
+                      disabled={documentPage === 1}
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-sm text-gray-500">
+                      Page {documentPage} of {totalDocPages}
+                    </span>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setDocumentPage(p => Math.min(totalDocPages, p + 1))}
+                      disabled={documentPage === totalDocPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
