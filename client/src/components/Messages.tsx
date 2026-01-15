@@ -704,7 +704,7 @@ export default function Messages() {
               <div className="border-b pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden ${viewingMessage.senderIsAdmin ? 'bg-white border-2 border-acclaim-teal' : 'bg-white border-2 border-gray-300'}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden ${viewingMessage.senderIsAdmin ? 'bg-white border-2 border-acclaim-teal' : 'bg-white border-2 border-blue-300'}`}>
                       {viewingMessage.senderIsAdmin ? (
                         <img src={acclaimRoseLogo} alt="Acclaim" className="w-8 h-8 object-contain" />
                       ) : (
@@ -841,7 +841,7 @@ export default function Messages() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1">
                       <div className="relative flex-shrink-0">
-                        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center overflow-hidden ${message.senderIsAdmin ? 'bg-white border-2 border-acclaim-teal' : 'bg-white border-2 border-gray-300'}`}>
+                        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center overflow-hidden ${message.senderIsAdmin ? 'bg-white border-2 border-acclaim-teal' : 'bg-white border-2 border-blue-300'}`}>
                           {message.senderIsAdmin ? (
                             <img src={acclaimRoseLogo} alt="Acclaim" className="w-6 h-6 sm:w-8 sm:h-8 object-contain" />
                           ) : (
