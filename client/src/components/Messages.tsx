@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-import { Send, MessageSquare, Plus, User, Paperclip, Download, Trash2, Search, Filter, Calendar, X, FileSpreadsheet } from "lucide-react";
+import { Send, MessageSquare, Plus, User, Paperclip, Download, Trash2, Search, Filter, Calendar, X, FileSpreadsheet, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/use-auth";
@@ -659,6 +659,15 @@ export default function Messages() {
                     <span className="hidden sm:inline">{isExporting ? "Exporting..." : "Export to Excel"}</span>
                     <span className="sm:hidden ml-1">XLS</span>
                   </Button>
+                </div>
+                
+                {/* Report Tip */}
+                <div className="flex gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs sm:text-sm text-blue-800">
+                  <Info className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-medium">Tip:</span> Create a message report by setting your date range and filters above, then click "Export to Excel". 
+                    In Excel, you can further filter and organise columns to view specific message types, such as those with subject "Instructions Required" or "Information Only".
+                  </div>
                 </div>
               </div>
             )}
