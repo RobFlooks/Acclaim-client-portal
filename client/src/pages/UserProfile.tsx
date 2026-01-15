@@ -1599,12 +1599,12 @@ export default function UserProfile() {
                                 </div>
 
                                 {/* Member Management Section */}
-                                {nonAdminOrgUsers.length > 0 && (
+                                {nonAdminOrgUsers.filter((u: any) => u.id !== user?.id).length > 0 && (
                                   <div className="mt-4 pt-4 border-t">
                                     <h5 className="font-medium text-sm mb-2">Team Member Management</h5>
                                     <p className="text-xs text-gray-500 mb-3">Request to remove members from your organisation or delegate owner privileges to manage the organisation and it's members.</p>
                                     <div className="space-y-2">
-                                      {nonAdminOrgUsers.map((u: any) => (
+                                      {nonAdminOrgUsers.filter((u: any) => u.id !== user?.id).map((u: any) => (
                                         <div key={u.id} className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                                           <div className="flex items-center gap-2">
                                             <div className="h-8 w-8 rounded-full bg-teal-100 dark:bg-teal-900 flex items-center justify-center text-teal-700 dark:text-teal-300 text-sm font-medium">
