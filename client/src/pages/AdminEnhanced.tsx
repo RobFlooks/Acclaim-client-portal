@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, EyeOff, Mail, Bell, BellOff, FilePlus, FileX, BarChart3, Search, Crown } from "lucide-react";
+import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, EyeOff, Mail, Bell, BellOff, FilePlus, FileX, BarChart3, Search, Crown, Calendar, CalendarOff } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrganisationSchema } from "@shared/schema";
@@ -144,6 +144,7 @@ interface Organisation {
   createdAt: string;
   userCount: number;
   externalRef?: string;
+  scheduledReportsEnabled?: boolean;
 }
 
 type CreateUserForm = z.infer<typeof createUserSchema>;
@@ -2123,6 +2124,28 @@ export default function AdminEnhanced() {
     },
   });
 
+  // Toggle scheduled reports for organisation
+  const toggleScheduledReportsMutation = useMutation({
+    mutationFn: async ({ orgId, enabled }: { orgId: number; enabled: boolean }) => {
+      const response = await apiRequest("PUT", `/api/admin/organisations/${orgId}/scheduled-reports`, { enabled });
+      return await response.json();
+    },
+    onSuccess: (_, { enabled }) => {
+      toast({
+        title: "Success",
+        description: `Scheduled reports ${enabled ? 'enabled' : 'disabled'} for this organisation`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/organisations"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update scheduled reports setting",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Assign user to organisation mutation
   const assignUserMutation = useMutation({
     mutationFn: async ({ userId, organisationId }: { userId: string; organisationId: number }) => {
@@ -3560,6 +3583,7 @@ export default function AdminEnhanced() {
                   <TableRow>
                     <TableHead>Organisation</TableHead>
                     <TableHead>Users</TableHead>
+                    <TableHead>Scheduled Reports</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -3573,6 +3597,27 @@ export default function AdminEnhanced() {
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">{org.userCount} users</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            toggleScheduledReportsMutation.mutate({ 
+                              orgId: org.id, 
+                              enabled: !(org.scheduledReportsEnabled !== false) 
+                            });
+                          }}
+                          disabled={toggleScheduledReportsMutation.isPending}
+                          title={org.scheduledReportsEnabled !== false ? "Click to disable scheduled reports for this organisation" : "Click to enable scheduled reports for this organisation"}
+                          className={org.scheduledReportsEnabled !== false ? "text-green-600 hover:text-green-700" : "text-gray-400 hover:text-gray-500"}
+                        >
+                          {org.scheduledReportsEnabled !== false ? (
+                            <><Calendar className="h-4 w-4 mr-1" /> Enabled</>
+                          ) : (
+                            <><CalendarOff className="h-4 w-4 mr-1" /> Disabled</>
+                          )}
+                        </Button>
                       </TableCell>
                       <TableCell>
                         {new Date(org.createdAt).toLocaleDateString()}
