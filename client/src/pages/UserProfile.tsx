@@ -1747,7 +1747,7 @@ export default function UserProfile() {
                         <SelectItem value="owner">Owner</SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs mt-1 text-[#0d9488]">
                       {memberRequestData.memberType === "owner" 
                         ? "Owners can manage case access for other team members in your organisation."
                         : "Members can view cases and documents assigned to them."}
