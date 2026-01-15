@@ -223,8 +223,8 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
       {/* Dashboard Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">Welcome to your debt recovery portal</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Welcome to your debt recovery portal</p>
         </div>
         {user?.canSubmitCases !== false && (
           <Button 
@@ -241,10 +241,10 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <TrendingUp className="text-green-600 h-5 w-5" />
+            <div className="p-2 bg-green-100 dark:bg-green-900/40 rounded-lg">
+              <TrendingUp className="text-green-600 dark:text-green-400 h-5 w-5" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900">Live Cases Stats</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Live Cases Stats</h2>
           </div>
 
         </div>
@@ -253,12 +253,12 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className="p-3 rounded-lg bg-[#f5e7006e]">
-                  <FolderOpen className="text-acclaim-teal h-6 w-6" />
+                <div className="p-3 rounded-lg bg-amber-100 dark:bg-amber-900/40">
+                  <FolderOpen className="text-amber-600 dark:text-amber-400 h-6 w-6" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-gray-600 text-sm">Active Cases</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">Active Cases</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                     {statsLoading ? "..." : stats?.activeCases || 0}
                   </p>
                 </div>
@@ -269,15 +269,15 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-start">
-                <div className="p-3 bg-blue-100 rounded-lg flex-shrink-0">
-                  <PoundSterling className="text-blue-600 h-6 w-6" />
+                <div className="p-3 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex-shrink-0">
+                  <PoundSterling className="text-blue-600 dark:text-blue-400 h-6 w-6" />
                 </div>
                 <div className="ml-4 min-w-0 flex-1">
-                  <p className="text-gray-600 text-sm">Total Outstanding</p>
-                  <p className="text-base sm:text-lg font-bold text-gray-900 break-all">
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">Total Outstanding</p>
+                  <p className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 break-all">
                     {statsLoading ? "..." : formatCurrency(stats?.totalOutstanding || 0)}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">*Active cases only</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">*Active cases only</p>
                 </div>
               </div>
             </CardContent>
@@ -286,15 +286,15 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-start">
-                <div className="p-3 bg-purple-100 rounded-lg flex-shrink-0">
-                  <PoundSterling className="text-purple-600 h-6 w-6" />
+                <div className="p-3 bg-purple-100 dark:bg-purple-900/40 rounded-lg flex-shrink-0">
+                  <PoundSterling className="text-purple-600 dark:text-purple-400 h-6 w-6" />
                 </div>
                 <div className="ml-4 min-w-0 flex-1">
-                  <p className="text-gray-600 text-sm">Total Recovery</p>
-                  <p className="text-base sm:text-lg font-bold text-gray-900 break-all">
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">Total Recovery</p>
+                  <p className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 break-all">
                     {statsLoading ? "..." : `£${parseFloat(stats?.totalRecovery || '0').toLocaleString()}`}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">*Active cases only</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">*Active cases only</p>
                 </div>
               </div>
             </CardContent>
@@ -303,21 +303,21 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <CheckCircle className="text-green-600 h-6 w-6" />
+                <div className="p-3 bg-green-100 dark:bg-green-900/40 rounded-lg">
+                  <CheckCircle className="text-green-600 dark:text-green-400 h-6 w-6" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-gray-600 text-sm">Closed Cases</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">Closed Cases</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                     {statsLoading ? "..." : stats?.closedCases || 0}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">*For reference</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">*For reference</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
-        <p className="text-xs text-gray-500 text-center mt-2">
+        <p className="text-xs text-gray-500 dark:text-gray-500 text-center mt-2">
           Statistics are based on all cases across your organisation(s)
         </p>
       </div>
@@ -334,7 +334,7 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="animate-pulse">
-                      <div className="h-16 bg-gray-200 rounded-lg"></div>
+                      <div className="h-16 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
                     </div>
                   ))}
                 </div>
@@ -343,23 +343,23 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
                   {recentCases.map((case_: any) => (
                     <div
                       key={case_.id}
-                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                      className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors"
                       onClick={() => handleCaseClick(case_)}
                     >
                       <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#ffffff]">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-gray-700">
                           {getDebtorIcon(case_.debtorType)}
                         </div>
                         <div className="ml-4">
-                          <p className="font-medium text-gray-900">{case_.caseName}</p>
-                          <p className="text-sm text-gray-600">Account: {case_.accountNumber}</p>
+                          <p className="font-medium text-gray-900 dark:text-gray-100">{case_.caseName}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Account: {case_.accountNumber}</p>
                           {case_.organisationName && (
-                            <p className="text-xs text-gray-500">{case_.organisationName}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-500">{case_.organisationName}</p>
                           )}
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-gray-900">
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">
                           {formatCurrency(case_.outstandingAmount)}
                         </p>
                         {getStageBadge(case_.status, case_.stage)}
@@ -369,8 +369,8 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <FolderOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No cases found</p>
+                  <FolderOpen className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                  <p className="text-gray-500 dark:text-gray-400">No cases found</p>
                 </div>
               )}
             </CardContent>
@@ -402,7 +402,7 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
                 <div className="space-y-4">
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="animate-pulse">
-                      <div className="h-16 bg-gray-200 rounded-lg"></div>
+                      <div className="h-16 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
                     </div>
                   ))}
                 </div>
