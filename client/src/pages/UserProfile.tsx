@@ -458,6 +458,12 @@ export default function UserProfile() {
     retry: false,
   });
 
+  // Check if scheduled reports are allowed for this user's organisation(s)
+  const { data: scheduledReportsAllowed } = useQuery<{ allowed: boolean; reason?: string }>({
+    queryKey: ["/api/user/scheduled-reports-allowed"],
+    retry: false,
+  });
+
   // Populate scheduled report form when data is loaded
   useEffect(() => {
     if (scheduledReportData) {
@@ -1384,7 +1390,8 @@ export default function UserProfile() {
             </CardContent>
           </Card>
 
-          {/* Scheduled Reports */}
+          {/* Scheduled Reports - only show if allowed for user's organisation(s) */}
+          {scheduledReportsAllowed?.allowed !== false && (
           <Card className="mt-6">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center space-x-2">
@@ -1587,6 +1594,7 @@ export default function UserProfile() {
               </div>
             </CardContent>
           </Card>
+          )}
         </TabsContent>
 
         {/* Organisation Tab */}

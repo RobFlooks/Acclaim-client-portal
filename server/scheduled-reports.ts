@@ -631,6 +631,16 @@ export async function processScheduledReports(): Promise<void> {
       const user = await storage.getUser(settings.userId);
       if (!user || !user.email) continue;
 
+      // Check if user's organisations have scheduled reports enabled
+      const userOrgs = await storage.getUserOrganisations(settings.userId);
+      const disabledOrgIds = await storage.getOrganisationsWithScheduledReportsDisabled();
+      const allOrgsDisabled = userOrgs.every(org => disabledOrgIds.includes(org.id));
+      
+      if (allOrgsDisabled) {
+        console.log(`  Skipping - scheduled reports disabled for all user's organisations`);
+        continue;
+      }
+
       const reportBuffers = await generateScheduledReport(settings.userId, settings as ScheduledReportSettings);
       
       const frequencyText = settings.frequency === "daily" ? "Daily" : settings.frequency === "weekly" ? "Weekly" : "Monthly";
