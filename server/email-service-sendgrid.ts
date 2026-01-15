@@ -510,99 +510,130 @@ Portal: https://acclaim-api.azurewebsites.net/auth
           : 'New Message Received - Acclaim Portal';
 
       const htmlContent = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
-          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); background-color: #14b8a6; color: #ffffff; padding: 30px; text-align: center;">
-            <div style="margin-bottom: 10px;">
-              <img src="cid:logo" alt="Acclaim Credit Management & Recovery" style="height: 40px; width: auto;" />
-            </div>
-            <p style="margin: 0; color: #ffffff; font-size: 16px; font-weight: 500;">New message received</p>
-            ${data.caseReference ? `<p style="margin: 5px 0 0 0; color: #ffffff; font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
-          </div>
-          
-          <div style="padding: 30px;">
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h2 style="color: #1e293b; margin-top: 0;">Message Details</h2>
-              <table style="width: 100%; border-spacing: 0;">
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 140px;">From:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.userName} (${data.userEmail})</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Organisation:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.organisationName}</td>
-                </tr>
-                ${data.caseReference ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Case Reference:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseReference}</td>
-                </tr>
-                ` : ''}
-                ${data.caseDetails ? `
-                <tr>
-                  <td colspan="2" style="padding: 15px 0 8px 0;">
-                    <h3 style="color: #0f172a; margin: 0; font-size: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Case Details</h3>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Case Name:</td>
-                  <td style="padding: 4px 0; color: #1e293b;">${data.caseDetails.caseName}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Debtor Type:</td>
-                  <td style="padding: 4px 0; color: #1e293b;">${data.caseDetails.debtorType.charAt(0).toUpperCase() + data.caseDetails.debtorType.slice(1).replace('_', ' ')}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Original Amount:</td>
-                  <td style="padding: 4px 0; color: #1e293b;">£${data.caseDetails.originalAmount}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Outstanding Amount:</td>
-                  <td style="padding: 4px 0; color: #1e293b; font-weight: bold;">£${data.caseDetails.outstandingAmount}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Status:</td>
-                  <td style="padding: 4px 0; color: #1e293b;">
-                    <span style="background: ${data.caseDetails.status === 'active' ? '#dcfce7' : '#fef3c7'}; color: ${data.caseDetails.status === 'active' ? '#166534' : '#a16207'}; padding: 2px 8px; border-radius: 4px; font-size: 12px; text-transform: uppercase; font-weight: bold;">
-                      ${data.caseDetails.status}
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Current Stage:</td>
-                  <td style="padding: 4px 0; color: #1e293b;">${data.caseDetails.stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</td>
-                </tr>
-                ${data.caseDetails.assignedTo ? `
-                <tr>
-                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Case Handler:</td>
-                  <td style="padding: 4px 0; color: #1e293b;">${data.caseDetails.assignedTo}</td>
-                </tr>
-                ` : ''}
-                ` : ''}
-                ${data.messageSubject ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Subject:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.messageSubject}</td>
-                </tr>
-                ` : ''}
-              </table>
-            </div>
-
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h3 style="color: #1e293b; margin-top: 0;">Message Content</h3>
-              <div style="color: #475569; line-height: 1.6; white-space: pre-wrap;">${data.messageContent}</div>
-            </div>
-
-            <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; text-align: center;">
-              <p style="margin: 0 0 15px 0; color: #64748b;">
-                Please log in to the Acclaim Portal to view and respond to this message.
-              </p>
-            </div>
-          </div>
-
-          <div style="background: #e2e8f0; padding: 20px; text-align: center; color: #64748b; font-size: 14px;">
-            <p style="margin: 0;">This is an automated notification from Acclaim Credit Management & Recovery</p>
-          </div>
-        </div>
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f0f4f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f0f4f8;">
+            <tr>
+              <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width: 600px; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+                  
+                  <!-- Header -->
+                  <tr>
+                    <td style="background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                      <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
+                      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">New Message</h1>
+                      ${data.caseReference ? `<p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
+                    </td>
+                  </tr>
+                  
+                  <!-- Body -->
+                  <tr>
+                    <td style="padding: 40px;">
+                      
+                      <!-- Sender Info Card -->
+                      <div style="background: #f8fafb; border-radius: 12px; padding: 24px; margin-bottom: 24px; border-left: 4px solid #008b8b;">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                          <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px; width: 120px;">From</td>
+                            <td style="padding: 6px 0; color: #1e293b; font-size: 14px; font-weight: 500;">${data.userName}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Email</td>
+                            <td style="padding: 6px 0; color: #1e293b; font-size: 14px;">${data.userEmail}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Organisation</td>
+                            <td style="padding: 6px 0; color: #1e293b; font-size: 14px; font-weight: 500;">${data.organisationName}</td>
+                          </tr>
+                          ${data.caseReference ? `
+                          <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Case Ref</td>
+                            <td style="padding: 6px 0; color: #1e293b; font-size: 14px; font-weight: 500;">${data.caseReference}</td>
+                          </tr>
+                          ` : ''}
+                          ${data.messageSubject ? `
+                          <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Subject</td>
+                            <td style="padding: 6px 0; color: #1e293b; font-size: 14px; font-weight: 500;">${data.messageSubject}</td>
+                          </tr>
+                          ` : ''}
+                        </table>
+                      </div>
+                      
+                      ${data.caseDetails ? `
+                      <!-- Case Details Card -->
+                      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                        <h3 style="margin: 0 0 16px 0; color: #0f172a; font-size: 15px; font-weight: 600;">
+                          <span style="display: inline-block; width: 4px; height: 16px; background: #008b8b; border-radius: 2px; margin-right: 10px; vertical-align: middle;"></span>
+                          Case Details
+                        </h3>
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="font-size: 14px;">
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b; width: 140px;">Case Name</td>
+                            <td style="padding: 8px 0; color: #1e293b; font-weight: 500;">${data.caseDetails.caseName}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Debtor Type</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseDetails.debtorType.charAt(0).toUpperCase() + data.caseDetails.debtorType.slice(1).replace('_', ' ')}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Original Amount</td>
+                            <td style="padding: 8px 0; color: #1e293b;">£${data.caseDetails.originalAmount}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Outstanding</td>
+                            <td style="padding: 8px 0; color: #008b8b; font-weight: 700; font-size: 16px;">£${data.caseDetails.outstandingAmount}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Status</td>
+                            <td style="padding: 8px 0;">
+                              <span style="display: inline-block; background: ${data.caseDetails.status === 'active' ? '#dcfce7' : '#fef3c7'}; color: ${data.caseDetails.status === 'active' ? '#166534' : '#a16207'}; padding: 4px 12px; border-radius: 50px; font-size: 12px; font-weight: 600;">
+                                ${data.caseDetails.status.toUpperCase()}
+                              </span>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Stage</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseDetails.stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</td>
+                          </tr>
+                          ${data.caseDetails.assignedTo ? `
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Case Handler</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseDetails.assignedTo}</td>
+                          </tr>
+                          ` : ''}
+                        </table>
+                      </div>
+                      ` : ''}
+                      
+                      <!-- Message Content -->
+                      <div style="background: #fafbfc; border-radius: 12px; padding: 24px; margin-bottom: 30px;">
+                        <h3 style="margin: 0 0 12px 0; color: #0f172a; font-size: 15px; font-weight: 600;">Message</h3>
+                        <div style="color: #475569; line-height: 1.7; font-size: 14px; white-space: pre-wrap;">${data.messageContent}</div>
+                      </div>
+                      
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background: #f8fafb; padding: 24px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
+                      <p style="margin: 0; color: #94a3b8; font-size: 13px;">Acclaim Credit Management & Recovery</p>
+                      <p style="margin: 8px 0 0 0; color: #cbd5e1; font-size: 12px;">This is an automated notification</p>
+                    </td>
+                  </tr>
+                  
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
       `;
 
       const textContent = `
@@ -678,78 +709,107 @@ Please log in to the Acclaim Portal to view and respond to this message.
           : 'New Message from Administrator - Acclaim Portal';
 
       const htmlContent = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
-          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 30px; text-align: center;">
-            <div style="margin-bottom: 10px;">
-              <img src="cid:logo" alt="Acclaim Credit Management & Recovery" style="height: 40px; width: auto;" />
-            </div>
-            <p style="margin: 0; opacity: 0.9; font-size: 16px;">Message from Acclaim</p>
-            ${data.caseReference ? `<p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
-          </div>
-          
-          <div style="padding: 30px;">
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h2 style="color: #1e293b; margin-top: 0;">Message Details</h2>
-              <table style="width: 100%; border-spacing: 0;">
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 140px;">From:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">Acclaim</td>
-                </tr>
-                ${data.caseReference ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Case Reference:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseReference}</td>
-                </tr>
-                ` : ''}
-                ${data.caseDetails ? `
-                <tr>
-                  <td colspan="2" style="padding: 15px 0 8px 0;">
-                    <h3 style="color: #0f172a; margin: 0; font-size: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Case Details</h3>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Case Name:</td>
-                  <td style="padding: 4px 0; color: #1e293b;">${data.caseDetails.caseName}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Outstanding Amount:</td>
-                  <td style="padding: 4px 0; color: #1e293b; font-weight: bold;">£${data.caseDetails.outstandingAmount}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Status:</td>
-                  <td style="padding: 4px 0; color: #1e293b;">
-                    <span style="background: ${data.caseDetails.status === 'active' ? '#dcfce7' : '#fef3c7'}; color: ${data.caseDetails.status === 'active' ? '#166534' : '#a16207'}; padding: 2px 8px; border-radius: 4px; font-size: 12px; text-transform: uppercase; font-weight: bold;">
-                      ${data.caseDetails.status}
-                    </span>
-                  </td>
-                </tr>
-                ` : ''}
-                ${data.messageSubject ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Subject:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.messageSubject}</td>
-                </tr>
-                ` : ''}
-              </table>
-            </div>
-
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h3 style="color: #1e293b; margin-top: 0;">Message Content</h3>
-              <div style="color: #475569; line-height: 1.6; white-space: pre-wrap;">${data.messageContent}</div>
-            </div>
-
-            <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; text-align: center;">
-              <p style="margin: 0 0 15px 0; color: #64748b;">
-                Please log in to the Acclaim Portal to view this message and respond if needed.
-              </p>
-              <a href="https://acclaim-api.azurewebsites.net/auth" style="display: inline-block; background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 16px;">View Message</a>
-            </div>
-          </div>
-
-          <div style="background: #e2e8f0; padding: 20px; text-align: center; color: #64748b; font-size: 14px;">
-            <p style="margin: 0;">This is an automated notification from Acclaim Credit Management & Recovery</p>
-          </div>
-        </div>
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f0f4f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f0f4f8;">
+            <tr>
+              <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width: 600px; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+                  
+                  <!-- Header -->
+                  <tr>
+                    <td style="background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                      <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
+                      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Message from Acclaim</h1>
+                      ${data.caseReference ? `<p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
+                    </td>
+                  </tr>
+                  
+                  <!-- Body -->
+                  <tr>
+                    <td style="padding: 40px;">
+                      
+                      <!-- Info Card -->
+                      <div style="background: #f8fafb; border-radius: 12px; padding: 24px; margin-bottom: 24px; border-left: 4px solid #008b8b;">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                          ${data.caseReference ? `
+                          <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px; width: 120px;">Case Ref</td>
+                            <td style="padding: 6px 0; color: #1e293b; font-size: 14px; font-weight: 500;">${data.caseReference}</td>
+                          </tr>
+                          ` : ''}
+                          ${data.messageSubject ? `
+                          <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Subject</td>
+                            <td style="padding: 6px 0; color: #1e293b; font-size: 14px; font-weight: 500;">${data.messageSubject}</td>
+                          </tr>
+                          ` : ''}
+                        </table>
+                      </div>
+                      
+                      ${data.caseDetails ? `
+                      <!-- Case Details Card -->
+                      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                        <h3 style="margin: 0 0 16px 0; color: #0f172a; font-size: 15px; font-weight: 600;">
+                          <span style="display: inline-block; width: 4px; height: 16px; background: #008b8b; border-radius: 2px; margin-right: 10px; vertical-align: middle;"></span>
+                          Case Details
+                        </h3>
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="font-size: 14px;">
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b; width: 140px;">Case Name</td>
+                            <td style="padding: 8px 0; color: #1e293b; font-weight: 500;">${data.caseDetails.caseName}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Outstanding</td>
+                            <td style="padding: 8px 0; color: #008b8b; font-weight: 700; font-size: 16px;">£${data.caseDetails.outstandingAmount}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Status</td>
+                            <td style="padding: 8px 0;">
+                              <span style="display: inline-block; background: ${data.caseDetails.status === 'active' ? '#dcfce7' : '#fef3c7'}; color: ${data.caseDetails.status === 'active' ? '#166534' : '#a16207'}; padding: 4px 12px; border-radius: 50px; font-size: 12px; font-weight: 600;">
+                                ${data.caseDetails.status.toUpperCase()}
+                              </span>
+                            </td>
+                          </tr>
+                        </table>
+                      </div>
+                      ` : ''}
+                      
+                      <!-- Message Content -->
+                      <div style="background: #fafbfc; border-radius: 12px; padding: 24px; margin-bottom: 30px;">
+                        <h3 style="margin: 0 0 12px 0; color: #0f172a; font-size: 15px; font-weight: 600;">Message</h3>
+                        <div style="color: #475569; line-height: 1.7; font-size: 14px; white-space: pre-wrap;">${data.messageContent}</div>
+                      </div>
+                      
+                      <!-- CTA Button -->
+                      <div style="text-align: center;">
+                        <a href="https://acclaim-api.azurewebsites.net/auth" style="display: inline-block; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(0,139,139,0.3);">
+                          View in Portal →
+                        </a>
+                      </div>
+                      
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background: #f8fafb; padding: 24px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
+                      <p style="margin: 0; color: #94a3b8; font-size: 13px;">Acclaim Credit Management & Recovery</p>
+                      <p style="margin: 8px 0 0 0; color: #cbd5e1; font-size: 12px;">This is an automated notification</p>
+                    </td>
+                  </tr>
+                  
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
       `;
 
       const textContent = `
@@ -811,61 +871,89 @@ Portal: https://acclaim-api.azurewebsites.net/auth
       const subject = `Welcome to the Acclaim Credit Management & Recovery Portal!`;
 
       const htmlContent = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
-          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 30px; text-align: center;">
-            <div style="margin-bottom: 10px;">
-              <img src="cid:logo" alt="Acclaim Credit Management & Recovery" style="height: 40px; width: auto;" />
-            </div>
-            <h1 style="margin: 0; font-size: 24px;">Welcome to the Acclaim Credit Management & Recovery Portal!</h1>
-            <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">Your account is ready</p>
-          </div>
-          
-          <div style="padding: 30px;">
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <p style="color: #475569; margin-bottom: 20px;">Hello ${data.firstName},</p>
-              <p style="color: #475569; margin-bottom: 20px;">Welcome to the Acclaim Credit Management & Recovery Portal! Your account has been created and you can now access the system to view and manage your cases.</p>
-              
-              <table style="width: 100%; border-spacing: 0; margin: 20px 0;">
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 140px;">Username:</td>
-                  <td style="padding: 8px 0; color: #1e293b; font-family: monospace; background: #f1f5f9; padding: 4px 8px; border-radius: 4px;">${data.userEmail}</td>
-                </tr>
-              </table>
-              
-              <div style="text-align: center; margin: 25px 0;">
-                <a href="${portalUrl}" style="display: inline-block; background-color: #0d9488; background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 16px;">Access the Portal</a>
-              </div>
-              <p style="color: #94a3b8; font-size: 12px; text-align: center; margin-top: 10px;">
-                Or copy this link: <a href="${portalUrl}" style="color: #14b8a6;">${portalUrl}</a>
-              </p>
-            </div>
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f0f4f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f0f4f8;">
+            <tr>
+              <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width: 600px; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+                  
+                  <!-- Header -->
+                  <tr>
+                    <td style="background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                      <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
+                      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Welcome to Acclaim</h1>
+                      <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Your account is ready</p>
+                    </td>
+                  </tr>
+                  
+                  <!-- Body -->
+                  <tr>
+                    <td style="padding: 40px;">
+                      
+                      <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">Hello ${data.firstName},</p>
+                      <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">Welcome to the Acclaim Credit Management & Recovery Portal! Your account has been created and you can now access the system to view and manage your cases.</p>
+                      
+                      <!-- Username Card -->
+                      <div style="background: #f8fafb; border-radius: 12px; padding: 24px; margin-bottom: 24px; border-left: 4px solid #008b8b;">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                          <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px; width: 100px;">Username</td>
+                            <td style="padding: 6px 0; color: #1e293b; font-size: 14px; font-weight: 500; font-family: monospace;">${data.userEmail}</td>
+                          </tr>
+                        </table>
+                      </div>
+                      
+                      <!-- CTA Button -->
+                      <div style="text-align: center; margin-bottom: 30px;">
+                        <a href="${portalUrl}" style="display: inline-block; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(0,139,139,0.3);">
+                          Access the Portal →
+                        </a>
+                      </div>
+                      
+                      <!-- Features Card -->
+                      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                        <h3 style="margin: 0 0 16px 0; color: #0f172a; font-size: 15px; font-weight: 600;">
+                          <span style="display: inline-block; width: 4px; height: 16px; background: #008b8b; border-radius: 2px; margin-right: 10px; vertical-align: middle;"></span>
+                          What you can do
+                        </h3>
+                        <ul style="color: #475569; line-height: 2; padding-left: 20px; margin: 0; font-size: 14px;">
+                          <li>View and track your cases</li>
+                          <li>Send and receive messages with our team</li>
+                          <li>Access and download case documents</li>
+                          <li>Track payment history</li>
+                        </ul>
+                      </div>
 
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h3 style="color: #1e293b; margin-top: 0;">What you can do in the portal:</h3>
-              <ul style="color: #475569; line-height: 1.8; padding-left: 20px;">
-                <li>View and track your cases</li>
-                <li>Send and receive messages with our team</li>
-                <li>Access and download case documents</li>
-                <li>Track payment history</li>
-              </ul>
-            </div>
-
-            <div style="background: #e0f2fe; border: 1px solid #0284c7; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-              <p style="color: #0369a1; margin: 0; font-size: 14px;">
-                <strong>📧 Note:</strong> Your temporary password will be sent in a separate email for security purposes.
-              </p>
-              <p style="color: #0369a1; margin: 10px 0 0 0; font-size: 13px;">
-                <strong>⚠️ Important:</strong> If you don't receive the password email within 5 minutes, please check your spam or junk folder.
-              </p>
-            </div>
-
-            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; text-align: center;">
-              <p style="color: #64748b; margin: 0; font-size: 12px;">
-                If you have any questions, please contact our support team.
-              </p>
-            </div>
-          </div>
-        </div>
+                      <!-- Note Card -->
+                      <div style="background: #e0f7f6; border-radius: 12px; padding: 20px; margin-bottom: 16px;">
+                        <p style="color: #00695c; margin: 0; font-size: 14px; line-height: 1.6;">
+                          <strong>Note:</strong> Your temporary password will be sent in a separate email for security purposes.
+                        </p>
+                      </div>
+                      
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background: #f8fafb; padding: 24px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
+                      <p style="margin: 0; color: #94a3b8; font-size: 13px;">Acclaim Credit Management & Recovery</p>
+                      <p style="margin: 8px 0 0 0; color: #cbd5e1; font-size: 12px;">Questions? Contact our support team</p>
+                    </td>
+                  </tr>
+                  
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
       `;
 
       const textContent = `
@@ -922,55 +1010,86 @@ If you have any questions, please contact our support team.
       const subject = `Your Temporary Password - Acclaim Portal`;
 
       const htmlContent = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
-          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 30px; text-align: center;">
-            <div style="margin-bottom: 10px;">
-              <img src="cid:logo" alt="Acclaim Credit Management & Recovery" style="height: 40px; width: auto;" />
-            </div>
-            <p style="margin: 0; opacity: 0.9; font-size: 16px;">Your Temporary Password</p>
-          </div>
-          
-          <div style="padding: 30px;">
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <p style="color: #475569; margin-bottom: 20px;">Hello ${data.firstName},</p>
-              <p style="color: #475569; margin-bottom: 20px;">Here is your temporary password to access the Acclaim Credit Management & Recovery Portal:</p>
-              
-              <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
-                <p style="color: #475569; margin: 0 0 10px 0; font-size: 14px;">Your temporary password:</p>
-                <div style="font-size: 24px; font-weight: bold; color: #1e293b; font-family: monospace; letter-spacing: 2px; background: white; padding: 15px; border-radius: 6px; border: 2px dashed #14b8a6;">
-                  ${data.temporaryPassword}
-                </div>
-              </div>
-            </div>
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f0f4f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f0f4f8;">
+            <tr>
+              <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width: 600px; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+                  
+                  <!-- Header -->
+                  <tr>
+                    <td style="background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                      <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
+                      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Your Temporary Password</h1>
+                    </td>
+                  </tr>
+                  
+                  <!-- Body -->
+                  <tr>
+                    <td style="padding: 40px;">
+                      
+                      <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">Hello ${data.firstName},</p>
+                      <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">Here is your temporary password to access the Acclaim Portal:</p>
+                      
+                      <!-- Password Display -->
+                      <div style="background: #f8fafb; border-radius: 12px; padding: 30px; margin-bottom: 24px; text-align: center;">
+                        <p style="color: #64748b; margin: 0 0 12px 0; font-size: 13px;">Your temporary password:</p>
+                        <div style="font-size: 28px; font-weight: bold; color: #008b8b; font-family: monospace; letter-spacing: 3px; background: white; padding: 20px; border-radius: 8px; border: 2px solid #008b8b;">
+                          ${data.temporaryPassword}
+                        </div>
+                      </div>
 
-            <div style="background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-              <h3 style="color: #92400e; margin-top: 0; margin-bottom: 10px;">⚠️ Important Security Notice</h3>
-              <p style="color: #92400e; margin: 0; font-size: 14px;">This is a temporary password. <strong>You will be required to change it when you first log in</strong> for security purposes.</p>
-            </div>
+                      <!-- Warning Card -->
+                      <div style="background: #fef3c7; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                        <p style="color: #92400e; margin: 0; font-size: 14px; line-height: 1.6;">
+                          <strong>Important:</strong> This is a temporary password. You will be required to change it when you first log in.
+                        </p>
+                      </div>
+                      
+                      <!-- Steps Card -->
+                      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                        <h3 style="margin: 0 0 16px 0; color: #0f172a; font-size: 15px; font-weight: 600;">
+                          <span style="display: inline-block; width: 4px; height: 16px; background: #008b8b; border-radius: 2px; margin-right: 10px; vertical-align: middle;"></span>
+                          Getting Started
+                        </h3>
+                        <ol style="color: #475569; line-height: 2; padding-left: 20px; margin: 0; font-size: 14px;">
+                          <li>Go to the Acclaim Portal login page</li>
+                          <li>Enter your email address as your username</li>
+                          <li>Enter this temporary password</li>
+                          <li>You will be prompted to create a new secure password</li>
+                        </ol>
+                      </div>
 
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h3 style="color: #1e293b; margin-top: 0;">Getting Started</h3>
-              <ol style="color: #475569; line-height: 1.8; padding-left: 20px;">
-                <li>Go to the Acclaim Portal login page</li>
-                <li>Enter your email address as your username</li>
-                <li>Enter this temporary password</li>
-                <li>You will be prompted to create a new secure password</li>
-              </ol>
-            </div>
-
-            <div style="background: #fee2e2; border: 1px solid #ef4444; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-              <p style="color: #dc2626; margin: 0; font-size: 14px;">
-                <strong>🔒 Security Tip:</strong> Please delete this email after you have logged in and changed your password.
-              </p>
-            </div>
-
-            <div style="background: #f8fafc; padding: 15px; border-radius: 8px; text-align: center;">
-              <p style="color: #64748b; margin: 0; font-size: 12px;">
-                If you have any questions, please contact our support team.
-              </p>
-            </div>
-          </div>
-        </div>
+                      <!-- Security Tip -->
+                      <div style="background: #fef2f2; border-radius: 12px; padding: 20px;">
+                        <p style="color: #dc2626; margin: 0; font-size: 14px; line-height: 1.6;">
+                          <strong>Security Tip:</strong> Please delete this email after you have logged in and changed your password.
+                        </p>
+                      </div>
+                      
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background: #f8fafb; padding: 24px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
+                      <p style="margin: 0; color: #94a3b8; font-size: 13px;">Acclaim Credit Management & Recovery</p>
+                      <p style="margin: 8px 0 0 0; color: #cbd5e1; font-size: 12px;">Questions? Contact our support team</p>
+                    </td>
+                  </tr>
+                  
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
       `;
 
       const textContent = `
@@ -1026,55 +1145,81 @@ If you have any questions, please contact our support team.
       const subject = `Your Password Reset Code - Acclaim Portal`;
 
       const htmlContent = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
-          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 30px; text-align: center;">
-            <div style="margin-bottom: 10px;">
-              <img src="cid:logo" alt="Acclaim Credit Management & Recovery" style="height: 40px; width: auto;" />
-            </div>
-            <p style="margin: 0; opacity: 0.9; font-size: 16px;">Password Reset Request</p>
-          </div>
-          
-          <div style="padding: 30px;">
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h2 style="color: #1e293b; margin-top: 0;">Hello ${data.userName},</h2>
-              <p style="color: #475569; margin-bottom: 20px;">
-                We received a request to reset your password for the Acclaim Credit Management & Recovery Portal.
-              </p>
-              
-              <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px;">
-                <p style="color: #475569; margin: 0 0 10px 0; font-size: 14px;">Your one-time password is:</p>
-                <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #0d9488; font-family: monospace;">
-                  ${data.otp}
-                </div>
-                <p style="color: #94a3b8; margin: 10px 0 0 0; font-size: 12px;">
-                  This code expires in ${data.expiresInMinutes} minutes
-                </p>
-              </div>
-              
-              <div style="background: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b;">
-                <p style="color: #92400e; margin: 0; font-size: 14px;">
-                  <strong>⚠️ Security Notice:</strong> If you didn't request this password reset, please ignore this email. Your account remains secure.
-                </p>
-              </div>
-            </div>
-            
-            <div style="background: white; padding: 20px; border-radius: 8px;">
-              <h3 style="color: #1e293b; margin-top: 0;">How to Reset Your Password</h3>
-              <ol style="color: #475569; padding-left: 20px;">
-                <li style="margin-bottom: 10px;">Go to the login page</li>
-                <li style="margin-bottom: 10px;">Click "Forgot Password"</li>
-                <li style="margin-bottom: 10px;">Enter your email and click "Send Code" (already done)</li>
-                <li style="margin-bottom: 10px;">Enter this one-time code and click "Login with Code"</li>
-                <li style="margin-bottom: 10px;">You'll be prompted to create a new password</li>
-              </ol>
-            </div>
-          </div>
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f0f4f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f0f4f8;">
+            <tr>
+              <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width: 600px; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+                  
+                  <!-- Header -->
+                  <tr>
+                    <td style="background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                      <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
+                      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Password Reset</h1>
+                    </td>
+                  </tr>
+                  
+                  <!-- Body -->
+                  <tr>
+                    <td style="padding: 40px;">
+                      
+                      <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">Hello ${data.userName},</p>
+                      <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">We received a request to reset your password. Use the code below to complete the process:</p>
+                      
+                      <!-- OTP Code Display -->
+                      <div style="background: #f8fafb; border-radius: 12px; padding: 30px; margin-bottom: 24px; text-align: center;">
+                        <p style="color: #64748b; margin: 0 0 12px 0; font-size: 13px;">Your one-time code:</p>
+                        <div style="font-size: 36px; font-weight: bold; color: #008b8b; font-family: monospace; letter-spacing: 8px; background: white; padding: 20px; border-radius: 8px; border: 2px solid #008b8b;">
+                          ${data.otp}
+                        </div>
+                        <p style="color: #94a3b8; margin: 16px 0 0 0; font-size: 13px;">
+                          Expires in ${data.expiresInMinutes} minutes
+                        </p>
+                      </div>
 
-          <div style="background: #e2e8f0; padding: 20px; text-align: center; color: #64748b; font-size: 14px;">
-            <p style="margin: 0;">This is an automated notification from Acclaim Credit Management & Recovery</p>
-            <p style="margin: 5px 0 0 0;">Need help? Contact us at <a href="mailto:email@acclaim.law" style="color: #0d9488;">email@acclaim.law</a></p>
-          </div>
-        </div>
+                      <!-- Warning Card -->
+                      <div style="background: #fef3c7; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                        <p style="color: #92400e; margin: 0; font-size: 14px; line-height: 1.6;">
+                          <strong>Security Notice:</strong> If you didn't request this password reset, please ignore this email. Your account remains secure.
+                        </p>
+                      </div>
+                      
+                      <!-- Steps Card -->
+                      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px;">
+                        <h3 style="margin: 0 0 16px 0; color: #0f172a; font-size: 15px; font-weight: 600;">
+                          <span style="display: inline-block; width: 4px; height: 16px; background: #008b8b; border-radius: 2px; margin-right: 10px; vertical-align: middle;"></span>
+                          How to Reset
+                        </h3>
+                        <ol style="color: #475569; line-height: 2; padding-left: 20px; margin: 0; font-size: 14px;">
+                          <li>Enter this one-time code on the reset page</li>
+                          <li>Click "Login with Code"</li>
+                          <li>Create your new password</li>
+                        </ol>
+                      </div>
+                      
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background: #f8fafb; padding: 24px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
+                      <p style="margin: 0; color: #94a3b8; font-size: 13px;">Acclaim Credit Management & Recovery</p>
+                      <p style="margin: 8px 0 0 0; color: #cbd5e1; font-size: 12px;">Need help? Contact us at email@acclaim.law</p>
+                    </td>
+                  </tr>
+                  
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
       `;
 
       const textContent = `
@@ -1328,235 +1473,289 @@ Need help? Contact us at email@acclaim.law
       }
 
       const htmlContent = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
-          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); padding: 30px; text-align: center;">
-            <div style="margin-bottom: 10px;">
-              <img src="cid:logo" alt="Acclaim Credit Management & Recovery" style="height: 40px; width: auto;" />
-            </div>
-            <h1 style="margin: 0; font-size: 24px; color: #000000 !important;">New Case Submission Received</h1>
-            <p style="margin: 10px 0 0 0; font-size: 16px; color: #000000 !important;">Submission ID: #${data.submissionId}</p>
-          </div>
-          
-          <div style="padding: 30px;">
-            <!-- Client Details -->
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h2 style="color: #1e293b; margin-top: 0;">Client Details</h2>
-              <table style="width: 100%; border-spacing: 0;">
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 180px;">Client Name:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.clientName}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Client Email:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.clientEmail}</td>
-                </tr>
-                ${data.caseSubmission.clientPhone ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Client Phone:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.clientPhone}</td>
-                </tr>` : ''}
-                ${data.caseSubmission.creditorName ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Creditor Name:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.creditorName}</td>
-                </tr>` : ''}
-              </table>
-            </div>
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f0f4f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f0f4f8;">
+            <tr>
+              <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width: 600px; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+                  
+                  <!-- Header -->
+                  <tr>
+                    <td style="background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                      <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
+                      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">New Case Submission</h1>
+                      <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Submission ID: #${data.submissionId}</p>
+                    </td>
+                  </tr>
+                  
+                  <!-- Body -->
+                  <tr>
+                    <td style="padding: 40px;">
+                      
+                      <!-- Submitter Info Card -->
+                      <div style="background: #f8fafb; border-radius: 12px; padding: 24px; margin-bottom: 24px; border-left: 4px solid #008b8b;">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                          <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px; width: 120px;">Submitted By</td>
+                            <td style="padding: 6px 0; color: #1e293b; font-size: 14px; font-weight: 500;">${data.firstName} ${data.lastName}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Email</td>
+                            <td style="padding: 6px 0; color: #1e293b; font-size: 14px;">${data.userEmail}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Organisation</td>
+                            <td style="padding: 6px 0; color: #1e293b; font-size: 14px; font-weight: 500;">${data.organisationName}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Submitted</td>
+                            <td style="padding: 6px 0; color: #1e293b; font-size: 14px;">${data.caseSubmission.submittedAt.toLocaleString('en-GB')}</td>
+                          </tr>
+                        </table>
+                      </div>
+                      
+                      <!-- Client Details Card -->
+                      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                        <h3 style="margin: 0 0 16px 0; color: #0f172a; font-size: 15px; font-weight: 600;">
+                          <span style="display: inline-block; width: 4px; height: 16px; background: #008b8b; border-radius: 2px; margin-right: 10px; vertical-align: middle;"></span>
+                          Client Details
+                        </h3>
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="font-size: 14px;">
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b; width: 140px;">Client Name</td>
+                            <td style="padding: 8px 0; color: #1e293b; font-weight: 500;">${data.caseSubmission.clientName}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Client Email</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.clientEmail}</td>
+                          </tr>
+                          ${data.caseSubmission.clientPhone ? `
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Client Phone</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.clientPhone}</td>
+                          </tr>` : ''}
+                          ${data.caseSubmission.creditorName ? `
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Creditor Name</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.creditorName}</td>
+                          </tr>` : ''}
+                        </table>
+                      </div>
 
-            <!-- Debtor Information -->
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h2 style="color: #1e293b; margin-top: 0;">Debtor Information</h2>
-              <table style="width: 100%; border-spacing: 0;">
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 180px;">Case Name:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.caseName}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Debtor Type:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.debtorType === 'individual' ? 'Individual/Sole Trader' : 'Organisation'}</td>
-                </tr>
-                ${debtorDetailsHtml}
-              </table>
-            </div>
+                      <!-- Debtor Information Card -->
+                      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                        <h3 style="margin: 0 0 16px 0; color: #0f172a; font-size: 15px; font-weight: 600;">
+                          <span style="display: inline-block; width: 4px; height: 16px; background: #008b8b; border-radius: 2px; margin-right: 10px; vertical-align: middle;"></span>
+                          Debtor Information
+                        </h3>
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="font-size: 14px;">
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b; width: 140px;">Case Name</td>
+                            <td style="padding: 8px 0; color: #1e293b; font-weight: 500;">${data.caseSubmission.caseName}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Debtor Type</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.debtorType === 'individual' ? 'Individual/Sole Trader' : 'Organisation'}</td>
+                          </tr>
+                          ${debtorDetailsHtml}
+                        </table>
+                      </div>
 
-            <!-- Address -->
-            ${data.caseSubmission.addressLine1 ? `
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h2 style="color: #1e293b; margin-top: 0;">Address</h2>
-              <table style="width: 100%; border-spacing: 0;">
-                ${data.caseSubmission.addressLine1 ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 180px;">Address Line 1:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.addressLine1}</td>
-                </tr>` : ''}
-                ${data.caseSubmission.addressLine2 ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Address Line 2:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.addressLine2}</td>
-                </tr>` : ''}
-                ${data.caseSubmission.city ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">City:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.city}</td>
-                </tr>` : ''}
-                ${data.caseSubmission.county ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">County:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.county}</td>
-                </tr>` : ''}
-                ${data.caseSubmission.postcode ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Postcode:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.postcode}</td>
-                </tr>` : ''}
-              </table>
-            </div>` : ''}
+                      <!-- Address Card -->
+                      ${data.caseSubmission.addressLine1 ? `
+                      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                        <h3 style="margin: 0 0 16px 0; color: #0f172a; font-size: 15px; font-weight: 600;">
+                          <span style="display: inline-block; width: 4px; height: 16px; background: #008b8b; border-radius: 2px; margin-right: 10px; vertical-align: middle;"></span>
+                          Address
+                        </h3>
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="font-size: 14px;">
+                          ${data.caseSubmission.addressLine1 ? `
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b; width: 140px;">Address Line 1</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.addressLine1}</td>
+                          </tr>` : ''}
+                          ${data.caseSubmission.addressLine2 ? `
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Address Line 2</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.addressLine2}</td>
+                          </tr>` : ''}
+                          ${data.caseSubmission.city ? `
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">City</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.city}</td>
+                          </tr>` : ''}
+                          ${data.caseSubmission.county ? `
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">County</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.county}</td>
+                          </tr>` : ''}
+                          ${data.caseSubmission.postcode ? `
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Postcode</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.postcode}</td>
+                          </tr>` : ''}
+                        </table>
+                      </div>` : ''}
 
-            <!-- Contact Details -->
-            ${data.caseSubmission.mainPhone || data.caseSubmission.altPhone || data.caseSubmission.mainEmail || data.caseSubmission.altEmail ? `
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h2 style="color: #1e293b; margin-top: 0;">Contact Details</h2>
-              <table style="width: 100%; border-spacing: 0;">
-                ${data.caseSubmission.mainPhone ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 180px;">Main Phone:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.mainPhone}</td>
-                </tr>` : ''}
-                ${data.caseSubmission.altPhone ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Alternative Phone:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.altPhone}</td>
-                </tr>` : ''}
-                ${data.caseSubmission.mainEmail ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Main Email:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.mainEmail}</td>
-                </tr>` : ''}
-                ${data.caseSubmission.altEmail ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Alternative Email:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.altEmail}</td>
-                </tr>` : ''}
-              </table>
-            </div>` : ''}
+                      <!-- Contact Details Card -->
+                      ${data.caseSubmission.mainPhone || data.caseSubmission.altPhone || data.caseSubmission.mainEmail || data.caseSubmission.altEmail ? `
+                      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                        <h3 style="margin: 0 0 16px 0; color: #0f172a; font-size: 15px; font-weight: 600;">
+                          <span style="display: inline-block; width: 4px; height: 16px; background: #008b8b; border-radius: 2px; margin-right: 10px; vertical-align: middle;"></span>
+                          Contact Details
+                        </h3>
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="font-size: 14px;">
+                          ${data.caseSubmission.mainPhone ? `
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b; width: 140px;">Main Phone</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.mainPhone}</td>
+                          </tr>` : ''}
+                          ${data.caseSubmission.altPhone ? `
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Alt Phone</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.altPhone}</td>
+                          </tr>` : ''}
+                          ${data.caseSubmission.mainEmail ? `
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Main Email</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.mainEmail}</td>
+                          </tr>` : ''}
+                          ${data.caseSubmission.altEmail ? `
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Alt Email</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.altEmail}</td>
+                          </tr>` : ''}
+                        </table>
+                      </div>` : ''}
 
-            <!-- Debt Details -->
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h2 style="color: #1e293b; margin-top: 0;">Debt Details</h2>
-              <table style="width: 100%; border-spacing: 0;">
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 180px;">Total Amount:</td>
-                  <td style="padding: 8px 0; color: #1e293b; font-weight: bold; font-size: 18px;">${data.caseSubmission.currency || 'GBP'} ${data.caseSubmission.totalDebtAmount}</td>
-                </tr>
-              </table>
-              ${data.caseSubmission.debtDetails ? `
-              <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
-                <h3 style="color: #475569; margin: 0 0 10px 0; font-size: 14px;">Debt Description:</h3>
-                <p style="color: #1e293b; margin: 0; white-space: pre-wrap;">${data.caseSubmission.debtDetails}</p>
-              </div>` : ''}
-            </div>
+                      <!-- Debt Details Card -->
+                      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                        <h3 style="margin: 0 0 16px 0; color: #0f172a; font-size: 15px; font-weight: 600;">
+                          <span style="display: inline-block; width: 4px; height: 16px; background: #008b8b; border-radius: 2px; margin-right: 10px; vertical-align: middle;"></span>
+                          Debt Details
+                        </h3>
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="font-size: 14px;">
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b; width: 140px;">Total Amount</td>
+                            <td style="padding: 8px 0; color: #008b8b; font-weight: 700; font-size: 18px;">${data.caseSubmission.currency || 'GBP'} ${data.caseSubmission.totalDebtAmount}</td>
+                          </tr>
+                        </table>
+                        ${data.caseSubmission.debtDetails ? `
+                        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+                          <p style="color: #64748b; margin: 0 0 8px 0; font-size: 13px;">Debt Description:</p>
+                          <p style="color: #1e293b; margin: 0; white-space: pre-wrap; font-size: 14px; line-height: 1.6;">${data.caseSubmission.debtDetails}</p>
+                        </div>` : ''}
+                      </div>
 
-            <!-- Payment Terms -->
-            ${data.caseSubmission.paymentTermsType ? `
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h2 style="color: #1e293b; margin-top: 0;">Payment Terms</h2>
-              <table style="width: 100%; border-spacing: 0;">
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 180px;">Payment Terms Type:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.paymentTermsType.replace(/_/g, ' ')}</td>
-                </tr>
-                ${data.caseSubmission.paymentTermsDays ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Payment Terms Days:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.paymentTermsDays}</td>
-                </tr>` : ''}
-                ${data.caseSubmission.paymentTermsOther ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Other Terms:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.paymentTermsOther}</td>
-                </tr>` : ''}
-              </table>
-            </div>` : ''}
+                      <!-- Payment Terms Card -->
+                      ${data.caseSubmission.paymentTermsType ? `
+                      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                        <h3 style="margin: 0 0 16px 0; color: #0f172a; font-size: 15px; font-weight: 600;">
+                          <span style="display: inline-block; width: 4px; height: 16px; background: #008b8b; border-radius: 2px; margin-right: 10px; vertical-align: middle;"></span>
+                          Payment Terms
+                        </h3>
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="font-size: 14px;">
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b; width: 140px;">Terms Type</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.paymentTermsType.replace(/_/g, ' ')}</td>
+                          </tr>
+                          ${data.caseSubmission.paymentTermsDays ? `
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Terms Days</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.paymentTermsDays}</td>
+                          </tr>` : ''}
+                          ${data.caseSubmission.paymentTermsOther ? `
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Other Terms</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.paymentTermsOther}</td>
+                          </tr>` : ''}
+                        </table>
+                      </div>` : ''}
 
-            <!-- Invoice Details -->
-            ${data.caseSubmission.singleInvoice || data.caseSubmission.firstOverdueDate || data.caseSubmission.lastOverdueDate ? `
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h2 style="color: #1e293b; margin-top: 0;">Invoice Details</h2>
-              <table style="width: 100%; border-spacing: 0;">
-                ${data.caseSubmission.singleInvoice ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 180px;">Single Invoice:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.singleInvoice === 'yes' ? 'Yes' : 'No'}</td>
-                </tr>` : ''}
-                ${data.caseSubmission.firstOverdueDate ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">First Overdue Date:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.firstOverdueDate}</td>
-                </tr>` : ''}
-                ${data.caseSubmission.lastOverdueDate ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Last Overdue Date:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.lastOverdueDate}</td>
-                </tr>` : ''}
-              </table>
-            </div>` : ''}
+                      <!-- Invoice Details Card -->
+                      ${data.caseSubmission.singleInvoice || data.caseSubmission.firstOverdueDate || data.caseSubmission.lastOverdueDate ? `
+                      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                        <h3 style="margin: 0 0 16px 0; color: #0f172a; font-size: 15px; font-weight: 600;">
+                          <span style="display: inline-block; width: 4px; height: 16px; background: #008b8b; border-radius: 2px; margin-right: 10px; vertical-align: middle;"></span>
+                          Invoice Details
+                        </h3>
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="font-size: 14px;">
+                          ${data.caseSubmission.singleInvoice ? `
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b; width: 140px;">Single Invoice</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.singleInvoice === 'yes' ? 'Yes' : 'No'}</td>
+                          </tr>` : ''}
+                          ${data.caseSubmission.firstOverdueDate ? `
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">First Overdue</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.firstOverdueDate}</td>
+                          </tr>` : ''}
+                          ${data.caseSubmission.lastOverdueDate ? `
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Last Overdue</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.lastOverdueDate}</td>
+                          </tr>` : ''}
+                        </table>
+                      </div>` : ''}
 
-            <!-- Additional Information -->
-            ${data.caseSubmission.additionalInfo ? `
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h2 style="color: #1e293b; margin-top: 0;">Additional Information</h2>
-              <p style="color: #475569; margin: 0; white-space: pre-wrap;">${data.caseSubmission.additionalInfo}</p>
-            </div>` : ''}
+                      <!-- Additional Information Card -->
+                      ${data.caseSubmission.additionalInfo ? `
+                      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                        <h3 style="margin: 0 0 16px 0; color: #0f172a; font-size: 15px; font-weight: 600;">
+                          <span style="display: inline-block; width: 4px; height: 16px; background: #008b8b; border-radius: 2px; margin-right: 10px; vertical-align: middle;"></span>
+                          Additional Information
+                        </h3>
+                        <p style="color: #475569; margin: 0; white-space: pre-wrap; font-size: 14px; line-height: 1.6;">${data.caseSubmission.additionalInfo}</p>
+                      </div>` : ''}
 
-            <!-- Submitted By -->
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h2 style="color: #1e293b; margin-top: 0;">Submitted By</h2>
-              <table style="width: 100%; border-spacing: 0;">
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 180px;">Name:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.firstName} ${data.lastName} (${data.userName})</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Email:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.userEmail}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Organisation:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.organisationName}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Submitted:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseSubmission.submittedAt.toLocaleString('en-GB')}</td>
-                </tr>
-              </table>
-            </div>
+                      <!-- Uploaded Files Card -->
+                      ${data.uploadedFiles && data.uploadedFiles.length > 0 ? `
+                      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                        <h3 style="margin: 0 0 16px 0; color: #0f172a; font-size: 15px; font-weight: 600;">
+                          <span style="display: inline-block; width: 4px; height: 16px; background: #008b8b; border-radius: 2px; margin-right: 10px; vertical-align: middle;"></span>
+                          Uploaded Files (${data.uploadedFiles.length})
+                        </h3>
+                        <ul style="color: #475569; margin: 0; padding-left: 20px; font-size: 14px;">
+                          ${data.uploadedFiles.map(file => `
+                            <li style="margin-bottom: 8px;">
+                              <strong style="color: #1e293b;">${file.fileName}</strong> 
+                              <span style="color: #64748b;">(${(file.fileSize / 1024).toFixed(2)} KB)</span>
+                            </li>
+                          `).join('')}
+                        </ul>
+                        <p style="color: #64748b; font-size: 13px; margin: 16px 0 0 0;">All uploaded files are attached to this email.</p>
+                      </div>` : ''}
 
-            <!-- Uploaded Files -->
-            ${data.uploadedFiles && data.uploadedFiles.length > 0 ? `
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h2 style="color: #1e293b; margin-top: 0;">Uploaded Files (${data.uploadedFiles.length})</h2>
-              <ul style="color: #475569; margin: 0; padding-left: 20px;">
-                ${data.uploadedFiles.map(file => `
-                  <li style="margin-bottom: 5px;">
-                    <strong>${file.fileName}</strong> 
-                    <span style="color: #64748b; font-size: 14px;">(${(file.fileSize / 1024).toFixed(2)} KB)</span>
-                  </li>
-                `).join('')}
-              </ul>
-              <p style="color: #64748b; font-size: 14px; margin: 10px 0 0 0;">All uploaded files are attached to this email.</p>
-            </div>` : ''}
-
-            <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-              <p style="color: #475569; margin: 0; font-size: 14px;">
-                📊 <strong>Excel Summary:</strong> A detailed Excel spreadsheet with all case submission information is attached for your records.
-              </p>
-            </div>
-          </div>
-
-          <div style="background: #e2e8f0; padding: 20px; text-align: center; color: #64748b; font-size: 14px;">
-            <p style="margin: 0;">This is an automated notification from Acclaim Credit Management & Recovery</p>
-          </div>
-        </div>
+                      <!-- Excel Note -->
+                      <div style="background: #e0f7f6; border-radius: 12px; padding: 20px;">
+                        <p style="color: #00695c; margin: 0; font-size: 14px; line-height: 1.6;">
+                          <strong>Excel Summary:</strong> A detailed spreadsheet with all case submission information is attached for your records.
+                        </p>
+                      </div>
+                      
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background: #f8fafb; padding: 24px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
+                      <p style="margin: 0; color: #94a3b8; font-size: 13px;">Acclaim Credit Management & Recovery</p>
+                      <p style="margin: 8px 0 0 0; color: #cbd5e1; font-size: 12px;">This is an automated notification</p>
+                    </td>
+                  </tr>
+                  
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
       `;
 
       const textContent = `
@@ -1665,68 +1864,98 @@ A detailed Excel spreadsheet and all uploaded files are attached to this email.
       };
 
       const htmlContent = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
-          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 30px; text-align: center;">
-            <div style="margin-bottom: 10px;">
-              <img src="cid:logo" alt="Acclaim Credit Management & Recovery" style="height: 40px; width: auto;" />
-            </div>
-            <p style="margin: 0; opacity: 0.9; font-size: 16px;">New document uploaded</p>
-          </div>
-          
-          <div style="padding: 30px;">
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h2 style="color: #1e293b; margin-top: 0;">Document Upload Details</h2>
-              <table style="width: 100%; border-spacing: 0;">
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 140px;">Uploaded By:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.uploaderName} (${data.uploaderEmail})</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Organisation:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.organisationName}</td>
-                </tr>
-                ${data.caseReference ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Case Reference:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseReference}</td>
-                </tr>
-                ` : ''}
-                ${data.caseName ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Case Name:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseName}</td>
-                </tr>
-                ` : ''}
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">File Name:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.fileName}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">File Size:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${formatFileSize(data.fileSize)}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">File Type:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.fileType}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Uploaded:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.uploadedAt.toLocaleString('en-GB')}</td>
-                </tr>
-              </table>
-            </div>
-
-            <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; text-align: center;">
-              <p style="margin: 0 0 15px 0; color: #64748b;">
-                Please log in to the Acclaim Portal to view this document.
-              </p>
-            </div>
-          </div>
-
-          <div style="background: #e2e8f0; padding: 20px; text-align: center; color: #64748b; font-size: 14px;">
-            <p style="margin: 0;">This is an automated notification from Acclaim Credit Management & Recovery</p>
-          </div>
-        </div>
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f0f4f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f0f4f8;">
+            <tr>
+              <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width: 600px; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+                  
+                  <!-- Header -->
+                  <tr>
+                    <td style="background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                      <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
+                      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Document Uploaded</h1>
+                      ${data.caseReference ? `<p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
+                    </td>
+                  </tr>
+                  
+                  <!-- Body -->
+                  <tr>
+                    <td style="padding: 40px;">
+                      
+                      <!-- Uploader Info Card -->
+                      <div style="background: #f8fafb; border-radius: 12px; padding: 24px; margin-bottom: 24px; border-left: 4px solid #008b8b;">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                          <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px; width: 120px;">Uploaded By</td>
+                            <td style="padding: 6px 0; color: #1e293b; font-size: 14px; font-weight: 500;">${data.uploaderName}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Email</td>
+                            <td style="padding: 6px 0; color: #1e293b; font-size: 14px;">${data.uploaderEmail}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Organisation</td>
+                            <td style="padding: 6px 0; color: #1e293b; font-size: 14px; font-weight: 500;">${data.organisationName}</td>
+                          </tr>
+                          ${data.caseName ? `
+                          <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Case Name</td>
+                            <td style="padding: 6px 0; color: #1e293b; font-size: 14px; font-weight: 500;">${data.caseName}</td>
+                          </tr>
+                          ` : ''}
+                        </table>
+                      </div>
+                      
+                      <!-- Document Details Card -->
+                      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 30px;">
+                        <h3 style="margin: 0 0 16px 0; color: #0f172a; font-size: 15px; font-weight: 600;">
+                          <span style="display: inline-block; width: 4px; height: 16px; background: #008b8b; border-radius: 2px; margin-right: 10px; vertical-align: middle;"></span>
+                          Document Details
+                        </h3>
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="font-size: 14px;">
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b; width: 100px;">File Name</td>
+                            <td style="padding: 8px 0; color: #1e293b; font-weight: 500;">${data.fileName}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">File Size</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${formatFileSize(data.fileSize)}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">File Type</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.fileType}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Uploaded</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.uploadedAt.toLocaleString('en-GB')}</td>
+                          </tr>
+                        </table>
+                      </div>
+                      
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background: #f8fafb; padding: 24px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
+                      <p style="margin: 0; color: #94a3b8; font-size: 13px;">Acclaim Credit Management & Recovery</p>
+                      <p style="margin: 8px 0 0 0; color: #cbd5e1; font-size: 12px;">This is an automated notification</p>
+                    </td>
+                  </tr>
+                  
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
       `;
 
       const textContent = `
@@ -1801,63 +2030,85 @@ Please log in to the Acclaim Portal to view this document.
       };
 
       const htmlContent = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
-          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 30px; text-align: center;">
-            <div style="margin-bottom: 10px;">
-              <img src="cid:logo" alt="Acclaim Credit Management & Recovery" style="height: 40px; width: auto;" />
-            </div>
-            <p style="margin: 0; opacity: 0.9; font-size: 16px;">New document available</p>
-          </div>
-          
-          <div style="padding: 30px;">
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h2 style="color: #1e293b; margin-top: 0;">Document Details</h2>
-              <table style="width: 100%; border-spacing: 0;">
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 140px;">From:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">Acclaim Credit Management</td>
-                </tr>
-                ${data.caseReference ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Case Reference:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseReference}</td>
-                </tr>
-                ` : ''}
-                ${data.caseName ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Case Name:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseName}</td>
-                </tr>
-                ` : ''}
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">File Name:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.fileName}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">File Size:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${formatFileSize(data.fileSize)}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Uploaded:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.uploadedAt.toLocaleString('en-GB')}</td>
-                </tr>
-              </table>
-            </div>
-
-            <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; text-align: center;">
-              <p style="margin: 0 0 15px 0; color: #64748b;">
-                A new document has been uploaded to your portal. Please log in to view and download it.
-              </p>
-              <a href="https://acclaim-api.azurewebsites.net/auth" style="display: inline-block; background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 16px;">
-                View in Portal
-              </a>
-            </div>
-          </div>
-
-          <div style="background: #e2e8f0; padding: 20px; text-align: center; color: #64748b; font-size: 14px;">
-            <p style="margin: 0;">This is an automated notification from Acclaim Credit Management & Recovery</p>
-          </div>
-        </div>
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f0f4f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f0f4f8;">
+            <tr>
+              <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width: 600px; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+                  
+                  <!-- Header -->
+                  <tr>
+                    <td style="background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                      <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
+                      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">New Document Available</h1>
+                      ${data.caseReference ? `<p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
+                    </td>
+                  </tr>
+                  
+                  <!-- Body -->
+                  <tr>
+                    <td style="padding: 40px;">
+                      
+                      <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 24px 0;">A new document has been added to your portal and is ready for you to view.</p>
+                      
+                      <!-- Document Details Card -->
+                      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 30px;">
+                        <h3 style="margin: 0 0 16px 0; color: #0f172a; font-size: 15px; font-weight: 600;">
+                          <span style="display: inline-block; width: 4px; height: 16px; background: #008b8b; border-radius: 2px; margin-right: 10px; vertical-align: middle;"></span>
+                          Document Details
+                        </h3>
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="font-size: 14px;">
+                          ${data.caseName ? `
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b; width: 100px;">Case Name</td>
+                            <td style="padding: 8px 0; color: #1e293b; font-weight: 500;">${data.caseName}</td>
+                          </tr>
+                          ` : ''}
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b; width: 100px;">File Name</td>
+                            <td style="padding: 8px 0; color: #1e293b; font-weight: 500;">${data.fileName}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">File Size</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${formatFileSize(data.fileSize)}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Uploaded</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.uploadedAt.toLocaleString('en-GB')}</td>
+                          </tr>
+                        </table>
+                      </div>
+                      
+                      <!-- CTA Button -->
+                      <div style="text-align: center;">
+                        <a href="https://acclaim-api.azurewebsites.net/auth" style="display: inline-block; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(0,139,139,0.3);">
+                          View in Portal →
+                        </a>
+                      </div>
+                      
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background: #f8fafb; padding: 24px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
+                      <p style="margin: 0; color: #94a3b8; font-size: 13px;">Acclaim Credit Management & Recovery</p>
+                      <p style="margin: 8px 0 0 0; color: #cbd5e1; font-size: 12px;">This is an automated notification</p>
+                    </td>
+                  </tr>
+                  
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
       `;
 
       const textContent = `
