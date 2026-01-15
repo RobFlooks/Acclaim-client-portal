@@ -40,12 +40,12 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
   ];
 
   return (
-    <div className="w-64 h-[100dvh] max-h-screen bg-acclaim-teal shadow-lg flex flex-col overflow-hidden">
+    <div className="w-64 h-[100dvh] max-h-screen bg-acclaim-teal dark:bg-gray-900 shadow-lg flex flex-col overflow-hidden">
       {/* Brand Header */}
-      <div className="flex-shrink-0 flex items-center justify-center h-16 bg-acclaim-teal border-b border-teal-700">
+      <div className="flex-shrink-0 flex items-center justify-center h-16 bg-acclaim-teal dark:bg-gray-900 border-b border-teal-700 dark:border-gray-700">
         <button 
           onClick={() => setActiveSection('dashboard')}
-          className="flex items-center hover:bg-teal-700 px-3 py-2 rounded-lg transition-colors"
+          className="flex items-center hover:bg-teal-700 dark:hover:bg-gray-800 px-3 py-2 rounded-lg transition-colors"
         >
           <img src={logoImage} alt="Acclaim Logo" className="w-8 h-8 mr-3 filter brightness-0 invert" />
           <div className="text-white">
@@ -72,8 +72,8 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
               }}
               className={`flex items-center w-full px-4 py-3 text-white rounded-lg transition-colors ${
                 isActive 
-                  ? "bg-teal-700" 
-                  : "hover:bg-teal-700"
+                  ? "bg-teal-700 dark:bg-gray-700" 
+                  : "hover:bg-teal-700 dark:hover:bg-gray-800"
               }`}
             >
               <Icon className="w-5 h-5 mr-3" />
@@ -88,13 +88,13 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
         })}
         
         {/* Other Legal Services - separate from main nav */}
-        <div className="pt-4 mt-4 border-t border-teal-700/50">
+        <div className="pt-4 mt-4 border-t border-teal-700/50 dark:border-gray-700">
           <button
             onClick={() => setActiveSection("chadwick-lawrence")}
             className={`flex items-center w-full px-4 py-3 text-white rounded-lg transition-colors ${
               activeSection === "chadwick-lawrence"
-                ? "bg-teal-700"
-                : "hover:bg-teal-700"
+                ? "bg-teal-700 dark:bg-gray-700"
+                : "hover:bg-teal-700 dark:hover:bg-gray-800"
             }`}
           >
             <Scale className="w-5 h-5 mr-3" />
@@ -103,7 +103,7 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
         </div>
       </nav>
       {/* User Profile */}
-      <div className="flex-shrink-0 p-4 border-t border-teal-700">
+      <div className="flex-shrink-0 p-4 border-t border-teal-700 dark:border-gray-700">
         <div className="flex items-center mb-3">
           <div className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden ${user?.isAdmin ? 'bg-white' : 'bg-white'}`}>
             {user?.isAdmin ? (
@@ -126,7 +126,7 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
             variant="ghost"
             size="sm"
             onClick={() => setLocation("/profile")}
-            className="flex-1 justify-start text-white hover:bg-teal-700"
+            className="flex-1 justify-start text-white hover:bg-teal-700 dark:hover:bg-gray-800"
           >
             <UserCog className="w-4 h-4 mr-2" />
             Profile
@@ -135,7 +135,7 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
             variant="ghost"
             size="sm"
             onClick={handleLogout}
-            className="flex-1 justify-start text-white hover:bg-teal-700"
+            className="flex-1 justify-start text-white hover:bg-teal-700 dark:hover:bg-gray-800"
           >
             <LogOut className="w-4 h-4 mr-2" />
             Logout
