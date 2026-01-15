@@ -84,6 +84,25 @@ export const mutedCases = pgTable("muted_cases", {
   index("idx_muted_cases_case_id").on(table.caseId),
 ]);
 
+// Scheduled reports preferences - allows users to receive periodic email reports
+export const scheduledReports = pgTable("scheduled_reports", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  enabled: boolean("enabled").default(false),
+  frequency: varchar("frequency", { length: 20 }).notNull().default("weekly"), // 'weekly' or 'monthly'
+  dayOfWeek: integer("day_of_week"), // 0-6 for weekly (0 = Sunday)
+  dayOfMonth: integer("day_of_month"), // 1-28 for monthly
+  includeCaseSummary: boolean("include_case_summary").default(true),
+  includeActivityReport: boolean("include_activity_report").default(true),
+  organisationIds: jsonb("organisation_ids").$type<number[]>(), // Array of org IDs to include, null = all
+  caseStatusFilter: varchar("case_status_filter", { length: 20 }).default("active"), // 'active', 'all', 'closed'
+  lastSentAt: timestamp("last_sent_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_scheduled_reports_user_id").on(table.userId),
+]);
+
 // Case access restrictions - allows admins to hide cases from specific users
 export const caseAccessRestrictions = pgTable("case_access_restrictions", {
   id: serial("id").primaryKey(),
@@ -568,3 +587,8 @@ export const updateOrganisationSchema = z.object({
   name: z.string().min(1, "Organization name is required"),
   externalRef: z.string().optional(),
 });
+
+// Scheduled reports schemas
+export const insertScheduledReportSchema = createInsertSchema(scheduledReports).omit({ id: true, createdAt: true, updatedAt: true, lastSentAt: true });
+export type InsertScheduledReport = z.infer<typeof insertScheduledReportSchema>;
+export type ScheduledReport = typeof scheduledReports.$inferSelect;
