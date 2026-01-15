@@ -13,8 +13,23 @@ import {
   changePasswordSchema,
   resetPasswordSchema,
   createOrganisationSchema,
-  updateOrganisationSchema
+  updateOrganisationSchema,
+  insertScheduledReportSchema
 } from "@shared/schema";
+import { z } from "zod";
+
+// Schema for org-level scheduled report creation with custom recipient
+const orgScheduledReportSchema = z.object({
+  recipientEmail: z.string().email("Invalid email format"),
+  recipientName: z.string().optional(),
+  frequency: z.enum(["daily", "weekly", "monthly"]).default("weekly"),
+  dayOfWeek: z.number().int().min(0).max(6).optional(),
+  dayOfMonth: z.number().int().min(1).max(28).optional(),
+  timeOfDay: z.number().int().min(0).max(23).default(9),
+  includeCaseSummary: z.boolean().default(true),
+  includeActivityReport: z.boolean().default(true),
+  caseStatusFilter: z.enum(["active", "all", "closed"]).default("active"),
+});
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -2652,42 +2667,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const orgId = parseInt(req.params.id);
       const adminUserId = req.user.id;
-      const { 
-        recipientEmail, 
-        recipientName, 
-        frequency, 
-        dayOfWeek, 
-        dayOfMonth, 
-        timeOfDay, 
-        includeCaseSummary, 
-        includeActivityReport, 
-        caseStatusFilter 
-      } = req.body;
       
-      if (!recipientEmail || typeof recipientEmail !== 'string') {
-        return res.status(400).json({ message: "recipientEmail is required" });
+      // Validate request body using Zod schema
+      const validationResult = orgScheduledReportSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: validationResult.error.errors 
+        });
       }
       
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(recipientEmail)) {
-        return res.status(400).json({ message: "Invalid email format" });
-      }
+      const validated = validationResult.data;
       
       // Create the scheduled report with the admin as owner but custom recipient
       const report = await storage.createScheduledReport({
         userId: adminUserId,
         organisationId: orgId,
         enabled: true,
-        frequency: frequency || 'weekly',
-        dayOfWeek: frequency === 'weekly' ? (dayOfWeek ?? 1) : null,
-        dayOfMonth: frequency === 'monthly' ? (dayOfMonth ?? 1) : null,
-        timeOfDay: timeOfDay ?? 9,
-        includeCaseSummary: includeCaseSummary ?? true,
-        includeActivityReport: includeActivityReport ?? true,
-        caseStatusFilter: caseStatusFilter || 'active',
-        recipientEmail: recipientEmail,
-        recipientName: recipientName || null,
+        frequency: validated.frequency,
+        dayOfWeek: validated.frequency === 'weekly' ? (validated.dayOfWeek ?? 1) : null,
+        dayOfMonth: validated.frequency === 'monthly' ? (validated.dayOfMonth ?? 1) : null,
+        timeOfDay: validated.timeOfDay,
+        includeCaseSummary: validated.includeCaseSummary,
+        includeActivityReport: validated.includeActivityReport,
+        caseStatusFilter: validated.caseStatusFilter,
+        recipientEmail: validated.recipientEmail,
+        recipientName: validated.recipientName || null,
       });
       
       res.status(201).json(report);
