@@ -1353,34 +1353,38 @@ export default function UserProfile() {
                                     </div>
                                   ) : (
                                     <>
-                                      <div className="overflow-x-auto border rounded-lg max-h-64">
+                                      {/* Redesigned table: Cases as rows, Members as columns */}
+                                      <div className="overflow-x-auto border rounded-lg">
                                         <Table>
                                           <TableHeader>
-                                            <TableRow>
-                                              <TableHead className="sticky left-0 bg-white dark:bg-gray-950 z-10 min-w-[120px] text-xs py-2">Member</TableHead>
-                                              {paginatedOrgCases.map((c: any) => (
-                                                <TableHead key={c.id} className="text-center min-w-[80px] py-2">
-                                                  <div className="font-medium text-xs truncate max-w-[80px]" title={c.caseName}>{c.caseName}</div>
-                                                  {c.reference && <div className="text-xs text-gray-400 truncate">{c.reference}</div>}
+                                            <TableRow className="bg-gray-50 dark:bg-gray-800">
+                                              <TableHead className="min-w-[300px] text-xs py-2 font-semibold">Case</TableHead>
+                                              {nonAdminOrgUsers.map((u: any) => (
+                                                <TableHead key={u.id} className="text-center min-w-[100px] py-2">
+                                                  <div className="font-medium text-xs">{u.firstName} {u.lastName}</div>
                                                 </TableHead>
                                               ))}
                                             </TableRow>
                                           </TableHeader>
                                           <TableBody>
-                                            {nonAdminOrgUsers.map((u: any) => (
-                                              <TableRow key={u.id}>
-                                                <TableCell className="sticky left-0 bg-white dark:bg-gray-950 z-10 py-1">
-                                                  <div className="font-medium text-xs">{u.firstName} {u.lastName}</div>
-                                                  <div className="text-xs text-gray-500 truncate max-w-[100px]">{u.email}</div>
+                                            {paginatedOrgCases.map((c: any) => (
+                                              <TableRow key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                                <TableCell className="py-2">
+                                                  <div className="flex flex-col">
+                                                    <span className="font-medium text-sm text-gray-900 dark:text-gray-100">{c.caseName}</span>
+                                                    {c.reference && (
+                                                      <span className="text-xs text-teal-600 dark:text-teal-400 font-mono">{c.reference}</span>
+                                                    )}
+                                                  </div>
                                                 </TableCell>
-                                                {paginatedOrgCases.map((c: any) => {
+                                                {nonAdminOrgUsers.map((u: any) => {
                                                   const restricted = isRestricted(u.id, c.id);
                                                   return (
-                                                    <TableCell key={c.id} className="text-center p-1">
+                                                    <TableCell key={u.id} className="text-center p-2">
                                                       <Button
                                                         variant={restricted ? "destructive" : "outline"}
                                                         size="sm"
-                                                        className={`w-12 h-6 text-xs ${!restricted ? 'bg-green-50 border-green-300 text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-700 dark:text-green-400' : ''}`}
+                                                        className={`w-20 h-7 text-xs ${!restricted ? 'bg-green-50 border-green-300 text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-700 dark:text-green-400' : ''}`}
                                                         onClick={() => {
                                                           toggleRestrictionMutation.mutate({
                                                             userId: u.id,
@@ -1390,9 +1394,15 @@ export default function UserProfile() {
                                                         disabled={toggleRestrictionMutation.isPending}
                                                       >
                                                         {restricted ? (
-                                                          <ShieldOff className="h-3 w-3" />
+                                                          <>
+                                                            <ShieldOff className="h-3 w-3 mr-1" />
+                                                            Blocked
+                                                          </>
                                                         ) : (
-                                                          <ShieldCheck className="h-3 w-3" />
+                                                          <>
+                                                            <ShieldCheck className="h-3 w-3 mr-1" />
+                                                            Access
+                                                          </>
                                                         )}
                                                       </Button>
                                                     </TableCell>
@@ -1406,23 +1416,23 @@ export default function UserProfile() {
 
                                       {/* Pagination */}
                                       {totalOrgCasePages > 1 && (
-                                        <div className="flex items-center justify-between pt-2">
+                                        <div className="flex items-center justify-between pt-3">
                                           <Button 
                                             variant="outline" 
                                             size="sm"
-                                            className="h-7 text-xs"
+                                            className="h-8"
                                             onClick={() => setOrgCasePage(p => Math.max(1, p - 1))}
                                             disabled={orgCasePage === 1}
                                           >
                                             Previous
                                           </Button>
-                                          <span className="text-xs text-gray-500">
+                                          <span className="text-sm text-gray-500">
                                             Page {orgCasePage} of {totalOrgCasePages} ({filteredOrgCases.length} cases)
                                           </span>
                                           <Button 
                                             variant="outline" 
                                             size="sm"
-                                            className="h-7 text-xs"
+                                            className="h-8"
                                             onClick={() => setOrgCasePage(p => Math.min(totalOrgCasePages, p + 1))}
                                             disabled={orgCasePage === totalOrgCasePages}
                                           >
