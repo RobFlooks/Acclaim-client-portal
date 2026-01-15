@@ -61,16 +61,20 @@ export async function generateScheduledReport(
 function addCaseSummarySheet(workbook: ExcelJS.Workbook, cases: any[]) {
   const sheet = workbook.addWorksheet("Case Summary");
 
+  // Match columns from manual Case Summary Report export
   sheet.columns = [
-    { header: "Case Name", key: "caseName", width: 28 },
-    { header: "Account Number", key: "accountNumber", width: 18 },
-    { header: "Debtor Type", key: "debtorType", width: 14 },
-    { header: "Debtor Name", key: "debtorName", width: 24 },
-    { header: "Status", key: "status", width: 14 },
-    { header: "Stage", key: "stage", width: 18 },
-    { header: "Original Amount", key: "originalAmount", width: 16 },
-    { header: "Current Balance", key: "currentBalance", width: 16 },
-    { header: "Organisation", key: "organisationName", width: 22 },
+    { header: "Account Number", key: "accountNumber", width: 15 },
+    { header: "Case Name", key: "caseName", width: 25 },
+    { header: "Status", key: "status", width: 12 },
+    { header: "Stage", key: "stage", width: 15 },
+    { header: "Original Amount", key: "originalAmount", width: 15 },
+    { header: "Costs Added", key: "costsAdded", width: 12 },
+    { header: "Interest Added", key: "interestAdded", width: 12 },
+    { header: "Fees Added", key: "feesAdded", width: 12 },
+    { header: "Total Additional Charges", key: "totalAdditionalCharges", width: 18 },
+    { header: "Total Debt", key: "totalDebt", width: 15 },
+    { header: "Total Payments", key: "totalPayments", width: 15 },
+    { header: "Outstanding Amount", key: "outstandingAmount", width: 18 },
   ];
 
   // Style header row
@@ -86,29 +90,44 @@ function addCaseSummarySheet(workbook: ExcelJS.Workbook, cases: any[]) {
 
   if (cases.length === 0) {
     const emptyRow = sheet.addRow({
-      caseName: "No cases found matching the selected filter",
-      accountNumber: "",
-      debtorType: "",
-      debtorName: "",
+      accountNumber: "No cases found matching the selected filter",
+      caseName: "",
       status: "",
       stage: "",
       originalAmount: "",
-      currentBalance: "",
-      organisationName: "",
+      costsAdded: "",
+      interestAdded: "",
+      feesAdded: "",
+      totalAdditionalCharges: "",
+      totalDebt: "",
+      totalPayments: "",
+      outstandingAmount: "",
     });
     emptyRow.font = { italic: true, color: { argb: "FF666666" } };
   } else {
     cases.forEach((c, index) => {
+      const originalAmount = parseFloat(c.originalAmount || "0");
+      const costsAdded = parseFloat(c.costsAdded || "0");
+      const interestAdded = parseFloat(c.interestAdded || "0");
+      const feesAdded = parseFloat(c.feesAdded || "0");
+      const totalAdditionalCharges = costsAdded + interestAdded + feesAdded;
+      const totalDebt = originalAmount + totalAdditionalCharges;
+      const totalPayments = parseFloat(c.totalPayments || "0");
+      const outstandingAmount = parseFloat(c.outstandingAmount || "0");
+
       const row = sheet.addRow({
-        caseName: c.caseName || "",
         accountNumber: c.accountNumber || "",
-        debtorType: c.debtorType || "",
-        debtorName: c.debtorName || "",
+        caseName: c.organisationName ? `${c.caseName} (${c.organisationName})` : c.caseName || "",
         status: formatStatus(c.status),
         stage: formatStage(c.stage),
         originalAmount: formatCurrency(c.originalAmount),
-        currentBalance: formatCurrency(c.currentBalance),
-        organisationName: c.organisationName || "",
+        costsAdded: formatCurrency(c.costsAdded),
+        interestAdded: formatCurrency(c.interestAdded),
+        feesAdded: formatCurrency(c.feesAdded),
+        totalAdditionalCharges: formatCurrency(totalAdditionalCharges.toString()),
+        totalDebt: formatCurrency(totalDebt.toString()),
+        totalPayments: formatCurrency(c.totalPayments),
+        outstandingAmount: formatCurrency(c.outstandingAmount),
       });
       
       // Alternate row colours for readability
@@ -125,7 +144,7 @@ function addCaseSummarySheet(workbook: ExcelJS.Workbook, cases: any[]) {
   // Enable autofilter for all columns
   sheet.autoFilter = {
     from: "A1",
-    to: "I1",
+    to: "L1",
   };
   
   // Freeze the header row
@@ -156,15 +175,25 @@ async function getRecentMessages(userId: string, frequency: string): Promise<any
   });
 
   for (const message of filteredMessages) {
+    // If sender is admin, show "Acclaim" instead of their name
+    const displayName = message.senderIsAdmin ? "Acclaim" : (message.senderName || "Unknown");
+    
+    // Include organisation in case name if available
+    let caseNameDisplay = message.caseName || (message.caseId ? "Unknown Case" : "General Message");
+    if (message.organisationName && message.caseId) {
+      caseNameDisplay = `${message.caseName} (${message.organisationName})`;
+    }
+    
     messages.push({
       caseId: message.caseId,
-      caseName: message.caseName || (message.caseId ? "Unknown Case" : "General Message"),
+      caseName: caseNameDisplay,
       accountNumber: message.accountNumber || "",
       subject: message.subject || "",
-      senderName: message.senderName || "Unknown",
+      senderName: displayName,
       content: message.content,
       createdAt: message.createdAt,
       hasAttachment: !!message.attachmentFileName,
+      attachmentFileName: message.attachmentFileName || "",
     });
   }
 

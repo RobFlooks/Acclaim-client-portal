@@ -1023,7 +1023,8 @@ export class DatabaseStorage implements IStorage {
 
     // If user is admin, return all messages (no organisation filtering)
     if (userRecord.isAdmin) {
-      return await db
+      // We need a subquery to get the case's organisation name
+      const result = await db
         .select({
           id: messages.id,
           senderId: messages.senderId,
@@ -1044,6 +1045,7 @@ export class DatabaseStorage implements IStorage {
           senderOrganisationName: organisations.name,
           caseName: cases.caseName,
           accountNumber: cases.accountNumber,
+          caseOrganisationId: cases.organisationId,
         })
         .from(messages)
         .leftJoin(users, eq(messages.senderId, users.id))
@@ -1056,6 +1058,21 @@ export class DatabaseStorage implements IStorage {
           )
         )
         .orderBy(desc(messages.createdAt));
+      
+      // Get organisation names for each case
+      const caseOrgIds = [...new Set(result.filter(m => m.caseOrganisationId).map(m => m.caseOrganisationId))];
+      const orgNameMap: Record<number, string> = {};
+      for (const orgId of caseOrgIds) {
+        if (orgId) {
+          const org = await this.getOrganisationById(orgId);
+          if (org) orgNameMap[orgId] = org.name;
+        }
+      }
+      
+      return result.map(m => ({
+        ...m,
+        organisationName: m.caseOrganisationId ? orgNameMap[m.caseOrganisationId] : undefined,
+      }));
     }
 
     // For non-admin users, filter by all assigned organisations
@@ -1090,6 +1107,7 @@ export class DatabaseStorage implements IStorage {
         senderOrganisationName: organisations.name,
         caseName: cases.caseName,
         accountNumber: cases.accountNumber,
+        caseOrganisationId: cases.organisationId,
       })
       .from(messages)
       .leftJoin(users, eq(messages.senderId, users.id))
@@ -1124,12 +1142,27 @@ export class DatabaseStorage implements IStorage {
       ))
       .orderBy(desc(messages.createdAt));
     
-    // Filter out messages from restricted cases
-    if (restrictedCaseIds.length > 0) {
-      return result.filter(m => !m.caseId || !restrictedCaseIds.includes(m.caseId));
+    // Get organisation names for each case
+    const caseOrgIds = [...new Set(result.filter(m => m.caseOrganisationId).map(m => m.caseOrganisationId))];
+    const orgNameMap: Record<number, string> = {};
+    for (const orgId of caseOrgIds) {
+      if (orgId) {
+        const org = await this.getOrganisationById(orgId);
+        if (org) orgNameMap[orgId] = org.name;
+      }
     }
     
-    return result;
+    const messagesWithOrgNames = result.map(m => ({
+      ...m,
+      organisationName: m.caseOrganisationId ? orgNameMap[m.caseOrganisationId] : undefined,
+    }));
+    
+    // Filter out messages from restricted cases
+    if (restrictedCaseIds.length > 0) {
+      return messagesWithOrgNames.filter(m => !m.caseId || !restrictedCaseIds.includes(m.caseId));
+    }
+    
+    return messagesWithOrgNames;
   }
 
   async getMessagesForCase(caseId: number): Promise<any[]> {
