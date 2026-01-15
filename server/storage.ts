@@ -2574,12 +2574,12 @@ export class DatabaseStorage implements IStorage {
   // When admin removes restriction, it unmutes the case
   async addCaseAccessRestriction(caseId: number, blockedUserId: string, createdBy: string): Promise<void> {
     // Use muted_cases table - mute the case for the user
-    await this.muteCaseForUser(blockedUserId, caseId);
+    await this.muteCase(blockedUserId, caseId);
   }
 
   async removeCaseAccessRestriction(caseId: number, blockedUserId: string): Promise<void> {
     // Use muted_cases table - unmute the case for the user
-    await this.unmuteCaseForUser(blockedUserId, caseId);
+    await this.unmuteCase(blockedUserId, caseId);
   }
 
   async getCaseAccessRestrictions(caseId: number): Promise<string[]> {
