@@ -1211,9 +1211,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (recipientType === 'user') {
             const recipientUser = await storage.getUser(recipientId);
             // Only send emails to users who have logged in (mustChangePassword = false) and have notifications enabled
-            // Also check if this case is muted by the user
+            // Also check if this case is muted by the user or if user is blocked from the case
             const isCaseMuted = messageData.caseId ? await storage.isCaseMuted(recipientId, messageData.caseId) : false;
-            if (recipientUser && recipientUser.email && !recipientUser.isAdmin && recipientUser.emailNotifications !== false && !recipientUser.mustChangePassword && !isCaseMuted) {
+            const isBlockedFromCase = messageData.caseId ? await storage.isUserBlockedFromCase(recipientId, messageData.caseId) : false;
+            if (recipientUser && recipientUser.email && !recipientUser.isAdmin && recipientUser.emailNotifications !== false && !recipientUser.mustChangePassword && !isCaseMuted && !isBlockedFromCase) {
               // Get organisation name
               let organisationName = "Unknown Organisation";
               if (recipientUser.organisationId) {
@@ -1314,12 +1315,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 };
               }
 
-              // Send notification to each user in the organisation (skip if case is muted)
+              // Send notification to each user in the organisation (skip if case is muted or user is blocked)
               for (const orgUser of organisationUsers) {
-                // Check if this case is muted by the user
+                // Check if this case is muted by the user or if user is blocked from the case
                 const isCaseMuted = messageData.caseId ? await storage.isCaseMuted(orgUser.id, messageData.caseId) : false;
+                const isBlockedFromCase = messageData.caseId ? await storage.isUserBlockedFromCase(orgUser.id, messageData.caseId) : false;
                 if (isCaseMuted) {
                   console.log(`Skipping notification for user ${orgUser.id} - case ${messageData.caseId} is muted`);
+                  continue;
+                }
+                if (isBlockedFromCase) {
+                  console.log(`Skipping notification for user ${orgUser.id} - user is blocked from case ${messageData.caseId}`);
                   continue;
                 }
                 await sendGridEmailService.sendAdminToUserNotification({
@@ -1533,10 +1539,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const orgUsers = await storage.getUsersByOrganisationId(caseOrgId!);
           for (const orgUser of orgUsers) {
-            // Check if this case is muted by the user
+            // Check if this case is muted by the user or if user is blocked from the case
             const isCaseMuted = case_.id ? await storage.isCaseMuted(orgUser.id, case_.id) : false;
+            const isBlockedFromCase = case_.id ? await storage.isUserBlockedFromCase(orgUser.id, case_.id) : false;
             if (isCaseMuted) {
               console.log(`[Documents] Skipping notification for user ${orgUser.id} - case ${case_.id} is muted`);
+              continue;
+            }
+            if (isBlockedFromCase) {
+              console.log(`[Documents] Skipping notification for user ${orgUser.id} - user is blocked from case ${case_.id}`);
               continue;
             }
             if (!orgUser.isAdmin && orgUser.documentNotifications !== false) {
@@ -1938,10 +1949,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const orgUsers = await storage.getUsersByOrganisationId(caseOrgId!);
           for (const orgUser of orgUsers) {
-            // Check if this case is muted by the user
+            // Check if this case is muted by the user or if user is blocked from the case
             const isCaseMuted = case_.id ? await storage.isCaseMuted(orgUser.id, case_.id) : false;
+            const isBlockedFromCase = case_.id ? await storage.isUserBlockedFromCase(orgUser.id, case_.id) : false;
             if (isCaseMuted) {
               console.log(`[Case Documents] Skipping notification for user ${orgUser.id} - case ${case_.id} is muted`);
+              continue;
+            }
+            if (isBlockedFromCase) {
+              console.log(`[Case Documents] Skipping notification for user ${orgUser.id} - user is blocked from case ${case_.id}`);
               continue;
             }
             if (!orgUser.isAdmin && orgUser.documentNotifications !== false) {
