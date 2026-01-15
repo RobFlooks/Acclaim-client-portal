@@ -16,7 +16,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import CaseDetail from "./CaseDetail";
-import acclaimRoseLogo from "@assets/picsvg_modified_1768473646229.png";
+import acclaimRoseLogo from "@assets/acclaim_rose_transparent_1768474381340.png";
 
 export default function Messages() {
   const [newMessage, setNewMessage] = useState("");

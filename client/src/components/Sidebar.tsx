@@ -1,6 +1,6 @@
 import { Scale, Home, FolderOpen, MessageSquare, BarChart3, FileText, User, LogOut, Settings, Shield, UserCog } from "lucide-react";
 import logoImage from "@assets/cl-bg_1752271318153.png";
-import acclaimRoseLogo from "@assets/picsvg_modified_1768473646229.png";
+import acclaimRoseLogo from "@assets/acclaim_rose_transparent_1768474381340.png";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";

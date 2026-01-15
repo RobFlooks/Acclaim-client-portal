@@ -11,7 +11,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation } from "wouter";
 import CaseDetail from "./CaseDetail";
 import RefreshIndicator from "./RefreshIndicator";
-import acclaimRoseLogo from "@assets/picsvg_modified_1768473646229.png";
+import acclaimRoseLogo from "@assets/acclaim_rose_transparent_1768474381340.png";
 
 
 interface DashboardProps {
