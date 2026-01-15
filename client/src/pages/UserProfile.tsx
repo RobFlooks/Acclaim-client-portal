@@ -1388,7 +1388,7 @@ export default function UserProfile() {
                             {isOwner && isExpanded && (
                               <div className="p-4 border-t bg-white dark:bg-gray-900 space-y-4">
                                 {/* Request To Add New Member Button */}
-                                <div className="flex justify-between items-center">
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                                   <div>
                                     <h4 className="font-medium text-sm">Organisation Settings</h4>
                                     <p className="text-xs text-gray-500">Manage team members and case access</p>
@@ -1400,7 +1400,7 @@ export default function UserProfile() {
                                       setMemberRequestOrgId(org.id);
                                       setMemberRequestOpen(true);
                                     }}
-                                    className="text-teal-600 border-teal-300 hover:bg-teal-50"
+                                    className="text-teal-600 border-teal-300 hover:bg-teal-50 w-full sm:w-auto"
                                   >
                                     <UserPlus className="h-4 w-4 mr-1" />
                                     Request New Member
@@ -1571,28 +1571,30 @@ export default function UserProfile() {
 
                                       {/* Pagination */}
                                       {totalOrgCasePages > 1 && (
-                                        <div className="flex items-center justify-between pt-3">
-                                          <Button 
-                                            variant="outline" 
-                                            size="sm"
-                                            className="h-8"
-                                            onClick={() => setOrgCasePage(p => Math.max(1, p - 1))}
-                                            disabled={orgCasePage === 1}
-                                          >
-                                            Previous
-                                          </Button>
-                                          <span className="text-sm text-gray-500">
-                                            Page {orgCasePage} of {totalOrgCasePages} ({filteredOrgCases.length} cases)
+                                        <div className="flex flex-col sm:flex-row items-center justify-between pt-3 gap-2">
+                                          <span className="text-xs sm:text-sm text-gray-500 order-2 sm:order-1">
+                                            Page {orgCasePage} of {totalOrgCasePages}
                                           </span>
-                                          <Button 
-                                            variant="outline" 
-                                            size="sm"
-                                            className="h-8"
-                                            onClick={() => setOrgCasePage(p => Math.min(totalOrgCasePages, p + 1))}
-                                            disabled={orgCasePage === totalOrgCasePages}
-                                          >
-                                            Next
-                                          </Button>
+                                          <div className="flex gap-2 order-1 sm:order-2 w-full sm:w-auto">
+                                            <Button 
+                                              variant="outline" 
+                                              size="sm"
+                                              className="h-8 flex-1 sm:flex-initial"
+                                              onClick={() => setOrgCasePage(p => Math.max(1, p - 1))}
+                                              disabled={orgCasePage === 1}
+                                            >
+                                              Previous
+                                            </Button>
+                                            <Button 
+                                              variant="outline" 
+                                              size="sm"
+                                              className="h-8 flex-1 sm:flex-initial"
+                                              onClick={() => setOrgCasePage(p => Math.min(totalOrgCasePages, p + 1))}
+                                              disabled={orgCasePage === totalOrgCasePages}
+                                            >
+                                              Next
+                                            </Button>
+                                          </div>
                                         </div>
                                       )}
                                     </>
@@ -1606,13 +1608,13 @@ export default function UserProfile() {
                                     <p className="text-xs text-gray-500 mb-3">Request to remove members from your organisation or delegate owner privileges to manage the organisation and it's members.</p>
                                     <div className="space-y-2">
                                       {nonAdminOrgUsers.filter((u: any) => u.id !== user?.id).map((u: any) => (
-                                        <div key={u.id} className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <div key={u.id} className="flex flex-col sm:flex-row sm:items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800 rounded-lg gap-2">
                                           <div className="flex items-center gap-2">
-                                            <div className="h-8 w-8 rounded-full bg-teal-100 dark:bg-teal-900 flex items-center justify-center text-teal-700 dark:text-teal-300 text-sm font-medium">
+                                            <div className="h-8 w-8 rounded-full bg-teal-100 dark:bg-teal-900 flex items-center justify-center text-teal-700 dark:text-teal-300 text-sm font-medium flex-shrink-0">
                                               {u.firstName?.[0]}{u.lastName?.[0]}
                                             </div>
-                                            <div>
-                                              <div className="flex items-center gap-2">
+                                            <div className="min-w-0">
+                                              <div className="flex items-center gap-2 flex-wrap">
                                                 <span className="text-sm font-medium">{u.firstName} {u.lastName}</span>
                                                 {u.isOrgOwner && (
                                                   <Badge variant="outline" className="h-5 text-[10px] bg-amber-50 text-amber-700 border-amber-300">
@@ -1621,15 +1623,15 @@ export default function UserProfile() {
                                                   </Badge>
                                                 )}
                                               </div>
-                                              <span className="text-xs text-gray-500 block">{u.email}</span>
+                                              <span className="text-xs text-gray-500 block truncate">{u.email}</span>
                                             </div>
                                           </div>
-                                          <div className="flex gap-2">
+                                          <div className="flex gap-2 sm:flex-shrink-0">
                                             {!u.isOrgOwner && (
                                               <Button
                                                 variant="outline"
                                                 size="sm"
-                                                className="h-7 text-xs text-amber-600 border-amber-300 hover:bg-amber-50"
+                                                className="h-7 text-xs text-amber-600 border-amber-300 hover:bg-amber-50 flex-1 sm:flex-initial"
                                                 onClick={() => {
                                                   setDelegationTarget({ userId: u.id, userName: `${u.firstName} ${u.lastName}`, orgId: org.id });
                                                   setDelegationDialogOpen(true);
@@ -1642,7 +1644,7 @@ export default function UserProfile() {
                                             <Button
                                               variant="outline"
                                               size="sm"
-                                              className="h-7 text-xs text-red-600 border-red-300 hover:bg-red-50"
+                                              className="h-7 text-xs text-red-600 border-red-300 hover:bg-red-50 flex-1 sm:flex-initial"
                                               onClick={() => {
                                                 setRemovalTarget({ userId: u.id, userName: `${u.firstName} ${u.lastName}`, orgId: org.id });
                                                 setRemovalDialogOpen(true);
