@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, Mail, Bell, BellOff, FilePlus, FileX, BarChart3, Search } from "lucide-react";
+import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, EyeOff, Mail, Bell, BellOff, FilePlus, FileX, BarChart3, Search } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrganisationSchema } from "@shared/schema";
@@ -295,6 +295,8 @@ function CaseManagementTab() {
   const [showNewCaseDialog, setShowNewCaseDialog] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [caseSearchFilter, setCaseSearchFilter] = useState("");
+  const [restrictAccessCase, setRestrictAccessCase] = useState<Case | null>(null);
+  const [blockedUserIds, setBlockedUserIds] = useState<string[]>([]);
   const [newCaseForm, setNewCaseForm] = useState({
     accountNumber: '',
     caseName: '',
@@ -397,6 +399,59 @@ function CaseManagementTab() {
       return await response.json();
     },
     retry: false,
+  });
+
+  // Fetch users for access restrictions when a case is selected
+  const { data: orgUsers = [] } = useQuery({
+    queryKey: ['/api/admin/organisations', restrictAccessCase?.organisationId, 'users'],
+    queryFn: async () => {
+      if (!restrictAccessCase?.organisationId) return [];
+      const response = await apiRequest('GET', `/api/admin/organisations/${restrictAccessCase.organisationId}/users`);
+      return await response.json();
+    },
+    enabled: !!restrictAccessCase?.organisationId,
+    retry: false,
+  });
+
+  // Fetch current access restrictions for selected case
+  const { data: currentRestrictions } = useQuery({
+    queryKey: ['/api/admin/cases', restrictAccessCase?.id, 'access-restrictions'],
+    queryFn: async () => {
+      if (!restrictAccessCase?.id) return { blockedUserIds: [] };
+      const response = await apiRequest('GET', `/api/admin/cases/${restrictAccessCase.id}/access-restrictions`);
+      return await response.json();
+    },
+    enabled: !!restrictAccessCase?.id,
+    retry: false,
+  });
+
+  // Update blocked user IDs when restrictions are fetched
+  useEffect(() => {
+    if (currentRestrictions?.blockedUserIds) {
+      setBlockedUserIds(currentRestrictions.blockedUserIds);
+    }
+  }, [currentRestrictions]);
+
+  // Mutation to update access restrictions
+  const updateAccessRestrictionsMutation = useMutation({
+    mutationFn: async ({ caseId, blockedUserIds }: { caseId: number; blockedUserIds: string[] }) => {
+      return await apiRequest('POST', `/api/admin/cases/${caseId}/access-restrictions`, { blockedUserIds });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Access Updated",
+        description: "Case visibility restrictions have been updated.",
+      });
+      setRestrictAccessCase(null);
+      setBlockedUserIds([]);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update access restrictions.",
+        variant: "destructive",
+      });
+    },
   });
 
   // Create new case mutation
@@ -731,6 +786,17 @@ function CaseManagementTab() {
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() => {
+                  setRestrictAccessCase(case_);
+                  setBlockedUserIds([]);
+                }}
+                title="Restrict access"
+              >
+                <EyeOff className="h-3 w-3" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setDeleteConfirmCase(case_)}
                 disabled={deleteCaseMutation.isPending}
                 className="text-red-600 hover:text-red-700"
@@ -806,6 +872,17 @@ function CaseManagementTab() {
                         <Archive className="h-3 w-3" />
                       </Button>
                     )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setRestrictAccessCase(case_);
+                        setBlockedUserIds([]);
+                      }}
+                      title="Restrict access for specific users"
+                    >
+                      <EyeOff className="h-3 w-3" />
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -1090,6 +1167,76 @@ function CaseManagementTab() {
             </Button>
             <Button onClick={handleSubmitNewCase} disabled={createCaseMutation.isPending}>
               {createCaseMutation.isPending ? "Creating..." : "Create Case"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Restrict Access Dialog */}
+      <Dialog open={!!restrictAccessCase} onOpenChange={() => { setRestrictAccessCase(null); setBlockedUserIds([]); }}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <EyeOff className="h-5 w-5" />
+              Restrict Case Access
+            </DialogTitle>
+            <DialogDescription>
+              Hide this case from specific users in the organisation. Blocked users will not see this case in their case list.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm font-medium mb-2">Case: {restrictAccessCase?.caseName}</p>
+            <p className="text-xs text-gray-500 mb-4">Organisation: {restrictAccessCase?.organisationName}</p>
+            
+            {orgUsers.length === 0 ? (
+              <p className="text-sm text-gray-500">No users found for this organisation.</p>
+            ) : (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                <p className="text-sm text-gray-600 mb-2">Select users to hide this case from:</p>
+                {orgUsers.filter((u: any) => !u.isAdmin).map((user: any) => (
+                  <div key={user.id} className="flex items-center space-x-3 p-2 border rounded hover:bg-gray-50">
+                    <Checkbox
+                      id={`block-${user.id}`}
+                      checked={blockedUserIds.includes(user.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setBlockedUserIds([...blockedUserIds, user.id]);
+                        } else {
+                          setBlockedUserIds(blockedUserIds.filter(id => id !== user.id));
+                        }
+                      }}
+                    />
+                    <label htmlFor={`block-${user.id}`} className="flex-1 cursor-pointer">
+                      <p className="text-sm font-medium">{user.firstName} {user.lastName}</p>
+                      <p className="text-xs text-gray-500">{user.email}</p>
+                    </label>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {blockedUserIds.length > 0 && (
+              <p className="text-sm text-amber-600 mt-3">
+                {blockedUserIds.length} user{blockedUserIds.length > 1 ? 's' : ''} will be blocked from viewing this case.
+              </p>
+            )}
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => { setRestrictAccessCase(null); setBlockedUserIds([]); }}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                if (restrictAccessCase) {
+                  updateAccessRestrictionsMutation.mutate({ 
+                    caseId: restrictAccessCase.id, 
+                    blockedUserIds 
+                  });
+                }
+              }}
+              disabled={updateAccessRestrictionsMutation.isPending}
+            >
+              {updateAccessRestrictionsMutation.isPending ? "Saving..." : "Save Restrictions"}
             </Button>
           </div>
         </DialogContent>
