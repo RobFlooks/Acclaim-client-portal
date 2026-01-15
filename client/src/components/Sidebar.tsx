@@ -1,4 +1,4 @@
-import { Scale, Home, FolderOpen, MessageSquare, BarChart3, FileText, User, LogOut, Settings, Shield, UserCog, Crown } from "lucide-react";
+import { Scale, Home, FolderOpen, MessageSquare, BarChart3, FileText, User, LogOut, Settings, Shield, UserCog } from "lucide-react";
 import logoImage from "@assets/cl-bg_1752271318153.png";
 import acclaimRoseLogo from "@assets/acclaim_rose_transparent_1768474381340.png";
 import { Button } from "@/components/ui/button";
@@ -25,25 +25,12 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
     retry: false,
   });
 
-  // Fetch org ownerships to show org settings link
-  const { data: orgOwnerships } = useQuery<number[]>({
-    queryKey: ["/api/org-owner/ownerships"],
-    retry: false,
-    enabled: !user?.isAdmin, // Only check for non-admin users
-  });
-
-  const isOrgOwner = (orgOwnerships && orgOwnerships.length > 0) || false;
-
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: Home },
     { id: "cases", label: "Cases", icon: FolderOpen },
     { id: "messages", label: "Messages", icon: MessageSquare },
     { id: "documents", label: "Documents", icon: FileText },
     { id: "reports", label: "Reports", icon: BarChart3 },
-    // Only show org settings link to org owners (non-admin)
-    ...(isOrgOwner && !user?.isAdmin ? [
-      { id: "org-settings", label: "Organisation Settings", icon: Crown, isRoute: true, route: "/org-settings" }
-    ] : []),
     // Only show admin link to admin users
     ...(user?.isAdmin ? [
       { id: "admin", label: "Admin Panel", icon: Shield, isRoute: true, route: "/admin" }

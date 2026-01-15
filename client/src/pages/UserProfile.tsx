@@ -13,7 +13,8 @@ import { useTheme } from "@/hooks/use-theme";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 import { useQueryClient } from "@tanstack/react-query";
-import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft, Bell, Building2, FileText, Download, Trash2, Upload, Search, Sun, Moon, HelpCircle, Briefcase, MessageSquare, BarChart3, Crown } from "lucide-react";
+import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft, Bell, Building2, FileText, Download, Trash2, Upload, Search, Sun, Moon, HelpCircle, Briefcase, MessageSquare, BarChart3, Crown, ShieldCheck, ShieldOff, Loader2, Users } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
@@ -119,6 +120,63 @@ export default function UserProfile() {
     retry: false,
     enabled: !userProfile?.isAdmin, // Only check for non-admin users
   });
+
+  // Org settings state
+  const [selectedOrgForSettings, setSelectedOrgForSettings] = useState<string>("");
+  const ownedOrgs = userOrganisations?.filter(org => orgOwnerships?.includes(org.id)) || [];
+  const currentSettingsOrgId = selectedOrgForSettings ? parseInt(selectedOrgForSettings) : (ownedOrgs[0]?.id || 0);
+
+  // Fetch org users for settings (org owners only)
+  const { data: orgSettingsUsers, isLoading: orgUsersLoading } = useQuery<any[]>({
+    queryKey: ["/api/org-owner", currentSettingsOrgId, "users"],
+    retry: false,
+    enabled: currentSettingsOrgId > 0 && ownedOrgs.length > 0,
+  });
+
+  // Fetch org cases for settings (org owners only)
+  const { data: orgSettingsCases, isLoading: orgCasesLoading } = useQuery<any[]>({
+    queryKey: ["/api/org-owner", currentSettingsOrgId, "cases"],
+    retry: false,
+    enabled: currentSettingsOrgId > 0 && ownedOrgs.length > 0,
+  });
+
+  // Fetch case restrictions for settings (org owners only)
+  const { data: orgRestrictions, isLoading: orgRestrictionsLoading } = useQuery<any[]>({
+    queryKey: ["/api/org-owner", currentSettingsOrgId, "restrictions"],
+    retry: false,
+    enabled: currentSettingsOrgId > 0 && ownedOrgs.length > 0,
+  });
+
+  // Toggle restriction mutation
+  const toggleRestrictionMutation = useMutation({
+    mutationFn: async ({ userId, caseId }: { userId: string; caseId: number }) => {
+      const response = await apiRequest("POST", `/api/org-owner/${currentSettingsOrgId}/toggle-restriction`, {
+        userId,
+        caseId
+      });
+      return await response.json();
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: data.restricted ? "Access Restricted" : "Access Restored",
+        description: data.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/org-owner", currentSettingsOrgId, "restrictions"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update access",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const isRestricted = (userId: string, caseId: number) => {
+    return orgRestrictions?.some((r: any) => r.userId === userId && r.caseId === caseId) || false;
+  };
+
+  const nonAdminOrgUsers = orgSettingsUsers?.filter((u: any) => !u.isAdmin) || [];
 
   // Fetch organisation documents (documents without case association)
   const { data: orgDocuments, isLoading: documentsLoading } = useQuery<any[]>({
@@ -1108,6 +1166,120 @@ export default function UserProfile() {
                     </div>
                   ) : (
                     <p className="text-gray-500">You are not currently assigned to any organisation.</p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Organisation Settings - Case Access Management (for org owners only) */}
+            {!userProfile?.isAdmin && ownedOrgs.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Crown className="h-5 w-5 text-amber-500" />
+                    <span>Organisation Settings</span>
+                  </CardTitle>
+                  <CardDescription>
+                    As an organisation owner, you can manage which team members can access specific cases.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {ownedOrgs.length > 1 && (
+                    <div>
+                      <Label>Select Organisation</Label>
+                      <Select value={selectedOrgForSettings || String(ownedOrgs[0]?.id)} onValueChange={setSelectedOrgForSettings}>
+                        <SelectTrigger className="w-64">
+                          <SelectValue placeholder="Select organisation" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ownedOrgs.map((org: any) => (
+                            <SelectItem key={org.id} value={String(org.id)}>
+                              {org.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4 py-2">
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <Users className="h-4 w-4" />
+                      <span>{nonAdminOrgUsers.length} member{nonAdminOrgUsers.length !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <Briefcase className="h-4 w-4" />
+                      <span>{orgSettingsCases?.length || 0} case{(orgSettingsCases?.length || 0) !== 1 ? 's' : ''}</span>
+                    </div>
+                  </div>
+
+                  <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                    Click on a cell to toggle access. <span className="text-green-600">Green</span> = access allowed, <span className="text-red-600">Red</span> = blocked.
+                  </div>
+
+                  {(orgUsersLoading || orgCasesLoading || orgRestrictionsLoading) ? (
+                    <div className="flex items-center justify-center h-32">
+                      <Loader2 className="h-6 w-6 animate-spin text-teal-600" />
+                    </div>
+                  ) : nonAdminOrgUsers.length === 0 ? (
+                    <div className="text-center py-6 text-gray-500 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      No team members to manage in this organisation.
+                    </div>
+                  ) : (orgSettingsCases?.length || 0) === 0 ? (
+                    <div className="text-center py-6 text-gray-500 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      No cases in this organisation yet.
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto border rounded-lg">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="sticky left-0 bg-white dark:bg-gray-950 z-10 min-w-[150px]">Member</TableHead>
+                            {orgSettingsCases?.map((c: any) => (
+                              <TableHead key={c.id} className="text-center min-w-[100px]">
+                                <div className="font-medium text-xs">{c.caseName}</div>
+                                {c.reference && <div className="text-xs text-gray-400">{c.reference}</div>}
+                              </TableHead>
+                            ))}
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {nonAdminOrgUsers.map((u: any) => (
+                            <TableRow key={u.id}>
+                              <TableCell className="sticky left-0 bg-white dark:bg-gray-950 z-10">
+                                <div className="font-medium text-sm">{u.firstName} {u.lastName}</div>
+                                <div className="text-xs text-gray-500">{u.email}</div>
+                              </TableCell>
+                              {orgSettingsCases?.map((c: any) => {
+                                const restricted = isRestricted(u.id, c.id);
+                                return (
+                                  <TableCell key={c.id} className="text-center p-1">
+                                    <Button
+                                      variant={restricted ? "destructive" : "outline"}
+                                      size="sm"
+                                      className={`w-16 h-8 text-xs ${!restricted ? 'bg-green-50 border-green-300 text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-700 dark:text-green-400' : ''}`}
+                                      onClick={() => {
+                                        toggleRestrictionMutation.mutate({
+                                          userId: u.id,
+                                          caseId: c.id
+                                        });
+                                      }}
+                                      disabled={toggleRestrictionMutation.isPending}
+                                    >
+                                      {restricted ? (
+                                        <ShieldOff className="h-3 w-3" />
+                                      ) : (
+                                        <ShieldCheck className="h-3 w-3" />
+                                      )}
+                                    </Button>
+                                  </TableCell>
+                                );
+                              })}
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   )}
                 </CardContent>
               </Card>
