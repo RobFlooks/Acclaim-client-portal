@@ -99,7 +99,7 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
 
   const getStageBadge = (status: string, stage: string) => {
     if (status === "resolved" || status?.toLowerCase() === "closed") {
-      return <Badge className="bg-green-100 text-green-800"><Check className="w-3 h-3 mr-1" />Closed</Badge>;
+      return <Badge className="bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300"><Check className="w-3 h-3 mr-1" />Closed</Badge>;
     }
     
     // Normalize stage for consistent comparison
@@ -108,27 +108,27 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
     switch (normalizedStage) {
       case "initialcontact":
       case "prelegal":
-        return <Badge className="bg-blue-100 text-blue-800">Pre-Legal</Badge>;
+        return <Badge className="bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300">Pre-Legal</Badge>;
       case "claim":
-        return <Badge className="bg-yellow-100 text-yellow-800">Claim</Badge>;
+        return <Badge className="bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300">Claim</Badge>;
       case "judgment":
       case "judgement":
-        return <Badge className="bg-orange-100 text-orange-800">Judgment</Badge>;
+        return <Badge className="bg-orange-100 dark:bg-orange-900/50 text-orange-800 dark:text-orange-300">Judgment</Badge>;
       case "enforcement":
-        return <Badge className="bg-red-100 text-red-800">Enforcement</Badge>;
+        return <Badge className="bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300">Enforcement</Badge>;
       case "paymentplan":
-        return <Badge className="bg-green-100 text-green-800">Payment Plan</Badge>;
+        return <Badge className="bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300">Payment Plan</Badge>;
       case "paid":
-        return <Badge className="bg-green-100 text-green-800">Paid</Badge>;
+        return <Badge className="bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300">Paid</Badge>;
       case "legalaction":
-        return <Badge className="bg-orange-100 text-orange-800">Legal Action</Badge>;
+        return <Badge className="bg-orange-100 dark:bg-orange-900/50 text-orange-800 dark:text-orange-300">Legal Action</Badge>;
       default:
         // Display the actual stage name, formatted nicely
         const formattedStage = stage?.replace(/[_-]/g, ' ')
           .split(' ')
           .map(word => word.charAt(0).toUpperCase() + word.slice(1))
           .join(' ') || 'Active';
-        return <Badge className="bg-gray-100 text-gray-800">{formattedStage}</Badge>;
+        return <Badge className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300">{formattedStage}</Badge>;
     }
   };
 
