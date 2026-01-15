@@ -1486,7 +1486,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                     className="bg-acclaim-teal text-white hover:bg-acclaim-teal/90 flex-shrink-0"
                   >
                     <Send className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden sm:inline">New Message</span>
+                    <span className="hidden sm:inline">Create Message</span>
                   </Button>
                 </div>
               </div>
