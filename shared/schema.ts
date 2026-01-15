@@ -87,6 +87,7 @@ export const mutedCases = pgTable("muted_cases", {
 
 // Scheduled reports preferences - allows users to receive periodic email reports
 // Supports multiple schedules per user: per-org schedules (organisationId set) or combined reports (organisationId null)
+// Also supports org-level reports with custom recipient email (for sending to external contacts)
 export const scheduledReports = pgTable("scheduled_reports", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
@@ -100,6 +101,8 @@ export const scheduledReports = pgTable("scheduled_reports", {
   includeActivityReport: boolean("include_activity_report").default(true),
   organisationIds: jsonb("organisation_ids").$type<number[]>(), // For combined reports: array of org IDs to include, null = all user's orgs
   caseStatusFilter: varchar("case_status_filter", { length: 20 }).default("active"), // 'active', 'all', 'closed'
+  recipientEmail: varchar("recipient_email", { length: 255 }), // Optional: send to this email instead of user's email (for org-level reports)
+  recipientName: varchar("recipient_name", { length: 255 }), // Optional: name for email greeting when using recipientEmail
   lastSentAt: timestamp("last_sent_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
