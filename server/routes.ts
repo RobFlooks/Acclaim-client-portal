@@ -361,7 +361,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/cases', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const cases = await storage.getCasesForUser(userId);
+      const user = await storage.getUser(userId);
+      let cases = await storage.getCasesForUser(userId);
+      
+      // Filter out cases the user is blocked from (unless admin)
+      if (!user?.isAdmin) {
+        const blockedCaseIds = await storage.getBlockedCasesForUser(userId);
+        if (blockedCaseIds.length > 0) {
+          cases = cases.filter(c => !blockedCaseIds.includes(c.id));
+        }
+      }
+      
       res.json(cases);
     } catch (error) {
       console.error("Error fetching cases:", error);
@@ -379,6 +389,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const caseId = parseInt(req.params.id);
+      
+      // Check if user is blocked from this case (unless admin)
+      if (!user.isAdmin) {
+        const isBlocked = await storage.isUserBlockedFromCase(userId, caseId);
+        if (isBlocked) {
+          return res.status(404).json({ message: "Case not found" });
+        }
+      }
+      
       let case_;
       
       if (user.isAdmin) {
