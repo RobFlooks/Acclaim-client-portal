@@ -22,6 +22,7 @@ import PaymentPerformanceReport from "@/pages/PaymentPerformanceReport";
 import AdminPaymentPerformanceReport from "@/pages/AdminPaymentPerformanceReport";
 import SimpleReports from "@/pages/SimpleReports";
 import AuditManagement from "@/pages/AuditManagement";
+import OrgSettings from "@/pages/OrgSettings";
 
 function Router() {
   return (
@@ -31,6 +32,7 @@ function Router() {
       <ProtectedRoute path="/admin" component={AdminEnhanced} />
       <ProtectedRoute path="/admin-enhanced" component={AdminEnhanced} />
       <ProtectedRoute path="/profile" component={UserProfile} />
+      <ProtectedRoute path="/org-settings" component={OrgSettings} />
       <ProtectedRoute path="/system-monitoring" component={SystemMonitoring} />
       <ProtectedRoute path="/advanced-reports" component={SimpleReports} />
       <ProtectedRoute path="/reports" component={SimpleReports} />
