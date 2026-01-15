@@ -1403,7 +1403,7 @@ export default function UserProfile() {
                     <Label htmlFor="scheduled-reports-enabled" className="font-medium">
                       Enable Scheduled Reports
                     </Label>
-                    <p className="text-sm text-gray-500">Receive an Excel report by email with Case Summary and Activity tabs.</p>
+                    <p className="text-sm text-gray-500">Receive a routine report by email.</p>
                   </div>
                   <Switch
                     id="scheduled-reports-enabled"
