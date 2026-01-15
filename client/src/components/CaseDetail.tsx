@@ -1138,7 +1138,6 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
           Print Case PDF
         </Button>
       </div>
-
       {/* Case Header */}
       <Card>
         <CardHeader>
@@ -1233,7 +1232,6 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
           </div>
         </CardContent>
       </Card>
-
       {/* Tabbed Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
@@ -1488,7 +1486,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                     className="bg-acclaim-teal text-white hover:bg-acclaim-teal/90 flex-shrink-0"
                   >
                     <Send className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Send Message</span>
+                    <span className="hidden sm:inline">New Message</span>
                   </Button>
                 </div>
               </div>
