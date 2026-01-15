@@ -317,6 +317,9 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
             </CardContent>
           </Card>
         </div>
+        <p className="text-xs text-gray-500 text-center mt-2">
+          Statistics are based on all cases across your organisation(s)
+        </p>
       </div>
       {/* Recent Cases and Messages */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
