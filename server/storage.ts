@@ -330,6 +330,7 @@ export interface IStorage {
   getCaseAccessRestrictions(caseId: number): Promise<string[]>; // Returns array of blocked user IDs
   isUserBlockedFromCase(userId: string, caseId: number): Promise<boolean>;
   getBlockedCasesForUser(userId: string): Promise<number[]>;
+  getAdminRestrictedCasesForUser(userId: string): Promise<number[]>; // Only admin-set restrictions, not user muting
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1064,8 +1065,9 @@ export class DatabaseStorage implements IStorage {
 
     const orgIdArray = Array.from(allUserOrgIds);
     
-    // Get user's restricted case IDs to exclude them
-    const restrictedCaseIds = await this.getBlockedCasesForUser(userId);
+    // Get user's admin-restricted case IDs to exclude them
+    // Note: User-muted cases still appear (muting is for notifications only)
+    const restrictedCaseIds = await this.getAdminRestrictedCasesForUser(userId);
     
     const result = await db
       .select({
@@ -2698,6 +2700,15 @@ export class DatabaseStorage implements IStorage {
   async getBlockedCasesForUser(userId: string): Promise<number[]> {
     // Use muted_cases table - muted cases are now also blocked
     return this.getMutedCasesForUser(userId);
+  }
+
+  async getAdminRestrictedCasesForUser(userId: string): Promise<number[]> {
+    // Get only admin-set restrictions from case_access_restrictions table
+    // This is separate from user-muting - used for scheduled reports
+    const results = await db.select({ caseId: caseAccessRestrictions.caseId })
+      .from(caseAccessRestrictions)
+      .where(eq(caseAccessRestrictions.blockedUserId, userId));
+    return results.map(r => r.caseId);
   }
 
   // Scheduled reports operations

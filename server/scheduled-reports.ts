@@ -27,8 +27,9 @@ export async function generateScheduledReport(
   const user = await storage.getUser(userId);
   if (!user) throw new Error("User not found");
 
-  // Get user's restricted case IDs to filter them out
-  const restrictedCaseIds = await storage.getBlockedCasesForUser(userId);
+  // Get user's admin-restricted case IDs to filter them out
+  // Note: User-muted cases should STILL appear in reports (they only mute notifications)
+  const restrictedCaseIds = await storage.getAdminRestrictedCasesForUser(userId);
 
   let cases = await storage.getCasesForUser(userId);
   
