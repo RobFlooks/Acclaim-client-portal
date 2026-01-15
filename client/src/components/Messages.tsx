@@ -711,7 +711,7 @@ export default function Messages() {
                         <p className="font-medium text-gray-900">
                           {viewingMessage.senderName || viewingMessage.senderEmail || 'Unknown'}
                         </p>
-                        <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                        <Badge variant="secondary" className="text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300">
                           {viewingMessage.senderIsAdmin ? "Acclaim" : (viewingMessage.senderOrganisationName || "User")}
                         </Badge>
                       </div>
@@ -848,7 +848,7 @@ export default function Messages() {
                               <span className="hidden sm:inline">From: </span>
                               <span className="font-medium">{message.senderName || message.senderEmail || 'Unknown'}</span>
                             </p>
-                            <Badge variant="secondary" className="text-[10px] sm:text-xs bg-blue-100 text-blue-800 px-1.5 py-0">
+                            <Badge variant="secondary" className="text-[10px] sm:text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300 px-1.5 py-0">
                               {message.senderIsAdmin ? "Acclaim" : (message.senderOrganisationName || "User")}
                             </Badge>
                             {message.attachmentFileName && (
