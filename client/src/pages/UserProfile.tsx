@@ -1651,7 +1651,7 @@ export default function UserProfile() {
                                               }}
                                             >
                                               <UserMinus className="h-3 w-3 mr-1" />
-                                              Remove
+                                              Remove from Org
                                             </Button>
                                           </div>
                                         </div>
