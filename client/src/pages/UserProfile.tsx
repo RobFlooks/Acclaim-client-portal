@@ -13,7 +13,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 import { useQueryClient } from "@tanstack/react-query";
-import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft, Bell, Building2, FileText, Download, Trash2, Upload, Search, Sun, Moon, HelpCircle, Briefcase, MessageSquare, BarChart3 } from "lucide-react";
+import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft, Bell, Building2, FileText, Download, Trash2, Upload, Search, Sun, Moon, HelpCircle, Briefcase, MessageSquare, BarChart3, Crown } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
@@ -111,6 +111,13 @@ export default function UserProfile() {
   const { data: userOrganisations } = useQuery<any[]>({
     queryKey: ["/api/user/organisations"],
     retry: false,
+  });
+
+  // Fetch org ownerships (organisations where user is an owner)
+  const { data: orgOwnerships } = useQuery<number[]>({
+    queryKey: ["/api/org-owner/ownerships"],
+    retry: false,
+    enabled: !userProfile?.isAdmin, // Only check for non-admin users
   });
 
   // Fetch organisation documents (documents without case association)
@@ -1072,17 +1079,32 @@ export default function UserProfile() {
                 <CardContent>
                   {userOrganisations && userOrganisations.length > 0 ? (
                     <div className="space-y-3">
-                      {userOrganisations.map((org: any) => (
-                        <div key={org.id} className="p-4 bg-gray-50 rounded-lg">
-                          <div className="flex items-center space-x-3">
-                            <Building2 className="h-5 w-5 text-acclaim-teal" />
-                            <div>
-                              <p className="font-medium text-lg">{org.name}</p>
-                              <p className="text-sm text-gray-500">You are a member of this organisation</p>
+                      {userOrganisations.map((org: any) => {
+                        const isOwner = orgOwnerships?.includes(org.id);
+                        return (
+                          <div key={org.id} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3">
+                                <Building2 className="h-5 w-5 text-acclaim-teal" />
+                                <div>
+                                  <p className="font-medium text-lg">{org.name}</p>
+                                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    {isOwner 
+                                      ? "You are an Owner of this organisation" 
+                                      : "You are a member of this organisation"}
+                                  </p>
+                                </div>
+                              </div>
+                              {isOwner && (
+                                <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 rounded-full text-sm font-medium">
+                                  <Crown className="h-4 w-4" />
+                                  <span>Owner</span>
+                                </div>
+                              )}
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ) : (
                     <p className="text-gray-500">You are not currently assigned to any organisation.</p>
