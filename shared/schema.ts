@@ -66,6 +66,7 @@ export const userOrganisations = pgTable("user_organisations", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
   organisationId: integer("organisation_id").notNull().references(() => organisations.id, { onDelete: "cascade" }),
+  role: varchar("role", { length: 50 }).notNull().default("member"), // 'member' or 'owner'
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_user_organisations_user_id").on(table.userId),
