@@ -6,6 +6,7 @@ import { sendScheduledReportEmailWithAttachments } from "./email-service-sendgri
 export interface ScheduledReportSettings {
   id: number;
   userId: string;
+  organisationId: number | null; // For per-org schedules. null = combined report
   enabled: boolean | null;
   frequency: string;
   dayOfWeek: number | null;
@@ -13,6 +14,7 @@ export interface ScheduledReportSettings {
   timeOfDay: number | null;
   includeCaseSummary: boolean | null;
   includeActivityReport: boolean | null;
+  organisationIds: number[] | null; // For combined reports: which orgs to include
   caseStatusFilter: string | null;
   lastSentAt: Date | null;
 }
@@ -20,6 +22,39 @@ export interface ScheduledReportSettings {
 export interface ReportBuffers {
   excel: Buffer;
   pdf: Buffer;
+}
+
+// Generate a report by report ID (for test send and processing)
+export async function generateScheduledReportForId(reportId: number): Promise<void> {
+  const report = await storage.getScheduledReportById(reportId);
+  if (!report) throw new Error("Report not found");
+
+  const user = await storage.getUser(report.userId);
+  if (!user || !user.email) throw new Error("User not found or has no email");
+
+  const reportBuffers = await generateScheduledReport(report.userId, report as ScheduledReportSettings);
+  
+  const now = new Date();
+  const frequencyText = report.frequency === "daily" ? "Daily" : report.frequency === "weekly" ? "Weekly" : "Monthly";
+  
+  // Add organisation name to filename if this is a per-org report
+  let baseFileName = `Acclaim_${frequencyText}_Report_${now.toISOString().split("T")[0]}`;
+  if (report.organisationId) {
+    const org = await storage.getOrganisation(report.organisationId);
+    if (org) {
+      const orgName = org.name.replace(/[^a-zA-Z0-9]/g, '_');
+      baseFileName = `Acclaim_${orgName}_${frequencyText}_Report_${now.toISOString().split("T")[0]}`;
+    }
+  }
+
+  await sendScheduledReportEmailWithAttachments(
+    user.email,
+    `${user.firstName} ${user.lastName}`,
+    frequencyText,
+    reportBuffers.excel,
+    reportBuffers.pdf,
+    baseFileName
+  );
 }
 
 export async function generateScheduledReport(
@@ -51,6 +86,14 @@ export async function generateScheduledReport(
   if (disabledOrgIds.length > 0) {
     cases = cases.filter((c: any) => !disabledOrgIds.includes(c.organisationId));
   }
+
+  // Filter by specific organisation if this is a per-org report
+  if (settings.organisationId) {
+    cases = cases.filter((c: any) => c.organisationId === settings.organisationId);
+  } else if (settings.organisationIds && settings.organisationIds.length > 0) {
+    // For combined reports with specific org selection
+    cases = cases.filter((c: any) => settings.organisationIds!.includes(c.organisationId));
+  }
   
   // Apply status filter
   if (settings.caseStatusFilter === "active") {
@@ -59,10 +102,10 @@ export async function generateScheduledReport(
     cases = cases.filter((c: any) => c.status === "closed" || c.status === "resolved");
   }
 
-  // Get messages for reports
+  // Get messages for reports, filtered by organisation if needed
   let messages: any[] = [];
   if (settings.includeActivityReport) {
-    messages = await getRecentMessages(userId, settings.frequency);
+    messages = await getRecentMessages(userId, settings.frequency, settings.organisationId, settings.organisationIds);
   }
 
   // Generate Excel
@@ -414,7 +457,12 @@ function addCaseSummarySheet(workbook: ExcelJS.Workbook, cases: any[]) {
   sheet.views = [{ state: "frozen", ySplit: 1 }];
 }
 
-async function getRecentMessages(userId: string, frequency: string): Promise<any[]> {
+async function getRecentMessages(
+  userId: string, 
+  frequency: string, 
+  organisationId?: number | null, 
+  organisationIds?: number[] | null
+): Promise<any[]> {
   const messages: any[] = [];
   const now = new Date();
   const cutoffDate = new Date();
@@ -442,6 +490,13 @@ async function getRecentMessages(userId: string, frequency: string): Promise<any
     // Note: caseOrganisationId is the field returned by getMessagesForUser
     const msgOrgId = m.caseOrganisationId || m.organisationId;
     if (disabledOrgIds.length > 0 && msgOrgId && disabledOrgIds.includes(msgOrgId)) return false;
+    
+    // Filter by specific organisation if this is a per-org report
+    if (organisationId && msgOrgId !== organisationId) return false;
+    
+    // Filter by selected organisations if this is a combined report with specific orgs
+    if (organisationIds && organisationIds.length > 0 && msgOrgId && !organisationIds.includes(msgOrgId)) return false;
+    
     return true;
   });
 
@@ -660,7 +715,16 @@ export async function processScheduledReports(): Promise<void> {
       const reportBuffers = await generateScheduledReport(settings.userId, settings as ScheduledReportSettings);
       
       const frequencyText = settings.frequency === "daily" ? "Daily" : settings.frequency === "weekly" ? "Weekly" : "Monthly";
-      const baseFileName = `Acclaim_${frequencyText}_Report_${now.toISOString().split("T")[0]}`;
+      
+      // Add organisation name to filename if this is a per-org report
+      let baseFileName = `Acclaim_${frequencyText}_Report_${now.toISOString().split("T")[0]}`;
+      if (settings.organisationId) {
+        const org = await storage.getOrganisation(settings.organisationId);
+        if (org) {
+          const orgName = org.name.replace(/[^a-zA-Z0-9]/g, '_');
+          baseFileName = `Acclaim_${orgName}_${frequencyText}_Report_${now.toISOString().split("T")[0]}`;
+        }
+      }
 
       await sendScheduledReportEmailWithAttachments(
         user.email,
@@ -671,9 +735,9 @@ export async function processScheduledReports(): Promise<void> {
         baseFileName
       );
 
-      await storage.updateScheduledReportLastSent(settings.userId);
+      await storage.updateScheduledReportLastSent(settings.id);
 
-      console.log(`Sent scheduled report to ${user.email}`);
+      console.log(`Sent scheduled report #${settings.id} to ${user.email}`);
     } catch (error) {
       console.error(`Failed to send scheduled report for user ${settings.userId}:`, error);
     }

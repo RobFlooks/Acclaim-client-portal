@@ -549,12 +549,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Scheduled reports endpoints
+  // Scheduled reports endpoints - read-only for users (admin configures reports)
   app.get('/api/user/scheduled-reports', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const report = await storage.getScheduledReport(userId);
-      res.json(report || null);
+      const reports = await storage.getScheduledReportsForUser(userId);
+      res.json(reports);
     } catch (error) {
       console.error("Error fetching scheduled report settings:", error);
       res.status(500).json({ message: "Failed to fetch scheduled report settings" });
@@ -583,71 +583,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error checking scheduled reports allowed:", error);
       res.status(500).json({ message: "Failed to check scheduled reports status" });
-    }
-  });
-
-  app.post('/api/user/scheduled-reports', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.id;
-      const { enabled, frequency, dayOfWeek, dayOfMonth, timeOfDay, includeCaseSummary, includeActivityReport, organisationIds, caseStatusFilter } = req.body;
-      
-      const report = await storage.upsertScheduledReport(userId, {
-        enabled,
-        frequency,
-        dayOfWeek,
-        dayOfMonth,
-        timeOfDay,
-        includeCaseSummary,
-        includeActivityReport,
-        organisationIds,
-        caseStatusFilter,
-      });
-      
-      res.json(report);
-    } catch (error) {
-      console.error("Error saving scheduled report settings:", error);
-      res.status(500).json({ message: "Failed to save scheduled report settings" });
-    }
-  });
-
-  // Test send scheduled report immediately
-  app.post('/api/user/scheduled-reports/test-send', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.id;
-      const user = await storage.getUser(userId);
-      
-      if (!user || !user.email) {
-        return res.status(400).json({ message: "User email not found" });
-      }
-      
-      const settings = await storage.getScheduledReport(userId);
-      if (!settings) {
-        return res.status(400).json({ message: "No scheduled report settings found. Please configure your report first." });
-      }
-      
-      // Import the function dynamically
-      const { generateScheduledReport } = await import("./scheduled-reports");
-      const { sendScheduledReportEmailWithAttachments } = await import("./email-service-sendgrid");
-      
-      const reportBuffers = await generateScheduledReport(userId, settings as any);
-      
-      const now = new Date();
-      const frequencyText = settings.frequency === "daily" ? "Daily" : settings.frequency === "weekly" ? "Weekly" : "Monthly";
-      const baseFileName = `Acclaim_${frequencyText}_Report_${now.toISOString().split("T")[0]}`;
-      
-      await sendScheduledReportEmailWithAttachments(
-        user.email,
-        `${user.firstName} ${user.lastName}`,
-        frequencyText,
-        reportBuffers.excel,
-        reportBuffers.pdf,
-        baseFileName
-      );
-      
-      res.json({ message: "Test report sent successfully to " + user.email });
-    } catch (error) {
-      console.error("Error sending test report:", error);
-      res.status(500).json({ message: "Failed to send test report: " + (error as Error).message });
     }
   });
 
@@ -2752,23 +2687,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin: Get scheduled report for a specific user
-  app.get('/api/admin/users/:userId/scheduled-report', isAuthenticated, isAdmin, async (req: any, res) => {
+  // Admin: Get all scheduled reports for a specific user
+  app.get('/api/admin/users/:userId/scheduled-reports', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const { userId } = req.params;
-      const report = await storage.getScheduledReport(userId);
-      res.json(report || null);
+      const reports = await storage.getScheduledReportsForUser(userId);
+      res.json(reports);
     } catch (error) {
-      console.error("Error fetching user scheduled report:", error);
-      res.status(500).json({ message: "Failed to fetch user scheduled report" });
+      console.error("Error fetching user scheduled reports:", error);
+      res.status(500).json({ message: "Failed to fetch user scheduled reports" });
     }
   });
 
-  // Admin: Configure scheduled report for a specific user
-  app.put('/api/admin/users/:userId/scheduled-report', isAuthenticated, isAdmin, async (req: any, res) => {
+  // Admin: Create a new scheduled report for a user
+  app.post('/api/admin/users/:userId/scheduled-reports', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const { userId } = req.params;
-      const { enabled, frequency, dayOfWeek, dayOfMonth, timeOfDay, includeCaseSummary, includeActivityReport, caseStatusFilter } = req.body;
+      const { organisationId, enabled, frequency, dayOfWeek, dayOfMonth, timeOfDay, includeCaseSummary, includeActivityReport, organisationIds, caseStatusFilter } = req.body;
       
       // Validate the user exists
       const user = await storage.getUser(userId);
@@ -2776,7 +2711,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
-      const report = await storage.upsertScheduledReport(userId, {
+      const report = await storage.createScheduledReport({
+        userId,
+        organisationId: organisationId || null, // null = combined report
         enabled: enabled ?? false,
         frequency: frequency || 'weekly',
         dayOfWeek: dayOfWeek ?? 1,
@@ -2784,33 +2721,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
         timeOfDay: timeOfDay ?? 9,
         includeCaseSummary: includeCaseSummary ?? true,
         includeActivityReport: includeActivityReport ?? true,
+        organisationIds: organisationIds || null, // For combined reports: which orgs to include
         caseStatusFilter: caseStatusFilter || 'active',
       });
       
       res.json(report);
     } catch (error) {
-      console.error("Error configuring user scheduled report:", error);
-      res.status(500).json({ message: "Failed to configure user scheduled report" });
+      console.error("Error creating user scheduled report:", error);
+      res.status(500).json({ message: "Failed to create user scheduled report" });
     }
   });
 
-  // Admin: Send test scheduled report for a user
-  app.post('/api/admin/users/:userId/scheduled-report/test-send', isAuthenticated, isAdmin, async (req: any, res) => {
+  // Admin: Get a specific scheduled report by ID
+  app.get('/api/admin/scheduled-reports/:id', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const { userId } = req.params;
+      const id = parseInt(req.params.id);
+      const report = await storage.getScheduledReportById(id);
+      if (!report) {
+        return res.status(404).json({ message: "Scheduled report not found" });
+      }
+      res.json(report);
+    } catch (error) {
+      console.error("Error fetching scheduled report:", error);
+      res.status(500).json({ message: "Failed to fetch scheduled report" });
+    }
+  });
+
+  // Admin: Update a specific scheduled report
+  app.put('/api/admin/scheduled-reports/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { organisationId, enabled, frequency, dayOfWeek, dayOfMonth, timeOfDay, includeCaseSummary, includeActivityReport, organisationIds, caseStatusFilter } = req.body;
       
-      const user = await storage.getUser(userId);
+      const existing = await storage.getScheduledReportById(id);
+      if (!existing) {
+        return res.status(404).json({ message: "Scheduled report not found" });
+      }
+      
+      const report = await storage.updateScheduledReport(id, {
+        organisationId: organisationId !== undefined ? organisationId : existing.organisationId,
+        enabled: enabled ?? existing.enabled,
+        frequency: frequency || existing.frequency,
+        dayOfWeek: dayOfWeek ?? existing.dayOfWeek,
+        dayOfMonth: dayOfMonth ?? existing.dayOfMonth,
+        timeOfDay: timeOfDay ?? existing.timeOfDay,
+        includeCaseSummary: includeCaseSummary ?? existing.includeCaseSummary,
+        includeActivityReport: includeActivityReport ?? existing.includeActivityReport,
+        organisationIds: organisationIds !== undefined ? organisationIds : existing.organisationIds,
+        caseStatusFilter: caseStatusFilter || existing.caseStatusFilter,
+      });
+      
+      res.json(report);
+    } catch (error) {
+      console.error("Error updating scheduled report:", error);
+      res.status(500).json({ message: "Failed to update scheduled report" });
+    }
+  });
+
+  // Admin: Delete a specific scheduled report
+  app.delete('/api/admin/scheduled-reports/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      const existing = await storage.getScheduledReportById(id);
+      if (!existing) {
+        return res.status(404).json({ message: "Scheduled report not found" });
+      }
+      
+      await storage.deleteScheduledReport(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting scheduled report:", error);
+      res.status(500).json({ message: "Failed to delete scheduled report" });
+    }
+  });
+
+  // Admin: Send test scheduled report for a specific report
+  app.post('/api/admin/scheduled-reports/:id/test-send', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      const report = await storage.getScheduledReportById(id);
+      if (!report) {
+        return res.status(404).json({ message: "Scheduled report not found" });
+      }
+      
+      const user = await storage.getUser(report.userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
       
-      const reportSettings = await storage.getScheduledReport(userId);
-      if (!reportSettings) {
-        return res.status(400).json({ message: "No scheduled report settings found for this user. Please configure their report first." });
-      }
-      
-      const { generateScheduledReport } = await import("./scheduled-reports");
-      await generateScheduledReport(userId);
+      const { generateScheduledReportForId } = await import("./scheduled-reports");
+      await generateScheduledReportForId(id);
       
       res.json({ success: true, message: `Test report sent to ${user.email}` });
     } catch (error) {
