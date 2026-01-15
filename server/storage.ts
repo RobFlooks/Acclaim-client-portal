@@ -2745,36 +2745,47 @@ export class DatabaseStorage implements IStorage {
     return results.map(r => r.caseId);
   }
 
-  // Scheduled reports operations
-  async getScheduledReport(userId: string): Promise<ScheduledReport | undefined> {
+  // Scheduled reports operations - supports multiple reports per user
+  
+  async getScheduledReportById(id: number): Promise<ScheduledReport | undefined> {
     const [result] = await db.select()
       .from(scheduledReports)
-      .where(eq(scheduledReports.userId, userId))
+      .where(eq(scheduledReports.id, id))
       .limit(1);
     return result;
   }
 
-  async upsertScheduledReport(userId: string, data: Partial<InsertScheduledReport>): Promise<ScheduledReport> {
-    const existing = await this.getScheduledReport(userId);
-    
-    if (existing) {
-      const [updated] = await db.update(scheduledReports)
-        .set({ ...data, updatedAt: new Date() })
-        .where(eq(scheduledReports.userId, userId))
-        .returning();
-      return updated;
-    } else {
-      const [created] = await db.insert(scheduledReports)
-        .values({ userId, ...data })
-        .returning();
-      return created;
-    }
+  async getScheduledReportsForUser(userId: string): Promise<ScheduledReport[]> {
+    return await db.select()
+      .from(scheduledReports)
+      .where(eq(scheduledReports.userId, userId));
   }
 
-  async updateScheduledReportLastSent(userId: string): Promise<void> {
+  async createScheduledReport(data: InsertScheduledReport): Promise<ScheduledReport> {
+    const [created] = await db.insert(scheduledReports)
+      .values(data)
+      .returning();
+    return created;
+  }
+
+  async updateScheduledReport(id: number, data: Partial<InsertScheduledReport>): Promise<ScheduledReport | undefined> {
+    const [updated] = await db.update(scheduledReports)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(scheduledReports.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteScheduledReport(id: number): Promise<boolean> {
+    const result = await db.delete(scheduledReports)
+      .where(eq(scheduledReports.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async updateScheduledReportLastSent(reportId: number): Promise<void> {
     await db.update(scheduledReports)
       .set({ lastSentAt: new Date() })
-      .where(eq(scheduledReports.userId, userId));
+      .where(eq(scheduledReports.id, reportId));
   }
 
   async getScheduledReportsDue(): Promise<ScheduledReport[]> {
