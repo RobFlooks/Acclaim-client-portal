@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, User, Building, Factory, Clock, Check, AlertTriangle, Eye, UserCog, Users, Store, UserCheck, Filter } from "lucide-react";
+import { Search, User, Building, Factory, Clock, Check, AlertTriangle, Eye, UserCog, Users, Store, UserCheck, Filter, Bell, BellOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/use-auth";
@@ -46,6 +46,13 @@ export default function Cases() {
       });
     },
   });
+
+  // Fetch muted cases to show mute status icons
+  const { data: mutedCasesData } = useQuery<{ mutedCaseIds: number[] }>({
+    queryKey: ["/api/user/muted-cases"],
+    staleTime: 30000,
+  });
+  const mutedCaseIds = mutedCasesData?.mutedCaseIds || [];
 
   // Handle scroll to case when navigated from Messages
   useEffect(() => {
@@ -269,7 +276,14 @@ export default function Cases() {
                       {getDebtorIcon(case_.debtorType)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-gray-900 truncate">{case_.caseName}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-gray-900 truncate">{case_.caseName}</p>
+                        {mutedCaseIds.includes(case_.id) ? (
+                          <BellOff className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" title="Notifications muted" />
+                        ) : (
+                          <Bell className="w-3.5 h-3.5 text-green-500 flex-shrink-0" title="Notifications enabled" />
+                        )}
+                      </div>
                       <p className="text-sm text-gray-600 truncate">Account: {case_.accountNumber}</p>
                       {case_.organisationName && (
                         <p className="text-sm text-blue-600 font-medium truncate">
