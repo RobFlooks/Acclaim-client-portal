@@ -16,6 +16,7 @@ import {
   externalApiCredentials,
   userOrganisations,
   mutedCases,
+  caseAccessRestrictions,
   type User,
   type UpsertUser,
   type Organization,
@@ -315,6 +316,13 @@ export interface IStorage {
   unmuteCase(userId: string, caseId: number): Promise<void>;
   isCaseMuted(userId: string, caseId: number): Promise<boolean>;
   getMutedCasesForUser(userId: string): Promise<number[]>;
+
+  // Case access restriction operations (admin feature)
+  addCaseAccessRestriction(caseId: number, blockedUserId: string, createdBy: string): Promise<void>;
+  removeCaseAccessRestriction(caseId: number, blockedUserId: string): Promise<void>;
+  getCaseAccessRestrictions(caseId: number): Promise<string[]>; // Returns array of blocked user IDs
+  isUserBlockedFromCase(userId: string, caseId: number): Promise<boolean>;
+  getBlockedCasesForUser(userId: string): Promise<number[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2558,6 +2566,55 @@ export class DatabaseStorage implements IStorage {
     const results = await db.select({ caseId: mutedCases.caseId })
       .from(mutedCases)
       .where(eq(mutedCases.userId, userId));
+    return results.map(r => r.caseId);
+  }
+
+  // Case access restriction operations
+  async addCaseAccessRestriction(caseId: number, blockedUserId: string, createdBy: string): Promise<void> {
+    // Check if restriction already exists
+    const existing = await db.select()
+      .from(caseAccessRestrictions)
+      .where(and(
+        eq(caseAccessRestrictions.caseId, caseId),
+        eq(caseAccessRestrictions.blockedUserId, blockedUserId)
+      ))
+      .limit(1);
+    
+    if (existing.length === 0) {
+      await db.insert(caseAccessRestrictions).values({ caseId, blockedUserId, createdBy });
+    }
+  }
+
+  async removeCaseAccessRestriction(caseId: number, blockedUserId: string): Promise<void> {
+    await db.delete(caseAccessRestrictions)
+      .where(and(
+        eq(caseAccessRestrictions.caseId, caseId),
+        eq(caseAccessRestrictions.blockedUserId, blockedUserId)
+      ));
+  }
+
+  async getCaseAccessRestrictions(caseId: number): Promise<string[]> {
+    const results = await db.select({ blockedUserId: caseAccessRestrictions.blockedUserId })
+      .from(caseAccessRestrictions)
+      .where(eq(caseAccessRestrictions.caseId, caseId));
+    return results.map(r => r.blockedUserId);
+  }
+
+  async isUserBlockedFromCase(userId: string, caseId: number): Promise<boolean> {
+    const [result] = await db.select()
+      .from(caseAccessRestrictions)
+      .where(and(
+        eq(caseAccessRestrictions.caseId, caseId),
+        eq(caseAccessRestrictions.blockedUserId, userId)
+      ))
+      .limit(1);
+    return !!result;
+  }
+
+  async getBlockedCasesForUser(userId: string): Promise<number[]> {
+    const results = await db.select({ caseId: caseAccessRestrictions.caseId })
+      .from(caseAccessRestrictions)
+      .where(eq(caseAccessRestrictions.blockedUserId, userId));
     return results.map(r => r.caseId);
   }
 }
