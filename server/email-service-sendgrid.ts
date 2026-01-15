@@ -2345,7 +2345,7 @@ This request was submitted via the Acclaim Client Portal.
       }
 
       return await this.sendViaAPIM({
-        to: 'admin@acclaim.law',
+        to: 'email@acclaim.law',
         subject: subject,
         textContent: textContent,
         htmlContent: htmlContent,
@@ -2484,7 +2484,7 @@ This request was submitted via the Acclaim Client Portal.
       }
 
       return await this.sendViaAPIM({
-        to: 'admin@acclaim.law',
+        to: 'email@acclaim.law',
         subject: subject,
         textContent: textContent,
         htmlContent: htmlContent,
