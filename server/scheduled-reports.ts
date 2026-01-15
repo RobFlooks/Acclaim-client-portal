@@ -115,12 +115,14 @@ async function generatePdfReport(
     totalPayments += payments;
     totalOutstanding += outstanding;
     
-    const caseName = c.organisationName ? `${c.caseName} (${c.organisationName})` : (c.caseName || '');
+    const caseNameHtml = c.organisationName 
+      ? `${c.caseName || ''} <span class="org-name">(${c.organisationName})</span>` 
+      : (c.caseName || '');
     
     caseSummaryRows += `
       <tr>
         <td>${c.accountNumber || ''}</td>
-        <td>${caseName}</td>
+        <td>${caseNameHtml}</td>
         <td><span class="status-${c.status}">${formatStatus(c.status)}</span></td>
         <td>${formatStage(c.stage)}</td>
         <td class="currency">${formatCurrency(c.originalAmount)}</td>
@@ -136,20 +138,23 @@ async function generatePdfReport(
   });
 
   // Build messages rows - match Excel columns exactly
+  // Column order: Date & Time, Case Name, Account Number, Subject, From, Message, Attachment
   let messagesRows = '';
   messages.forEach((m: any) => {
     // Show "Acclaim" for admin senders
     const sender = m.isAdminSender ? 'Acclaim' : (m.senderName || 'Unknown');
-    const caseName = m.caseOrganisationName ? `${m.caseName || 'General'} (${m.caseOrganisationName})` : (m.caseName || 'General');
+    const caseNameHtml = m.caseOrganisationName 
+      ? `${m.caseName || 'General'} <span class="org-name">(${m.caseOrganisationName})</span>` 
+      : (m.caseName || 'General');
     const hasAttachment = m.attachmentFilename ? `${m.attachmentFilename}` : '';
     
     messagesRows += `
       <tr>
         <td>${formatDate(m.createdAt)}</td>
-        <td>${caseName}</td>
+        <td>${caseNameHtml}</td>
         <td>${m.caseAccountNumber || ''}</td>
-        <td>${sender}</td>
         <td>${m.subject || ''}</td>
+        <td>${sender}</td>
         <td class="message-preview">${truncateMessage(m.content, 120)}</td>
         <td>${hasAttachment}</td>
       </tr>
@@ -164,32 +169,33 @@ async function generatePdfReport(
       <style>
         * { box-sizing: border-box; }
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; font-size: 10px; }
-        .header { text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #0d9488 0%, #115e59 100%); color: white; border-radius: 8px; }
-        .header h1 { margin: 0; font-size: 24px; }
-        .header p { margin: 8px 0 0 0; opacity: 0.9; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 24px; color: #333; }
+        .header p { margin: 5px 0 0 0; color: #666; }
         .section { margin-bottom: 30px; }
-        .section h2 { font-size: 16px; margin-bottom: 15px; color: #0d9488; border-bottom: 2px solid #0d9488; padding-bottom: 5px; }
-        .stats-grid { display: flex; gap: 15px; margin-bottom: 20px; }
-        .stat-card { flex: 1; padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f9fafb; }
-        .stat-label { font-size: 11px; color: #666; margin-bottom: 5px; }
-        .stat-value { font-size: 18px; font-weight: bold; color: #0d9488; }
+        .section h2 { font-size: 18px; margin-bottom: 15px; color: #333; }
+        .stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; margin-bottom: 20px; }
+        .stat-card { padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .stat-label { font-size: 12px; color: #666; margin-bottom: 5px; }
+        .stat-value { font-size: 18px; font-weight: bold; color: #333; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 8px; text-align: left; border: 1px solid #ddd; font-size: 9px; }
-        th { background-color: #0d9488; color: white; font-weight: bold; }
-        tr:nth-child(even) { background-color: #f9fafb; }
+        th { background-color: #f5f5f5; font-weight: bold; }
         .currency { text-align: right; }
+        .org-name { color: #0d9488; font-size: 9px; }
         .status-active, .status-open, .status-in_progress { background-color: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 3px; font-size: 8px; }
-        .status-closed, .status-resolved { background-color: #d1fae5; color: #065f46; padding: 2px 6px; border-radius: 3px; font-size: 8px; }
+        .status-closed, .status-resolved, .status-Closed { background-color: #d1fae5; color: #065f46; padding: 2px 6px; border-radius: 3px; font-size: 8px; }
         .status-new { background-color: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 3px; font-size: 8px; }
         .totals-row { font-weight: bold; background-color: #e5e7eb !important; }
-        .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 9px; }
+        .footer { text-align: center; margin-top: 40px; color: #666; font-size: 12px; }
         .no-data { color: #666; font-style: italic; padding: 20px; text-align: center; }
+        .message-preview { max-width: 200px; word-wrap: break-word; }
       </style>
     </head>
     <body>
       <div class="header">
         <h1>${frequencyText} Report</h1>
-        <p>${currentDate}</p>
+        <p>Generated on: ${currentDate}</p>
       </div>
       
       ${settings.includeCaseSummary ? `
@@ -262,8 +268,8 @@ async function generatePdfReport(
                   <th>Date & Time</th>
                   <th>Case Name</th>
                   <th>Account Number</th>
-                  <th>From</th>
                   <th>Subject</th>
+                  <th>From</th>
                   <th>Message</th>
                   <th>Attachment</th>
                 </tr>
