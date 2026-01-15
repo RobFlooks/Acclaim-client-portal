@@ -86,9 +86,11 @@ export const mutedCases = pgTable("muted_cases", {
 ]);
 
 // Scheduled reports preferences - allows users to receive periodic email reports
+// Supports multiple schedules per user: per-org schedules (organisationId set) or combined reports (organisationId null)
 export const scheduledReports = pgTable("scheduled_reports", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  organisationId: integer("organisation_id").references(() => organisations.id, { onDelete: "cascade" }), // For per-org schedules. null = combined report
   enabled: boolean("enabled").default(false),
   frequency: varchar("frequency", { length: 20 }).notNull().default("weekly"), // 'daily', 'weekly' or 'monthly'
   dayOfWeek: integer("day_of_week"), // 0-6 for weekly (0 = Sunday)
@@ -96,13 +98,14 @@ export const scheduledReports = pgTable("scheduled_reports", {
   timeOfDay: integer("time_of_day").default(9), // Hour of day to send (0-23), default 9am
   includeCaseSummary: boolean("include_case_summary").default(true),
   includeActivityReport: boolean("include_activity_report").default(true),
-  organisationIds: jsonb("organisation_ids").$type<number[]>(), // Array of org IDs to include, null = all
+  organisationIds: jsonb("organisation_ids").$type<number[]>(), // For combined reports: array of org IDs to include, null = all user's orgs
   caseStatusFilter: varchar("case_status_filter", { length: 20 }).default("active"), // 'active', 'all', 'closed'
   lastSentAt: timestamp("last_sent_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   index("idx_scheduled_reports_user_id").on(table.userId),
+  index("idx_scheduled_reports_org_id").on(table.organisationId),
 ]);
 
 // Case access restrictions - allows admins to hide cases from specific users
