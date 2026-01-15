@@ -48,7 +48,7 @@ import {
   type InsertUserOrganisation,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, sql, or, isNull, isNotNull, inArray } from "drizzle-orm";
+import { eq, and, desc, sql, or, isNull, isNotNull, inArray, notInArray } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
 import session, { SessionStore } from "express-session";
@@ -170,7 +170,7 @@ export interface IStorage {
     totalRecovery: string;
   }>; // Admin only - get stats across all organizations
   
-  getCombinedCaseStats(organisationIds: number[]): Promise<{
+  getCombinedCaseStats(organisationIds: number[], excludeCaseIds?: number[]): Promise<{
     activeCases: number;
     closedCases: number;
     totalOutstanding: string;
@@ -1427,13 +1427,24 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async getCombinedCaseStats(organisationIds: number[]): Promise<{
+  async getCombinedCaseStats(organisationIds: number[], excludeCaseIds: number[] = []): Promise<{
     activeCases: number;
     closedCases: number;
     totalOutstanding: string;
     totalRecovery: string;
   }> {
-    // Get combined stats from multiple organizations (excluding archived cases)
+    // Build conditions for filtering
+    const conditions = [
+      eq(cases.isArchived, false),
+      inArray(cases.organisationId, organisationIds)
+    ];
+    
+    // Add exclusion filter if there are cases to exclude
+    if (excludeCaseIds.length > 0) {
+      conditions.push(notInArray(cases.id, excludeCaseIds));
+    }
+    
+    // Get combined stats from multiple organizations (excluding archived cases and optionally excluded cases)
     const [stats] = await db
       .select({
         activeCases: sql<number>`COUNT(CASE WHEN LOWER(status) != 'closed' THEN 1 END)`,
@@ -1441,10 +1452,18 @@ export class DatabaseStorage implements IStorage {
         totalOutstanding: sql<string>`COALESCE(SUM(CASE WHEN LOWER(status) != 'closed' THEN outstanding_amount ELSE 0 END), 0)`,
       })
       .from(cases)
-      .where(and(
-        eq(cases.isArchived, false),
-        inArray(cases.organisationId, organisationIds)
-      ));
+      .where(and(...conditions));
+
+    // Build conditions for recovery stats
+    const recoveryConditions = [
+      eq(cases.isArchived, false),
+      inArray(cases.organisationId, organisationIds),
+      sql`LOWER(${cases.status}) != 'closed'`
+    ];
+    
+    if (excludeCaseIds.length > 0) {
+      recoveryConditions.push(notInArray(cases.id, excludeCaseIds));
+    }
 
     // Calculate total recovery from payments for cases in specified organizations (excluding archived cases)
     const [recoveryStats] = await db
@@ -1453,11 +1472,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(payments)
       .leftJoin(cases, eq(payments.caseId, cases.id))
-      .where(and(
-        eq(cases.isArchived, false),
-        inArray(cases.organisationId, organisationIds),
-        sql`LOWER(${cases.status}) != 'closed'`
-      ));
+      .where(and(...recoveryConditions));
 
     return {
       activeCases: stats.activeCases,

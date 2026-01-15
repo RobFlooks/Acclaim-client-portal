@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
-import { FolderOpen, CheckCircle, PoundSterling, TrendingUp, User, Building, Clock, FileText, Check, AlertTriangle, Store, UserCheck, Plus } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { FolderOpen, CheckCircle, PoundSterling, TrendingUp, User, Building, Clock, FileText, Check, AlertTriangle, Store, UserCheck, Plus, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -26,10 +28,27 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
   const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+  const [showAccessibleOnly, setShowAccessibleOnly] = useState(false);
 
+  // Check if user has any case restrictions
+  const { data: restrictionStatus } = useQuery({
+    queryKey: ["/api/user/has-case-restrictions"],
+    enabled: !user?.isAdmin, // Only check for non-admin users
+    staleTime: 30000,
+  });
+
+  const hasRestrictions = restrictionStatus?.hasRestrictions ?? false;
 
   const { data: stats, isLoading: statsLoading, isFetching: statsIsFetching, dataUpdatedAt: statsDataUpdatedAt } = useQuery({
-    queryKey: ["/api/dashboard/stats"],
+    queryKey: ["/api/dashboard/stats", showAccessibleOnly ? "accessible" : "all"],
+    queryFn: async () => {
+      const url = showAccessibleOnly 
+        ? "/api/dashboard/stats?accessibleOnly=true" 
+        : "/api/dashboard/stats";
+      const response = await fetch(url, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch stats');
+      return response.json();
+    },
     refetchInterval: 15000, // Refresh every 15 seconds for stats
     staleTime: 0, // Always consider stats data stale to ensure fresh data
     onError: (error) => {
@@ -318,9 +337,34 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
             </CardContent>
           </Card>
         </div>
-        <p className="text-xs text-gray-500 dark:text-gray-500 text-center mt-2">
-          Statistics are based on all cases across your organisation(s)
-        </p>
+        <div className="mt-2 text-center space-y-2">
+          {hasRestrictions && !user?.isAdmin ? (
+            <>
+              <div className="flex items-center justify-center gap-2 text-xs text-amber-600 dark:text-amber-400">
+                <Info className="h-3 w-3" />
+                <span>
+                  {showAccessibleOnly 
+                    ? "Statistics are based on cases you have access to"
+                    : "Statistics are based on all cases across your organisation(s) — may include cases which have not been made visible to you"}
+                </span>
+              </div>
+              <div className="flex items-center justify-center gap-2">
+                <Switch
+                  id="accessible-only"
+                  checked={showAccessibleOnly}
+                  onCheckedChange={setShowAccessibleOnly}
+                />
+                <Label htmlFor="accessible-only" className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer">
+                  Show only cases I have access to
+                </Label>
+              </div>
+            </>
+          ) : (
+            <p className="text-xs text-gray-500 dark:text-gray-500">
+              Statistics are based on all cases across your organisation(s)
+            </p>
+          )}
+        </div>
       </div>
       {/* Recent Cases and Messages */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">

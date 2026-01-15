@@ -320,6 +320,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
+      const accessibleOnly = req.query.accessibleOnly === 'true';
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -347,13 +348,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Get combined stats from all user's organisations
-        stats = await storage.getCombinedCaseStats(Array.from(orgIds));
+        // If accessibleOnly is true, exclude blocked cases from stats
+        const blockedCaseIds = accessibleOnly ? await storage.getBlockedCasesForUser(userId) : [];
+        stats = await storage.getCombinedCaseStats(Array.from(orgIds), blockedCaseIds);
       }
 
       res.json(stats);
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
       res.status(500).json({ message: "Failed to fetch dashboard statistics" });
+    }
+  });
+  
+  // Check if user has any case restrictions
+  app.get('/api/user/has-case-restrictions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const blockedCaseIds = await storage.getBlockedCasesForUser(userId);
+      res.json({ hasRestrictions: blockedCaseIds.length > 0, count: blockedCaseIds.length });
+    } catch (error) {
+      console.error("Error checking case restrictions:", error);
+      res.status(500).json({ message: "Failed to check case restrictions" });
     }
   });
 
