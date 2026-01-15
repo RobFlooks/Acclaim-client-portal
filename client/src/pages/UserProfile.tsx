@@ -1841,6 +1841,7 @@ export default function UserProfile() {
                 <div className="space-y-4">
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     You are requesting to remove <strong>{removalTarget?.userName}</strong> from your organisation. 
+                    They will no longer have access to any cases or documents in this organisation.
                     This request will be sent to Acclaim for processing.
                   </p>
                   
