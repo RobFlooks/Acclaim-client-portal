@@ -2988,6 +2988,219 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bulk restrict/allow member from all cases in organisation
+  app.post('/api/org-owner/:orgId/bulk-member-restriction', isAuthenticated, async (req: any, res) => {
+    try {
+      const adminUserId = req.user.id;
+      const orgId = parseInt(req.params.orgId);
+      const { userId, action } = req.body; // action: 'restrict-all' | 'allow-all'
+
+      if (!userId || !action) {
+        return res.status(400).json({ message: "userId and action are required" });
+      }
+
+      const user = await storage.getUser(adminUserId);
+      const isOwner = await storage.isUserOrgOwner(adminUserId, orgId);
+
+      if (!user?.isAdmin && !isOwner) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Get all cases for this organisation
+      const cases = await storage.getCasesForOrganisation(orgId);
+      const targetUser = await storage.getUser(userId);
+
+      if (!targetUser || targetUser.isAdmin) {
+        return res.status(400).json({ message: "Cannot modify restrictions for admin users" });
+      }
+
+      let count = 0;
+      for (const c of cases) {
+        const currentRestrictions = await storage.getCaseAccessRestrictions(c.id);
+        const isCurrentlyRestricted = currentRestrictions.includes(userId);
+
+        if (action === 'restrict-all' && !isCurrentlyRestricted) {
+          await storage.addCaseAccessRestriction(c.id, userId, adminUserId);
+          count++;
+        } else if (action === 'allow-all' && isCurrentlyRestricted) {
+          await storage.removeCaseAccessRestriction(c.id, userId);
+          count++;
+        }
+      }
+
+      res.json({
+        success: true,
+        message: action === 'restrict-all'
+          ? `Blocked ${targetUser.firstName} ${targetUser.lastName} from ${count} cases`
+          : `Restored access for ${targetUser.firstName} ${targetUser.lastName} to ${count} cases`,
+        count
+      });
+    } catch (error) {
+      console.error("Error in bulk member restriction:", error);
+      res.status(500).json({ message: "Failed to update restrictions" });
+    }
+  });
+
+  // Bulk restrict/allow all members from a specific case
+  app.post('/api/org-owner/:orgId/bulk-case-restriction', isAuthenticated, async (req: any, res) => {
+    try {
+      const adminUserId = req.user.id;
+      const orgId = parseInt(req.params.orgId);
+      const { caseId, action } = req.body; // action: 'restrict-all' | 'allow-all'
+
+      if (!caseId || !action) {
+        return res.status(400).json({ message: "caseId and action are required" });
+      }
+
+      const user = await storage.getUser(adminUserId);
+      const isOwner = await storage.isUserOrgOwner(adminUserId, orgId);
+
+      if (!user?.isAdmin && !isOwner) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Get case and verify it belongs to this org
+      const caseData = await storage.getCaseById(caseId);
+      if (!caseData || caseData.organisationId !== orgId) {
+        return res.status(400).json({ message: "Case not found in this organisation" });
+      }
+
+      // Get non-admin users in this organisation
+      const orgUsers = await storage.getUsersInOrganisation(orgId);
+      const nonAdminUsers = orgUsers.filter(u => !u.isAdmin);
+
+      let count = 0;
+      for (const u of nonAdminUsers) {
+        const currentRestrictions = await storage.getCaseAccessRestrictions(caseId);
+        const isCurrentlyRestricted = currentRestrictions.includes(u.id);
+
+        if (action === 'restrict-all' && !isCurrentlyRestricted) {
+          await storage.addCaseAccessRestriction(caseId, u.id, adminUserId);
+          count++;
+        } else if (action === 'allow-all' && isCurrentlyRestricted) {
+          await storage.removeCaseAccessRestriction(caseId, u.id);
+          count++;
+        }
+      }
+
+      res.json({
+        success: true,
+        message: action === 'restrict-all'
+          ? `Blocked ${count} members from "${caseData.caseName}"`
+          : `Restored access for ${count} members to "${caseData.caseName}"`,
+        count
+      });
+    } catch (error) {
+      console.error("Error in bulk case restriction:", error);
+      res.status(500).json({ message: "Failed to update restrictions" });
+    }
+  });
+
+  // Member removal request (sends email to admin@acclaim.law)
+  app.post('/api/org-owner/member-removal-request', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { orgId, targetUserId, reason } = req.body;
+
+      if (!orgId || !targetUserId) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const parsedOrgId = parseInt(orgId);
+      const isOwner = await storage.isUserOrgOwner(userId, parsedOrgId);
+      const user = await storage.getUser(userId);
+
+      if (!user?.isAdmin && !isOwner) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const org = await storage.getOrganisation(parsedOrgId);
+      const targetUser = await storage.getUser(targetUserId);
+
+      if (!org || !targetUser) {
+        return res.status(400).json({ message: "Organisation or user not found" });
+      }
+
+      const requestedBy = `${user!.firstName} ${user!.lastName}`;
+      const requestedByEmail = user!.email;
+
+      const emailSent = await sendGridEmailService.sendOrgOwnerRequest({
+        type: 'member-removal',
+        orgName: org.name,
+        targetUserName: `${targetUser.firstName} ${targetUser.lastName}`,
+        targetUserEmail: targetUser.email,
+        reason: reason || 'No reason provided',
+        requestedBy,
+        requestedByEmail,
+      });
+
+      if (emailSent) {
+        res.json({ success: true, message: "Removal request sent successfully" });
+      } else {
+        throw new Error("Email service failed");
+      }
+    } catch (error) {
+      console.error("Error sending member removal request:", error);
+      res.status(500).json({ message: "Failed to send request" });
+    }
+  });
+
+  // Owner delegation request (sends email to admin@acclaim.law)
+  app.post('/api/org-owner/owner-delegation-request', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { orgId, targetUserId, reason } = req.body;
+
+      if (!orgId || !targetUserId) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const parsedOrgId = parseInt(orgId);
+      const isOwner = await storage.isUserOrgOwner(userId, parsedOrgId);
+      const user = await storage.getUser(userId);
+
+      if (!user?.isAdmin && !isOwner) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const org = await storage.getOrganisation(parsedOrgId);
+      const targetUser = await storage.getUser(targetUserId);
+
+      if (!org || !targetUser) {
+        return res.status(400).json({ message: "Organisation or user not found" });
+      }
+
+      // Check target user is in this org
+      const targetUserOrgs = await storage.getUserOrganisations(targetUserId);
+      const isInOrg = targetUserOrgs.some(uo => uo.organisationId === parsedOrgId);
+      if (!isInOrg) {
+        return res.status(400).json({ message: "User is not in this organisation" });
+      }
+
+      const requestedBy = `${user!.firstName} ${user!.lastName}`;
+      const requestedByEmail = user!.email;
+
+      const emailSent = await sendGridEmailService.sendOrgOwnerRequest({
+        type: 'owner-delegation',
+        orgName: org.name,
+        targetUserName: `${targetUser.firstName} ${targetUser.lastName}`,
+        targetUserEmail: targetUser.email,
+        reason: reason || 'No reason provided',
+        requestedBy,
+        requestedByEmail,
+      });
+
+      if (emailSent) {
+        res.json({ success: true, message: "Owner delegation request sent successfully" });
+      } else {
+        throw new Error("Email service failed");
+      }
+    } catch (error) {
+      console.error("Error sending owner delegation request:", error);
+      res.status(500).json({ message: "Failed to send request" });
+    }
+  });
+
   // Admin cases endpoint  
   app.get('/api/admin/cases', isAuthenticated, isAdmin, async (req: any, res) => {
     try {

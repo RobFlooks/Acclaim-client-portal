@@ -2356,6 +2356,145 @@ This request was submitted via the Acclaim Client Portal.
       return false;
     }
   }
+
+  // Send org owner request (member removal or owner delegation)
+  async sendOrgOwnerRequest(data: {
+    type: 'member-removal' | 'owner-delegation';
+    orgName: string;
+    targetUserName: string;
+    targetUserEmail: string;
+    reason: string;
+    requestedBy: string;
+    requestedByEmail: string;
+  }): Promise<boolean> {
+    if (!this.initialized) {
+      console.log('❌ SendGrid not configured - org owner request email not sent');
+      return false;
+    }
+
+    try {
+      const isRemoval = data.type === 'member-removal';
+      const subject = isRemoval
+        ? `Member Removal Request: ${data.targetUserName} from ${data.orgName}`
+        : `Owner Delegation Request: ${data.targetUserName} for ${data.orgName}`;
+      
+      const headerTitle = isRemoval ? 'Member Removal Request' : 'Owner Delegation Request';
+      const actionDescription = isRemoval
+        ? 'has requested to remove the following member from their organisation'
+        : 'has requested to grant Owner status to the following member';
+
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f0f4f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f0f4f8;">
+            <tr>
+              <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width: 600px; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+                  
+                  <!-- Header -->
+                  <tr>
+                    <td style="background: linear-gradient(135deg, ${isRemoval ? '#dc2626' : '#f59e0b'} 0%, ${isRemoval ? '#b91c1c' : '#d97706'} 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                      <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
+                      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">${headerTitle}</h1>
+                      <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Organisation: ${data.orgName}</p>
+                    </td>
+                  </tr>
+                  
+                  <!-- Content -->
+                  <tr>
+                    <td style="padding: 40px;">
+                      <p style="margin: 0 0 20px 0; color: #4b5563; font-size: 14px;">
+                        <strong>${data.requestedBy}</strong> (${data.requestedByEmail}) ${actionDescription}:
+                      </p>
+                      
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                        <tr>
+                          <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                            <span style="color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600;">Name</span>
+                            <p style="margin: 4px 0 0 0; color: #1f2937; font-size: 16px;">${data.targetUserName}</p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                            <span style="color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600;">Email</span>
+                            <p style="margin: 4px 0 0 0; color: #1f2937; font-size: 16px;"><a href="mailto:${data.targetUserEmail}" style="color: #008b8b;">${data.targetUserEmail}</a></p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                            <span style="color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600;">Request Type</span>
+                            <p style="margin: 4px 0 0 0;">
+                              <span style="display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 500; ${isRemoval ? 'background-color: #fef2f2; color: #dc2626;' : 'background-color: #fef3c7; color: #92400e;'}">
+                                ${isRemoval ? 'Remove from Organisation' : 'Grant Owner Status'}
+                              </span>
+                            </p>
+                          </td>
+                        </tr>
+                        ${data.reason && data.reason !== 'No reason provided' ? `
+                        <tr>
+                          <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                            <span style="color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600;">Reason</span>
+                            <p style="margin: 4px 0 0 0; color: #1f2937; font-size: 14px;">${data.reason}</p>
+                          </td>
+                        </tr>
+                        ` : ''}
+                      </table>
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background-color: #1f2937; padding: 24px; text-align: center;">
+                      <p style="margin: 0; color: #9ca3af; font-size: 12px;">This request was submitted via the Acclaim Client Portal</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `;
+
+      const textContent = `
+${headerTitle}
+
+Organisation: ${data.orgName}
+
+${data.requestedBy} (${data.requestedByEmail}) ${actionDescription}:
+
+Member Details:
+- Name: ${data.targetUserName}
+- Email: ${data.targetUserEmail}
+- Request Type: ${isRemoval ? 'Remove from Organisation' : 'Grant Owner Status'}
+${data.reason && data.reason !== 'No reason provided' ? `- Reason: ${data.reason}` : ''}
+
+This request was submitted via the Acclaim Client Portal.
+      `;
+
+      const attachments: Array<{ content: string; filename: string; type: string; disposition?: string; content_id?: string }> = [];
+      const logoBase64 = getLogoBase64();
+      if (logoBase64) {
+        attachments.push(logoBase64);
+      }
+
+      return await this.sendViaAPIM({
+        to: 'admin@acclaim.law',
+        subject: subject,
+        textContent: textContent,
+        htmlContent: htmlContent,
+        attachments: attachments
+      });
+    } catch (error) {
+      console.error('❌ Failed to send org owner request:', error);
+      return false;
+    }
+  }
 }
 
 // Export singleton instance

@@ -13,7 +13,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 import { useQueryClient } from "@tanstack/react-query";
-import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft, Bell, Building2, FileText, Download, Trash2, Upload, Search, Sun, Moon, HelpCircle, Briefcase, MessageSquare, BarChart3, Crown, ShieldCheck, ShieldOff, Loader2, Users, ChevronDown, ChevronUp, UserPlus, Send } from "lucide-react";
+import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft, Bell, Building2, FileText, Download, Trash2, Upload, Search, Sun, Moon, HelpCircle, Briefcase, MessageSquare, BarChart3, Crown, ShieldCheck, ShieldOff, Loader2, Users, ChevronDown, ChevronUp, UserPlus, UserMinus, Send } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -265,6 +265,100 @@ export default function UserProfile() {
       });
     } finally {
       setMemberRequestSubmitting(false);
+    }
+  };
+
+  // Member removal request state
+  const [removalDialogOpen, setRemovalDialogOpen] = useState(false);
+  const [removalTarget, setRemovalTarget] = useState<{ userId: string; userName: string; orgId: number } | null>(null);
+  const [removalReason, setRemovalReason] = useState("");
+  const [removalSubmitting, setRemovalSubmitting] = useState(false);
+
+  // Owner delegation request state
+  const [delegationDialogOpen, setDelegationDialogOpen] = useState(false);
+  const [delegationTarget, setDelegationTarget] = useState<{ userId: string; userName: string; orgId: number } | null>(null);
+  const [delegationReason, setDelegationReason] = useState("");
+  const [delegationSubmitting, setDelegationSubmitting] = useState(false);
+
+  // Bulk member restriction mutation
+  const bulkMemberRestrictionMutation = useMutation({
+    mutationFn: async ({ orgId, userId, action }: { orgId: number; userId: string; action: 'restrict-all' | 'allow-all' }) => {
+      const response = await apiRequest("POST", `/api/org-owner/${orgId}/bulk-member-restriction`, { userId, action });
+      if (!response.ok) throw new Error("Failed to update");
+      return await response.json();
+    },
+    onSuccess: (data: any) => {
+      toast({ title: "Success", description: data.message });
+      queryClient.invalidateQueries({ queryKey: ["/api/org-owner", currentSettingsOrgId, "restrictions"] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update restrictions", variant: "destructive" });
+    },
+  });
+
+  // Bulk case restriction mutation
+  const bulkCaseRestrictionMutation = useMutation({
+    mutationFn: async ({ orgId, caseId, action }: { orgId: number; caseId: number; action: 'restrict-all' | 'allow-all' }) => {
+      const response = await apiRequest("POST", `/api/org-owner/${orgId}/bulk-case-restriction`, { caseId, action });
+      if (!response.ok) throw new Error("Failed to update");
+      return await response.json();
+    },
+    onSuccess: (data: any) => {
+      toast({ title: "Success", description: data.message });
+      queryClient.invalidateQueries({ queryKey: ["/api/org-owner", currentSettingsOrgId, "restrictions"] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update restrictions", variant: "destructive" });
+    },
+  });
+
+  // Handle member removal request
+  const handleRemovalSubmit = async () => {
+    if (!removalTarget) return;
+    setRemovalSubmitting(true);
+    try {
+      const response = await apiRequest("POST", "/api/org-owner/member-removal-request", {
+        orgId: removalTarget.orgId,
+        targetUserId: removalTarget.userId,
+        reason: removalReason || undefined,
+      });
+      if (response.ok) {
+        toast({ title: "Request Sent", description: "Removal request sent to Acclaim for processing." });
+        setRemovalDialogOpen(false);
+        setRemovalTarget(null);
+        setRemovalReason("");
+      } else {
+        throw new Error("Failed");
+      }
+    } catch {
+      toast({ title: "Error", description: "Failed to send request", variant: "destructive" });
+    } finally {
+      setRemovalSubmitting(false);
+    }
+  };
+
+  // Handle owner delegation request
+  const handleDelegationSubmit = async () => {
+    if (!delegationTarget) return;
+    setDelegationSubmitting(true);
+    try {
+      const response = await apiRequest("POST", "/api/org-owner/owner-delegation-request", {
+        orgId: delegationTarget.orgId,
+        targetUserId: delegationTarget.userId,
+        reason: delegationReason || undefined,
+      });
+      if (response.ok) {
+        toast({ title: "Request Sent", description: "Owner delegation request sent to Acclaim." });
+        setDelegationDialogOpen(false);
+        setDelegationTarget(null);
+        setDelegationReason("");
+      } else {
+        throw new Error("Failed");
+      }
+    } catch {
+      toast({ title: "Error", description: "Failed to send request", variant: "destructive" });
+    } finally {
+      setDelegationSubmitting(false);
     }
   };
 
@@ -1375,8 +1469,30 @@ export default function UserProfile() {
                                             <TableRow className="bg-gray-50 dark:bg-gray-800">
                                               <TableHead className="min-w-[300px] text-xs py-2 font-semibold">Case</TableHead>
                                               {nonAdminOrgUsers.map((u: any) => (
-                                                <TableHead key={u.id} className="text-center min-w-[100px] py-2">
+                                                <TableHead key={u.id} className="text-center min-w-[120px] py-2">
                                                   <div className="font-medium text-xs">{u.firstName} {u.lastName}</div>
+                                                  <div className="flex gap-1 mt-1 justify-center">
+                                                    <Button
+                                                      variant="ghost"
+                                                      size="sm"
+                                                      className="h-5 px-1 text-[10px] text-red-600 hover:bg-red-50"
+                                                      onClick={() => bulkMemberRestrictionMutation.mutate({ orgId: org.id, userId: u.id, action: 'restrict-all' })}
+                                                      disabled={bulkMemberRestrictionMutation.isPending}
+                                                      title="Block from all cases"
+                                                    >
+                                                      Block All
+                                                    </Button>
+                                                    <Button
+                                                      variant="ghost"
+                                                      size="sm"
+                                                      className="h-5 px-1 text-[10px] text-green-600 hover:bg-green-50"
+                                                      onClick={() => bulkMemberRestrictionMutation.mutate({ orgId: org.id, userId: u.id, action: 'allow-all' })}
+                                                      disabled={bulkMemberRestrictionMutation.isPending}
+                                                      title="Allow access to all cases"
+                                                    >
+                                                      Allow All
+                                                    </Button>
+                                                  </div>
                                                 </TableHead>
                                               ))}
                                             </TableRow>
@@ -1385,11 +1501,35 @@ export default function UserProfile() {
                                             {paginatedOrgCases.map((c: any) => (
                                               <TableRow key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                                                 <TableCell className="py-2">
-                                                  <div className="flex flex-col">
-                                                    <span className="font-medium text-sm text-gray-900 dark:text-gray-100">{c.caseName}</span>
-                                                    {c.reference && (
-                                                      <span className="text-xs text-teal-600 dark:text-teal-400 font-mono">{c.reference}</span>
-                                                    )}
+                                                  <div className="flex items-start justify-between gap-2">
+                                                    <div className="flex flex-col">
+                                                      <span className="font-medium text-sm text-gray-900 dark:text-gray-100">{c.caseName}</span>
+                                                      {c.reference && (
+                                                        <span className="text-xs text-teal-600 dark:text-teal-400 font-mono">{c.reference}</span>
+                                                      )}
+                                                    </div>
+                                                    <div className="flex gap-1 flex-shrink-0">
+                                                      <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-5 px-1 text-[10px] text-red-600 hover:bg-red-50"
+                                                        onClick={() => bulkCaseRestrictionMutation.mutate({ orgId: org.id, caseId: c.id, action: 'restrict-all' })}
+                                                        disabled={bulkCaseRestrictionMutation.isPending}
+                                                        title="Block all members from this case"
+                                                      >
+                                                        Block All
+                                                      </Button>
+                                                      <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-5 px-1 text-[10px] text-green-600 hover:bg-green-50"
+                                                        onClick={() => bulkCaseRestrictionMutation.mutate({ orgId: org.id, caseId: c.id, action: 'allow-all' })}
+                                                        disabled={bulkCaseRestrictionMutation.isPending}
+                                                        title="Allow all members access to this case"
+                                                      >
+                                                        Allow All
+                                                      </Button>
+                                                    </div>
                                                   </div>
                                                 </TableCell>
                                                 {nonAdminOrgUsers.map((u: any) => {
@@ -1458,6 +1598,57 @@ export default function UserProfile() {
                                     </>
                                   )}
                                 </div>
+
+                                {/* Member Management Section */}
+                                {nonAdminOrgUsers.length > 0 && (
+                                  <div className="mt-4 pt-4 border-t">
+                                    <h5 className="font-medium text-sm mb-2">Team Member Management</h5>
+                                    <p className="text-xs text-gray-500 mb-3">
+                                      Request to remove members or delegate owner privileges.
+                                    </p>
+                                    <div className="space-y-2">
+                                      {nonAdminOrgUsers.map((u: any) => (
+                                        <div key={u.id} className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                          <div className="flex items-center gap-2">
+                                            <div className="h-8 w-8 rounded-full bg-teal-100 dark:bg-teal-900 flex items-center justify-center text-teal-700 dark:text-teal-300 text-sm font-medium">
+                                              {u.firstName?.[0]}{u.lastName?.[0]}
+                                            </div>
+                                            <div>
+                                              <span className="text-sm font-medium">{u.firstName} {u.lastName}</span>
+                                              <span className="text-xs text-gray-500 block">{u.email}</span>
+                                            </div>
+                                          </div>
+                                          <div className="flex gap-2">
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              className="h-7 text-xs text-amber-600 border-amber-300 hover:bg-amber-50"
+                                              onClick={() => {
+                                                setDelegationTarget({ userId: u.id, userName: `${u.firstName} ${u.lastName}`, orgId: org.id });
+                                                setDelegationDialogOpen(true);
+                                              }}
+                                            >
+                                              <Crown className="h-3 w-3 mr-1" />
+                                              Make Owner
+                                            </Button>
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              className="h-7 text-xs text-red-600 border-red-300 hover:bg-red-50"
+                                              onClick={() => {
+                                                setRemovalTarget({ userId: u.id, userName: `${u.firstName} ${u.lastName}`, orgId: org.id });
+                                                setRemovalDialogOpen(true);
+                                              }}
+                                            >
+                                              <UserMinus className="h-3 w-3 mr-1" />
+                                              Remove
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
@@ -1567,6 +1758,126 @@ export default function UserProfile() {
                       className="bg-teal-600 hover:bg-teal-700"
                     >
                       {memberRequestSubmitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4 mr-1" />
+                          Send Request
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            {/* Member Removal Request Dialog */}
+            <Dialog open={removalDialogOpen} onOpenChange={setRemovalDialogOpen}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 text-red-600">
+                    <UserMinus className="h-5 w-5" />
+                    Request Member Removal
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    You are requesting to remove <strong>{removalTarget?.userName}</strong> from your organisation. 
+                    This request will be sent to Acclaim for processing.
+                  </p>
+                  
+                  <div className="space-y-1">
+                    <Label htmlFor="removal-reason" className="text-sm">Reason (optional)</Label>
+                    <Input
+                      id="removal-reason"
+                      value={removalReason}
+                      onChange={(e) => setRemovalReason(e.target.value)}
+                      placeholder="Why should this member be removed?"
+                      className="h-9"
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setRemovalDialogOpen(false);
+                        setRemovalTarget(null);
+                        setRemovalReason("");
+                      }}
+                      disabled={removalSubmitting}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleRemovalSubmit}
+                      disabled={removalSubmitting}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      {removalSubmitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4 mr-1" />
+                          Send Request
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            {/* Owner Delegation Request Dialog */}
+            <Dialog open={delegationDialogOpen} onOpenChange={setDelegationDialogOpen}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 text-amber-600">
+                    <Crown className="h-5 w-5" />
+                    Request Owner Delegation
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    You are requesting that <strong>{delegationTarget?.userName}</strong> be granted Owner status for your organisation. 
+                    Owners can manage case access for other team members.
+                  </p>
+                  
+                  <div className="space-y-1">
+                    <Label htmlFor="delegation-reason" className="text-sm">Reason (optional)</Label>
+                    <Input
+                      id="delegation-reason"
+                      value={delegationReason}
+                      onChange={(e) => setDelegationReason(e.target.value)}
+                      placeholder="Why should this member become an owner?"
+                      className="h-9"
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setDelegationDialogOpen(false);
+                        setDelegationTarget(null);
+                        setDelegationReason("");
+                      }}
+                      disabled={delegationSubmitting}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleDelegationSubmit}
+                      disabled={delegationSubmitting}
+                      className="bg-amber-600 hover:bg-amber-700"
+                    >
+                      {delegationSubmitting ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                           Sending...
