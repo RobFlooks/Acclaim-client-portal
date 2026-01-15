@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, EyeOff, Mail, Bell, BellOff, FilePlus, FileX, BarChart3, Search } from "lucide-react";
+import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, EyeOff, Mail, Bell, BellOff, FilePlus, FileX, BarChart3, Search, Crown } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrganisationSchema } from "@shared/schema";
@@ -2322,6 +2322,29 @@ export default function AdminEnhanced() {
     },
   });
 
+  // Set user org role mutation
+  const setUserOrgRoleMutation = useMutation({
+    mutationFn: async ({ userId, organisationId, role }: { userId: string; organisationId: number; role: string }) => {
+      const response = await apiRequest("PUT", `/api/admin/users/${userId}/organisations/${organisationId}/role`, { role });
+      return await response.json();
+    },
+    onSuccess: (_, variables) => {
+      const roleLabel = variables.role === 'owner' ? 'Organisation Owner' : 'Member';
+      toast({
+        title: "Role Updated",
+        description: `User is now a ${roleLabel}`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users-with-orgs"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update user role",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Toggle admin status mutation
   const toggleAdminMutation = useMutation({
     mutationFn: async ({ userId, makeAdmin }: { userId: string; makeAdmin: boolean }) => {
@@ -3017,11 +3040,40 @@ export default function AdminEnhanced() {
                             </div>
                           )}
                           {/* Additional organisations (from junction table) */}
-                          {(user as any).organisations?.map((org: Organisation) => (
-                            <div key={org.id} className="flex items-center gap-1">
+                          {(user as any).organisations?.map((org: Organisation & { role?: string }) => (
+                            <div key={org.id} className="flex items-center gap-1 flex-wrap">
                               <Badge variant="outline" className="text-xs">
                                 {org.name}
                               </Badge>
+                              {org.role === 'owner' && (
+                                <Badge variant="default" className="text-xs bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                                  <Crown className="h-2.5 w-2.5 mr-0.5" />
+                                  Owner
+                                </Badge>
+                              )}
+                              {!user.isAdmin && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className={`h-5 px-1 text-xs ${org.role === 'owner' ? 'text-amber-600 hover:text-amber-800' : 'text-gray-500 hover:text-gray-700'}`}
+                                  onClick={() => {
+                                    const newRole = org.role === 'owner' ? 'member' : 'owner';
+                                    const action = newRole === 'owner' ? 'make an Owner of' : 'remove as Owner from';
+                                    const confirmation = confirm(`${action} ${org.name} for ${user.firstName} ${user.lastName}?`);
+                                    if (confirmation) {
+                                      setUserOrgRoleMutation.mutate({
+                                        userId: user.id,
+                                        organisationId: org.id,
+                                        role: newRole
+                                      });
+                                    }
+                                  }}
+                                  disabled={setUserOrgRoleMutation.isPending}
+                                  title={org.role === 'owner' ? 'Remove Owner role' : 'Make Owner'}
+                                >
+                                  <Crown className="h-3 w-3" />
+                                </Button>
+                              )}
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -3214,11 +3266,40 @@ export default function AdminEnhanced() {
                               </Badge>
                             )}
                             {/* Additional organisations (from junction table) */}
-                            {(user as any).organisations?.map((org: Organisation) => (
-                              <div key={org.id} className="flex items-center gap-1 mb-1">
+                            {(user as any).organisations?.map((org: Organisation & { role?: string }) => (
+                              <div key={org.id} className="flex items-center gap-1 mb-1 flex-wrap">
                                 <Badge variant="outline" className="mr-1">
                                   {org.name}
                                 </Badge>
+                                {org.role === 'owner' && (
+                                  <Badge variant="default" className="text-xs bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 mr-1">
+                                    <Crown className="h-2.5 w-2.5 mr-0.5" />
+                                    Owner
+                                  </Badge>
+                                )}
+                                {!user.isAdmin && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className={`h-5 w-5 p-0 ${org.role === 'owner' ? 'text-amber-600 hover:text-amber-800' : 'text-gray-400 hover:text-gray-600'}`}
+                                    onClick={() => {
+                                      const newRole = org.role === 'owner' ? 'member' : 'owner';
+                                      const action = newRole === 'owner' ? 'make an Owner of' : 'remove as Owner from';
+                                      const confirmation = confirm(`${action} ${org.name} for ${user.firstName} ${user.lastName}?`);
+                                      if (confirmation) {
+                                        setUserOrgRoleMutation.mutate({
+                                          userId: user.id,
+                                          organisationId: org.id,
+                                          role: newRole
+                                        });
+                                      }
+                                    }}
+                                    disabled={setUserOrgRoleMutation.isPending}
+                                    title={org.role === 'owner' ? 'Remove Owner role' : 'Make Owner'}
+                                  >
+                                    <Crown className="h-3 w-3" />
+                                  </Button>
+                                )}
                                 <Button
                                   variant="ghost"
                                   size="sm"

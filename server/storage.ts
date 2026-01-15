@@ -93,7 +93,7 @@ export interface IStorage {
   isUserOrgOwner(userId: string, organisationId: number): Promise<boolean>;
   getOrgOwnerships(userId: string): Promise<number[]>; // Returns org IDs where user is owner
   getUsersInOrganisation(organisationId: number): Promise<User[]>;
-  getUsersWithOrganisations(): Promise<(User & { organisations: Organization[] })[]>; // Returns all cases for user (admin gets all, regular user gets org-filtered)
+  getUsersWithOrganisations(): Promise<(User & { organisations: (Organization & { role?: string })[] })[]>; // Returns all users with their organisations and roles
   getAllCases(): Promise<Case[]>; // Admin only - get all cases across all organizations
   getAllCasesIncludingArchived(): Promise<Case[]>; // Admin only - get all cases including archived ones
   getCase(id: number, organisationId: number): Promise<Case | undefined>;
@@ -607,14 +607,17 @@ export class DatabaseStorage implements IStorage {
     return Array.from(userMap.values());
   }
 
-  async getUsersWithOrganisations(): Promise<(User & { organisations: Organization[] })[]> {
+  async getUsersWithOrganisations(): Promise<(User & { organisations: (Organization & { role?: string })[] })[]> {
     const allUsers = await db.select().from(users);
     
     const usersWithOrgs = await Promise.all(
       allUsers.map(async (user) => {
-        // Get user's assigned organisations from junction table
+        // Get user's assigned organisations from junction table with roles
         const userOrgs = await db
-          .select({ organisation: organisations })
+          .select({ 
+            organisation: organisations,
+            role: userOrganisations.role
+          })
           .from(userOrganisations)
           .leftJoin(organisations, eq(userOrganisations.organisationId, organisations.id))
           .where(eq(userOrganisations.userId, user.id));
@@ -623,18 +626,18 @@ export class DatabaseStorage implements IStorage {
         const legacyOrg = user.organisationId ? 
           await db.select().from(organisations).where(eq(organisations.id, user.organisationId)).limit(1) : [];
 
-        // Combine organisations (avoid duplicates)
-        const orgMap = new Map<number, Organization>();
+        // Combine organisations (avoid duplicates), include role from junction table
+        const orgMap = new Map<number, Organization & { role?: string }>();
         
-        // Add legacy organisation
+        // Add legacy organisation (no role)
         if (legacyOrg.length > 0) {
-          orgMap.set(legacyOrg[0].id, legacyOrg[0]);
+          orgMap.set(legacyOrg[0].id, { ...legacyOrg[0], role: undefined });
         }
         
-        // Add junction table organisations
+        // Add junction table organisations with roles
         userOrgs.forEach(uo => {
           if (uo.organisation) {
-            orgMap.set(uo.organisation.id, uo.organisation);
+            orgMap.set(uo.organisation.id, { ...uo.organisation, role: uo.role });
           }
         });
 
