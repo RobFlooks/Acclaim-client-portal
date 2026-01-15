@@ -415,7 +415,7 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
                       className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100 last:border-b-0"
                       onClick={() => handleMessageClick(message)}
                     >
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ${message.senderIsAdmin ? 'bg-white border-2 border-acclaim-teal' : 'bg-acclaim-teal bg-opacity-10'}`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ${message.senderIsAdmin ? 'bg-white border-2 border-acclaim-teal' : 'bg-white border-2 border-gray-300'}`}>
                         {message.senderIsAdmin ? (
                           <img src={acclaimRoseLogo} alt="Acclaim" className="w-6 h-6 object-contain" />
                         ) : (
