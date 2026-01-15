@@ -39,8 +39,8 @@ export async function generateScheduledReport(
   }
 
   if (settings.includeActivityReport) {
-    const activities = await getRecentActivities(cases, settings.frequency);
-    addActivitySheet(workbook, activities);
+    const messages = await getRecentMessages(userId, settings.frequency);
+    addMessagesSheet(workbook, messages, settings.frequency);
   }
 
   const buffer = await workbook.xlsx.writeBuffer();
@@ -90,52 +90,56 @@ function addCaseSummarySheet(workbook: ExcelJS.Workbook, cases: any[]) {
   };
 }
 
-async function getRecentActivities(cases: any[], frequency: string): Promise<any[]> {
-  const activities: any[] = [];
+async function getRecentMessages(userId: string, frequency: string): Promise<any[]> {
+  const messages: any[] = [];
   const now = new Date();
   const cutoffDate = new Date();
   
-  if (frequency === "weekly") {
+  if (frequency === "daily") {
+    // For daily reports, get messages from the last 24 hours
+    cutoffDate.setDate(now.getDate() - 1);
+  } else if (frequency === "weekly") {
     cutoffDate.setDate(now.getDate() - 7);
   } else {
+    // Monthly
     cutoffDate.setMonth(now.getMonth() - 1);
   }
 
-  for (const caseItem of cases) {
-    const caseActivities = await storage.getCaseActivities(caseItem.id);
-    const filteredActivities = caseActivities.filter((a: any) => {
-      const activityDate = new Date(a.createdAt);
-      const isRecent = activityDate >= cutoffDate;
-      const isNotStatusChange = a.type !== "status_change";
-      return isRecent && isNotStatusChange;
-    });
+  // Get all messages for the user's organisations
+  const allMessages = await storage.getMessagesForUser(userId);
+  
+  const filteredMessages = allMessages.filter((m: any) => {
+    const messageDate = new Date(m.createdAt);
+    return messageDate >= cutoffDate;
+  });
 
-    filteredActivities.forEach((a: any) => {
-      activities.push({
-        caseId: caseItem.id,
-        caseName: caseItem.caseName,
-        accountNumber: caseItem.accountNumber,
-        type: a.type,
-        description: a.description,
-        createdAt: a.createdAt,
-      });
+  for (const message of filteredMessages) {
+    messages.push({
+      caseId: message.caseId,
+      caseName: message.caseName || "General Message",
+      accountNumber: message.accountNumber || "",
+      senderName: message.senderName || "Unknown",
+      content: message.content,
+      createdAt: message.createdAt,
+      hasAttachment: message.hasAttachment || false,
     });
   }
 
-  activities.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  messages.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-  return activities;
+  return messages;
 }
 
-function addActivitySheet(workbook: ExcelJS.Workbook, activities: any[]) {
-  const sheet = workbook.addWorksheet("Activity Report");
+function addMessagesSheet(workbook: ExcelJS.Workbook, messages: any[], frequency: string) {
+  const sheet = workbook.addWorksheet("Messages Report");
 
   sheet.columns = [
-    { header: "Date", key: "date", width: 18 },
+    { header: "Date & Time", key: "date", width: 20 },
     { header: "Case Name", key: "caseName", width: 30 },
     { header: "Account Number", key: "accountNumber", width: 20 },
-    { header: "Activity Type", key: "type", width: 18 },
-    { header: "Description", key: "description", width: 50 },
+    { header: "From", key: "senderName", width: 20 },
+    { header: "Message", key: "content", width: 60 },
+    { header: "Attachment", key: "hasAttachment", width: 12 },
   ];
 
   const headerRow = sheet.getRow(1);
@@ -146,20 +150,39 @@ function addActivitySheet(workbook: ExcelJS.Workbook, activities: any[]) {
     fgColor: { argb: "FF0D9488" },
   };
 
-  activities.forEach((a) => {
+  if (messages.length === 0) {
+    const periodText = frequency === "daily" ? "the last 24 hours" : frequency === "weekly" ? "the last 7 days" : "the last month";
     sheet.addRow({
-      date: formatDate(a.createdAt),
-      caseName: a.caseName || "",
-      accountNumber: a.accountNumber || "",
-      type: formatActivityType(a.type),
-      description: a.description || "",
+      date: "",
+      caseName: `No messages received in ${periodText}`,
+      accountNumber: "",
+      senderName: "",
+      content: "",
+      hasAttachment: "",
     });
-  });
+  } else {
+    messages.forEach((m) => {
+      sheet.addRow({
+        date: formatDate(m.createdAt),
+        caseName: m.caseName || "",
+        accountNumber: m.accountNumber || "",
+        senderName: m.senderName || "",
+        content: truncateMessage(m.content, 200),
+        hasAttachment: m.hasAttachment ? "Yes" : "",
+      });
+    });
+  }
 
   sheet.autoFilter = {
     from: "A1",
-    to: "E1",
+    to: "F1",
   };
+}
+
+function truncateMessage(content: string, maxLength: number): string {
+  if (!content) return "";
+  if (content.length <= maxLength) return content;
+  return content.substring(0, maxLength) + "...";
 }
 
 function formatStatus(status: string): string {

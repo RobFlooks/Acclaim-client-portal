@@ -1429,6 +1429,11 @@ export default function UserProfile() {
                           <SelectItem value="monthly">Monthly</SelectItem>
                         </SelectContent>
                       </Select>
+                      <p className="text-xs text-gray-500">
+                        {scheduledReportFrequency === "daily" && "Shows messages from the last 24 hours. Best scheduled at end of day (e.g., 5:00 PM or 6:00 PM) to capture all daily activity."}
+                        {scheduledReportFrequency === "weekly" && "Shows messages from the last 7 days."}
+                        {scheduledReportFrequency === "monthly" && "Shows messages from the last month."}
+                      </p>
                     </div>
 
                     {/* Time of day selection */}
@@ -1509,8 +1514,8 @@ export default function UserProfile() {
 
                       <div className="flex items-center justify-between py-2">
                         <div>
-                          <span className="text-sm font-medium">Activity Report</span>
-                          <p className="text-xs text-gray-500">Messages received, documents uploaded</p>
+                          <span className="text-sm font-medium">Messages Report</span>
+                          <p className="text-xs text-gray-500">All messages received during the period</p>
                         </div>
                         <Switch
                           checked={scheduledReportActivity}
