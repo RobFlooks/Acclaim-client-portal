@@ -1638,11 +1638,12 @@ export class DatabaseStorage implements IStorage {
         name: organisations.name,
         externalRef: organisations.externalRef,
         createdAt: organisations.createdAt,
+        scheduledReportsEnabled: organisations.scheduledReportsEnabled,
         userCount: sql<number>`count(${users.id})`,
       })
       .from(organisations)
       .leftJoin(users, eq(organisations.id, users.organisationId))
-      .groupBy(organisations.id, organisations.name, organisations.externalRef, organisations.createdAt)
+      .groupBy(organisations.id, organisations.name, organisations.externalRef, organisations.createdAt, organisations.scheduledReportsEnabled)
       .orderBy(organisations.createdAt);
     
     return result;
