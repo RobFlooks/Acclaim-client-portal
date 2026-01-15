@@ -105,9 +105,9 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
       {/* User Profile */}
       <div className="flex-shrink-0 p-4 border-t border-teal-700">
         <div className="flex items-center mb-3">
-          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center overflow-hidden">
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden ${user?.isAdmin ? 'bg-transparent' : 'bg-white'}`}>
             {user?.isAdmin ? (
-              <img src={acclaimRoseLogo} alt="Acclaim" className="w-7 h-7 object-contain" />
+              <img src={acclaimRoseLogo} alt="Acclaim" className="w-8 h-8 object-contain filter brightness-0 invert" />
             ) : (
               <User className="text-acclaim-teal h-5 w-5" />
             )}
