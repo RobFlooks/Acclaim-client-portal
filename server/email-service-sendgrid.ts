@@ -326,102 +326,128 @@ class SendGridEmailService {
         ? `${data.messageType}: ${data.messageSubject} [${data.caseReference}] - Acclaim Portal`
         : `${data.messageType}: ${data.messageSubject} - Acclaim Portal`;
       const htmlContent = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc;">
-          <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 30px; text-align: center;">
-            <div style="margin-bottom: 10px;">
-              <img src="cid:logo" alt="Acclaim Credit Management & Recovery" style="height: 40px; width: auto;" />
-            </div>
-            <p style="margin: 0; opacity: 0.9; font-size: 16px;">New case update received</p>
-            ${data.caseReference ? `<p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
-          </div>
-          
-          <div style="padding: 30px;">
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h2 style="color: #1e293b; margin-top: 0;">Case Update Details</h2>
-              <table style="width: 100%; border-spacing: 0;">
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569; width: 140px;">From:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">Acclaim</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Organisation:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.organisationName}</td>
-                </tr>
-                ${data.caseReference ? `
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Case Reference:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.caseReference}</td>
-                </tr>
-                ` : ''}
-                ${data.caseDetails ? `
-                <tr>
-                  <td colspan="2" style="padding: 15px 0 8px 0;">
-                    <h3 style="color: #0f172a; margin: 0; font-size: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Case Details</h3>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Case Name:</td>
-                  <td style="padding: 4px 0; color: #1e293b;">${data.caseDetails.caseName}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Debtor Type:</td>
-                  <td style="padding: 4px 0; color: #1e293b;">${data.caseDetails.debtorType.charAt(0).toUpperCase() + data.caseDetails.debtorType.slice(1).replace('_', ' ')}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Original Amount:</td>
-                  <td style="padding: 4px 0; color: #1e293b;">£${data.caseDetails.originalAmount}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Outstanding Amount:</td>
-                  <td style="padding: 4px 0; color: #1e293b; font-weight: bold;">£${data.caseDetails.outstandingAmount}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Status:</td>
-                  <td style="padding: 4px 0; color: #1e293b;">
-                    <span style="background: ${data.caseDetails.status === 'active' ? '#dcfce7' : '#fef3c7'}; color: ${data.caseDetails.status === 'active' ? '#166534' : '#a16207'}; padding: 2px 8px; border-radius: 4px; font-size: 12px; text-transform: uppercase; font-weight: bold;">
-                      ${data.caseDetails.status}
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Current Stage:</td>
-                  <td style="padding: 4px 0; color: #1e293b;">${data.caseDetails.stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</td>
-                </tr>
-                ` : ''}
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Update Type:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">
-                    <span style="background: #e0f2fe; color: #0277bd; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
-                      ${data.messageType.toUpperCase()}
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; color: #475569;">Subject:</td>
-                  <td style="padding: 8px 0; color: #1e293b;">${data.messageSubject}</td>
-                </tr>
-              </table>
-            </div>
-
-            <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-              <h3 style="color: #1e293b; margin-top: 0;">Message Content</h3>
-              <div style="color: #475569; line-height: 1.6; white-space: pre-wrap;">${data.messageContent}</div>
-            </div>
-
-            <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; text-align: center;">
-              <p style="margin: 0 0 15px 0; color: #64748b;">
-                Please log in to the Acclaim Portal to view and respond to this message.
-              </p>
-              <a href="https://acclaim-api.azurewebsites.net/auth" style="display: inline-block; background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 16px;">
-                View in Portal
-              </a>
-            </div>
-          </div>
-
-          <div style="background: #e2e8f0; padding: 20px; text-align: center; color: #64748b; font-size: 14px;">
-            <p style="margin: 0;">This is an automated notification from Acclaim Credit Management & Recovery</p>
-          </div>
-        </div>
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f0f4f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f0f4f8;">
+            <tr>
+              <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width: 600px; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+                  
+                  <!-- Header -->
+                  <tr>
+                    <td style="background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                      <img src="cid:logo" alt="Acclaim" style="height: 50px; width: auto; margin-bottom: 16px;" />
+                      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Case Update</h1>
+                      ${data.caseReference ? `<p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Reference: ${data.caseReference}</p>` : ''}
+                    </td>
+                  </tr>
+                  
+                  <!-- Body -->
+                  <tr>
+                    <td style="padding: 40px;">
+                      
+                      <!-- Update Type Badge -->
+                      <div style="text-align: center; margin-bottom: 30px;">
+                        <span style="display: inline-block; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                          ${data.messageType}
+                        </span>
+                      </div>
+                      
+                      <!-- Info Card -->
+                      <div style="background: #f8fafb; border-radius: 12px; padding: 24px; margin-bottom: 24px; border-left: 4px solid #008b8b;">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                          <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px; width: 120px;">Organisation</td>
+                            <td style="padding: 6px 0; color: #1e293b; font-size: 14px; font-weight: 500;">${data.organisationName}</td>
+                          </tr>
+                          ${data.caseReference ? `
+                          <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Case Ref</td>
+                            <td style="padding: 6px 0; color: #1e293b; font-size: 14px; font-weight: 500;">${data.caseReference}</td>
+                          </tr>
+                          ` : ''}
+                          <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Subject</td>
+                            <td style="padding: 6px 0; color: #1e293b; font-size: 14px; font-weight: 500;">${data.messageSubject}</td>
+                          </tr>
+                        </table>
+                      </div>
+                      
+                      ${data.caseDetails ? `
+                      <!-- Case Details Card -->
+                      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                        <h3 style="margin: 0 0 16px 0; color: #0f172a; font-size: 15px; font-weight: 600; display: flex; align-items: center;">
+                          <span style="display: inline-block; width: 4px; height: 16px; background: #008b8b; border-radius: 2px; margin-right: 10px;"></span>
+                          Case Details
+                        </h3>
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="font-size: 14px;">
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b; width: 140px;">Case Name</td>
+                            <td style="padding: 8px 0; color: #1e293b; font-weight: 500;">${data.caseDetails.caseName}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Debtor Type</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseDetails.debtorType.charAt(0).toUpperCase() + data.caseDetails.debtorType.slice(1).replace('_', ' ')}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Original Amount</td>
+                            <td style="padding: 8px 0; color: #1e293b;">£${data.caseDetails.originalAmount}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Outstanding</td>
+                            <td style="padding: 8px 0; color: #008b8b; font-weight: 700; font-size: 16px;">£${data.caseDetails.outstandingAmount}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Status</td>
+                            <td style="padding: 8px 0;">
+                              <span style="display: inline-block; background: ${data.caseDetails.status === 'active' ? '#dcfce7' : '#fef3c7'}; color: ${data.caseDetails.status === 'active' ? '#166534' : '#a16207'}; padding: 4px 12px; border-radius: 50px; font-size: 12px; font-weight: 600;">
+                                ${data.caseDetails.status.toUpperCase()}
+                              </span>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Stage</td>
+                            <td style="padding: 8px 0; color: #1e293b;">${data.caseDetails.stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</td>
+                          </tr>
+                        </table>
+                      </div>
+                      ` : ''}
+                      
+                      <!-- Message Content -->
+                      <div style="background: #fafbfc; border-radius: 12px; padding: 24px; margin-bottom: 30px;">
+                        <h3 style="margin: 0 0 12px 0; color: #0f172a; font-size: 15px; font-weight: 600;">Message</h3>
+                        <div style="color: #475569; line-height: 1.7; font-size: 14px; white-space: pre-wrap;">${data.messageContent}</div>
+                      </div>
+                      
+                      <!-- CTA Button -->
+                      <div style="text-align: center;">
+                        <a href="https://acclaim-api.azurewebsites.net/auth" style="display: inline-block; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(0,139,139,0.3);">
+                          View in Portal →
+                        </a>
+                      </div>
+                      
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background: #f8fafb; padding: 24px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
+                      <p style="margin: 0; color: #94a3b8; font-size: 13px;">Acclaim Credit Management & Recovery</p>
+                      <p style="margin: 8px 0 0 0; color: #cbd5e1; font-size: 12px;">This is an automated notification</p>
+                    </td>
+                  </tr>
+                  
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
       `;
 
       const textContent = `
