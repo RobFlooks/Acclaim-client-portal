@@ -417,7 +417,7 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
                     >
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ${message.senderIsAdmin ? 'bg-white border-2 border-acclaim-teal' : 'bg-acclaim-teal bg-opacity-10'}`}>
                         {message.senderIsAdmin ? (
-                          <img src={acclaimRoseLogo} alt="Acclaim" className="w-6 h-6 object-contain" />
+                          <img src={acclaimRoseLogo} alt="Acclaim" className="w-6 h-6 object-contain filter sepia saturate-[500%] hue-rotate-[130deg]" />
                         ) : (
                           <User className="text-acclaim-teal h-4 w-4" />
                         )}
@@ -510,7 +510,7 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
                 <div className="flex items-center space-x-2">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ${selectedMessage.senderIsAdmin ? 'bg-white border-2 border-acclaim-teal' : 'bg-acclaim-teal bg-opacity-10'}`}>
                     {selectedMessage.senderIsAdmin ? (
-                      <img src={acclaimRoseLogo} alt="Acclaim" className="w-6 h-6 object-contain" />
+                      <img src={acclaimRoseLogo} alt="Acclaim" className="w-6 h-6 object-contain filter sepia saturate-[500%] hue-rotate-[130deg]" />
                     ) : (
                       <User className="text-acclaim-teal h-4 w-4" />
                     )}
