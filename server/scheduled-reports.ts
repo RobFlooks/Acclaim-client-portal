@@ -9,6 +9,7 @@ export interface ScheduledReportSettings {
   frequency: string;
   dayOfWeek: number | null;
   dayOfMonth: number | null;
+  timeOfDay: number | null;
   includeCaseSummary: boolean | null;
   includeActivityReport: boolean | null;
   caseStatusFilter: string | null;
@@ -221,10 +222,28 @@ function formatActivityType(type: string): string {
 
 export async function processScheduledReports(): Promise<void> {
   const now = new Date();
+  const currentHour = now.getHours();
+  const currentDay = now.getDay();
+  const currentDayOfMonth = now.getDate();
+  
   const allSettings = await storage.getScheduledReportsDue();
   
   for (const settings of allSettings) {
     if (!settings.enabled) continue;
+
+    const targetHour = settings.timeOfDay ?? 9;
+    if (currentHour !== targetHour) continue;
+
+    if (settings.frequency === "weekly" && currentDay !== (settings.dayOfWeek ?? 1)) continue;
+    if (settings.frequency === "monthly" && currentDayOfMonth !== (settings.dayOfMonth ?? 1)) continue;
+
+    const lastSent = settings.lastSentAt ? new Date(settings.lastSentAt) : null;
+    if (lastSent) {
+      const hoursSinceLastSent = (now.getTime() - lastSent.getTime()) / (1000 * 60 * 60);
+      if (settings.frequency === "daily" && hoursSinceLastSent < 20) continue;
+      if (settings.frequency === "weekly" && hoursSinceLastSent < 160) continue;
+      if (settings.frequency === "monthly" && hoursSinceLastSent < 600) continue;
+    }
 
     try {
       const user = await storage.getUser(settings.userId);
@@ -232,7 +251,7 @@ export async function processScheduledReports(): Promise<void> {
 
       const reportBuffer = await generateScheduledReport(settings.userId, settings as ScheduledReportSettings);
       
-      const frequencyText = settings.frequency === "weekly" ? "Weekly" : "Monthly";
+      const frequencyText = settings.frequency === "daily" ? "Daily" : settings.frequency === "weekly" ? "Weekly" : "Monthly";
       const fileName = `Acclaim_${frequencyText}_Report_${now.toISOString().split("T")[0]}.xlsx`;
 
       await sendScheduledReportEmailWithAttachment(

@@ -101,9 +101,10 @@ export default function UserProfile() {
 
   // Scheduled reports state
   const [scheduledReportEnabled, setScheduledReportEnabled] = useState(false);
-  const [scheduledReportFrequency, setScheduledReportFrequency] = useState<"weekly" | "monthly">("weekly");
+  const [scheduledReportFrequency, setScheduledReportFrequency] = useState<"daily" | "weekly" | "monthly">("weekly");
   const [scheduledReportDayOfWeek, setScheduledReportDayOfWeek] = useState(1); // Monday
   const [scheduledReportDayOfMonth, setScheduledReportDayOfMonth] = useState(1);
+  const [scheduledReportTimeOfDay, setScheduledReportTimeOfDay] = useState(9); // 9am default
   const [scheduledReportCaseSummary, setScheduledReportCaseSummary] = useState(true);
   const [scheduledReportActivity, setScheduledReportActivity] = useState(true);
   const [scheduledReportCaseFilter, setScheduledReportCaseFilter] = useState<"active" | "all" | "closed">("active");
@@ -464,6 +465,7 @@ export default function UserProfile() {
       setScheduledReportFrequency(scheduledReportData.frequency ?? "weekly");
       setScheduledReportDayOfWeek(scheduledReportData.dayOfWeek ?? 1);
       setScheduledReportDayOfMonth(scheduledReportData.dayOfMonth ?? 1);
+      setScheduledReportTimeOfDay(scheduledReportData.timeOfDay ?? 9);
       setScheduledReportCaseSummary(scheduledReportData.includeCaseSummary ?? true);
       setScheduledReportActivity(scheduledReportData.includeActivityReport ?? true);
       setScheduledReportCaseFilter(scheduledReportData.caseStatusFilter ?? "active");
@@ -1417,13 +1419,36 @@ export default function UserProfile() {
                     {/* Frequency */}
                     <div className="space-y-2">
                       <Label className="font-medium">Frequency</Label>
-                      <Select value={scheduledReportFrequency} onValueChange={(v: "weekly" | "monthly") => setScheduledReportFrequency(v)}>
+                      <Select value={scheduledReportFrequency} onValueChange={(v: "daily" | "weekly" | "monthly") => setScheduledReportFrequency(v)}>
                         <SelectTrigger className="w-full sm:w-48">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="daily">Daily</SelectItem>
                           <SelectItem value="weekly">Weekly</SelectItem>
                           <SelectItem value="monthly">Monthly</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Time of day selection */}
+                    <div className="space-y-2">
+                      <Label className="font-medium">Time of Day</Label>
+                      <Select value={String(scheduledReportTimeOfDay)} onValueChange={(v) => setScheduledReportTimeOfDay(parseInt(v))}>
+                        <SelectTrigger className="w-full sm:w-48">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 24 }, (_, i) => {
+                            const hour = i;
+                            const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+                            const period = hour < 12 ? 'AM' : 'PM';
+                            return (
+                              <SelectItem key={hour} value={String(hour)}>
+                                {displayHour}:00 {period}
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                     </div>
@@ -1521,6 +1546,7 @@ export default function UserProfile() {
                       frequency: scheduledReportFrequency,
                       dayOfWeek: scheduledReportDayOfWeek,
                       dayOfMonth: scheduledReportDayOfMonth,
+                      timeOfDay: scheduledReportTimeOfDay,
                       includeCaseSummary: scheduledReportCaseSummary,
                       includeActivityReport: scheduledReportActivity,
                       caseStatusFilter: scheduledReportCaseFilter,

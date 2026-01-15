@@ -564,13 +564,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/user/scheduled-reports', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const { enabled, frequency, dayOfWeek, dayOfMonth, includeCaseSummary, includeActivityReport, organisationIds, caseStatusFilter } = req.body;
+      const { enabled, frequency, dayOfWeek, dayOfMonth, timeOfDay, includeCaseSummary, includeActivityReport, organisationIds, caseStatusFilter } = req.body;
       
       const report = await storage.upsertScheduledReport(userId, {
         enabled,
         frequency,
         dayOfWeek,
         dayOfMonth,
+        timeOfDay,
         includeCaseSummary,
         includeActivityReport,
         organisationIds,

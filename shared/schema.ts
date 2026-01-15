@@ -89,9 +89,10 @@ export const scheduledReports = pgTable("scheduled_reports", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
   enabled: boolean("enabled").default(false),
-  frequency: varchar("frequency", { length: 20 }).notNull().default("weekly"), // 'weekly' or 'monthly'
+  frequency: varchar("frequency", { length: 20 }).notNull().default("weekly"), // 'daily', 'weekly' or 'monthly'
   dayOfWeek: integer("day_of_week"), // 0-6 for weekly (0 = Sunday)
   dayOfMonth: integer("day_of_month"), // 1-28 for monthly
+  timeOfDay: integer("time_of_day").default(9), // Hour of day to send (0-23), default 9am
   includeCaseSummary: boolean("include_case_summary").default(true),
   includeActivityReport: boolean("include_activity_report").default(true),
   organisationIds: jsonb("organisation_ids").$type<number[]>(), // Array of org IDs to include, null = all
