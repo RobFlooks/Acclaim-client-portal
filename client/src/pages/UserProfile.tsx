@@ -88,6 +88,12 @@ export default function UserProfile() {
   const [selectedOrgForUpload, setSelectedOrgForUpload] = useState<string>("");
   const [notifyOnUpload, setNotifyOnUpload] = useState(true);
 
+  // Case notifications state
+  const [caseSearch, setCaseSearch] = useState("");
+  const [caseFilter, setCaseFilter] = useState<"all" | "muted" | "unmuted">("all");
+  const [casePage, setCasePage] = useState(1);
+  const CASES_PER_PAGE = 50;
+
   // Fetch user profile data
   const { data: userProfile, isLoading: profileLoading } = useQuery<UserData>({
     queryKey: ["/api/auth/user"],
@@ -839,13 +845,13 @@ export default function UserProfile() {
 
           {/* Case-Specific Notifications */}
           <Card className="mt-6">
-            <CardHeader>
+            <CardHeader className="pb-3">
               <CardTitle className="flex items-center space-x-2">
                 <FileText className="h-5 w-5" />
                 <span>Case Notifications</span>
               </CardTitle>
               <CardDescription>
-                Control notifications for individual cases. Muted cases won't send you email notifications even if your general notifications are enabled.
+                Control notifications for individual cases. Muted cases won't send you email notifications.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -855,32 +861,96 @@ export default function UserProfile() {
                 <p className="text-sm text-gray-500">No cases found.</p>
               ) : (
                 <div className="space-y-3">
-                  {userCases.map((caseItem: any) => {
-                    const isMuted = mutedCasesData?.mutedCaseIds?.includes(caseItem.id);
+                  {/* Search and Filter Controls */}
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+                      <Input
+                        placeholder="Search cases..."
+                        value={caseSearch}
+                        onChange={(e) => { setCaseSearch(e.target.value); setCasePage(1); }}
+                        className="pl-8 h-9"
+                      />
+                    </div>
+                    <Select value={caseFilter} onValueChange={(v: "all" | "muted" | "unmuted") => { setCaseFilter(v); setCasePage(1); }}>
+                      <SelectTrigger className="w-full sm:w-32 h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="unmuted">On</SelectItem>
+                        <SelectItem value="muted">Muted</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Case List */}
+                  {(() => {
+                    const filteredCases = userCases.filter((c: any) => {
+                      const isMuted = mutedCasesData?.mutedCaseIds?.includes(c.id);
+                      const matchesSearch = caseSearch === "" || 
+                        c.caseName?.toLowerCase().includes(caseSearch.toLowerCase()) ||
+                        c.accountNumber?.toLowerCase().includes(caseSearch.toLowerCase());
+                      const matchesFilter = caseFilter === "all" || 
+                        (caseFilter === "muted" && isMuted) ||
+                        (caseFilter === "unmuted" && !isMuted);
+                      return matchesSearch && matchesFilter;
+                    });
+                    const totalPages = Math.ceil(filteredCases.length / CASES_PER_PAGE);
+                    const paginatedCases = filteredCases.slice((casePage - 1) * CASES_PER_PAGE, casePage * CASES_PER_PAGE);
+
                     return (
-                      <div 
-                        key={caseItem.id} 
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100"
-                      >
-                        <div className="flex-1 min-w-0 mr-4">
-                          <p className="font-medium text-sm truncate">{caseItem.caseName}</p>
-                          <p className="text-xs text-gray-500">{caseItem.accountNumber}</p>
+                      <>
+                        <div className="text-xs text-gray-500 mb-1">
+                          Showing {paginatedCases.length} of {filteredCases.length} cases
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-500 hidden sm:inline">
-                            {isMuted ? "Muted" : "On"}
-                          </span>
-                          <Switch
-                            checked={!isMuted}
-                            onCheckedChange={(checked) => 
-                              toggleCaseMuteMutation.mutate({ caseId: caseItem.id, mute: !checked })
-                            }
-                            disabled={toggleCaseMuteMutation.isPending}
-                          />
+                        <div className="space-y-1">
+                          {paginatedCases.map((caseItem: any) => {
+                            const isMuted = mutedCasesData?.mutedCaseIds?.includes(caseItem.id);
+                            return (
+                              <div 
+                                key={caseItem.id} 
+                                className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded border border-gray-100"
+                              >
+                                <div className="flex-1 min-w-0 mr-3">
+                                  <span className="text-sm font-medium truncate block">{caseItem.caseName}</span>
+                                  <span className="text-xs text-gray-400">{caseItem.accountNumber}</span>
+                                </div>
+                                <Switch
+                                  checked={!isMuted}
+                                  onCheckedChange={(checked) => 
+                                    toggleCaseMuteMutation.mutate({ caseId: caseItem.id, mute: !checked })
+                                  }
+                                  disabled={toggleCaseMuteMutation.isPending}
+                                />
+                              </div>
+                            );
+                          })}
                         </div>
-                      </div>
+                        {totalPages > 1 && (
+                          <div className="flex items-center justify-between pt-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => setCasePage(p => Math.max(1, p - 1))}
+                              disabled={casePage === 1}
+                            >
+                              Previous
+                            </Button>
+                            <span className="text-xs text-gray-500">Page {casePage} of {totalPages}</span>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => setCasePage(p => Math.min(totalPages, p + 1))}
+                              disabled={casePage === totalPages}
+                            >
+                              Next
+                            </Button>
+                          </div>
+                        )}
+                      </>
                     );
-                  })}
+                  })()}
                 </div>
               )}
             </CardContent>
