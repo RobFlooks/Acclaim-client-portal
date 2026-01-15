@@ -1321,15 +1321,15 @@ export default function UserProfile() {
                                   </p>
 
                                   {/* Case Search */}
-                                  {(orgSettingsCases?.length || 0) > 5 && (
+                                  {(orgSettingsCases?.length || 0) > 0 && (
                                     <div className="mb-3">
                                       <div className="relative">
                                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                                         <Input
-                                          placeholder="Search cases..."
+                                          placeholder="Search cases by name or reference..."
                                           value={orgCaseSearch}
                                           onChange={(e) => handleOrgCaseSearch(e.target.value)}
-                                          className="pl-9 h-8 text-sm"
+                                          className="pl-9 h-9 text-sm"
                                         />
                                       </div>
                                     </div>
