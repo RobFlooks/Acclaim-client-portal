@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, EyeOff, Mail, Bell, BellOff, FilePlus, FileX, BarChart3, Search, Crown, Calendar, CalendarOff } from "lucide-react";
+import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, EyeOff, Mail, Bell, BellOff, FilePlus, FileX, BarChart3, Search, Crown, Calendar, CalendarOff, Pencil } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrganisationSchema } from "@shared/schema";
@@ -2031,6 +2031,8 @@ export default function AdminEnhanced() {
   // Scheduled reports configuration dialog state
   const [showScheduledReportDialog, setShowScheduledReportDialog] = useState(false);
   const [scheduledReportUser, setScheduledReportUser] = useState<User | null>(null);
+  const [editingReportId, setEditingReportId] = useState<number | null>(null); // null = creating new
+  const [scheduledReportOrgId, setScheduledReportOrgId] = useState<number | null>(null); // null = combined report
   const [scheduledReportEnabled, setScheduledReportEnabled] = useState(false);
   const [scheduledReportFrequency, setScheduledReportFrequency] = useState<"daily" | "weekly" | "monthly">("weekly");
   const [scheduledReportDayOfWeek, setScheduledReportDayOfWeek] = useState(1);
@@ -2039,6 +2041,7 @@ export default function AdminEnhanced() {
   const [scheduledReportCaseSummary, setScheduledReportCaseSummary] = useState(true);
   const [scheduledReportActivity, setScheduledReportActivity] = useState(true);
   const [scheduledReportCaseFilter, setScheduledReportCaseFilter] = useState<"active" | "all" | "closed">("active");
+  const [showReportEditForm, setShowReportEditForm] = useState(false); // Show add/edit form within dialog
 
   // Fetch users with their organisations
   const { data: users = [], isLoading: usersLoading, error: usersError } = useQuery({
@@ -2058,11 +2061,14 @@ export default function AdminEnhanced() {
     retry: false,
   });
 
-  // Create a map of userId -> scheduled report settings for quick lookup
-  const scheduledReportsMap = scheduledReports.reduce((acc: Record<string, any>, report: any) => {
-    acc[report.userId] = report;
+  // Create a map of userId -> array of scheduled report settings for quick lookup
+  const scheduledReportsMap = scheduledReports.reduce((acc: Record<string, any[]>, report: any) => {
+    if (!acc[report.userId]) {
+      acc[report.userId] = [];
+    }
+    acc[report.userId].push(report);
     return acc;
-  }, {});
+  }, {} as Record<string, any[]>);
 
   // Create organisation mutation
   const createOrganisationMutation = useMutation({
@@ -2170,10 +2176,34 @@ export default function AdminEnhanced() {
     },
   });
 
-  // Configure user scheduled report mutation
-  const configureUserScheduledReportMutation = useMutation({
+  // Create scheduled report mutation
+  const createScheduledReportMutation = useMutation({
     mutationFn: async ({ userId, data }: { userId: string; data: any }) => {
-      const response = await apiRequest("PUT", `/api/admin/users/${userId}/scheduled-report`, data);
+      const response = await apiRequest("POST", `/api/admin/users/${userId}/scheduled-reports`, data);
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Scheduled report created",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/scheduled-reports"] });
+      setShowReportEditForm(false);
+      setEditingReportId(null);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create scheduled report",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update scheduled report mutation
+  const updateScheduledReportMutation = useMutation({
+    mutationFn: async ({ reportId, data }: { reportId: number; data: any }) => {
+      const response = await apiRequest("PUT", `/api/admin/scheduled-reports/${reportId}`, data);
       return await response.json();
     },
     onSuccess: () => {
@@ -2182,7 +2212,8 @@ export default function AdminEnhanced() {
         description: "Scheduled report settings saved",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/scheduled-reports"] });
-      setShowScheduledReportDialog(false);
+      setShowReportEditForm(false);
+      setEditingReportId(null);
     },
     onError: () => {
       toast({
@@ -2193,10 +2224,32 @@ export default function AdminEnhanced() {
     },
   });
 
-  // Send test report for user mutation
+  // Delete scheduled report mutation
+  const deleteScheduledReportMutation = useMutation({
+    mutationFn: async (reportId: number) => {
+      const response = await apiRequest("DELETE", `/api/admin/scheduled-reports/${reportId}`);
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Scheduled report deleted",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/scheduled-reports"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete scheduled report",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Send test report mutation
   const sendTestReportMutation = useMutation({
-    mutationFn: async (userId: string) => {
-      const response = await apiRequest("POST", `/api/admin/users/${userId}/scheduled-report/test-send`);
+    mutationFn: async (reportId: number) => {
+      const response = await apiRequest("POST", `/api/admin/scheduled-reports/${reportId}/test-send`);
       return await response.json();
     },
     onSuccess: (data) => {
@@ -2214,31 +2267,57 @@ export default function AdminEnhanced() {
     },
   });
 
-  // Open scheduled report dialog with user's current settings
+  // Open scheduled report dialog to show user's reports list
   const openScheduledReportDialog = (user: User) => {
     setScheduledReportUser(user);
-    const existingReport = scheduledReportsMap[user.id];
-    if (existingReport) {
-      setScheduledReportEnabled(existingReport.enabled ?? false);
-      setScheduledReportFrequency(existingReport.frequency || "weekly");
-      setScheduledReportDayOfWeek(existingReport.dayOfWeek ?? 1);
-      setScheduledReportDayOfMonth(existingReport.dayOfMonth ?? 1);
-      setScheduledReportTimeOfDay(existingReport.timeOfDay ?? 9);
-      setScheduledReportCaseSummary(existingReport.includeCaseSummary ?? true);
-      setScheduledReportActivity(existingReport.includeActivityReport ?? true);
-      setScheduledReportCaseFilter(existingReport.caseStatusFilter || "active");
-    } else {
-      // Reset to defaults for new configuration
-      setScheduledReportEnabled(false);
-      setScheduledReportFrequency("weekly");
-      setScheduledReportDayOfWeek(1);
-      setScheduledReportDayOfMonth(1);
-      setScheduledReportTimeOfDay(9);
-      setScheduledReportCaseSummary(true);
-      setScheduledReportActivity(true);
-      setScheduledReportCaseFilter("active");
-    }
+    setShowReportEditForm(false);
+    setEditingReportId(null);
     setShowScheduledReportDialog(true);
+  };
+
+  // Open form to create a new report
+  const openNewReportForm = () => {
+    setEditingReportId(null);
+    setScheduledReportOrgId(null);
+    setScheduledReportEnabled(true);
+    setScheduledReportFrequency("weekly");
+    setScheduledReportDayOfWeek(1);
+    setScheduledReportDayOfMonth(1);
+    setScheduledReportTimeOfDay(9);
+    setScheduledReportCaseSummary(true);
+    setScheduledReportActivity(true);
+    setScheduledReportCaseFilter("active");
+    setShowReportEditForm(true);
+  };
+
+  // Open form to edit an existing report
+  const openEditReportForm = (report: any) => {
+    setEditingReportId(report.id);
+    setScheduledReportOrgId(report.organisationId || null);
+    setScheduledReportEnabled(report.enabled ?? true);
+    setScheduledReportFrequency(report.frequency || "weekly");
+    setScheduledReportDayOfWeek(report.dayOfWeek ?? 1);
+    setScheduledReportDayOfMonth(report.dayOfMonth ?? 1);
+    setScheduledReportTimeOfDay(report.timeOfDay ?? 9);
+    setScheduledReportCaseSummary(report.includeCaseSummary ?? true);
+    setScheduledReportActivity(report.includeActivityReport ?? true);
+    setScheduledReportCaseFilter(report.caseStatusFilter || "active");
+    setShowReportEditForm(true);
+  };
+
+  // Get user's organisations for the report dropdown
+  const getUserOrganisations = (user: User): { id: number; name: string }[] => {
+    if (!user.organisations) return [];
+    return user.organisations.map((uo: any) => ({
+      id: uo.organisationId || uo.id,
+      name: uo.organisationName || uo.name || `Org ${uo.organisationId || uo.id}`,
+    }));
+  };
+
+  // Get organisation name from the organisations list
+  const getOrgName = (orgId: number): string => {
+    const org = organisations.find((o: any) => o.id === orgId);
+    return org?.name || `Organisation ${orgId}`;
   };
 
   // Assign user to organisation mutation
@@ -3462,18 +3541,22 @@ export default function AdminEnhanced() {
                             onClick={() => openScheduledReportDialog(user)}
                             title="Configure scheduled reports"
                           >
-                            {scheduledReportsMap[user.id] ? (
-                              scheduledReportsMap[user.id].enabled ? (
-                                <div className="flex items-center text-green-600">
-                                  <Calendar className="h-4 w-4 mr-1" />
-                                  <span className="text-xs capitalize">{scheduledReportsMap[user.id].frequency}</span>
-                                </div>
-                              ) : (
-                                <div className="flex items-center text-gray-400">
-                                  <CalendarOff className="h-4 w-4 mr-1" />
-                                  <span className="text-xs capitalize">{scheduledReportsMap[user.id].frequency} (off)</span>
-                                </div>
-                              )
+                            {scheduledReportsMap[user.id]?.length > 0 ? (
+                              (() => {
+                                const reports = scheduledReportsMap[user.id];
+                                const enabledCount = reports.filter((r: any) => r.enabled).length;
+                                return enabledCount > 0 ? (
+                                  <div className="flex items-center text-green-600">
+                                    <Calendar className="h-4 w-4 mr-1" />
+                                    <span className="text-xs">{enabledCount} active</span>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center text-gray-400">
+                                    <CalendarOff className="h-4 w-4 mr-1" />
+                                    <span className="text-xs">{reports.length} (off)</span>
+                                  </div>
+                                );
+                              })()
                             ) : (
                               <div className="flex items-center text-gray-300">
                                 <CalendarOff className="h-4 w-4" />
@@ -4132,166 +4215,268 @@ export default function AdminEnhanced() {
       </Dialog>
 
       {/* Scheduled Report Configuration Dialog */}
-      <Dialog open={showScheduledReportDialog} onOpenChange={setShowScheduledReportDialog}>
-        <DialogContent className="sm:max-w-[500px]">
+      <Dialog open={showScheduledReportDialog} onOpenChange={(open) => {
+        setShowScheduledReportDialog(open);
+        if (!open) {
+          setShowReportEditForm(false);
+          setEditingReportId(null);
+        }
+      }}>
+        <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
-            <DialogTitle>Configure Scheduled Reports</DialogTitle>
+            <DialogTitle>Scheduled Reports</DialogTitle>
             <DialogDescription>
-              Configure scheduled email reports for {scheduledReportUser?.firstName} {scheduledReportUser?.lastName}
+              Manage scheduled email reports for {scheduledReportUser?.firstName} {scheduledReportUser?.lastName}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="sr-enabled" className="font-medium">
-                  Enable Scheduled Reports
-                </Label>
-                <p className="text-sm text-gray-500">Send periodic reports by email</p>
+          
+          {!showReportEditForm ? (
+            <div className="py-4">
+              {/* List of existing reports */}
+              <div className="space-y-3 max-h-[40vh] overflow-y-auto">
+                {scheduledReportUser && scheduledReportsMap[scheduledReportUser.id]?.length > 0 ? (
+                  scheduledReportsMap[scheduledReportUser.id].map((report: any) => (
+                    <div key={report.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">
+                            {report.organisationId ? getOrgName(report.organisationId) : "Combined Report"}
+                          </span>
+                          {report.enabled ? (
+                            <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
+                              {report.frequency}
+                            </span>
+                          ) : (
+                            <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded">
+                              Disabled
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {report.enabled ? (
+                            <>
+                              {report.frequency === "daily" ? "Every day" : 
+                               report.frequency === "weekly" ? `Every ${["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][report.dayOfWeek || 0]}` :
+                               `Day ${report.dayOfMonth || 1} of each month`}
+                              {" at "}
+                              {report.timeOfDay === 0 ? "12:00 AM" : 
+                               report.timeOfDay > 12 ? `${report.timeOfDay - 12}:00 PM` : 
+                               report.timeOfDay === 12 ? "12:00 PM" : `${report.timeOfDay}:00 AM`}
+                            </>
+                          ) : "Report is disabled"}
+                        </p>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => sendTestReportMutation.mutate(report.id)}
+                          disabled={sendTestReportMutation.isPending}
+                          title="Send test report"
+                        >
+                          <Mail className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => openEditReportForm(report)}
+                          title="Edit report"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => deleteScheduledReportMutation.mutate(report.id)}
+                          disabled={deleteScheduledReportMutation.isPending}
+                          className="text-red-500 hover:text-red-700"
+                          title="Delete report"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p>No scheduled reports configured</p>
+                    <p className="text-xs mt-1">Add a report to send periodic email summaries</p>
+                  </div>
+                )}
               </div>
-              <Checkbox
-                id="sr-enabled"
-                checked={scheduledReportEnabled}
-                onCheckedChange={(checked) => setScheduledReportEnabled(checked === true)}
-              />
+              
+              <div className="flex justify-between mt-4 pt-4 border-t">
+                <Button variant="outline" onClick={() => setShowScheduledReportDialog(false)}>
+                  Close
+                </Button>
+                <Button onClick={openNewReportForm} className="bg-acclaim-teal hover:bg-acclaim-teal/90">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Report
+                </Button>
+              </div>
             </div>
-
-            {scheduledReportEnabled && (
-              <>
+          ) : (
+            <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
+              {/* Organisation selection for new reports */}
+              {editingReportId === null && (
                 <div className="space-y-2">
-                  <Label className="font-medium">Frequency</Label>
-                  <Select value={scheduledReportFrequency} onValueChange={(v: "daily" | "weekly" | "monthly") => setScheduledReportFrequency(v)}>
+                  <Label className="font-medium">Report Scope</Label>
+                  <Select 
+                    value={scheduledReportOrgId === null ? "combined" : String(scheduledReportOrgId)} 
+                    onValueChange={(v) => setScheduledReportOrgId(v === "combined" ? null : parseInt(v))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select organisation or combined" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="combined">All Organisations (Combined Report)</SelectItem>
+                      {scheduledReportUser && getUserOrganisations(scheduledReportUser as any).map((org) => (
+                        <SelectItem key={org.id} value={String(org.id)}>{org.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500">
+                    Choose a specific organisation or create a combined report for all
+                  </p>
+                </div>
+              )}
+
+              {/* Enable/Disable toggle */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="sr-enabled" className="font-medium">
+                    Enable Report
+                  </Label>
+                  <p className="text-sm text-gray-500">Send reports on schedule</p>
+                </div>
+                <Checkbox
+                  id="sr-enabled"
+                  checked={scheduledReportEnabled}
+                  onCheckedChange={(checked) => setScheduledReportEnabled(checked === true)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="font-medium">Frequency</Label>
+                <Select value={scheduledReportFrequency} onValueChange={(v: "daily" | "weekly" | "monthly") => setScheduledReportFrequency(v)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="font-medium">Time of Day</Label>
+                <Select value={String(scheduledReportTimeOfDay)} onValueChange={(v) => setScheduledReportTimeOfDay(parseInt(v))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 24 }, (_, i) => {
+                      const hour = i;
+                      const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+                      const period = hour < 12 ? 'AM' : 'PM';
+                      return (
+                        <SelectItem key={hour} value={String(hour)}>
+                          {displayHour}:00 {period}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {scheduledReportFrequency === "weekly" && (
+                <div className="space-y-2">
+                  <Label className="font-medium">Day of Week</Label>
+                  <Select value={String(scheduledReportDayOfWeek)} onValueChange={(v) => setScheduledReportDayOfWeek(parseInt(v))}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="daily">Daily</SelectItem>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
+                      <SelectItem value="0">Sunday</SelectItem>
+                      <SelectItem value="1">Monday</SelectItem>
+                      <SelectItem value="2">Tuesday</SelectItem>
+                      <SelectItem value="3">Wednesday</SelectItem>
+                      <SelectItem value="4">Thursday</SelectItem>
+                      <SelectItem value="5">Friday</SelectItem>
+                      <SelectItem value="6">Saturday</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+              )}
 
+              {scheduledReportFrequency === "monthly" && (
                 <div className="space-y-2">
-                  <Label className="font-medium">Time of Day</Label>
-                  <Select value={String(scheduledReportTimeOfDay)} onValueChange={(v) => setScheduledReportTimeOfDay(parseInt(v))}>
+                  <Label className="font-medium">Day of Month</Label>
+                  <Select value={String(scheduledReportDayOfMonth)} onValueChange={(v) => setScheduledReportDayOfMonth(parseInt(v))}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {Array.from({ length: 24 }, (_, i) => {
-                        const hour = i;
-                        const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-                        const period = hour < 12 ? 'AM' : 'PM';
-                        return (
-                          <SelectItem key={hour} value={String(hour)}>
-                            {displayHour}:00 {period}
-                          </SelectItem>
-                        );
-                      })}
+                      {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
+                        <SelectItem key={day} value={String(day)}>{day}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
+              )}
 
-                {scheduledReportFrequency === "weekly" && (
-                  <div className="space-y-2">
-                    <Label className="font-medium">Day of Week</Label>
-                    <Select value={String(scheduledReportDayOfWeek)} onValueChange={(v) => setScheduledReportDayOfWeek(parseInt(v))}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="0">Sunday</SelectItem>
-                        <SelectItem value="1">Monday</SelectItem>
-                        <SelectItem value="2">Tuesday</SelectItem>
-                        <SelectItem value="3">Wednesday</SelectItem>
-                        <SelectItem value="4">Thursday</SelectItem>
-                        <SelectItem value="5">Friday</SelectItem>
-                        <SelectItem value="6">Saturday</SelectItem>
-                      </SelectContent>
-                    </Select>
+              <div className="space-y-3">
+                <Label className="font-medium">Report Contents</Label>
+                
+                <div className="flex items-center justify-between py-2">
+                  <div>
+                    <span className="text-sm font-medium">Case Summary</span>
+                    <p className="text-xs text-gray-500">Case name, account number, debtor, status, amounts</p>
                   </div>
-                )}
-
-                {scheduledReportFrequency === "monthly" && (
-                  <div className="space-y-2">
-                    <Label className="font-medium">Day of Month</Label>
-                    <Select value={String(scheduledReportDayOfMonth)} onValueChange={(v) => setScheduledReportDayOfMonth(parseInt(v))}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
-                          <SelectItem key={day} value={String(day)}>{day}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                <div className="space-y-3">
-                  <Label className="font-medium">Report Contents</Label>
-                  
-                  <div className="flex items-center justify-between py-2">
-                    <div>
-                      <span className="text-sm font-medium">Case Summary</span>
-                      <p className="text-xs text-gray-500">Case name, account number, debtor, status, amounts</p>
-                    </div>
-                    <Checkbox
-                      checked={scheduledReportCaseSummary}
-                      onCheckedChange={(checked) => setScheduledReportCaseSummary(checked === true)}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between py-2">
-                    <div>
-                      <span className="text-sm font-medium">Messages Report</span>
-                      <p className="text-xs text-gray-500">All messages received during the period</p>
-                    </div>
-                    <Checkbox
-                      checked={scheduledReportActivity}
-                      onCheckedChange={(checked) => setScheduledReportActivity(checked === true)}
-                    />
-                  </div>
+                  <Checkbox
+                    checked={scheduledReportCaseSummary}
+                    onCheckedChange={(checked) => setScheduledReportCaseSummary(checked === true)}
+                  />
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="font-medium">Include Cases</Label>
-                  <Select value={scheduledReportCaseFilter} onValueChange={(v: "active" | "all" | "closed") => setScheduledReportCaseFilter(v)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active cases only</SelectItem>
-                      <SelectItem value="all">All cases</SelectItem>
-                      <SelectItem value="closed">Closed cases only</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="flex items-center justify-between py-2">
+                  <div>
+                    <span className="text-sm font-medium">Messages Report</span>
+                    <p className="text-xs text-gray-500">All messages received during the period</p>
+                  </div>
+                  <Checkbox
+                    checked={scheduledReportActivity}
+                    onCheckedChange={(checked) => setScheduledReportActivity(checked === true)}
+                  />
                 </div>
-              </>
-            )}
-          </div>
-          <div className="flex justify-between">
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (scheduledReportUser && scheduledReportsMap[scheduledReportUser.id]) {
-                  sendTestReportMutation.mutate(scheduledReportUser.id);
-                }
-              }}
-              disabled={!scheduledReportUser || !scheduledReportsMap[scheduledReportUser?.id] || sendTestReportMutation.isPending}
-            >
-              {sendTestReportMutation.isPending ? "Sending..." : "Send Test Report"}
-            </Button>
-            <div className="flex space-x-2">
-              <Button variant="outline" onClick={() => setShowScheduledReportDialog(false)}>
-                Cancel
-              </Button>
-              <Button
-                onClick={() => {
-                  if (scheduledReportUser) {
-                    configureUserScheduledReportMutation.mutate({
-                      userId: scheduledReportUser.id,
-                      data: {
+              </div>
+
+              <div className="space-y-2">
+                <Label className="font-medium">Include Cases</Label>
+                <Select value={scheduledReportCaseFilter} onValueChange={(v: "active" | "all" | "closed") => setScheduledReportCaseFilter(v)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active cases only</SelectItem>
+                    <SelectItem value="all">All cases</SelectItem>
+                    <SelectItem value="closed">Closed cases only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex justify-between pt-4 border-t">
+                <Button variant="outline" onClick={() => setShowReportEditForm(false)}>
+                  Back
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (scheduledReportUser) {
+                      const reportData = {
+                        organisationId: scheduledReportOrgId,
                         enabled: scheduledReportEnabled,
                         frequency: scheduledReportFrequency,
                         dayOfWeek: scheduledReportDayOfWeek,
@@ -4300,17 +4485,25 @@ export default function AdminEnhanced() {
                         includeCaseSummary: scheduledReportCaseSummary,
                         includeActivityReport: scheduledReportActivity,
                         caseStatusFilter: scheduledReportCaseFilter,
+                      };
+                      
+                      if (editingReportId !== null) {
+                        updateScheduledReportMutation.mutate({ reportId: editingReportId, data: reportData });
+                      } else {
+                        createScheduledReportMutation.mutate({ userId: scheduledReportUser.id, data: reportData });
                       }
-                    });
-                  }
-                }}
-                disabled={configureUserScheduledReportMutation.isPending}
-                className="bg-acclaim-teal hover:bg-acclaim-teal/90"
-              >
-                {configureUserScheduledReportMutation.isPending ? "Saving..." : "Save Settings"}
-              </Button>
+                    }
+                  }}
+                  disabled={createScheduledReportMutation.isPending || updateScheduledReportMutation.isPending}
+                  className="bg-acclaim-teal hover:bg-acclaim-teal/90"
+                >
+                  {(createScheduledReportMutation.isPending || updateScheduledReportMutation.isPending) 
+                    ? "Saving..." 
+                    : editingReportId !== null ? "Update Report" : "Create Report"}
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
