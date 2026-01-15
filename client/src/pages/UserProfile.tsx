@@ -1543,8 +1543,8 @@ export default function UserProfile() {
                   </>
                 )}
 
-                {/* Save button */}
-                <div className="pt-4 border-t">
+                {/* Save button and Test Send */}
+                <div className="pt-4 border-t flex flex-wrap gap-3">
                   <Button
                     onClick={() => saveScheduledReportMutation.mutate({
                       enabled: scheduledReportEnabled,
@@ -1560,6 +1560,28 @@ export default function UserProfile() {
                     className="bg-acclaim-teal hover:bg-acclaim-teal/90"
                   >
                     {saveScheduledReportMutation.isPending ? "Saving..." : "Save Report Settings"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      try {
+                        const response = await apiRequest("POST", "/api/user/scheduled-reports/test-send");
+                        const result = await response.json();
+                        toast({
+                          title: "Report Sent",
+                          description: result.message,
+                        });
+                      } catch (error: any) {
+                        toast({
+                          title: "Error",
+                          description: error.message || "Failed to send test report",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                    disabled={!scheduledReportData}
+                  >
+                    Send Test Report Now
                   </Button>
                 </div>
               </div>

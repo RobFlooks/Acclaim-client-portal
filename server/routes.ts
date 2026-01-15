@@ -585,6 +585,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test send scheduled report immediately
+  app.post('/api/user/scheduled-reports/test-send', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.email) {
+        return res.status(400).json({ message: "User email not found" });
+      }
+      
+      const settings = await storage.getScheduledReport(userId);
+      if (!settings) {
+        return res.status(400).json({ message: "No scheduled report settings found. Please configure your report first." });
+      }
+      
+      // Import the function dynamically
+      const { generateScheduledReport } = await import("./scheduled-reports");
+      const { sendScheduledReportEmailWithAttachment } = await import("./email-service-sendgrid");
+      
+      const reportBuffer = await generateScheduledReport(userId, settings as any);
+      
+      const now = new Date();
+      const frequencyText = settings.frequency === "daily" ? "Daily" : settings.frequency === "weekly" ? "Weekly" : "Monthly";
+      const fileName = `Acclaim_${frequencyText}_Report_${now.toISOString().split("T")[0]}.xlsx`;
+      
+      await sendScheduledReportEmailWithAttachment(
+        user.email,
+        `${user.firstName} ${user.lastName}`,
+        frequencyText,
+        reportBuffer,
+        fileName
+      );
+      
+      res.json({ message: "Test report sent successfully to " + user.email });
+    } catch (error) {
+      console.error("Error sending test report:", error);
+      res.status(500).json({ message: "Failed to send test report: " + (error as Error).message });
+    }
+  });
+
   // Case submission routes
   app.post('/api/case-submissions', isAuthenticated, upload.array('documents'), async (req: any, res) => {
     try {
