@@ -37,11 +37,19 @@ export async function generateScheduledReport(
   // Note: User-muted cases should STILL appear in reports (they only mute notifications)
   const restrictedCaseIds = await storage.getAdminRestrictedCasesForUser(userId);
 
+  // Get list of organisations with scheduled reports disabled
+  const disabledOrgIds = await storage.getOrganisationsWithScheduledReportsDisabled();
+
   let cases = await storage.getCasesForUser(userId);
   
   // Filter out restricted cases
   if (restrictedCaseIds.length > 0) {
     cases = cases.filter((c: any) => !restrictedCaseIds.includes(c.id));
+  }
+  
+  // Filter out cases from organisations with scheduled reports disabled
+  if (disabledOrgIds.length > 0) {
+    cases = cases.filter((c: any) => !disabledOrgIds.includes(c.organisationId));
   }
   
   // Apply status filter
@@ -421,12 +429,20 @@ async function getRecentMessages(userId: string, frequency: string): Promise<any
     cutoffDate.setMonth(now.getMonth() - 1);
   }
 
+  // Get list of organisations with scheduled reports disabled
+  const disabledOrgIds = await storage.getOrganisationsWithScheduledReportsDisabled();
+
   // Get all messages for the user's organisations (already filters by case restrictions)
   const allMessages = await storage.getMessagesForUser(userId);
   
   const filteredMessages = allMessages.filter((m: any) => {
     const messageDate = new Date(m.createdAt);
-    return messageDate >= cutoffDate;
+    // Filter by date and exclude messages from disabled organisations
+    if (messageDate < cutoffDate) return false;
+    // Note: caseOrganisationId is the field returned by getMessagesForUser
+    const msgOrgId = m.caseOrganisationId || m.organisationId;
+    if (disabledOrgIds.length > 0 && msgOrgId && disabledOrgIds.includes(msgOrgId)) return false;
+    return true;
   });
 
   for (const message of filteredMessages) {

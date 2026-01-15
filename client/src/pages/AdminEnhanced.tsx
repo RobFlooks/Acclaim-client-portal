@@ -2040,6 +2040,18 @@ export default function AdminEnhanced() {
     retry: false,
   });
 
+  // Fetch scheduled reports settings for all users
+  const { data: scheduledReports = [] } = useQuery<any[]>({
+    queryKey: ["/api/admin/scheduled-reports"],
+    retry: false,
+  });
+
+  // Create a map of userId -> scheduled report settings for quick lookup
+  const scheduledReportsMap = scheduledReports.reduce((acc: Record<string, any>, report: any) => {
+    acc[report.userId] = report;
+    return acc;
+  }, {});
+
   // Create organisation mutation
   const createOrganisationMutation = useMutation({
     mutationFn: async (data: CreateOrganisationForm) => {
@@ -3251,6 +3263,7 @@ export default function AdminEnhanced() {
                       <TableHead>Phone</TableHead>
                       <TableHead>Organisation</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Reports</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -3357,6 +3370,25 @@ export default function AdminEnhanced() {
                             )}
                             <Badge variant="outline">Active</Badge>
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          {scheduledReportsMap[user.id] ? (
+                            scheduledReportsMap[user.id].enabled ? (
+                              <div className="flex items-center text-green-600" title={`Scheduled ${scheduledReportsMap[user.id].frequency} reports enabled`}>
+                                <Calendar className="h-4 w-4 mr-1" />
+                                <span className="text-xs capitalize">{scheduledReportsMap[user.id].frequency}</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center text-gray-400" title={`${scheduledReportsMap[user.id].frequency} reports configured but disabled`}>
+                                <CalendarOff className="h-4 w-4 mr-1" />
+                                <span className="text-xs capitalize">{scheduledReportsMap[user.id].frequency} (off)</span>
+                              </div>
+                            )
+                          ) : (
+                            <div className="flex items-center text-gray-300" title="No scheduled reports configured">
+                              <CalendarOff className="h-4 w-4" />
+                            </div>
+                          )}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">
