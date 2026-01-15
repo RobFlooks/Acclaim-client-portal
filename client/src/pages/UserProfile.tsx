@@ -1384,7 +1384,6 @@ export default function UserProfile() {
                                 </div>
                               </div>
                             </div>
-
                             {/* Expanded Settings Panel (for owners only) */}
                             {isOwner && isExpanded && (
                               <div className="p-4 border-t bg-white dark:bg-gray-900 space-y-4">
@@ -1603,9 +1602,7 @@ export default function UserProfile() {
                                 {nonAdminOrgUsers.length > 0 && (
                                   <div className="mt-4 pt-4 border-t">
                                     <h5 className="font-medium text-sm mb-2">Team Member Management</h5>
-                                    <p className="text-xs text-gray-500 mb-3">
-                                      Request to remove members or delegate owner privileges.
-                                    </p>
+                                    <p className="text-xs text-gray-500 mb-3">Request to remove members from your organisation or delegate owner privileges to manage the organisation and it's members.</p>
                                     <div className="space-y-2">
                                       {nonAdminOrgUsers.map((u: any) => (
                                         <div key={u.id} className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
