@@ -2779,6 +2779,150 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Org owner: Get owned organisations (for OrgSettings page)
+  app.get('/api/org-owner/ownerships', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const ownedOrgIds = await storage.getOrgOwnerships(userId);
+      res.json(ownedOrgIds);
+    } catch (error) {
+      console.error("Error fetching org ownerships:", error);
+      res.status(500).json({ message: "Failed to fetch org ownerships" });
+    }
+  });
+
+  // Org owner: Get users in organisation (simplified URL for OrgSettings page)
+  app.get('/api/org-owner/:orgId/users', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const orgId = parseInt(req.params.orgId);
+      
+      const user = await storage.getUser(userId);
+      const isOwner = await storage.isUserOrgOwner(userId, orgId);
+      
+      if (!user?.isAdmin && !isOwner) {
+        return res.status(403).json({ message: "Access denied. You must be an organisation owner." });
+      }
+      
+      const users = await storage.getUsersInOrganisation(orgId);
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching org users:", error);
+      res.status(500).json({ message: "Failed to fetch org users" });
+    }
+  });
+
+  // Org owner: Get cases in organisation (simplified URL for OrgSettings page)
+  app.get('/api/org-owner/:orgId/cases', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const orgId = parseInt(req.params.orgId);
+      
+      const user = await storage.getUser(userId);
+      const isOwner = await storage.isUserOrgOwner(userId, orgId);
+      
+      if (!user?.isAdmin && !isOwner) {
+        return res.status(403).json({ message: "Access denied. You must be an organisation owner." });
+      }
+      
+      const cases = await storage.getCasesForOrganisation(orgId);
+      res.json(cases);
+    } catch (error) {
+      console.error("Error fetching org cases:", error);
+      res.status(500).json({ message: "Failed to fetch org cases" });
+    }
+  });
+
+  // Org owner: Get all case access restrictions in organisation
+  app.get('/api/org-owner/:orgId/restrictions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const orgId = parseInt(req.params.orgId);
+      
+      const user = await storage.getUser(userId);
+      const isOwner = await storage.isUserOrgOwner(userId, orgId);
+      
+      if (!user?.isAdmin && !isOwner) {
+        return res.status(403).json({ message: "Access denied. You must be an organisation owner." });
+      }
+      
+      // Get all restrictions for cases in this organisation
+      const cases = await storage.getCasesForOrganisation(orgId);
+      const caseIds = cases.map(c => c.id);
+      
+      const allRestrictions: Array<{id: number, userId: string, caseId: number, createdAt: string}> = [];
+      for (const caseId of caseIds) {
+        const restrictions = await storage.getCaseAccessRestrictions(caseId);
+        for (const restrictedUserId of restrictions) {
+          allRestrictions.push({
+            id: caseId * 10000 + allRestrictions.length, // Generate a unique ID
+            userId: restrictedUserId,
+            caseId: caseId,
+            createdAt: new Date().toISOString()
+          });
+        }
+      }
+      
+      res.json(allRestrictions);
+    } catch (error) {
+      console.error("Error fetching org restrictions:", error);
+      res.status(500).json({ message: "Failed to fetch org restrictions" });
+    }
+  });
+
+  // Org owner: Toggle case access restriction
+  app.post('/api/org-owner/:orgId/toggle-restriction', isAuthenticated, async (req: any, res) => {
+    try {
+      const adminUserId = req.user.id;
+      const orgId = parseInt(req.params.orgId);
+      const { userId, caseId } = req.body;
+      
+      if (!userId || !caseId) {
+        return res.status(400).json({ message: "userId and caseId are required" });
+      }
+      
+      const user = await storage.getUser(adminUserId);
+      const isOwner = await storage.isUserOrgOwner(adminUserId, orgId);
+      
+      if (!user?.isAdmin && !isOwner) {
+        return res.status(403).json({ message: "Access denied. You must be an organisation owner." });
+      }
+      
+      // Verify case belongs to this organisation
+      const caseData = await storage.getCaseById(caseId);
+      if (!caseData || caseData.organisationId !== orgId) {
+        return res.status(400).json({ message: "Case does not belong to this organisation" });
+      }
+      
+      // Verify user is in this organisation and not admin
+      const targetUser = await storage.getUser(userId);
+      if (!targetUser || targetUser.isAdmin) {
+        return res.status(400).json({ message: "Cannot restrict admin users" });
+      }
+      
+      // Check current restriction status
+      const currentRestrictions = await storage.getCaseAccessRestrictions(caseId);
+      const isCurrentlyRestricted = currentRestrictions.includes(userId);
+      
+      if (isCurrentlyRestricted) {
+        await storage.removeCaseAccessRestriction(caseId, userId);
+        res.json({ 
+          message: `Access restored for ${targetUser.firstName} ${targetUser.lastName}`,
+          restricted: false 
+        });
+      } else {
+        await storage.addCaseAccessRestriction(caseId, userId, adminUserId);
+        res.json({ 
+          message: `Access restricted for ${targetUser.firstName} ${targetUser.lastName}`,
+          restricted: true 
+        });
+      }
+    } catch (error) {
+      console.error("Error toggling case restriction:", error);
+      res.status(500).json({ message: "Failed to toggle case restriction" });
+    }
+  });
+
   // Admin cases endpoint  
   app.get('/api/admin/cases', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
