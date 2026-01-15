@@ -27,7 +27,17 @@ export async function generateScheduledReport(
   const user = await storage.getUser(userId);
   if (!user) throw new Error("User not found");
 
+  // Get user's restricted case IDs to filter them out
+  const restrictedCaseIds = await storage.getBlockedCasesForUser(userId);
+
   let cases = await storage.getCasesForUser(userId);
+  
+  // Filter out restricted cases
+  if (restrictedCaseIds.length > 0) {
+    cases = cases.filter((c: any) => !restrictedCaseIds.includes(c.id));
+  }
+  
+  // Apply status filter
   if (settings.caseStatusFilter === "active") {
     cases = cases.filter((c: any) => c.status !== "closed" && c.status !== "resolved");
   } else if (settings.caseStatusFilter === "closed") {
@@ -51,17 +61,18 @@ function addCaseSummarySheet(workbook: ExcelJS.Workbook, cases: any[]) {
   const sheet = workbook.addWorksheet("Case Summary");
 
   sheet.columns = [
-    { header: "Case Name", key: "caseName", width: 30 },
-    { header: "Account Number", key: "accountNumber", width: 20 },
-    { header: "Debtor Type", key: "debtorType", width: 15 },
-    { header: "Debtor Name", key: "debtorName", width: 25 },
-    { header: "Status", key: "status", width: 15 },
-    { header: "Stage", key: "stage", width: 15 },
-    { header: "Original Amount", key: "originalAmount", width: 18 },
-    { header: "Current Balance", key: "currentBalance", width: 18 },
-    { header: "Organisation", key: "organisationName", width: 25 },
+    { header: "Case Name", key: "caseName", width: 28 },
+    { header: "Account Number", key: "accountNumber", width: 18 },
+    { header: "Debtor Type", key: "debtorType", width: 14 },
+    { header: "Debtor Name", key: "debtorName", width: 24 },
+    { header: "Status", key: "status", width: 14 },
+    { header: "Stage", key: "stage", width: 18 },
+    { header: "Original Amount", key: "originalAmount", width: 16 },
+    { header: "Current Balance", key: "currentBalance", width: 16 },
+    { header: "Organisation", key: "organisationName", width: 22 },
   ];
 
+  // Style header row
   const headerRow = sheet.getRow(1);
   headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
   headerRow.fill = {
@@ -69,25 +80,55 @@ function addCaseSummarySheet(workbook: ExcelJS.Workbook, cases: any[]) {
     pattern: "solid",
     fgColor: { argb: "FF0D9488" },
   };
+  headerRow.alignment = { vertical: "middle", horizontal: "center" };
+  headerRow.height = 22;
 
-  cases.forEach((c) => {
-    sheet.addRow({
-      caseName: c.caseName || "",
-      accountNumber: c.accountNumber || "",
-      debtorType: c.debtorType || "",
-      debtorName: c.debtorName || "",
-      status: formatStatus(c.status),
-      stage: formatStage(c.stage),
-      originalAmount: formatCurrency(c.originalAmount),
-      currentBalance: formatCurrency(c.currentBalance),
-      organisationName: c.organisationName || "",
+  if (cases.length === 0) {
+    const emptyRow = sheet.addRow({
+      caseName: "No cases found matching the selected filter",
+      accountNumber: "",
+      debtorType: "",
+      debtorName: "",
+      status: "",
+      stage: "",
+      originalAmount: "",
+      currentBalance: "",
+      organisationName: "",
     });
-  });
+    emptyRow.font = { italic: true, color: { argb: "FF666666" } };
+  } else {
+    cases.forEach((c, index) => {
+      const row = sheet.addRow({
+        caseName: c.caseName || "",
+        accountNumber: c.accountNumber || "",
+        debtorType: c.debtorType || "",
+        debtorName: c.debtorName || "",
+        status: formatStatus(c.status),
+        stage: formatStage(c.stage),
+        originalAmount: formatCurrency(c.originalAmount),
+        currentBalance: formatCurrency(c.currentBalance),
+        organisationName: c.organisationName || "",
+      });
+      
+      // Alternate row colours for readability
+      if (index % 2 === 1) {
+        row.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFF5F5F5" },
+        };
+      }
+    });
+  }
 
+  // Enable autofilter for all columns
   sheet.autoFilter = {
     from: "A1",
     to: "I1",
   };
+  
+  // Freeze the header row
+  sheet.views = [{ state: "frozen", ySplit: 1 }];
 }
 
 async function getRecentMessages(userId: string, frequency: string): Promise<any[]> {
@@ -105,7 +146,7 @@ async function getRecentMessages(userId: string, frequency: string): Promise<any
     cutoffDate.setMonth(now.getMonth() - 1);
   }
 
-  // Get all messages for the user's organisations
+  // Get all messages for the user's organisations (already filters by case restrictions)
   const allMessages = await storage.getMessagesForUser(userId);
   
   const filteredMessages = allMessages.filter((m: any) => {
@@ -116,12 +157,13 @@ async function getRecentMessages(userId: string, frequency: string): Promise<any
   for (const message of filteredMessages) {
     messages.push({
       caseId: message.caseId,
-      caseName: message.caseName || "General Message",
+      caseName: message.caseName || (message.caseId ? "Unknown Case" : "General Message"),
       accountNumber: message.accountNumber || "",
+      subject: message.subject || "",
       senderName: message.senderName || "Unknown",
       content: message.content,
       createdAt: message.createdAt,
-      hasAttachment: message.hasAttachment || false,
+      hasAttachment: !!message.attachmentFileName,
     });
   }
 
@@ -135,13 +177,15 @@ function addMessagesSheet(workbook: ExcelJS.Workbook, messages: any[], frequency
 
   sheet.columns = [
     { header: "Date & Time", key: "date", width: 20 },
-    { header: "Case Name", key: "caseName", width: 30 },
-    { header: "Account Number", key: "accountNumber", width: 20 },
-    { header: "From", key: "senderName", width: 20 },
-    { header: "Message", key: "content", width: 60 },
+    { header: "Case Name", key: "caseName", width: 28 },
+    { header: "Account Number", key: "accountNumber", width: 18 },
+    { header: "Subject", key: "subject", width: 35 },
+    { header: "From", key: "senderName", width: 18 },
+    { header: "Message", key: "content", width: 50 },
     { header: "Attachment", key: "hasAttachment", width: 12 },
   ];
 
+  // Style header row
   const headerRow = sheet.getRow(1);
   headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
   headerRow.fill = {
@@ -149,34 +193,53 @@ function addMessagesSheet(workbook: ExcelJS.Workbook, messages: any[], frequency
     pattern: "solid",
     fgColor: { argb: "FF0D9488" },
   };
+  headerRow.alignment = { vertical: "middle", horizontal: "center" };
+  headerRow.height = 22;
 
   if (messages.length === 0) {
     const periodText = frequency === "daily" ? "the last 24 hours" : frequency === "weekly" ? "the last 7 days" : "the last month";
-    sheet.addRow({
+    const emptyRow = sheet.addRow({
       date: "",
       caseName: `No messages received in ${periodText}`,
       accountNumber: "",
+      subject: "",
       senderName: "",
       content: "",
       hasAttachment: "",
     });
+    emptyRow.font = { italic: true, color: { argb: "FF666666" } };
   } else {
-    messages.forEach((m) => {
-      sheet.addRow({
+    messages.forEach((m, index) => {
+      const row = sheet.addRow({
         date: formatDate(m.createdAt),
         caseName: m.caseName || "",
         accountNumber: m.accountNumber || "",
+        subject: m.subject || "",
         senderName: m.senderName || "",
         content: truncateMessage(m.content, 200),
         hasAttachment: m.hasAttachment ? "Yes" : "",
       });
+      
+      // Alternate row colours for readability
+      if (index % 2 === 1) {
+        row.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFF5F5F5" },
+        };
+      }
+      row.alignment = { vertical: "top", wrapText: true };
     });
   }
 
+  // Enable autofilter for all columns
   sheet.autoFilter = {
     from: "A1",
-    to: "F1",
+    to: "G1",
   };
+  
+  // Freeze the header row
+  sheet.views = [{ state: "frozen", ySplit: 1 }];
 }
 
 function truncateMessage(content: string, maxLength: number): string {

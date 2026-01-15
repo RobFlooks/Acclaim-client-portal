@@ -1041,6 +1041,8 @@ export class DatabaseStorage implements IStorage {
           senderEmail: users.email,
           senderIsAdmin: users.isAdmin,
           senderOrganisationName: organisations.name,
+          caseName: cases.caseName,
+          accountNumber: cases.accountNumber,
         })
         .from(messages)
         .leftJoin(users, eq(messages.senderId, users.id))
@@ -1062,7 +1064,10 @@ export class DatabaseStorage implements IStorage {
 
     const orgIdArray = Array.from(allUserOrgIds);
     
-    return await db
+    // Get user's restricted case IDs to exclude them
+    const restrictedCaseIds = await this.getBlockedCasesForUser(userId);
+    
+    const result = await db
       .select({
         id: messages.id,
         senderId: messages.senderId,
@@ -1081,6 +1086,8 @@ export class DatabaseStorage implements IStorage {
         senderEmail: users.email,
         senderIsAdmin: users.isAdmin,
         senderOrganisationName: organisations.name,
+        caseName: cases.caseName,
+        accountNumber: cases.accountNumber,
       })
       .from(messages)
       .leftJoin(users, eq(messages.senderId, users.id))
@@ -1114,6 +1121,13 @@ export class DatabaseStorage implements IStorage {
         )
       ))
       .orderBy(desc(messages.createdAt));
+    
+    // Filter out messages from restricted cases
+    if (restrictedCaseIds.length > 0) {
+      return result.filter(m => !m.caseId || !restrictedCaseIds.includes(m.caseId));
+    }
+    
+    return result;
   }
 
   async getMessagesForCase(caseId: number): Promise<any[]> {
