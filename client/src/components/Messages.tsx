@@ -704,9 +704,9 @@ export default function Messages() {
               <div className="border-b pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden ${viewingMessage.senderIsAdmin ? 'bg-acclaim-teal' : 'bg-acclaim-teal bg-opacity-10'}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden ${viewingMessage.senderIsAdmin ? 'bg-white border-2 border-acclaim-teal' : 'bg-acclaim-teal bg-opacity-10'}`}>
                       {viewingMessage.senderIsAdmin ? (
-                        <img src={acclaimRoseLogo} alt="Acclaim" className="w-7 h-7 object-contain filter brightness-0 invert" />
+                        <img src={acclaimRoseLogo} alt="Acclaim" className="w-8 h-8 object-contain" />
                       ) : (
                         <User className="h-5 w-5 text-acclaim-teal" />
                       )}
@@ -841,9 +841,9 @@ export default function Messages() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1">
                       <div className="relative flex-shrink-0">
-                        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center overflow-hidden ${message.senderIsAdmin ? 'bg-acclaim-teal' : 'bg-acclaim-teal bg-opacity-10'}`}>
+                        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center overflow-hidden ${message.senderIsAdmin ? 'bg-white border-2 border-acclaim-teal' : 'bg-acclaim-teal bg-opacity-10'}`}>
                           {message.senderIsAdmin ? (
-                            <img src={acclaimRoseLogo} alt="Acclaim" className="w-5 h-5 sm:w-7 sm:h-7 object-contain filter brightness-0 invert" />
+                            <img src={acclaimRoseLogo} alt="Acclaim" className="w-6 h-6 sm:w-8 sm:h-8 object-contain" />
                           ) : (
                             <User className="h-4 w-4 sm:h-5 sm:w-5 text-acclaim-teal" />
                           )}

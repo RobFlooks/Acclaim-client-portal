@@ -415,9 +415,9 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
                       className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100 last:border-b-0"
                       onClick={() => handleMessageClick(message)}
                     >
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ${message.senderIsAdmin ? 'bg-acclaim-teal' : 'bg-acclaim-teal bg-opacity-10'}`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ${message.senderIsAdmin ? 'bg-white border-2 border-acclaim-teal' : 'bg-acclaim-teal bg-opacity-10'}`}>
                         {message.senderIsAdmin ? (
-                          <img src={acclaimRoseLogo} alt="Acclaim" className="w-5 h-5 object-contain filter brightness-0 invert" />
+                          <img src={acclaimRoseLogo} alt="Acclaim" className="w-6 h-6 object-contain" />
                         ) : (
                           <User className="text-acclaim-teal h-4 w-4" />
                         )}
@@ -508,9 +508,9 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
               
               <div className="flex items-center justify-between pt-4 border-t">
                 <div className="flex items-center space-x-2">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ${selectedMessage.senderIsAdmin ? 'bg-acclaim-teal' : 'bg-acclaim-teal bg-opacity-10'}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ${selectedMessage.senderIsAdmin ? 'bg-white border-2 border-acclaim-teal' : 'bg-acclaim-teal bg-opacity-10'}`}>
                     {selectedMessage.senderIsAdmin ? (
-                      <img src={acclaimRoseLogo} alt="Acclaim" className="w-5 h-5 object-contain filter brightness-0 invert" />
+                      <img src={acclaimRoseLogo} alt="Acclaim" className="w-6 h-6 object-contain" />
                     ) : (
                       <User className="text-acclaim-teal h-4 w-4" />
                     )}
