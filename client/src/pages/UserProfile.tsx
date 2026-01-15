@@ -1504,8 +1504,8 @@ export default function UserProfile() {
                                                   <div className="flex items-start justify-between gap-2">
                                                     <div className="flex flex-col">
                                                       <span className="font-medium text-sm text-gray-900 dark:text-gray-100">{c.caseName}</span>
-                                                      {c.reference && (
-                                                        <span className="text-xs text-teal-600 dark:text-teal-400 font-mono">{c.reference}</span>
+                                                      {c.accountNumber && (
+                                                        <span className="text-xs text-teal-600 dark:text-teal-400 font-mono">{c.accountNumber}</span>
                                                       )}
                                                     </div>
                                                     <div className="flex gap-1 flex-shrink-0">
