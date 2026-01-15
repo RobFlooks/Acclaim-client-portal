@@ -2783,6 +2783,19 @@ export class DatabaseStorage implements IStorage {
       .where(eq(scheduledReports.enabled, true));
     return results;
   }
+
+  async getAllScheduledReports(): Promise<ScheduledReport[]> {
+    // Get all scheduled report settings for admin view
+    return await db.select().from(scheduledReports);
+  }
+
+  async getOrganisationsWithScheduledReportsDisabled(): Promise<number[]> {
+    // Get organisation IDs where scheduled reports are disabled
+    const results = await db.select({ id: organisations.id })
+      .from(organisations)
+      .where(eq(organisations.scheduledReportsEnabled, false));
+    return results.map(r => r.id);
+  }
 }
 
 export const storage = new DatabaseStorage();

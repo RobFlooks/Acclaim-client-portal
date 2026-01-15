@@ -561,6 +561,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check if user is allowed to use scheduled reports (based on org settings)
+  app.get('/api/user/scheduled-reports-allowed', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const userOrgs = await storage.getUserOrganisations(userId);
+      
+      if (userOrgs.length === 0) {
+        return res.json({ allowed: false, reason: "No organisation assigned" });
+      }
+      
+      // Check if ALL user's organisations have scheduled reports disabled
+      const disabledOrgIds = await storage.getOrganisationsWithScheduledReportsDisabled();
+      const allOrgsDisabled = userOrgs.every(org => disabledOrgIds.includes(org.id));
+      
+      if (allOrgsDisabled) {
+        return res.json({ allowed: false, reason: "Scheduled reports disabled by admin for your organisation" });
+      }
+      
+      res.json({ allowed: true });
+    } catch (error) {
+      console.error("Error checking scheduled reports allowed:", error);
+      res.status(500).json({ message: "Failed to check scheduled reports status" });
+    }
+  });
+
   app.post('/api/user/scheduled-reports', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
@@ -2684,6 +2709,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching organisation users:", error);
       res.status(500).json({ message: "Failed to fetch organisation users" });
+    }
+  });
+
+  // Admin: Toggle scheduled reports for an organisation
+  app.put('/api/admin/organisations/:id/scheduled-reports', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const orgId = parseInt(req.params.id);
+      const { enabled } = req.body;
+      
+      if (typeof enabled !== 'boolean') {
+        return res.status(400).json({ message: "enabled must be a boolean" });
+      }
+      
+      const updated = await storage.updateOrganisation(orgId, { scheduledReportsEnabled: enabled });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating organisation scheduled reports:", error);
+      res.status(500).json({ message: "Failed to update organisation scheduled reports" });
+    }
+  });
+
+  // Admin: Get all users with their scheduled report settings
+  app.get('/api/admin/scheduled-reports', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const allReports = await storage.getAllScheduledReports();
+      // Get user info for each report
+      const reportsWithUsers = await Promise.all(
+        allReports.map(async (report) => {
+          const user = await storage.getUser(report.userId);
+          return {
+            ...report,
+            userEmail: user?.email,
+            userName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'Unknown',
+          };
+        })
+      );
+      res.json(reportsWithUsers);
+    } catch (error) {
+      console.error("Error fetching all scheduled reports:", error);
+      res.status(500).json({ message: "Failed to fetch scheduled reports" });
     }
   });
 
