@@ -484,6 +484,10 @@ async function getRecentMessages(
   const allMessages = await storage.getMessagesForUser(userId);
   
   const filteredMessages = allMessages.filter((m: any) => {
+    // Only include admin messages linked to cases (exclude user messages and messages not linked to a case)
+    if (!m.senderIsAdmin) return false;
+    if (!m.caseId) return false;
+    
     const messageDate = new Date(m.createdAt);
     // Filter by date and exclude messages from disabled organisations
     if (messageDate < cutoffDate) return false;
