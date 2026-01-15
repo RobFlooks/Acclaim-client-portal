@@ -13,10 +13,11 @@ import { useTheme } from "@/hooks/use-theme";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 import { useQueryClient } from "@tanstack/react-query";
-import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft, Bell, Building2, FileText, Download, Trash2, Upload, Search, Sun, Moon, HelpCircle, Briefcase, MessageSquare, BarChart3, Crown, ShieldCheck, ShieldOff, Loader2, Users } from "lucide-react";
+import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft, Bell, Building2, FileText, Download, Trash2, Upload, Search, Sun, Moon, HelpCircle, Briefcase, MessageSquare, BarChart3, Crown, ShieldCheck, ShieldOff, Loader2, Users, ChevronDown, ChevronUp, UserPlus, Send } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
 import { updateUserSchema, changePasswordSchema } from "@shared/schema";
 import { z } from "zod";
@@ -177,6 +178,93 @@ export default function UserProfile() {
   };
 
   const nonAdminOrgUsers = orgSettingsUsers?.filter((u: any) => !u.isAdmin) || [];
+
+  // Org settings UI state
+  const [expandedOrgSettings, setExpandedOrgSettings] = useState<number | null>(null);
+  const [orgCaseSearch, setOrgCaseSearch] = useState("");
+  const [orgCasePage, setOrgCasePage] = useState(1);
+  const ORG_CASES_PER_PAGE = 5;
+
+  // Member request form state
+  const [memberRequestOpen, setMemberRequestOpen] = useState(false);
+  const [memberRequestOrgId, setMemberRequestOrgId] = useState<number | null>(null);
+  const [memberRequestData, setMemberRequestData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    memberType: "member" as "member" | "owner",
+  });
+  const [memberRequestSubmitting, setMemberRequestSubmitting] = useState(false);
+
+  // Filter and paginate org cases
+  const filteredOrgCases = orgSettingsCases?.filter((c: any) => {
+    if (!orgCaseSearch) return true;
+    const search = orgCaseSearch.toLowerCase();
+    return c.caseName?.toLowerCase().includes(search) || 
+           c.reference?.toLowerCase().includes(search);
+  }) || [];
+  
+  const totalOrgCasePages = Math.ceil(filteredOrgCases.length / ORG_CASES_PER_PAGE);
+  const paginatedOrgCases = filteredOrgCases.slice(
+    (orgCasePage - 1) * ORG_CASES_PER_PAGE,
+    orgCasePage * ORG_CASES_PER_PAGE
+  );
+
+  // Reset page when search changes
+  const handleOrgCaseSearch = (value: string) => {
+    setOrgCaseSearch(value);
+    setOrgCasePage(1);
+  };
+
+  // Handle member request submission
+  const handleMemberRequestSubmit = async () => {
+    if (!memberRequestData.firstName || !memberRequestData.lastName || !memberRequestData.email) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setMemberRequestSubmitting(true);
+    try {
+      const response = await apiRequest("POST", "/api/org-owner/member-request", {
+        orgId: memberRequestOrgId,
+        firstName: memberRequestData.firstName,
+        lastName: memberRequestData.lastName,
+        email: memberRequestData.email,
+        phone: memberRequestData.phone || undefined,
+        memberType: memberRequestData.memberType,
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Request Sent",
+          description: "Your member request has been sent to Acclaim for processing.",
+        });
+        setMemberRequestOpen(false);
+        setMemberRequestData({
+          firstName: "",
+          lastName: "",
+          email: "",
+          phone: "",
+          memberType: "member",
+        });
+      } else {
+        throw new Error("Failed to send request");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send member request. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setMemberRequestSubmitting(false);
+    }
+  };
 
   // Fetch organisation documents (documents without case association)
   const { data: orgDocuments, isLoading: documentsLoading } = useQuery<any[]>({
@@ -1132,34 +1220,221 @@ export default function UserProfile() {
                     <Building2 className="h-5 w-5" />
                     <span>{userOrganisations && userOrganisations.length > 1 ? "Your Organisations" : "Your Organisation"}</span>
                   </CardTitle>
-                  <CardDescription>View your organisation details and shared documents.</CardDescription>
+                  <CardDescription>View your organisation details and manage settings.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {userOrganisations && userOrganisations.length > 0 ? (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {userOrganisations.map((org: any) => {
                         const isOwner = orgOwnerships?.includes(org.id);
+                        const isExpanded = expandedOrgSettings === org.id;
                         return (
-                          <div key={org.id} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-3">
-                                <Building2 className="h-5 w-5 text-acclaim-teal" />
-                                <div>
-                                  <p className="font-medium text-lg">{org.name}</p>
-                                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    {isOwner 
-                                      ? "You are an Owner of this organisation" 
-                                      : "You are a member of this organisation"}
-                                  </p>
+                          <div key={org.id} className="border rounded-lg overflow-hidden">
+                            {/* Organisation Header */}
+                            <div className="p-4 bg-gray-50 dark:bg-gray-800">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-3">
+                                  <Building2 className="h-5 w-5 text-acclaim-teal" />
+                                  <div>
+                                    <p className="font-medium text-lg">{org.name}</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                      {isOwner 
+                                        ? "You are an Owner of this organisation" 
+                                        : "You are a member of this organisation"}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {isOwner && (
+                                    <>
+                                      <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 rounded-full text-sm font-medium">
+                                        <Crown className="h-4 w-4" />
+                                        <span>Owner</span>
+                                      </div>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                          if (isExpanded) {
+                                            setExpandedOrgSettings(null);
+                                          } else {
+                                            setExpandedOrgSettings(org.id);
+                                            setSelectedOrgForSettings(String(org.id));
+                                            setOrgCaseSearch("");
+                                            setOrgCasePage(1);
+                                          }
+                                        }}
+                                        className="ml-2"
+                                      >
+                                        <Settings className="h-4 w-4 mr-1" />
+                                        Settings
+                                        {isExpanded ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
+                                      </Button>
+                                    </>
+                                  )}
                                 </div>
                               </div>
-                              {isOwner && (
-                                <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 rounded-full text-sm font-medium">
-                                  <Crown className="h-4 w-4" />
-                                  <span>Owner</span>
-                                </div>
-                              )}
                             </div>
+
+                            {/* Expanded Settings Panel (for owners only) */}
+                            {isOwner && isExpanded && (
+                              <div className="p-4 border-t bg-white dark:bg-gray-900 space-y-4">
+                                {/* Request New Member Button */}
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <h4 className="font-medium text-sm">Organisation Settings</h4>
+                                    <p className="text-xs text-gray-500">Manage team members and case access</p>
+                                  </div>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setMemberRequestOrgId(org.id);
+                                      setMemberRequestOpen(true);
+                                    }}
+                                    className="text-teal-600 border-teal-300 hover:bg-teal-50"
+                                  >
+                                    <UserPlus className="h-4 w-4 mr-1" />
+                                    Request New Member
+                                  </Button>
+                                </div>
+
+                                <Separator />
+
+                                {/* Stats */}
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                    <Users className="h-4 w-4" />
+                                    <span>{nonAdminOrgUsers.length} member{nonAdminOrgUsers.length !== 1 ? 's' : ''}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                    <Briefcase className="h-4 w-4" />
+                                    <span>{orgSettingsCases?.length || 0} case{(orgSettingsCases?.length || 0) !== 1 ? 's' : ''}</span>
+                                  </div>
+                                </div>
+
+                                {/* Case Access Management */}
+                                <div>
+                                  <h5 className="font-medium text-sm mb-2">Case Access Management</h5>
+                                  <p className="text-xs text-gray-500 mb-3">
+                                    Click on a cell to toggle access. <span className="text-green-600">Green</span> = access allowed, <span className="text-red-600">Red</span> = blocked.
+                                  </p>
+
+                                  {/* Case Search */}
+                                  {(orgSettingsCases?.length || 0) > 5 && (
+                                    <div className="mb-3">
+                                      <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                        <Input
+                                          placeholder="Search cases..."
+                                          value={orgCaseSearch}
+                                          onChange={(e) => handleOrgCaseSearch(e.target.value)}
+                                          className="pl-9 h-8 text-sm"
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {(orgUsersLoading || orgCasesLoading || orgRestrictionsLoading) ? (
+                                    <div className="flex items-center justify-center h-24">
+                                      <Loader2 className="h-5 w-5 animate-spin text-teal-600" />
+                                    </div>
+                                  ) : nonAdminOrgUsers.length === 0 ? (
+                                    <div className="text-center py-4 text-gray-500 bg-gray-50 dark:bg-gray-800 rounded-lg text-sm">
+                                      No team members to manage.
+                                    </div>
+                                  ) : (orgSettingsCases?.length || 0) === 0 ? (
+                                    <div className="text-center py-4 text-gray-500 bg-gray-50 dark:bg-gray-800 rounded-lg text-sm">
+                                      No cases in this organisation yet.
+                                    </div>
+                                  ) : filteredOrgCases.length === 0 ? (
+                                    <div className="text-center py-4 text-gray-500 bg-gray-50 dark:bg-gray-800 rounded-lg text-sm">
+                                      No cases match your search.
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <div className="overflow-x-auto border rounded-lg max-h-64">
+                                        <Table>
+                                          <TableHeader>
+                                            <TableRow>
+                                              <TableHead className="sticky left-0 bg-white dark:bg-gray-950 z-10 min-w-[120px] text-xs py-2">Member</TableHead>
+                                              {paginatedOrgCases.map((c: any) => (
+                                                <TableHead key={c.id} className="text-center min-w-[80px] py-2">
+                                                  <div className="font-medium text-xs truncate max-w-[80px]" title={c.caseName}>{c.caseName}</div>
+                                                  {c.reference && <div className="text-xs text-gray-400 truncate">{c.reference}</div>}
+                                                </TableHead>
+                                              ))}
+                                            </TableRow>
+                                          </TableHeader>
+                                          <TableBody>
+                                            {nonAdminOrgUsers.map((u: any) => (
+                                              <TableRow key={u.id}>
+                                                <TableCell className="sticky left-0 bg-white dark:bg-gray-950 z-10 py-1">
+                                                  <div className="font-medium text-xs">{u.firstName} {u.lastName}</div>
+                                                  <div className="text-xs text-gray-500 truncate max-w-[100px]">{u.email}</div>
+                                                </TableCell>
+                                                {paginatedOrgCases.map((c: any) => {
+                                                  const restricted = isRestricted(u.id, c.id);
+                                                  return (
+                                                    <TableCell key={c.id} className="text-center p-1">
+                                                      <Button
+                                                        variant={restricted ? "destructive" : "outline"}
+                                                        size="sm"
+                                                        className={`w-12 h-6 text-xs ${!restricted ? 'bg-green-50 border-green-300 text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-700 dark:text-green-400' : ''}`}
+                                                        onClick={() => {
+                                                          toggleRestrictionMutation.mutate({
+                                                            userId: u.id,
+                                                            caseId: c.id
+                                                          });
+                                                        }}
+                                                        disabled={toggleRestrictionMutation.isPending}
+                                                      >
+                                                        {restricted ? (
+                                                          <ShieldOff className="h-3 w-3" />
+                                                        ) : (
+                                                          <ShieldCheck className="h-3 w-3" />
+                                                        )}
+                                                      </Button>
+                                                    </TableCell>
+                                                  );
+                                                })}
+                                              </TableRow>
+                                            ))}
+                                          </TableBody>
+                                        </Table>
+                                      </div>
+
+                                      {/* Pagination */}
+                                      {totalOrgCasePages > 1 && (
+                                        <div className="flex items-center justify-between pt-2">
+                                          <Button 
+                                            variant="outline" 
+                                            size="sm"
+                                            className="h-7 text-xs"
+                                            onClick={() => setOrgCasePage(p => Math.max(1, p - 1))}
+                                            disabled={orgCasePage === 1}
+                                          >
+                                            Previous
+                                          </Button>
+                                          <span className="text-xs text-gray-500">
+                                            Page {orgCasePage} of {totalOrgCasePages} ({filteredOrgCases.length} cases)
+                                          </span>
+                                          <Button 
+                                            variant="outline" 
+                                            size="sm"
+                                            className="h-7 text-xs"
+                                            onClick={() => setOrgCasePage(p => Math.min(totalOrgCasePages, p + 1))}
+                                            disabled={orgCasePage === totalOrgCasePages}
+                                          >
+                                            Next
+                                          </Button>
+                                        </div>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         );
                       })}
@@ -1171,119 +1446,117 @@ export default function UserProfile() {
               </Card>
             )}
 
-            {/* Organisation Settings - Case Access Management (for org owners only) */}
-            {!userProfile?.isAdmin && ownedOrgs.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Crown className="h-5 w-5 text-amber-500" />
-                    <span>Organisation Settings</span>
-                  </CardTitle>
-                  <CardDescription>
-                    As an organisation owner, you can manage which team members can access specific cases.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {ownedOrgs.length > 1 && (
-                    <div>
-                      <Label>Select Organisation</Label>
-                      <Select value={selectedOrgForSettings || String(ownedOrgs[0]?.id)} onValueChange={setSelectedOrgForSettings}>
-                        <SelectTrigger className="w-64">
-                          <SelectValue placeholder="Select organisation" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {ownedOrgs.map((org: any) => (
-                            <SelectItem key={org.id} value={String(org.id)}>
-                              {org.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+            {/* Member Request Dialog */}
+            <Dialog open={memberRequestOpen} onOpenChange={setMemberRequestOpen}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <UserPlus className="h-5 w-5 text-teal-600" />
+                    Request New Team Member
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Complete this form to request Acclaim add a new member to your organisation. We'll review and process your request.
+                  </p>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label htmlFor="req-firstName" className="text-sm">First Name *</Label>
+                      <Input
+                        id="req-firstName"
+                        value={memberRequestData.firstName}
+                        onChange={(e) => setMemberRequestData(d => ({ ...d, firstName: e.target.value }))}
+                        placeholder="First name"
+                        className="h-9"
+                      />
                     </div>
-                  )}
-
-                  <div className="grid grid-cols-2 gap-4 py-2">
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <Users className="h-4 w-4" />
-                      <span>{nonAdminOrgUsers.length} member{nonAdminOrgUsers.length !== 1 ? 's' : ''}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <Briefcase className="h-4 w-4" />
-                      <span>{orgSettingsCases?.length || 0} case{(orgSettingsCases?.length || 0) !== 1 ? 's' : ''}</span>
+                    <div className="space-y-1">
+                      <Label htmlFor="req-lastName" className="text-sm">Surname *</Label>
+                      <Input
+                        id="req-lastName"
+                        value={memberRequestData.lastName}
+                        onChange={(e) => setMemberRequestData(d => ({ ...d, lastName: e.target.value }))}
+                        placeholder="Surname"
+                        className="h-9"
+                      />
                     </div>
                   </div>
 
-                  <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                    Click on a cell to toggle access. <span className="text-green-600">Green</span> = access allowed, <span className="text-red-600">Red</span> = blocked.
+                  <div className="space-y-1">
+                    <Label htmlFor="req-email" className="text-sm">Email Address *</Label>
+                    <Input
+                      id="req-email"
+                      type="email"
+                      value={memberRequestData.email}
+                      onChange={(e) => setMemberRequestData(d => ({ ...d, email: e.target.value }))}
+                      placeholder="email@example.com"
+                      className="h-9"
+                    />
                   </div>
 
-                  {(orgUsersLoading || orgCasesLoading || orgRestrictionsLoading) ? (
-                    <div className="flex items-center justify-center h-32">
-                      <Loader2 className="h-6 w-6 animate-spin text-teal-600" />
-                    </div>
-                  ) : nonAdminOrgUsers.length === 0 ? (
-                    <div className="text-center py-6 text-gray-500 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      No team members to manage in this organisation.
-                    </div>
-                  ) : (orgSettingsCases?.length || 0) === 0 ? (
-                    <div className="text-center py-6 text-gray-500 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      No cases in this organisation yet.
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto border rounded-lg">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="sticky left-0 bg-white dark:bg-gray-950 z-10 min-w-[150px]">Member</TableHead>
-                            {orgSettingsCases?.map((c: any) => (
-                              <TableHead key={c.id} className="text-center min-w-[100px]">
-                                <div className="font-medium text-xs">{c.caseName}</div>
-                                {c.reference && <div className="text-xs text-gray-400">{c.reference}</div>}
-                              </TableHead>
-                            ))}
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {nonAdminOrgUsers.map((u: any) => (
-                            <TableRow key={u.id}>
-                              <TableCell className="sticky left-0 bg-white dark:bg-gray-950 z-10">
-                                <div className="font-medium text-sm">{u.firstName} {u.lastName}</div>
-                                <div className="text-xs text-gray-500">{u.email}</div>
-                              </TableCell>
-                              {orgSettingsCases?.map((c: any) => {
-                                const restricted = isRestricted(u.id, c.id);
-                                return (
-                                  <TableCell key={c.id} className="text-center p-1">
-                                    <Button
-                                      variant={restricted ? "destructive" : "outline"}
-                                      size="sm"
-                                      className={`w-16 h-8 text-xs ${!restricted ? 'bg-green-50 border-green-300 text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-700 dark:text-green-400' : ''}`}
-                                      onClick={() => {
-                                        toggleRestrictionMutation.mutate({
-                                          userId: u.id,
-                                          caseId: c.id
-                                        });
-                                      }}
-                                      disabled={toggleRestrictionMutation.isPending}
-                                    >
-                                      {restricted ? (
-                                        <ShieldOff className="h-3 w-3" />
-                                      ) : (
-                                        <ShieldCheck className="h-3 w-3" />
-                                      )}
-                                    </Button>
-                                  </TableCell>
-                                );
-                              })}
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+                  <div className="space-y-1">
+                    <Label htmlFor="req-phone" className="text-sm">Phone Number (optional)</Label>
+                    <Input
+                      id="req-phone"
+                      type="tel"
+                      value={memberRequestData.phone}
+                      onChange={(e) => setMemberRequestData(d => ({ ...d, phone: e.target.value }))}
+                      placeholder="+44 7xxx xxx xxx"
+                      className="h-9"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-sm">Member Type *</Label>
+                    <Select 
+                      value={memberRequestData.memberType} 
+                      onValueChange={(v: "member" | "owner") => setMemberRequestData(d => ({ ...d, memberType: v }))}
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="member">Member</SelectItem>
+                        <SelectItem value="owner">Owner</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {memberRequestData.memberType === "owner" 
+                        ? "Owners can manage case access for other team members in your organisation."
+                        : "Members can view cases and documents assigned to them."}
+                    </p>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setMemberRequestOpen(false)}
+                      disabled={memberRequestSubmitting}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleMemberRequestSubmit}
+                      disabled={memberRequestSubmitting}
+                      className="bg-teal-600 hover:bg-teal-700"
+                    >
+                      {memberRequestSubmitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4 mr-1" />
+                          Send Request
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
 
             {/* Organisation Documents */}
             <Card>

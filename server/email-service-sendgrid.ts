@@ -2213,6 +2213,149 @@ Portal: https://acclaim-api.azurewebsites.net/auth
       return false;
     }
   }
+
+  // Send member request notification to admin
+  async sendMemberRequestNotification(data: {
+    orgId: number;
+    orgName: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    memberType: 'member' | 'owner';
+    requestedBy: string;
+    requestedByEmail: string;
+  }): Promise<boolean> {
+    if (!this.initialized) {
+      console.log('❌ SendGrid not configured - member request email not sent');
+      return false;
+    }
+
+    try {
+      const subject = `New Member Request: ${data.firstName} ${data.lastName} for ${data.orgName}`;
+      
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f0f4f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f0f4f8;">
+            <tr>
+              <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width: 600px; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+                  
+                  <!-- Header -->
+                  <tr>
+                    <td style="background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                      <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
+                      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">New Member Request</h1>
+                      <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Organisation: ${data.orgName}</p>
+                    </td>
+                  </tr>
+                  
+                  <!-- Content -->
+                  <tr>
+                    <td style="padding: 40px;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                        <tr>
+                          <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                            <span style="color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600;">First Name</span>
+                            <p style="margin: 4px 0 0 0; color: #1f2937; font-size: 16px;">${data.firstName}</p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                            <span style="color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600;">Surname</span>
+                            <p style="margin: 4px 0 0 0; color: #1f2937; font-size: 16px;">${data.lastName}</p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                            <span style="color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600;">Email</span>
+                            <p style="margin: 4px 0 0 0; color: #1f2937; font-size: 16px;"><a href="mailto:${data.email}" style="color: #008b8b;">${data.email}</a></p>
+                          </td>
+                        </tr>
+                        ${data.phone ? `
+                        <tr>
+                          <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                            <span style="color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600;">Phone</span>
+                            <p style="margin: 4px 0 0 0; color: #1f2937; font-size: 16px;">${data.phone}</p>
+                          </td>
+                        </tr>
+                        ` : ''}
+                        <tr>
+                          <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                            <span style="color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600;">Member Type</span>
+                            <p style="margin: 4px 0 0 0;">
+                              <span style="display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 500; ${data.memberType === 'owner' ? 'background-color: #fef3c7; color: #92400e;' : 'background-color: #d1fae5; color: #065f46;'}">
+                                ${data.memberType === 'owner' ? 'Owner' : 'Member'}
+                              </span>
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
+                      
+                      <!-- Requested By -->
+                      <div style="margin-top: 24px; padding: 16px; background-color: #e0f2f1; border-radius: 8px;">
+                        <p style="margin: 0; color: #008b8b; font-size: 14px;">
+                          <strong>Requested by:</strong> ${data.requestedBy} (${data.requestedByEmail})
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background-color: #1f2937; padding: 24px; text-align: center;">
+                      <p style="margin: 0; color: #9ca3af; font-size: 12px;">This request was submitted via the Acclaim Client Portal</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `;
+
+      const textContent = `
+New Member Request
+
+Organisation: ${data.orgName}
+
+Member Details:
+- First Name: ${data.firstName}
+- Surname: ${data.lastName}
+- Email: ${data.email}
+${data.phone ? `- Phone: ${data.phone}` : ''}
+- Member Type: ${data.memberType === 'owner' ? 'Owner' : 'Member'}
+
+Requested by: ${data.requestedBy} (${data.requestedByEmail})
+
+This request was submitted via the Acclaim Client Portal.
+      `;
+
+      const attachments: Array<{ content: string; filename: string; type: string; disposition?: string; content_id?: string }> = [];
+      const logoBase64 = getLogoBase64();
+      if (logoBase64) {
+        attachments.push(logoBase64);
+      }
+
+      return await this.sendViaAPIM({
+        to: 'admin@acclaim.law',
+        subject: subject,
+        textContent: textContent,
+        htmlContent: htmlContent,
+        attachments: attachments
+      });
+    } catch (error) {
+      console.error('❌ Failed to send member request notification:', error);
+      return false;
+    }
+  }
 }
 
 // Export singleton instance

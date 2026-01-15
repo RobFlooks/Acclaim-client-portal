@@ -2923,6 +2923,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Org owner member request (sends email to admin@acclaim.law)
+  app.post('/api/org-owner/member-request', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { orgId, firstName, lastName, email, phone, memberType } = req.body;
+
+      // Validate required fields
+      if (!orgId || !firstName || !lastName || !email || !memberType) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      // Validate orgId is a number
+      const parsedOrgId = parseInt(orgId);
+      if (isNaN(parsedOrgId)) {
+        return res.status(400).json({ message: "Invalid organisation ID" });
+      }
+
+      // Validate memberType
+      if (memberType !== 'member' && memberType !== 'owner') {
+        return res.status(400).json({ message: "Invalid member type" });
+      }
+
+      // Verify user is org owner
+      const isOwner = await storage.isUserOrgOwner(userId, parsedOrgId);
+      const user = await storage.getUser(userId);
+      
+      if (!user?.isAdmin && !isOwner) {
+        return res.status(403).json({ message: "Access denied. You must be an organisation owner." });
+      }
+
+      // Get org name from database (don't trust client-provided value)
+      const org = await storage.getOrganisation(parsedOrgId);
+      if (!org) {
+        return res.status(400).json({ message: "Organisation not found" });
+      }
+
+      // Use server-side user info (don't trust client-provided values)
+      const requestedBy = `${user!.firstName} ${user!.lastName}`;
+      const requestedByEmail = user!.email;
+
+      // Send email using email service
+      const emailSent = await sendGridEmailService.sendMemberRequestNotification({
+        orgId: parsedOrgId,
+        orgName: org.name,
+        firstName,
+        lastName,
+        email,
+        phone: phone || undefined,
+        memberType,
+        requestedBy,
+        requestedByEmail,
+      });
+
+      if (emailSent) {
+        console.log(`Member request email sent for ${firstName} ${lastName} to ${org.name}`);
+        res.json({ success: true, message: "Member request sent successfully" });
+      } else {
+        throw new Error("Email service failed to send");
+      }
+    } catch (error) {
+      console.error("Error sending member request:", error);
+      res.status(500).json({ message: "Failed to send member request" });
+    }
+  });
+
   // Admin cases endpoint  
   app.get('/api/admin/cases', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
