@@ -99,16 +99,6 @@ export default function UserProfile() {
   const [casePage, setCasePage] = useState(1);
   const CASES_PER_PAGE = 50;
 
-  // Scheduled reports state
-  const [scheduledReportEnabled, setScheduledReportEnabled] = useState(false);
-  const [scheduledReportFrequency, setScheduledReportFrequency] = useState<"daily" | "weekly" | "monthly">("weekly");
-  const [scheduledReportDayOfWeek, setScheduledReportDayOfWeek] = useState(1); // Monday
-  const [scheduledReportDayOfMonth, setScheduledReportDayOfMonth] = useState(1);
-  const [scheduledReportTimeOfDay, setScheduledReportTimeOfDay] = useState(9); // 9am default
-  const [scheduledReportCaseSummary, setScheduledReportCaseSummary] = useState(true);
-  const [scheduledReportActivity, setScheduledReportActivity] = useState(true);
-  const [scheduledReportCaseFilter, setScheduledReportCaseFilter] = useState<"active" | "all" | "closed">("active");
-
   // Fetch user profile data
   const { data: userProfile, isLoading: profileLoading } = useQuery<UserData>({
     queryKey: ["/api/auth/user"],
@@ -447,53 +437,6 @@ export default function UserProfile() {
       toast({
         title: "Error",
         description: "Failed to update case notification setting.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Fetch scheduled report settings
-  const { data: scheduledReportData } = useQuery<any>({
-    queryKey: ["/api/user/scheduled-reports"],
-    retry: false,
-  });
-
-  // Check if scheduled reports are allowed for this user's organisation(s)
-  const { data: scheduledReportsAllowed } = useQuery<{ allowed: boolean; reason?: string }>({
-    queryKey: ["/api/user/scheduled-reports-allowed"],
-    retry: false,
-  });
-
-  // Populate scheduled report form when data is loaded
-  useEffect(() => {
-    if (scheduledReportData) {
-      setScheduledReportEnabled(scheduledReportData.enabled ?? false);
-      setScheduledReportFrequency(scheduledReportData.frequency ?? "weekly");
-      setScheduledReportDayOfWeek(scheduledReportData.dayOfWeek ?? 1);
-      setScheduledReportDayOfMonth(scheduledReportData.dayOfMonth ?? 1);
-      setScheduledReportTimeOfDay(scheduledReportData.timeOfDay ?? 9);
-      setScheduledReportCaseSummary(scheduledReportData.includeCaseSummary ?? true);
-      setScheduledReportActivity(scheduledReportData.includeActivityReport ?? true);
-      setScheduledReportCaseFilter(scheduledReportData.caseStatusFilter ?? "active");
-    }
-  }, [scheduledReportData]);
-
-  // Mutation for saving scheduled report settings
-  const saveScheduledReportMutation = useMutation({
-    mutationFn: async (data: any) => {
-      return await apiRequest("POST", "/api/user/scheduled-reports", data);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Scheduled report settings saved",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/user/scheduled-reports"] });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to save scheduled report settings",
         variant: "destructive",
       });
     },
