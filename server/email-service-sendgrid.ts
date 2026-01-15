@@ -2510,3 +2510,150 @@ This request was submitted via the Acclaim Client Portal.
 
 // Export singleton instance
 export const sendGridEmailService = new SendGridEmailService();
+
+// Standalone function for sending scheduled reports with Excel attachment
+export async function sendScheduledReportEmailWithAttachment(
+  recipientEmail: string,
+  recipientName: string,
+  frequencyText: string,
+  excelBuffer: Buffer,
+  fileName: string
+): Promise<boolean> {
+  try {
+    const APIM_KEY = process.env.APIM_SUBSCRIPTION_KEY;
+    if (!APIM_KEY) {
+      console.error('[ScheduledReport] APIM subscription key not configured');
+      return false;
+    }
+
+    const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f3f4f6;">
+          <tr>
+            <td align="center" style="padding: 40px 20px;">
+              <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                <!-- Header -->
+                <tr>
+                  <td style="background: linear-gradient(135deg, #0d9488 0%, #115e59 100%); padding: 32px; text-align: center; border-radius: 12px 12px 0 0;">
+                    <img src="cid:logo" alt="Acclaim" style="height: 50px; margin-bottom: 16px;">
+                    <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600;">Your ${frequencyText} Report</h1>
+                    <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.8); font-size: 14px;">${today}</p>
+                  </td>
+                </tr>
+                
+                <!-- Content -->
+                <tr>
+                  <td style="padding: 32px;">
+                    <p style="margin: 0 0 16px 0; color: #374151; font-size: 16px; line-height: 24px;">
+                      Dear ${recipientName},
+                    </p>
+                    <p style="margin: 0 0 24px 0; color: #374151; font-size: 16px; line-height: 24px;">
+                      Please find attached your ${frequencyText.toLowerCase()} report from the Acclaim Client Portal. This report contains:
+                    </p>
+                    
+                    <ul style="margin: 0 0 24px 0; padding-left: 20px; color: #374151; font-size: 16px; line-height: 28px;">
+                      <li><strong>Case Summary</strong> - Overview of your cases including status and amounts</li>
+                      <li><strong>Activity Report</strong> - Recent messages and document activity</li>
+                    </ul>
+                    
+                    <p style="margin: 0 0 24px 0; color: #374151; font-size: 16px; line-height: 24px;">
+                      The Excel file attached contains separate tabs for each section. You can adjust your report preferences in your Profile settings.
+                    </p>
+                    
+                    <p style="margin: 0; color: #6b7280; font-size: 14px;">
+                      Kind regards,<br>
+                      The Acclaim Credit Management Team
+                    </p>
+                  </td>
+                </tr>
+                
+                <!-- Footer -->
+                <tr>
+                  <td style="background-color: #1f2937; padding: 24px; text-align: center; border-radius: 0 0 12px 12px;">
+                    <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                      This is an automated message from the Acclaim Client Portal
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+
+    const textContent = `
+Dear ${recipientName},
+
+Please find attached your ${frequencyText.toLowerCase()} report from the Acclaim Client Portal.
+
+This report contains:
+- Case Summary: Overview of your cases including status and amounts
+- Activity Report: Recent messages and document activity
+
+The Excel file attached contains separate tabs for each section.
+
+Kind regards,
+The Acclaim Credit Management Team
+    `;
+
+    const attachments: Array<{ content: string; filename: string; type: string; disposition?: string; content_id?: string }> = [];
+    
+    // Add logo
+    const logoBase64 = getLogoBase64();
+    if (logoBase64) {
+      attachments.push(logoBase64);
+    }
+
+    // Add Excel report
+    attachments.push({
+      content: excelBuffer.toString('base64'),
+      filename: fileName,
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      disposition: 'attachment'
+    });
+
+    const emailPayload = {
+      personalizations: [{
+        to: [{ email: recipientEmail }]
+      }],
+      from: { email: 'email@acclaim.law', name: 'Acclaim Credit Management' },
+      subject: `Your ${frequencyText} Report from Acclaim`,
+      content: [
+        { type: 'text/plain', value: textContent },
+        { type: 'text/html', value: htmlContent }
+      ],
+      attachments: attachments
+    };
+
+    const response = await fetch(APIM_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Ocp-Apim-Subscription-Key': APIM_KEY
+      },
+      body: JSON.stringify(emailPayload)
+    });
+
+    if (response.ok || response.status === 202) {
+      console.log(`[ScheduledReport] Successfully sent ${frequencyText} report to ${recipientEmail}`);
+      return true;
+    } else {
+      const errorText = await response.text();
+      console.error(`[ScheduledReport] Failed to send report: ${response.status} - ${errorText}`);
+      return false;
+    }
+  } catch (error) {
+    console.error('[ScheduledReport] Error sending scheduled report email:', error);
+    return false;
+  }
+}
