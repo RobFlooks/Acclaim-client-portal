@@ -2703,6 +2703,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const orgId = parseInt(req.params.id);
       const adminUserId = req.user.id;
+      const adminUser = await storage.getUser(adminUserId);
       
       // Validate request body using Zod schema
       const validationResult = orgScheduledReportSchema.safeParse(req.body);
@@ -2714,6 +2715,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const validated = validationResult.data;
+      const organisation = await storage.getOrganisation(orgId);
       
       // Create the scheduled report with the admin as owner but custom recipient
       const report = await storage.createScheduledReport({
@@ -2730,6 +2732,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         recipientEmail: validated.recipientEmail,
         recipientName: validated.recipientName || null,
       });
+      
+      // Log admin action
+      if (adminUser && organisation) {
+        await logAdminAction({
+          adminUser,
+          tableName: 'scheduled_reports',
+          recordId: String(report.id),
+          operation: 'INSERT',
+          description: `Created ${validated.frequency} scheduled report for organisation "${organisation.name}" with recipient "${validated.recipientEmail}"`,
+          newValue: JSON.stringify({ 
+            frequency: validated.frequency, 
+            recipientEmail: validated.recipientEmail, 
+            recipientName: validated.recipientName,
+            organisationName: organisation.name 
+          }),
+          organisationId: orgId,
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        });
+      }
       
       res.status(201).json(report);
     } catch (error) {
@@ -2851,12 +2873,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/admin/scheduled-reports/:id', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
-      const { organisationId, enabled, frequency, dayOfWeek, dayOfMonth, timeOfDay, includeCaseSummary, includeActivityReport, organisationIds, caseStatusFilter } = req.body;
+      const adminUser = await storage.getUser(req.user.id);
+      const { organisationId, enabled, frequency, dayOfWeek, dayOfMonth, timeOfDay, includeCaseSummary, includeActivityReport, organisationIds, caseStatusFilter, recipientEmail, recipientName } = req.body;
       
       const existing = await storage.getScheduledReportById(id);
       if (!existing) {
         return res.status(404).json({ message: "Scheduled report not found" });
       }
+      
+      // Get organisation name for audit log
+      const organisation = existing.organisationId ? await storage.getOrganisation(existing.organisationId) : null;
+      const recipientUser = await storage.getUser(existing.userId);
       
       const report = await storage.updateScheduledReport(id, {
         organisationId: organisationId !== undefined ? organisationId : existing.organisationId,
@@ -2869,7 +2896,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         includeActivityReport: includeActivityReport ?? existing.includeActivityReport,
         organisationIds: organisationIds !== undefined ? organisationIds : existing.organisationIds,
         caseStatusFilter: caseStatusFilter || existing.caseStatusFilter,
+        recipientEmail: recipientEmail !== undefined ? recipientEmail : existing.recipientEmail,
+        recipientName: recipientName !== undefined ? recipientName : existing.recipientName,
       });
+      
+      // Log admin action
+      if (adminUser) {
+        const recipient = existing.recipientEmail || recipientUser?.email || 'Unknown';
+        const orgName = organisation?.name || 'All Organisations';
+        await logAdminAction({
+          adminUser,
+          tableName: 'scheduled_reports',
+          recordId: String(id),
+          operation: 'UPDATE',
+          description: `Updated scheduled report for "${orgName}" (recipient: ${recipient})`,
+          oldValue: JSON.stringify({ 
+            frequency: existing.frequency, 
+            enabled: existing.enabled,
+            recipientEmail: existing.recipientEmail 
+          }),
+          newValue: JSON.stringify({ 
+            frequency: frequency || existing.frequency, 
+            enabled: enabled ?? existing.enabled,
+            recipientEmail: recipientEmail || existing.recipientEmail 
+          }),
+          organisationId: existing.organisationId || undefined,
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        });
+      }
       
       res.json(report);
     } catch (error) {
@@ -2882,13 +2937,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/admin/scheduled-reports/:id', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
+      const adminUser = await storage.getUser(req.user.id);
       
       const existing = await storage.getScheduledReportById(id);
       if (!existing) {
         return res.status(404).json({ message: "Scheduled report not found" });
       }
       
+      // Get details for audit log before deletion
+      const organisation = existing.organisationId ? await storage.getOrganisation(existing.organisationId) : null;
+      const recipientUser = await storage.getUser(existing.userId);
+      
       await storage.deleteScheduledReport(id);
+      
+      // Log admin action
+      if (adminUser) {
+        const recipient = existing.recipientEmail || recipientUser?.email || 'Unknown';
+        const orgName = organisation?.name || 'All Organisations';
+        await logAdminAction({
+          adminUser,
+          tableName: 'scheduled_reports',
+          recordId: String(id),
+          operation: 'DELETE',
+          description: `Deleted ${existing.frequency} scheduled report for "${orgName}" (recipient: ${recipient})`,
+          oldValue: JSON.stringify({ 
+            frequency: existing.frequency, 
+            recipientEmail: existing.recipientEmail,
+            recipientName: existing.recipientName,
+            organisationName: orgName
+          }),
+          organisationId: existing.organisationId || undefined,
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        });
+      }
+      
       res.json({ success: true });
     } catch (error) {
       console.error("Error deleting scheduled report:", error);
@@ -2928,14 +3011,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId, orgId } = req.params;
       const { role } = req.body;
+      const adminUser = await storage.getUser(req.user.id);
       
       if (!role || !['member', 'owner'].includes(role)) {
         return res.status(400).json({ message: "Invalid role. Must be 'member' or 'owner'" });
       }
       
+      // Get current role for audit log
+      const targetUser = await storage.getUser(userId);
+      const organisation = await storage.getOrganisation(parseInt(orgId));
+      const currentUserOrgs = await storage.getUserOrganisations(userId);
+      const currentOrgAssignment = currentUserOrgs.find(uo => uo.organisationId === parseInt(orgId));
+      const oldRole = currentOrgAssignment?.role || 'member';
+      
       const userOrg = await storage.setUserOrgRole(userId, parseInt(orgId), role);
       if (!userOrg) {
         return res.status(404).json({ message: "User-organisation assignment not found" });
+      }
+      
+      // Log admin action
+      if (adminUser && targetUser && organisation) {
+        const userName = [targetUser.firstName, targetUser.lastName].filter(Boolean).join(' ') || targetUser.email;
+        const action = role === 'owner' ? 'Assigned owner role to' : 'Removed owner role from';
+        await logAdminAction({
+          adminUser,
+          tableName: 'user_organisations',
+          recordId: `${userId}-${orgId}`,
+          operation: 'UPDATE',
+          fieldName: 'role',
+          description: `${action} user "${userName}" in organisation "${organisation.name}"`,
+          oldValue: oldRole,
+          newValue: role,
+          organisationId: parseInt(orgId),
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        });
       }
       
       res.json(userOrg);
