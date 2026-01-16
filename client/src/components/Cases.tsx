@@ -269,7 +269,7 @@ export default function Cases() {
                 <div
                   key={case_.id}
                   id={`case-${case_.id}`}
-                  className="grid grid-cols-1 sm:grid-cols-[1fr_180px_120px_auto] gap-4 items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border"
+                  className="grid grid-cols-1 sm:grid-cols-[minmax(200px,1fr)_200px_120px_110px] gap-4 items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border"
                 >
                   <div className="flex items-center space-x-4 min-w-0">
                     <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#f9fafb] flex-shrink-0">
@@ -294,7 +294,7 @@ export default function Cases() {
                     </div>
                   </div>
                   
-                  <div className="text-left sm:text-right">
+                  <div className="text-left sm:text-center">
                     <p className="text-sm text-gray-600">Outstanding Amount</p>
                     <p className="font-semibold text-gray-900">
                       {formatCurrency(case_.outstandingAmount)}
@@ -302,7 +302,7 @@ export default function Cases() {
                     <p className="text-xs text-gray-500 hidden sm:block">*May include interest and costs</p>
                   </div>
                   
-                  <div className="flex sm:justify-center">
+                  <div className="flex justify-start sm:justify-center">
                     {getStageBadge(case_.status, case_.stage)}
                   </div>
                   
