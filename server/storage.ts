@@ -1796,6 +1796,7 @@ export class DatabaseStorage implements IStorage {
   async updateNotificationPreferences(userId: string, preferences: {
     emailNotifications: boolean;
     documentNotifications?: boolean;
+    loginNotifications?: boolean;
     pushNotifications: boolean;
   }): Promise<User | null> {
     const [user] = await db
@@ -1803,6 +1804,7 @@ export class DatabaseStorage implements IStorage {
       .set({
         emailNotifications: preferences.emailNotifications,
         documentNotifications: preferences.documentNotifications,
+        loginNotifications: preferences.loginNotifications,
         pushNotifications: preferences.pushNotifications,
         updatedAt: new Date(),
       })

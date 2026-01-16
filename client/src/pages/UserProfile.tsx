@@ -28,6 +28,7 @@ type ChangePasswordForm = z.infer<typeof changePasswordSchema>;
 type NotificationPreferencesForm = {
   emailNotifications: boolean;
   documentNotifications: boolean;
+  loginNotifications: boolean;
 };
 
 interface UserData {
@@ -42,6 +43,7 @@ interface UserData {
   emailNotifications?: boolean;
   documentNotifications?: boolean;
   pushNotifications?: boolean;
+  loginNotifications?: boolean;
   createdAt: string;
 }
 
@@ -81,6 +83,7 @@ export default function UserProfile() {
   const [notificationData, setNotificationData] = useState<NotificationPreferencesForm>({
     emailNotifications: true,
     documentNotifications: true,
+    loginNotifications: true,
   });
 
   // Organisation documents state
@@ -456,6 +459,7 @@ export default function UserProfile() {
       setNotificationData({
         emailNotifications: userProfile.emailNotifications ?? true,
         documentNotifications: userProfile.documentNotifications ?? true,
+        loginNotifications: userProfile.loginNotifications ?? true,
       });
     }
   }, [userProfile]);
@@ -499,6 +503,7 @@ export default function UserProfile() {
       return await apiRequest("PUT", `/api/user/notifications`, { 
         emailNotifications: data.emailNotifications,
         documentNotifications: data.documentNotifications,
+        loginNotifications: data.loginNotifications,
         pushNotifications: true // Always enable push notifications on backend
       });
     },
@@ -1192,6 +1197,22 @@ export default function UserProfile() {
                       checked={notificationData.documentNotifications}
                       onCheckedChange={(checked) => 
                         setNotificationData(prev => ({ ...prev, documentNotifications: checked }))
+                      }
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between space-x-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="loginNotifications" className="text-base font-medium">
+                        Login Notifications
+                      </Label>
+                      <p className="text-sm text-gray-500">Receive email alerts when someone logs into your account, including device and location information.</p>
+                    </div>
+                    <Switch
+                      id="loginNotifications"
+                      checked={notificationData.loginNotifications}
+                      onCheckedChange={(checked) => 
+                        setNotificationData(prev => ({ ...prev, loginNotifications: checked }))
                       }
                     />
                   </div>

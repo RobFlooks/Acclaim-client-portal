@@ -550,6 +550,7 @@ export const updateUserSchema = z.object({
 export const updateNotificationPreferencesSchema = z.object({
   emailNotifications: z.boolean(),
   documentNotifications: z.boolean().optional(),
+  loginNotifications: z.boolean().optional(),
   pushNotifications: z.boolean(),
 });
 
