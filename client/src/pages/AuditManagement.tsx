@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import {
   ArrowLeft,
@@ -14,7 +14,14 @@ import {
   Activity,
   FileText,
   AlertTriangle,
+  Trash2,
+  Settings,
+  HardDrive,
+  Calendar,
+  Loader2,
 } from "lucide-react";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,13 +56,25 @@ interface AuditSummary {
   topTables: { tableName: string; changeCount: number }[];
 }
 
+interface AuditLogStats {
+  totalCount: number;
+  oldestLog: string | null;
+  newestLog: string | null;
+  logsOlderThan30Days: number;
+  logsOlderThan90Days: number;
+  logsOlderThan180Days: number;
+  logsOlderThan365Days: number;
+}
+
 export default function AuditManagement() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'logs' | 'analysis'>('overview');
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState<'overview' | 'logs' | 'analysis' | 'retention'>('overview');
   const [searchTerm, setSearchTerm] = useState("");
   const [tableFilter, setTableFilter] = useState("");
   const [operationFilter, setOperationFilter] = useState("");
   const [userFilter, setUserFilter] = useState("");
   const [limitResults, setLimitResults] = useState("100");
+  const [retentionDays, setRetentionDays] = useState("365");
 
   // Fetch audit summary
   const { data: auditSummary, isLoading: summaryLoading } = useQuery<AuditSummary>({
@@ -81,6 +100,49 @@ export default function AuditManagement() {
     },
     retry: false,
   });
+
+  // Fetch audit log stats for retention
+  const { data: auditStats, isLoading: statsLoading, refetch: refetchStats } = useQuery<AuditLogStats>({
+    queryKey: ["/api/admin/audit/stats"],
+    retry: false,
+  });
+
+  // Cleanup mutation
+  const cleanupMutation = useMutation({
+    mutationFn: async (days: number) => {
+      const res = await apiRequest("POST", "/api/admin/audit/cleanup", { retentionDays: days });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Cleanup Complete",
+        description: data.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/audit/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/audit/summary"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/audit/logs"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Cleanup Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleCleanup = () => {
+    const days = parseInt(retentionDays);
+    if (days < 30) {
+      toast({
+        title: "Invalid Retention Period",
+        description: "Retention period must be at least 30 days",
+        variant: "destructive",
+      });
+      return;
+    }
+    cleanupMutation.mutate(days);
+  };
 
   const filteredLogs = auditLogs?.filter(log => {
     if (!searchTerm) return true;
@@ -164,10 +226,11 @@ export default function AuditManagement() {
         </div>
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="logs">Audit Logs</TabsTrigger>
             <TabsTrigger value="analysis">Analysis</TabsTrigger>
+            <TabsTrigger value="retention">Retention</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -682,6 +745,167 @@ export default function AuditManagement() {
                       <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                         All changes are being properly tracked and logged
                       </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="retention">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <HardDrive className="w-5 h-5 mr-2" />
+                    Audit Log Storage
+                  </CardTitle>
+                  <CardDescription>Current storage statistics for audit logs</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {statsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                    </div>
+                  ) : auditStats ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                          <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                            {auditStats.totalCount.toLocaleString()}
+                          </div>
+                          <div className="text-sm text-gray-600 dark:text-gray-400">Total Audit Logs</div>
+                        </div>
+                        <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                          <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+                            365
+                          </div>
+                          <div className="text-sm text-gray-600 dark:text-gray-400">Days Retained</div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <h4 className="font-medium flex items-center gap-2">
+                          <Calendar className="w-4 h-4" />
+                          Log Age Distribution
+                        </h4>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                            <span>Older than 30 days</span>
+                            <Badge variant="secondary">{auditStats.logsOlderThan30Days.toLocaleString()}</Badge>
+                          </div>
+                          <div className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                            <span>Older than 90 days</span>
+                            <Badge variant="secondary">{auditStats.logsOlderThan90Days.toLocaleString()}</Badge>
+                          </div>
+                          <div className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                            <span>Older than 180 days</span>
+                            <Badge variant="secondary">{auditStats.logsOlderThan180Days.toLocaleString()}</Badge>
+                          </div>
+                          <div className="flex justify-between items-center p-2 bg-orange-50 dark:bg-orange-900/20 rounded">
+                            <span>Older than 365 days</span>
+                            <Badge variant="outline" className="text-orange-600 border-orange-600">{auditStats.logsOlderThan365Days.toLocaleString()}</Badge>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {auditStats.oldestLog && auditStats.newestLog && (
+                        <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                          <div>Oldest log: {format(new Date(auditStats.oldestLog), 'dd MMM yyyy, HH:mm')}</div>
+                          <div>Newest log: {format(new Date(auditStats.newestLog), 'dd MMM yyyy, HH:mm')}</div>
+                        </div>
+                      )}
+                      
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => refetchStats()}
+                        className="w-full"
+                      >
+                        Refresh Statistics
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      Unable to load audit log statistics
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Settings className="w-5 h-5 mr-2" />
+                    Manual Cleanup
+                  </CardTitle>
+                  <CardDescription>
+                    Manually delete audit logs older than a specified number of days. 
+                    Automatic cleanup runs daily (365-day retention).
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-amber-800 dark:text-amber-200">Important</h4>
+                          <p className="text-sm text-amber-700 dark:text-amber-300">
+                            This action permanently deletes audit logs. Deleted logs cannot be recovered.
+                            The system automatically cleans up logs older than 365 days daily.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <label className="text-sm font-medium">Delete logs older than:</label>
+                      <Select value={retentionDays} onValueChange={setRetentionDays}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="30">30 days</SelectItem>
+                          <SelectItem value="60">60 days</SelectItem>
+                          <SelectItem value="90">90 days</SelectItem>
+                          <SelectItem value="180">180 days (6 months)</SelectItem>
+                          <SelectItem value="365">365 days (1 year)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      
+                      {auditStats && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          This will delete approximately{' '}
+                          <strong>
+                            {retentionDays === "30" && auditStats.logsOlderThan30Days.toLocaleString()}
+                            {retentionDays === "60" && auditStats.logsOlderThan30Days.toLocaleString()}
+                            {retentionDays === "90" && auditStats.logsOlderThan90Days.toLocaleString()}
+                            {retentionDays === "180" && auditStats.logsOlderThan180Days.toLocaleString()}
+                            {retentionDays === "365" && auditStats.logsOlderThan365Days.toLocaleString()}
+                          </strong>{' '}
+                          audit logs.
+                        </p>
+                      )}
+                      
+                      <Button 
+                        variant="destructive" 
+                        onClick={handleCleanup}
+                        disabled={cleanupMutation.isPending}
+                        className="w-full"
+                      >
+                        {cleanupMutation.isPending ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Cleaning Up...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete Old Logs
+                          </>
+                        )}
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
