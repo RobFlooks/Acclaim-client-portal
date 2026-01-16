@@ -2013,6 +2013,12 @@ export default function AdminEnhanced() {
     includeActivityReport: true,
     caseStatusFilter: 'active' as 'active' | 'all' | 'closed',
   });
+  
+  // State for viewing/managing org scheduled reports
+  const [showOrgReportsDialog, setShowOrgReportsDialog] = useState(false);
+  const [selectedOrgForReports, setSelectedOrgForReports] = useState<Organisation | null>(null);
+  const [editingOrgReport, setEditingOrgReport] = useState<any | null>(null);
+  const [showEditOrgReportForm, setShowEditOrgReportForm] = useState(false);
 
   // State for user management
   const [showCreateUser, setShowCreateUser] = useState(false);
@@ -2085,6 +2091,28 @@ export default function AdminEnhanced() {
     acc[report.userId].push(report);
     return acc;
   }, {} as Record<string, any[]>);
+
+  // Create a map of orgId -> array of scheduled reports for quick lookup
+  const orgScheduledReportsMap = scheduledReports.reduce((acc: Record<number, any[]>, report: any) => {
+    if (report.organisationId) {
+      if (!acc[report.organisationId]) {
+        acc[report.organisationId] = [];
+      }
+      acc[report.organisationId].push(report);
+    }
+    return acc;
+  }, {} as Record<number, any[]>);
+
+  // Fetch scheduled reports for selected organisation
+  const { data: selectedOrgReports = [], isLoading: orgReportsLoading, refetch: refetchOrgReports } = useQuery<any[]>({
+    queryKey: ["/api/admin/organisations", selectedOrgForReports?.id, "scheduled-reports"],
+    queryFn: async () => {
+      if (!selectedOrgForReports?.id) return [];
+      const response = await apiRequest("GET", `/api/admin/organisations/${selectedOrgForReports.id}/scheduled-reports`);
+      return response.json();
+    },
+    enabled: !!selectedOrgForReports?.id,
+  });
 
   // Create organisation mutation
   const createOrganisationMutation = useMutation({
@@ -2240,8 +2268,13 @@ export default function AdminEnhanced() {
         description: "Scheduled report settings saved",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/scheduled-reports"] });
+      if (selectedOrgForReports?.id) {
+        queryClient.invalidateQueries({ queryKey: ["/api/admin/organisations", selectedOrgForReports.id, "scheduled-reports"] });
+      }
       setShowReportEditForm(false);
+      setShowEditOrgReportForm(false);
       setEditingReportId(null);
+      setEditingOrgReport(null);
     },
     onError: () => {
       toast({
@@ -2264,6 +2297,9 @@ export default function AdminEnhanced() {
         description: "Scheduled report deleted",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/scheduled-reports"] });
+      if (selectedOrgForReports?.id) {
+        queryClient.invalidateQueries({ queryKey: ["/api/admin/organisations", selectedOrgForReports.id, "scheduled-reports"] });
+      }
     },
     onError: () => {
       toast({
@@ -3817,12 +3853,15 @@ export default function AdminEnhanced() {
                   <TableRow>
                     <TableHead>Organisation</TableHead>
                     <TableHead>Users</TableHead>
+                    <TableHead>Scheduled Reports</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedOrgs?.map((org: Organisation) => (
+                  {paginatedOrgs?.map((org: Organisation) => {
+                    const orgReportCount = orgScheduledReportsMap[org.id]?.length || 0;
+                    return (
                     <TableRow key={org.id}>
                       <TableCell>
                         <div className="font-medium">{org.name}</div>
@@ -3830,6 +3869,25 @@ export default function AdminEnhanced() {
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">{org.userCount} users</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {orgReportCount > 0 ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-acclaim-teal hover:text-acclaim-teal/80"
+                            onClick={() => {
+                              setSelectedOrgForReports(org);
+                              setShowOrgReportsDialog(true);
+                            }}
+                            title="View and manage scheduled reports"
+                          >
+                            <Calendar className="h-4 w-4 mr-1" />
+                            <span>{orgReportCount} report{orgReportCount !== 1 ? 's' : ''}</span>
+                          </Button>
+                        ) : (
+                          <span className="text-gray-400 text-sm">None</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         {new Date(org.createdAt).toLocaleDateString()}
@@ -3854,10 +3912,10 @@ export default function AdminEnhanced() {
                               });
                               setShowOrgScheduleDialog(true);
                             }}
-                            title="Schedule a report for this organisation"
+                            title="Schedule a new report for this organisation"
                             className="text-acclaim-teal hover:text-acclaim-teal/80"
                           >
-                            <Calendar className="h-3 w-3" />
+                            <Plus className="h-3 w-3" />
                           </Button>
                           <Button 
                             variant="outline" 
@@ -3891,7 +3949,7 @@ export default function AdminEnhanced() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  );})}
                 </TableBody>
               </Table>
               {/* Pagination */}
@@ -4174,6 +4232,322 @@ export default function AdminEnhanced() {
               {createOrgScheduledReportMutation.isPending ? "Creating..." : "Create Schedule"}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* View/Manage Organisation Scheduled Reports Dialog */}
+      <Dialog open={showOrgReportsDialog} onOpenChange={(open) => {
+        setShowOrgReportsDialog(open);
+        if (!open) {
+          setSelectedOrgForReports(null);
+          setEditingOrgReport(null);
+          setShowEditOrgReportForm(false);
+        }
+      }}>
+        <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Scheduled Reports for {selectedOrgForReports?.name}
+            </DialogTitle>
+            <DialogDescription>
+              View, edit, or delete scheduled reports for this organisation
+            </DialogDescription>
+          </DialogHeader>
+          
+          {!showEditOrgReportForm ? (
+            <div className="space-y-4">
+              {orgReportsLoading ? (
+                <div className="text-center py-8 text-gray-500">
+                  <div className="animate-spin h-8 w-8 border-2 border-acclaim-teal border-t-transparent rounded-full mx-auto mb-4"></div>
+                  <p>Loading scheduled reports...</p>
+                </div>
+              ) : selectedOrgReports.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No scheduled reports for this organisation</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {selectedOrgReports.map((report: any) => (
+                    <div key={report.id} className="border rounded-lg p-4 space-y-2">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1">
+                          <div className="font-medium flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-gray-500" />
+                            {report.recipientEmail || report.userEmail}
+                            {report.recipientName && (
+                              <span className="text-gray-500 text-sm">({report.recipientName})</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Badge variant={report.enabled ? "default" : "secondary"}>
+                              {report.enabled ? "Active" : "Disabled"}
+                            </Badge>
+                            <span className="capitalize">{report.frequency}</span>
+                            <span>at {report.timeOfDay}:00</span>
+                            {report.frequency === 'weekly' && (
+                              <span>
+                                ({['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][report.dayOfWeek || 0]})
+                              </span>
+                            )}
+                            {report.frequency === 'monthly' && (
+                              <span>(Day {report.dayOfMonth || 1})</span>
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-500 flex items-center gap-3">
+                            {report.includeCaseSummary && <span>Case Summary</span>}
+                            {report.includeActivityReport && <span>Messages</span>}
+                            <span className="capitalize">({report.caseStatusFilter || 'active'} cases)</span>
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            Created by: {report.userName || 'Unknown'}
+                            {report.lastSentAt && (
+                              <span> • Last sent: {new Date(report.lastSentAt).toLocaleDateString()}</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => sendTestReportMutation.mutate(report.id)}
+                            disabled={sendTestReportMutation.isPending}
+                            title="Send test report"
+                          >
+                            <Mail className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditingOrgReport(report);
+                              setOrgScheduleForm({
+                                recipientEmail: report.recipientEmail || '',
+                                recipientName: report.recipientName || '',
+                                frequency: report.frequency || 'weekly',
+                                dayOfWeek: report.dayOfWeek || 1,
+                                dayOfMonth: report.dayOfMonth || 1,
+                                timeOfDay: report.timeOfDay || 9,
+                                includeCaseSummary: report.includeCaseSummary ?? true,
+                                includeActivityReport: report.includeActivityReport ?? true,
+                                caseStatusFilter: report.caseStatusFilter || 'active',
+                              });
+                              setShowEditOrgReportForm(true);
+                            }}
+                            title="Edit report"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-500 hover:text-red-700"
+                            onClick={() => {
+                              if (confirm("Are you sure you want to delete this scheduled report?")) {
+                                deleteScheduledReportMutation.mutate(report.id);
+                              }
+                            }}
+                            disabled={deleteScheduledReportMutation.isPending}
+                            title="Delete report"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              <div className="flex justify-between pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (selectedOrgForReports) {
+                      setSelectedOrgForSchedule(selectedOrgForReports);
+                      setOrgScheduleForm({
+                        recipientEmail: '',
+                        recipientName: '',
+                        frequency: 'weekly',
+                        dayOfWeek: 1,
+                        dayOfMonth: 1,
+                        timeOfDay: 9,
+                        includeCaseSummary: true,
+                        includeActivityReport: true,
+                        caseStatusFilter: 'active',
+                      });
+                      setShowOrgReportsDialog(false);
+                      setShowOrgScheduleDialog(true);
+                    }
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add New Report
+                </Button>
+                <Button variant="outline" onClick={() => setShowOrgReportsDialog(false)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="editRecipientEmail">Recipient Email</Label>
+                <Input
+                  id="editRecipientEmail"
+                  type="email"
+                  value={orgScheduleForm.recipientEmail}
+                  onChange={(e) => setOrgScheduleForm({ ...orgScheduleForm, recipientEmail: e.target.value })}
+                  placeholder="email@example.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editRecipientName">Recipient Name (optional)</Label>
+                <Input
+                  id="editRecipientName"
+                  value={orgScheduleForm.recipientName}
+                  onChange={(e) => setOrgScheduleForm({ ...orgScheduleForm, recipientName: e.target.value })}
+                  placeholder="Enter recipient name"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Frequency</Label>
+                  <Select
+                    value={orgScheduleForm.frequency}
+                    onValueChange={(v: 'daily' | 'weekly' | 'monthly') => setOrgScheduleForm({ ...orgScheduleForm, frequency: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="daily">Daily</SelectItem>
+                      <SelectItem value="weekly">Weekly</SelectItem>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Time</Label>
+                  <Select
+                    value={String(orgScheduleForm.timeOfDay)}
+                    onValueChange={(v) => setOrgScheduleForm({ ...orgScheduleForm, timeOfDay: parseInt(v) })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 24 }, (_, i) => (
+                        <SelectItem key={i} value={String(i)}>
+                          {i === 0 ? '12:00 AM' : i < 12 ? `${i}:00 AM` : i === 12 ? '12:00 PM' : `${i-12}:00 PM`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              {orgScheduleForm.frequency === 'weekly' && (
+                <div className="space-y-2">
+                  <Label>Day of Week</Label>
+                  <Select
+                    value={String(orgScheduleForm.dayOfWeek)}
+                    onValueChange={(v) => setOrgScheduleForm({ ...orgScheduleForm, dayOfWeek: parseInt(v) })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day, i) => (
+                        <SelectItem key={i} value={String(i)}>{day}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {orgScheduleForm.frequency === 'monthly' && (
+                <div className="space-y-2">
+                  <Label>Day of Month</Label>
+                  <Select
+                    value={String(orgScheduleForm.dayOfMonth)}
+                    onValueChange={(v) => setOrgScheduleForm({ ...orgScheduleForm, dayOfMonth: parseInt(v) })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 28 }, (_, i) => (
+                        <SelectItem key={i+1} value={String(i+1)}>{i+1}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label>Case Status</Label>
+                <Select
+                  value={orgScheduleForm.caseStatusFilter}
+                  onValueChange={(v: 'active' | 'all' | 'closed') => setOrgScheduleForm({ ...orgScheduleForm, caseStatusFilter: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active Cases Only</SelectItem>
+                    <SelectItem value="all">All Cases</SelectItem>
+                    <SelectItem value="closed">Closed Cases Only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="editIncludeCaseSummary"
+                  checked={orgScheduleForm.includeCaseSummary}
+                  onCheckedChange={(checked) => setOrgScheduleForm({ ...orgScheduleForm, includeCaseSummary: checked })}
+                />
+                <Label htmlFor="editIncludeCaseSummary">Include Case Summary</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="editIncludeActivityReport"
+                  checked={orgScheduleForm.includeActivityReport}
+                  onCheckedChange={(checked) => setOrgScheduleForm({ ...orgScheduleForm, includeActivityReport: checked })}
+                />
+                <Label htmlFor="editIncludeActivityReport">Include Activity Report (Messages)</Label>
+              </div>
+              
+              <div className="flex justify-end space-x-2 pt-4 border-t">
+                <Button variant="outline" onClick={() => {
+                  setShowEditOrgReportForm(false);
+                  setEditingOrgReport(null);
+                }}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (!editingOrgReport) return;
+                    updateScheduledReportMutation.mutate({
+                      reportId: editingOrgReport.id,
+                      data: {
+                        recipientEmail: orgScheduleForm.recipientEmail || null,
+                        recipientName: orgScheduleForm.recipientName || null,
+                        frequency: orgScheduleForm.frequency,
+                        dayOfWeek: orgScheduleForm.frequency === 'weekly' ? orgScheduleForm.dayOfWeek : null,
+                        dayOfMonth: orgScheduleForm.frequency === 'monthly' ? orgScheduleForm.dayOfMonth : null,
+                        timeOfDay: orgScheduleForm.timeOfDay,
+                        includeCaseSummary: orgScheduleForm.includeCaseSummary,
+                        includeActivityReport: orgScheduleForm.includeActivityReport,
+                        caseStatusFilter: orgScheduleForm.caseStatusFilter,
+                      }
+                    });
+                  }}
+                  disabled={updateScheduledReportMutation.isPending}
+                  className="bg-acclaim-teal hover:bg-acclaim-teal/90"
+                >
+                  {updateScheduledReportMutation.isPending ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
