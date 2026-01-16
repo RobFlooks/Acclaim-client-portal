@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,9 +8,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Activity, Users, AlertTriangle, Shield, Clock, Download, Search, Filter, CheckCircle, AlertCircle, XCircle } from "lucide-react";
+import { ArrowLeft, Activity, Users, AlertTriangle, Shield, Clock, Download, Search, Filter, CheckCircle, AlertCircle, XCircle, Lock, Unlock, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface SystemAnalytics {
   totalUsers: number;
@@ -60,8 +62,32 @@ interface SystemHealth {
   timestamp: Date;
 }
 
+interface RateLimitStats {
+  totalTracked: number;
+  currentlyLocked: number;
+  maxAttempts: number;
+  lockoutMinutes: number;
+}
+
+interface LockedAccount {
+  identifier: string;
+  username?: string;
+  attempts: number;
+  lockedUntil: string;
+  remainingMinutes: number;
+}
+
+interface RateLimitAttempt {
+  identifier: string;
+  username?: string;
+  attempts: number;
+  lockedUntil: string | null;
+  lastAttempt: string;
+}
+
 export default function SystemMonitoring() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'activity' | 'logins' | 'metrics'>('overview');
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState<'overview' | 'activity' | 'logins' | 'metrics' | 'security'>('overview');
   const [searchTerm, setSearchTerm] = useState("");
   const [limitResults, setLimitResults] = useState("100");
   const [filterUser, setFilterUser] = useState("");
@@ -142,6 +168,51 @@ export default function SystemMonitoring() {
     queryKey: ['/api/admin/reports/system-health'],
     retry: false,
     refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  // Fetch rate limit stats
+  const { data: rateLimitStats, isLoading: rateLimitStatsLoading, refetch: refetchRateLimitStats } = useQuery<RateLimitStats>({
+    queryKey: ["/api/admin/system/rate-limit/stats"],
+    retry: false,
+    refetchInterval: 10000, // Refresh every 10 seconds
+  });
+
+  // Fetch locked accounts
+  const { data: lockedAccounts = [], isLoading: lockedAccountsLoading, refetch: refetchLockedAccounts } = useQuery<LockedAccount[]>({
+    queryKey: ["/api/admin/system/rate-limit/locked"],
+    retry: false,
+    refetchInterval: 10000, // Refresh every 10 seconds
+  });
+
+  // Fetch all rate limit attempts
+  const { data: rateLimitAttempts = [], isLoading: rateLimitAttemptsLoading, refetch: refetchRateLimitAttempts } = useQuery<RateLimitAttempt[]>({
+    queryKey: ["/api/admin/system/rate-limit/attempts"],
+    retry: false,
+    refetchInterval: 10000, // Refresh every 10 seconds
+  });
+
+  // Unlock account mutation
+  const unlockMutation = useMutation({
+    mutationFn: async (identifier: string) => {
+      const res = await apiRequest("POST", "/api/admin/system/rate-limit/unlock", { identifier });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Account Unlocked",
+        description: data.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/system/rate-limit/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/system/rate-limit/locked"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/system/rate-limit/attempts"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Unlock Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   const getHealthBadgeColor = (health: string) => {
@@ -246,11 +317,12 @@ export default function SystemMonitoring() {
         </div>
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="activity">Activity Logs</TabsTrigger>
-            <TabsTrigger value="logins">Login Attempts</TabsTrigger>
-            <TabsTrigger value="metrics">System Metrics</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="logins">Logins</TabsTrigger>
+            <TabsTrigger value="metrics">Metrics</TabsTrigger>
+            <TabsTrigger value="security">Security</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -730,6 +802,274 @@ export default function SystemMonitoring() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Security Tab - Rate Limiting & Lockouts */}
+          <TabsContent value="security">
+            <div className="space-y-6">
+              {/* Rate Limit Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">Currently Locked</CardTitle>
+                    <Lock className="h-4 w-4 text-red-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-red-600">
+                      {rateLimitStatsLoading ? "..." : rateLimitStats?.currentlyLocked || 0}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Accounts locked out</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">Tracked IPs</CardTitle>
+                    <Shield className="h-4 w-4 text-blue-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {rateLimitStatsLoading ? "..." : rateLimitStats?.totalTracked || 0}
+                    </div>
+                    <p className="text-xs text-muted-foreground">IPs with failed attempts</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">Max Attempts</CardTitle>
+                    <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {rateLimitStatsLoading ? "..." : rateLimitStats?.maxAttempts || 5}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Before lockout</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">Lockout Duration</CardTitle>
+                    <Clock className="h-4 w-4 text-gray-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {rateLimitStatsLoading ? "..." : rateLimitStats?.lockoutMinutes || 15} min
+                    </div>
+                    <p className="text-xs text-muted-foreground">Auto-unlock period</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Locked Accounts Section */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Lock className="h-5 w-5 text-red-500" />
+                        Currently Locked Accounts
+                      </CardTitle>
+                      <CardDescription>
+                        Accounts that have exceeded the maximum failed login attempts
+                      </CardDescription>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        refetchRateLimitStats();
+                        refetchLockedAccounts();
+                        refetchRateLimitAttempts();
+                      }}
+                    >
+                      <Activity className="h-4 w-4 mr-2" />
+                      Refresh
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>IP Address</TableHead>
+                          <TableHead>Username</TableHead>
+                          <TableHead>Failed Attempts</TableHead>
+                          <TableHead>Locked Until</TableHead>
+                          <TableHead>Remaining</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {lockedAccountsLoading ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-8">
+                              <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                            </TableCell>
+                          </TableRow>
+                        ) : lockedAccounts.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                              <div className="flex flex-col items-center gap-2">
+                                <CheckCircle className="h-8 w-8 text-green-500" />
+                                <span>No accounts are currently locked</span>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          lockedAccounts.map((account) => (
+                            <TableRow key={account.identifier}>
+                              <TableCell className="font-mono text-sm">{account.identifier}</TableCell>
+                              <TableCell>
+                                {account.username ? (
+                                  <Badge variant="secondary">{account.username}</Badge>
+                                ) : (
+                                  <span className="text-gray-400 italic">Unknown</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="destructive">{account.attempts}</Badge>
+                              </TableCell>
+                              <TableCell>{format(new Date(account.lockedUntil), 'HH:mm:ss')}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="text-orange-600">
+                                  {account.remainingMinutes} min
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => unlockMutation.mutate(account.identifier)}
+                                  disabled={unlockMutation.isPending}
+                                >
+                                  {unlockMutation.isPending ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <>
+                                      <Unlock className="h-4 w-4 mr-1" />
+                                      Unlock
+                                    </>
+                                  )}
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* All Rate Limit Attempts Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                    Failed Login Attempts Tracker
+                  </CardTitle>
+                  <CardDescription>
+                    All IP addresses with failed login attempts (clears on server restart)
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>IP Address</TableHead>
+                          <TableHead>Username</TableHead>
+                          <TableHead>Failed Attempts</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Last Attempt</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {rateLimitAttemptsLoading ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-8">
+                              <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                            </TableCell>
+                          </TableRow>
+                        ) : rateLimitAttempts.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                              No failed login attempts recorded
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          rateLimitAttempts.map((attempt) => (
+                            <TableRow key={attempt.identifier}>
+                              <TableCell className="font-mono text-sm">{attempt.identifier}</TableCell>
+                              <TableCell>
+                                {attempt.username ? (
+                                  <Badge variant="secondary">{attempt.username}</Badge>
+                                ) : (
+                                  <span className="text-gray-400 italic">Unknown</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={attempt.attempts >= (rateLimitStats?.maxAttempts || 5) ? "destructive" : "secondary"}>
+                                  {attempt.attempts}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {attempt.lockedUntil ? (
+                                  <Badge className="bg-red-100 text-red-800">Locked</Badge>
+                                ) : (
+                                  <Badge className="bg-yellow-100 text-yellow-800">Warning</Badge>
+                                )}
+                              </TableCell>
+                              <TableCell>{format(new Date(attempt.lastAttempt), 'HH:mm:ss')}</TableCell>
+                              <TableCell className="text-right">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => unlockMutation.mutate(attempt.identifier)}
+                                  disabled={unlockMutation.isPending}
+                                >
+                                  {unlockMutation.isPending ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <>
+                                      <XCircle className="h-4 w-4 mr-1" />
+                                      Clear
+                                    </>
+                                  )}
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Info Card */}
+              <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+                <CardContent className="pt-6">
+                  <div className="flex items-start gap-3">
+                    <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
+                    <div>
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-100">Rate Limiting Information</h4>
+                      <ul className="mt-2 text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                        <li>• Failed login attempts are tracked by IP address</li>
+                        <li>• After {rateLimitStats?.maxAttempts || 5} failed attempts, the IP is locked for {rateLimitStats?.lockoutMinutes || 15} minutes</li>
+                        <li>• Lockouts automatically expire after the duration period</li>
+                        <li>• Rate limit data is stored in memory and clears on server restart</li>
+                        <li>• All lockout events are logged to the System Audit for tracking</li>
+                      </ul>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
