@@ -2256,7 +2256,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const adminUser = await storage.getUser(req.user.id);
       
       // Get document details for audit log before deletion
-      const document = await storage.getDocument(documentId);
+      const document = await storage.getDocumentById(documentId);
       
       await storage.deleteDocumentById(documentId);
       
