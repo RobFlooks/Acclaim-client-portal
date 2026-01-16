@@ -170,7 +170,7 @@ export default function ClosedCaseManagement({ onBack }: ClosedCaseManagementPro
             Closed Case Management
           </CardTitle>
           <CardDescription>
-            View and manage closed cases. Filter by date range to find cases that haven't been updated recently, then archive or delete them in bulk.
+            All closed cases are shown below. Optionally filter by last updated date, then select cases to archive or delete in bulk.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
