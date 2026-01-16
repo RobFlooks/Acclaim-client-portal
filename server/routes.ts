@@ -2216,7 +2216,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/admin/messages/:id', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const messageId = parseInt(req.params.id);
+      const adminUser = await storage.getUser(req.user.id);
+      
+      // Get message details for audit log before deletion
+      const message = await storage.getMessage(messageId);
+      
       await storage.deleteMessage(messageId);
+      
+      // Log admin action
+      if (adminUser && message) {
+        const messagePreview = message.content ? message.content.substring(0, 50) + (message.content.length > 50 ? '...' : '') : '';
+        await logAdminAction({
+          adminUser,
+          tableName: 'messages',
+          recordId: String(messageId),
+          operation: 'DELETE',
+          description: `Deleted message: "${messagePreview}"`,
+          oldValue: JSON.stringify({ 
+            content: message.content?.substring(0, 200), 
+            caseId: message.caseId,
+            createdAt: message.createdAt 
+          }),
+          organisationId: message.organisationId || undefined,
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        });
+      }
+      
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting message:", error);
@@ -2227,7 +2253,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/admin/documents/:id', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const documentId = parseInt(req.params.id);
+      const adminUser = await storage.getUser(req.user.id);
+      
+      // Get document details for audit log before deletion
+      const document = await storage.getDocument(documentId);
+      
       await storage.deleteDocumentById(documentId);
+      
+      // Log admin action
+      if (adminUser && document) {
+        await logAdminAction({
+          adminUser,
+          tableName: 'documents',
+          recordId: String(documentId),
+          operation: 'DELETE',
+          description: `Deleted document: "${document.name}"`,
+          oldValue: JSON.stringify({ 
+            name: document.name, 
+            caseId: document.caseId,
+            uploadedAt: document.uploadedAt 
+          }),
+          organisationId: document.organisationId || undefined,
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        });
+      }
+      
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting document:", error);
@@ -2352,6 +2403,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/admin/users/:userId/make-admin', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const { userId } = req.params;
+      const adminUser = await storage.getUser(req.user.id);
       
       // Check if user has @chadlaw.co.uk email
       const existingUser = await storage.getUser(userId);
@@ -2366,6 +2418,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = await storage.makeUserAdmin(userId);
+      
+      // Log admin action
+      if (adminUser) {
+        const userName = [existingUser.firstName, existingUser.lastName].filter(Boolean).join(' ') || existingUser.email;
+        await logAdminAction({
+          adminUser,
+          tableName: 'users',
+          recordId: userId,
+          operation: 'UPDATE',
+          fieldName: 'isAdmin',
+          description: `Granted admin privileges to user "${userName}"`,
+          oldValue: 'false',
+          newValue: 'true',
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        });
+      }
+      
       res.json({ user, message: "User granted admin privileges" });
     } catch (error) {
       console.error("Error making user admin:", error);
@@ -2377,7 +2447,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/admin/users/:userId/remove-admin', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const { userId } = req.params;
+      const adminUser = await storage.getUser(req.user.id);
+      const existingUser = await storage.getUser(userId);
+      
       const user = await storage.removeUserAdmin(userId);
+      
+      // Log admin action
+      if (adminUser && existingUser) {
+        const userName = [existingUser.firstName, existingUser.lastName].filter(Boolean).join(' ') || existingUser.email;
+        await logAdminAction({
+          adminUser,
+          tableName: 'users',
+          recordId: userId,
+          operation: 'UPDATE',
+          fieldName: 'isAdmin',
+          description: `Removed admin privileges from user "${userName}"`,
+          oldValue: 'true',
+          newValue: 'false',
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        });
+      }
+      
       res.json({ user, message: "Admin privileges removed" });
     } catch (error) {
       console.error("Error removing admin privileges:", error);
@@ -2409,7 +2500,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/admin/users/:userId/reset-password', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const { userId } = req.params;
+      const adminUser = await storage.getUser(req.user.id);
+      const targetUser = await storage.getUser(userId);
+      
       const tempPassword = await storage.resetUserPassword(userId);
+      
+      // Log admin action
+      if (adminUser && targetUser) {
+        const userName = [targetUser.firstName, targetUser.lastName].filter(Boolean).join(' ') || targetUser.email;
+        await logAdminAction({
+          adminUser,
+          tableName: 'users',
+          recordId: userId,
+          operation: 'UPDATE',
+          fieldName: 'password',
+          description: `Reset password for user "${userName}"`,
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        });
+      }
       
       res.json({ 
         tempPassword, 
@@ -2600,6 +2709,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.params;
       const currentUser = req.user;
+      const adminUser = await storage.getUser(req.user.id);
 
       if (currentUser.id === userId) {
         return res.status(400).json({ message: "You cannot delete your own account" });
@@ -2612,6 +2722,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Delete the user
       await storage.deleteUser(userId);
+      
+      // Log admin action
+      if (adminUser) {
+        const userName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email;
+        await logAdminAction({
+          adminUser,
+          tableName: 'users',
+          recordId: userId,
+          operation: 'DELETE',
+          description: `Deleted user "${userName}" (${user.email})`,
+          oldValue: JSON.stringify({ 
+            email: user.email, 
+            firstName: user.firstName, 
+            lastName: user.lastName,
+            isAdmin: user.isAdmin 
+          }),
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        });
+      }
 
       res.json({ message: `User ${user.firstName} ${user.lastName} has been permanently deleted` });
     } catch (error) {
