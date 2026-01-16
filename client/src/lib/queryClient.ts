@@ -42,6 +42,14 @@ export const getQueryFn: <T>(options: {
     return await res.json();
   };
 
+// Global handler for 401 errors - redirects to login page
+function handleGlobalAuthError(error: Error) {
+  if (error.message.startsWith('401:')) {
+    // Clear any cached data and redirect to login
+    window.location.href = '/api/login';
+  }
+}
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -53,6 +61,10 @@ export const queryClient = new QueryClient({
     },
     mutations: {
       retry: false,
+      onError: handleGlobalAuthError,
     },
   },
 });
+
+// Set up global query error handler
+queryClient.getQueryCache().config.onError = handleGlobalAuthError;
