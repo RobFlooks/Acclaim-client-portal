@@ -4313,7 +4313,12 @@ export default function AdminEnhanced() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => sendTestReportMutation.mutate(report.id)}
+                            onClick={() => {
+                              const recipient = report.recipientEmail || report.userEmail;
+                              if (confirm(`Send a test report now to ${recipient}?`)) {
+                                sendTestReportMutation.mutate(report.id);
+                              }
+                            }}
                             disabled={sendTestReportMutation.isPending}
                             title="Send test report"
                           >
