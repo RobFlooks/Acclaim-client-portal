@@ -251,6 +251,15 @@ export interface IStorage {
     topTables: { tableName: string; changeCount: number }[];
   }>;
   
+  // Audit log retention
+  deleteOldAuditLogs(retentionDays: number): Promise<number>; // Returns count of deleted logs
+  getAuditLogStats(): Promise<{
+    totalLogs: number;
+    oldestLog: Date | null;
+    newestLog: Date | null;
+    logsByAge: { period: string; count: number }[];
+  }>;
+  
   getSystemAnalytics(): Promise<{
     totalUsers: number;
     activeUsers: number;
@@ -2566,6 +2575,88 @@ export class DatabaseStorage implements IStorage {
         tableName: table.tableName,
         changeCount: table.changeCount,
       })),
+    };
+  }
+
+  async deleteOldAuditLogs(retentionDays: number): Promise<number> {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - retentionDays);
+    
+    const result = await db.delete(auditLog)
+      .where(sql`${auditLog.timestamp} < ${cutoffDate}`);
+    
+    return result.rowCount || 0;
+  }
+
+  async getAuditLogStats(): Promise<{
+    totalLogs: number;
+    oldestLog: Date | null;
+    newestLog: Date | null;
+    logsByAge: { period: string; count: number }[];
+  }> {
+    // Get total count
+    const [totalResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(auditLog);
+
+    // Get oldest and newest log timestamps
+    const [dateRange] = await db
+      .select({
+        oldest: sql<Date>`min(${auditLog.timestamp})`,
+        newest: sql<Date>`max(${auditLog.timestamp})`,
+      })
+      .from(auditLog);
+
+    // Get logs grouped by age periods
+    const now = new Date();
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const threeMonthsAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+    const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+    const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+
+    const [lastWeek] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(auditLog)
+      .where(sql`${auditLog.timestamp} >= ${oneWeekAgo}`);
+
+    const [lastMonth] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(auditLog)
+      .where(sql`${auditLog.timestamp} >= ${oneMonthAgo} AND ${auditLog.timestamp} < ${oneWeekAgo}`);
+
+    const [lastThreeMonths] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(auditLog)
+      .where(sql`${auditLog.timestamp} >= ${threeMonthsAgo} AND ${auditLog.timestamp} < ${oneMonthAgo}`);
+
+    const [lastSixMonths] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(auditLog)
+      .where(sql`${auditLog.timestamp} >= ${sixMonthsAgo} AND ${auditLog.timestamp} < ${threeMonthsAgo}`);
+
+    const [lastYear] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(auditLog)
+      .where(sql`${auditLog.timestamp} >= ${oneYearAgo} AND ${auditLog.timestamp} < ${sixMonthsAgo}`);
+
+    const [olderThanYear] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(auditLog)
+      .where(sql`${auditLog.timestamp} < ${oneYearAgo}`);
+
+    return {
+      totalLogs: totalResult.count,
+      oldestLog: dateRange.oldest || null,
+      newestLog: dateRange.newest || null,
+      logsByAge: [
+        { period: 'Last 7 days', count: lastWeek.count },
+        { period: '7-30 days', count: lastMonth.count },
+        { period: '1-3 months', count: lastThreeMonths.count },
+        { period: '3-6 months', count: lastSixMonths.count },
+        { period: '6-12 months', count: lastYear.count },
+        { period: 'Over 1 year', count: olderThanYear.count },
+      ],
     };
   }
 

@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { scheduleReportProcessor } from "./scheduled-reports";
+import { storage } from "./storage";
 
 const app = express();
 app.use(express.json());
@@ -71,5 +72,27 @@ app.use((req, res, next) => {
     
     // Start the scheduled report processor
     scheduleReportProcessor();
+    
+    // Start audit log retention cleanup (runs daily at midnight)
+    const AUDIT_LOG_RETENTION_DAYS = 365; // Keep logs for 1 year by default
+    
+    const runAuditLogCleanup = async () => {
+      try {
+        const deletedCount = await storage.deleteOldAuditLogs(AUDIT_LOG_RETENTION_DAYS);
+        if (deletedCount > 0) {
+          log(`Audit log cleanup: deleted ${deletedCount} logs older than ${AUDIT_LOG_RETENTION_DAYS} days`);
+        }
+      } catch (error) {
+        console.error("Error during audit log cleanup:", error);
+      }
+    };
+    
+    // Run cleanup once at startup (after 30 seconds)
+    setTimeout(runAuditLogCleanup, 30000);
+    
+    // Then run daily (every 24 hours)
+    setInterval(runAuditLogCleanup, 24 * 60 * 60 * 1000);
+    
+    log("Audit log retention cleanup scheduled (runs daily, 365-day retention)");
   });
 })();

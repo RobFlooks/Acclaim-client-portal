@@ -4121,6 +4121,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Audit log retention endpoints
+  app.get("/api/admin/audit/stats", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const stats = await storage.getAuditLogStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching audit log stats:", error);
+      res.status(500).json({ message: "Failed to fetch audit log statistics" });
+    }
+  });
+
+  app.post("/api/admin/audit/cleanup", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { retentionDays } = req.body;
+      
+      if (!retentionDays || typeof retentionDays !== 'number' || retentionDays < 30) {
+        return res.status(400).json({ message: "Retention days must be at least 30 days" });
+      }
+      
+      const adminUser = await storage.getUser(req.user.id);
+      const deletedCount = await storage.deleteOldAuditLogs(retentionDays);
+      
+      // Log this admin action
+      if (adminUser) {
+        await storage.logAuditEvent({
+          tableName: 'audit_log',
+          recordId: 'cleanup',
+          operation: 'DELETE',
+          description: `Admin "${adminUser.email}" cleaned up ${deletedCount} audit logs older than ${retentionDays} days`,
+          userId: req.user.id,
+          userEmail: adminUser.email,
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        });
+      }
+      
+      res.json({ 
+        success: true, 
+        deletedCount, 
+        message: `Successfully deleted ${deletedCount} audit logs older than ${retentionDays} days` 
+      });
+    } catch (error) {
+      console.error("Error cleaning up audit logs:", error);
+      res.status(500).json({ message: "Failed to clean up audit logs" });
+    }
+  });
+
   // Advanced reporting endpoints
   app.get("/api/admin/reports/cross-organisation", isAuthenticated, isAdmin, async (req, res) => {
     try {
