@@ -106,8 +106,8 @@ export default function ClosedCaseManagement({ onBack }: ClosedCaseManagementPro
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      const nonArchivedCases = closedCases.filter(c => !c.isArchived);
-      setSelectedCases(new Set(nonArchivedCases.map(c => c.id)));
+      // Select all cases (including archived - they can still be deleted)
+      setSelectedCases(new Set(closedCases.map(c => c.id)));
     } else {
       setSelectedCases(new Set());
     }
@@ -252,7 +252,7 @@ export default function ClosedCaseManagement({ onBack }: ClosedCaseManagementPro
                     <TableRow>
                       <TableHead className="w-12">
                         <Checkbox
-                          checked={selectedCases.size === nonArchivedCases.length && nonArchivedCases.length > 0}
+                          checked={selectedCases.size === closedCases.length && closedCases.length > 0}
                           onCheckedChange={handleSelectAll}
                         />
                       </TableHead>
@@ -272,7 +272,6 @@ export default function ClosedCaseManagement({ onBack }: ClosedCaseManagementPro
                           <Checkbox
                             checked={selectedCases.has(case_.id)}
                             onCheckedChange={(checked) => handleSelectCase(case_.id, checked as boolean)}
-                            disabled={case_.isArchived}
                           />
                         </TableCell>
                         <TableCell className="font-medium">{case_.caseName}</TableCell>
@@ -298,7 +297,7 @@ export default function ClosedCaseManagement({ onBack }: ClosedCaseManagementPro
               <div className="md:hidden space-y-4">
                 <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
                   <Checkbox
-                    checked={selectedCases.size === nonArchivedCases.length && nonArchivedCases.length > 0}
+                    checked={selectedCases.size === closedCases.length && closedCases.length > 0}
                     onCheckedChange={handleSelectAll}
                   />
                   <span className="text-sm font-medium">Select All</span>
@@ -310,7 +309,6 @@ export default function ClosedCaseManagement({ onBack }: ClosedCaseManagementPro
                         <Checkbox
                           checked={selectedCases.has(case_.id)}
                           onCheckedChange={(checked) => handleSelectCase(case_.id, checked as boolean)}
-                          disabled={case_.isArchived}
                           className="mt-1"
                         />
                         <div className="flex-1 space-y-2">
