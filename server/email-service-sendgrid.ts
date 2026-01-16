@@ -445,9 +445,8 @@ class SendGridEmailService {
                   
                   <!-- Footer -->
                   <tr>
-                    <td style="background: #f8fafb; padding: 24px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
-                      <p style="margin: 0; color: #94a3b8; font-size: 13px;">Acclaim Credit Management & Recovery</p>
-                      <p style="margin: 8px 0 0 0; color: #cbd5e1; font-size: 12px;">This is an automated notification</p>
+                    <td style="background-color: #1f2937; padding: 24px 40px; text-align: center; border-radius: 0 0 12px 12px;">
+                      <p style="margin: 0; color: #9ca3af; font-size: 12px;">This is an automated notification from the Acclaim Client Portal</p>
                     </td>
                   </tr>
                   
@@ -638,9 +637,8 @@ Portal: https://acclaim-api.azurewebsites.net/auth
                   
                   <!-- Footer -->
                   <tr>
-                    <td style="background: #f8fafb; padding: 24px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
-                      <p style="margin: 0; color: #94a3b8; font-size: 13px;">Acclaim Credit Management & Recovery</p>
-                      <p style="margin: 8px 0 0 0; color: #cbd5e1; font-size: 12px;">This is an automated notification</p>
+                    <td style="background-color: #1f2937; padding: 24px 40px; text-align: center; border-radius: 0 0 12px 12px;">
+                      <p style="margin: 0; color: #9ca3af; font-size: 12px;">This is an automated notification from the Acclaim Client Portal</p>
                     </td>
                   </tr>
                   
@@ -821,9 +819,8 @@ Please log in to the Acclaim Portal to view and respond to this message.
                   
                   <!-- Footer -->
                   <tr>
-                    <td style="background: #f8fafb; padding: 24px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
-                      <p style="margin: 0; color: #94a3b8; font-size: 13px;">Acclaim Credit Management & Recovery</p>
-                      <p style="margin: 8px 0 0 0; color: #cbd5e1; font-size: 12px;">This is an automated notification</p>
+                    <td style="background-color: #1f2937; padding: 24px 40px; text-align: center; border-radius: 0 0 12px 12px;">
+                      <p style="margin: 0; color: #9ca3af; font-size: 12px;">This is an automated notification from the Acclaim Client Portal</p>
                     </td>
                   </tr>
                   
@@ -972,9 +969,8 @@ Portal: https://acclaim-api.azurewebsites.net/auth
                   
                   <!-- Footer -->
                   <tr>
-                    <td style="background: #f8fafb; padding: 24px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
-                      <p style="margin: 0; color: #94a3b8; font-size: 13px;">Acclaim Credit Management & Recovery</p>
-                      <p style="margin: 8px 0 0 0; color: #cbd5e1; font-size: 12px;">Questions? Contact our support team</p>
+                    <td style="background-color: #1f2937; padding: 24px 40px; text-align: center; border-radius: 0 0 12px 12px;">
+                      <p style="margin: 0; color: #9ca3af; font-size: 12px;">This is an automated notification from the Acclaim Client Portal</p>
                     </td>
                   </tr>
                   
@@ -1113,9 +1109,8 @@ If you have any questions, please contact our support team.
                   
                   <!-- Footer -->
                   <tr>
-                    <td style="background: #f8fafb; padding: 24px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
-                      <p style="margin: 0; color: #94a3b8; font-size: 13px;">Acclaim Credit Management & Recovery</p>
-                      <p style="margin: 8px 0 0 0; color: #cbd5e1; font-size: 12px;">Questions? Contact our support team</p>
+                    <td style="background-color: #1f2937; padding: 24px 40px; text-align: center; border-radius: 0 0 12px 12px;">
+                      <p style="margin: 0; color: #9ca3af; font-size: 12px;">This is an automated notification from the Acclaim Client Portal</p>
                     </td>
                   </tr>
                   
@@ -1248,9 +1243,8 @@ If you have any questions, please contact our support team.
                   
                   <!-- Footer -->
                   <tr>
-                    <td style="background: #f8fafb; padding: 24px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
-                      <p style="margin: 0; color: #94a3b8; font-size: 13px;">Acclaim Credit Management & Recovery</p>
-                      <p style="margin: 8px 0 0 0; color: #cbd5e1; font-size: 12px;">Need help? Contact us at email@acclaim.law</p>
+                    <td style="background-color: #1f2937; padding: 24px 40px; text-align: center; border-radius: 0 0 12px 12px;">
+                      <p style="margin: 0; color: #9ca3af; font-size: 12px;">This is an automated notification from the Acclaim Client Portal</p>
                     </td>
                   </tr>
                   
@@ -1791,9 +1785,8 @@ Need help? Contact us at email@acclaim.law
                   
                   <!-- Footer -->
                   <tr>
-                    <td style="background: #f8fafb; padding: 24px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
-                      <p style="margin: 0; color: #94a3b8; font-size: 13px;">Acclaim Credit Management & Recovery</p>
-                      <p style="margin: 8px 0 0 0; color: #cbd5e1; font-size: 12px;">This is an automated notification</p>
+                    <td style="background-color: #1f2937; padding: 24px 40px; text-align: center; border-radius: 0 0 12px 12px;">
+                      <p style="margin: 0; color: #9ca3af; font-size: 12px;">This is an automated notification from the Acclaim Client Portal</p>
                     </td>
                   </tr>
                   
@@ -1998,9 +1991,8 @@ A detailed Excel spreadsheet and all uploaded files are attached to this email.
                   
                   <!-- Footer -->
                   <tr>
-                    <td style="background: #f8fafb; padding: 24px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
-                      <p style="margin: 0; color: #94a3b8; font-size: 13px;">Acclaim Credit Management & Recovery</p>
-                      <p style="margin: 8px 0 0 0; color: #cbd5e1; font-size: 12px;">This is an automated notification</p>
+                    <td style="background-color: #1f2937; padding: 24px 40px; text-align: center; border-radius: 0 0 12px 12px;">
+                      <p style="margin: 0; color: #9ca3af; font-size: 12px;">This is an automated notification from the Acclaim Client Portal</p>
                     </td>
                   </tr>
                   
@@ -2158,9 +2150,8 @@ Please log in to the Acclaim Portal to view this document.
                   
                   <!-- Footer -->
                   <tr>
-                    <td style="background: #f8fafb; padding: 24px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
-                      <p style="margin: 0; color: #94a3b8; font-size: 13px;">Acclaim Credit Management & Recovery</p>
-                      <p style="margin: 8px 0 0 0; color: #cbd5e1; font-size: 12px;">This is an automated notification</p>
+                    <td style="background-color: #1f2937; padding: 24px 40px; text-align: center; border-radius: 0 0 12px 12px;">
+                      <p style="margin: 0; color: #9ca3af; font-size: 12px;">This is an automated notification from the Acclaim Client Portal</p>
                     </td>
                   </tr>
                   
@@ -2614,7 +2605,7 @@ This request was submitted via the Acclaim Client Portal.
                       
                       <p style="margin: 0; color: #6b7280; font-size: 14px;">
                         Kind regards,<br>
-                        The Acclaim Credit Management Team
+                        The Acclaim Team
                       </p>
                     </td>
                   </tr>
@@ -2623,8 +2614,7 @@ This request was submitted via the Acclaim Client Portal.
                   <tr>
                     <td style="background-color: #1f2937; padding: 24px; text-align: center; border-radius: 0 0 12px 12px;">
                       <p style="margin: 0; color: #9ca3af; font-size: 12px;">
-                        This is a security notification from the Acclaim Client Portal.<br>
-                        You can disable these notifications in your profile settings.
+                        This is a security notification from the Acclaim Client Portal.
                       </p>
                     </td>
                   </tr>
@@ -2653,11 +2643,10 @@ Wasn't you?
 If you didn't log in at this time, please contact your administrator immediately to secure your account.
 
 Kind regards,
-The Acclaim Credit Management Team
+The Acclaim Team
 
 ---
 This is a security notification from the Acclaim Client Portal.
-You can disable these notifications in your profile settings.
       `;
 
       const attachments: Array<{ content: string; filename: string; type: string; disposition?: string; content_id?: string }> = [];
@@ -2791,7 +2780,7 @@ export async function sendScheduledReportEmailWithAttachments(
                     
                     <p style="margin: 0; color: #6b7280; font-size: 14px;">
                       Kind regards,<br>
-                      The Acclaim Credit Management Team
+                      The Acclaim Team
                     </p>
                   </td>
                 </tr>
@@ -2826,7 +2815,7 @@ Two files are attached:
 - Excel for detailed analysis with separate tabs
 
 Kind regards,
-The Acclaim Credit Management Team
+The Acclaim Team
     `;
 
     const attachments: Array<{ content: string; filename: string; type: string; disposition?: string; content_id?: string }> = [];
