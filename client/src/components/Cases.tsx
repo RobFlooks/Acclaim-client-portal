@@ -275,9 +275,9 @@ export default function Cases() {
                     <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#f9fafb] flex-shrink-0">
                       {getDebtorIcon(case_.debtorType)}
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-gray-900 truncate">{case_.caseName}</p>
+                    <div className="min-w-0 flex-1 max-w-md">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-medium text-gray-900 break-words">{case_.caseName}</p>
                         {mutedCaseIds.includes(case_.id) ? (
                           <BellOff className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" title="Notifications muted" />
                         ) : (
