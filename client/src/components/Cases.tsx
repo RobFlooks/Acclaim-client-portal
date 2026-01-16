@@ -269,19 +269,19 @@ export default function Cases() {
                 <div
                   key={case_.id}
                   id={`case-${case_.id}`}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border space-y-4 sm:space-y-0"
+                  className="grid grid-cols-1 sm:grid-cols-[1fr_180px_120px_auto] gap-4 items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border"
                 >
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-4 min-w-0">
                     <div className="w-12 h-12 rounded-full flex items-center justify-center bg-[#f9fafb] flex-shrink-0">
                       {getDebtorIcon(case_.debtorType)}
                     </div>
-                    <div className="min-w-0 flex-1 max-w-md">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium text-gray-900 break-words">{case_.caseName}</p>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start gap-2">
+                        <p className="font-medium text-gray-900 break-words leading-tight">{case_.caseName}</p>
                         {mutedCaseIds.includes(case_.id) ? (
-                          <BellOff className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" title="Notifications muted" />
+                          <BellOff className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-1" title="Notifications muted" />
                         ) : (
-                          <Bell className="w-3.5 h-3.5 text-green-500 flex-shrink-0" title="Notifications enabled" />
+                          <Bell className="w-3.5 h-3.5 text-green-500 flex-shrink-0 mt-1" title="Notifications enabled" />
                         )}
                       </div>
                       <p className="text-sm text-gray-600 truncate">Account: {case_.accountNumber}</p>
@@ -294,18 +294,16 @@ export default function Cases() {
                     </div>
                   </div>
                   
-                  <div className="flex justify-between items-center sm:flex-col sm:justify-center sm:items-end space-x-4 sm:space-x-0">
-                    <div className="text-center sm:text-right">
-                      <p className="text-sm text-gray-600">Outstanding Amount</p>
-                      <p className="font-semibold text-gray-900">
-                        {formatCurrency(case_.outstandingAmount)}
-                      </p>
-                      <p className="text-xs text-gray-500 hidden sm:block">*May include interest and costs</p>
-                    </div>
-                    
-                    <div className="text-center sm:mt-2">
-                      {getStageBadge(case_.status, case_.stage)}
-                    </div>
+                  <div className="text-left sm:text-right">
+                    <p className="text-sm text-gray-600">Outstanding Amount</p>
+                    <p className="font-semibold text-gray-900">
+                      {formatCurrency(case_.outstandingAmount)}
+                    </p>
+                    <p className="text-xs text-gray-500 hidden sm:block">*May include interest and costs</p>
+                  </div>
+                  
+                  <div className="flex sm:justify-center">
+                    {getStageBadge(case_.status, case_.stage)}
                   </div>
                   
                   <Dialog open={dialogOpen && selectedCase?.id === case_.id} onOpenChange={setDialogOpen}>
@@ -317,7 +315,7 @@ export default function Cases() {
                           setSelectedCase(case_);
                           setDialogOpen(true);
                         }}
-                        className="flex-shrink-0 px-2 sm:px-3 text-xs sm:text-sm whitespace-nowrap"
+                        className="flex-shrink-0 px-2 sm:px-3 text-xs sm:text-sm whitespace-nowrap justify-self-end"
                       >
                         <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                         <span className="sm:hidden">View</span>
