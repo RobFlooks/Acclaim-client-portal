@@ -5539,6 +5539,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Closed case management - get closed cases with date range filter
+  app.get("/api/admin/closed-cases", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+      
+      const cases = await storage.getClosedCasesWithDateFilter(
+        startDate ? new Date(startDate as string) : undefined,
+        endDate ? new Date(endDate as string) : undefined
+      );
+      
+      res.json(cases);
+    } catch (error) {
+      console.error("Error fetching closed cases:", error);
+      res.status(500).json({ message: "Failed to fetch closed cases" });
+    }
+  });
+
+  // Bulk archive cases
+  app.post("/api/admin/cases/bulk-archive", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { caseIds } = req.body;
+      const userId = req.user.id;
+      const adminUser = await storage.getUser(userId);
+      
+      if (!Array.isArray(caseIds) || caseIds.length === 0) {
+        return res.status(400).json({ message: "caseIds must be a non-empty array" });
+      }
+      
+      const results = [];
+      for (const caseId of caseIds) {
+        try {
+          const caseDetails = await storage.getCaseById(caseId);
+          const archivedCase = await storage.archiveCase(caseId, userId);
+          results.push({ caseId, success: true, case: archivedCase });
+          
+          // Log admin action
+          if (adminUser && caseDetails) {
+            await logAdminAction({
+              adminUser,
+              tableName: 'cases',
+              recordId: String(caseId),
+              operation: 'UPDATE',
+              fieldName: 'isArchived',
+              description: `Bulk archived case "${caseDetails.caseName}" (${caseDetails.accountNumber})`,
+              oldValue: 'false',
+              newValue: 'true',
+              ipAddress: req.ip,
+              userAgent: req.get('user-agent'),
+            });
+          }
+        } catch (err) {
+          results.push({ caseId, success: false, error: 'Failed to archive' });
+        }
+      }
+      
+      res.json({
+        message: `Archived ${results.filter(r => r.success).length} of ${caseIds.length} cases`,
+        results,
+      });
+    } catch (error) {
+      console.error("Error bulk archiving cases:", error);
+      res.status(500).json({ message: "Failed to bulk archive cases" });
+    }
+  });
+
+  // Bulk delete cases
+  app.post("/api/admin/cases/bulk-delete", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { caseIds } = req.body;
+      const adminUser = await storage.getUser(req.user.id);
+      
+      if (!Array.isArray(caseIds) || caseIds.length === 0) {
+        return res.status(400).json({ message: "caseIds must be a non-empty array" });
+      }
+      
+      const results = [];
+      for (const caseId of caseIds) {
+        try {
+          const caseDetails = await storage.getCaseById(caseId);
+          if (!caseDetails) {
+            results.push({ caseId, success: false, error: 'Case not found' });
+            continue;
+          }
+          
+          await storage.deleteCase(caseId);
+          results.push({ 
+            caseId, 
+            success: true, 
+            deletedCase: { 
+              id: caseDetails.id, 
+              accountNumber: caseDetails.accountNumber, 
+              caseName: caseDetails.caseName 
+            } 
+          });
+          
+          // Log admin action
+          if (adminUser) {
+            await logAdminAction({
+              adminUser,
+              tableName: 'cases',
+              recordId: String(caseId),
+              operation: 'DELETE',
+              description: `Bulk deleted case "${caseDetails.caseName}" (${caseDetails.accountNumber}) and all associated data`,
+              oldValue: JSON.stringify({ id: caseDetails.id, accountNumber: caseDetails.accountNumber, caseName: caseDetails.caseName }),
+              ipAddress: req.ip,
+              userAgent: req.get('user-agent'),
+            });
+          }
+        } catch (err) {
+          results.push({ caseId, success: false, error: 'Failed to delete' });
+        }
+      }
+      
+      res.json({
+        message: `Deleted ${results.filter(r => r.success).length} of ${caseIds.length} cases`,
+        results,
+      });
+    } catch (error) {
+      console.error("Error bulk deleting cases:", error);
+      res.status(500).json({ message: "Failed to bulk delete cases" });
+    }
+  });
+
   // Download API Integration Guide as PDF
   app.get('/api/download/api-guide', async (req, res) => {
     try {

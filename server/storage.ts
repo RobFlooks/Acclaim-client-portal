@@ -51,7 +51,7 @@ import {
   type InsertScheduledReport,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, sql, or, isNull, isNotNull, inArray, notInArray } from "drizzle-orm";
+import { eq, and, desc, sql, or, isNull, isNotNull, inArray, notInArray, gte, lt } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
 import session, { SessionStore } from "express-session";
@@ -99,6 +99,7 @@ export interface IStorage {
   getUsersWithOrganisations(): Promise<(User & { organisations: (Organization & { role?: string })[] })[]>; // Returns all users with their organisations and roles
   getAllCases(): Promise<Case[]>; // Admin only - get all cases across all organizations
   getAllCasesIncludingArchived(): Promise<Case[]>; // Admin only - get all cases including archived ones
+  getClosedCasesWithDateFilter(startDate?: Date, endDate?: Date): Promise<Case[]>; // Admin only - get closed cases with date filter
   getCase(id: number, organisationId: number): Promise<Case | undefined>;
   getCaseById(id: number): Promise<Case | undefined>; // Admin only - get case by ID without org restriction
   createCase(caseData: InsertCase): Promise<Case>;
@@ -836,6 +837,69 @@ export class DatabaseStorage implements IStorage {
 
     // Sort by last activity time (most recent first)
     return casesWithCalculatedBalance.sort((a, b) => 
+      new Date(b.lastActivityTime).getTime() - new Date(a.lastActivityTime).getTime()
+    );
+  }
+
+  async getClosedCasesWithDateFilter(startDate?: Date, endDate?: Date): Promise<Case[]> {
+    // Admin only - get closed cases with optional date filter on updatedAt
+    let conditions = [eq(cases.status, 'closed')];
+    
+    if (startDate) {
+      conditions.push(gte(cases.updatedAt, startDate));
+    }
+    if (endDate) {
+      // Add one day to include the entire end date
+      const endOfDay = new Date(endDate);
+      endOfDay.setDate(endOfDay.getDate() + 1);
+      conditions.push(lt(cases.updatedAt, endOfDay));
+    }
+    
+    const closedCases = await db
+      .select({
+        ...cases,
+        organisationName: organisations.name,
+      })
+      .from(cases)
+      .leftJoin(organisations, eq(cases.organisationId, organisations.id))
+      .where(and(...conditions))
+      .orderBy(desc(cases.updatedAt));
+
+    // For each case, get the last activity time
+    const casesWithLastActivity = await Promise.all(
+      closedCases.map(async (case_) => {
+        // Get the most recent message for this case
+        const latestMessage = await db
+          .select()
+          .from(messages)
+          .where(eq(messages.caseId, case_.id))
+          .orderBy(desc(messages.createdAt))
+          .limit(1);
+        
+        // Get the most recent activity for this case
+        const latestActivity = await db
+          .select()
+          .from(caseActivities)
+          .where(eq(caseActivities.caseId, case_.id))
+          .orderBy(desc(caseActivities.createdAt))
+          .limit(1);
+        
+        // Determine the most recent update time
+        const caseUpdateTime = case_.updatedAt ? new Date(case_.updatedAt).getTime() : 0;
+        const messageUpdateTime = latestMessage.length > 0 ? new Date(latestMessage[0].createdAt).getTime() : 0;
+        const activityUpdateTime = latestActivity.length > 0 ? new Date(latestActivity[0].createdAt).getTime() : 0;
+        
+        const lastActivityTime = Math.max(caseUpdateTime, messageUpdateTime, activityUpdateTime);
+        
+        return {
+          ...case_,
+          lastActivityTime: new Date(lastActivityTime).toISOString(),
+        };
+      })
+    );
+
+    // Sort by last activity time (most recent first)
+    return casesWithLastActivity.sort((a, b) => 
       new Date(b.lastActivityTime).getTime() - new Date(a.lastActivityTime).getTime()
     );
   }
