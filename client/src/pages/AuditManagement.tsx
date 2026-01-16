@@ -57,13 +57,10 @@ interface AuditSummary {
 }
 
 interface AuditLogStats {
-  totalCount: number;
+  totalLogs: number;
   oldestLog: string | null;
   newestLog: string | null;
-  logsOlderThan30Days: number;
-  logsOlderThan90Days: number;
-  logsOlderThan180Days: number;
-  logsOlderThan365Days: number;
+  logsByAge: { period: string; count: number }[];
 }
 
 export default function AuditManagement() {
@@ -772,7 +769,7 @@ export default function AuditManagement() {
                       <div className="grid grid-cols-2 gap-4">
                         <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                           <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                            {auditStats.totalCount.toLocaleString()}
+                            {auditStats.totalLogs?.toLocaleString() || "0"}
                           </div>
                           <div className="text-sm text-gray-600 dark:text-gray-400">Total Audit Logs</div>
                         </div>
@@ -790,22 +787,24 @@ export default function AuditManagement() {
                           Log Age Distribution
                         </h4>
                         <div className="space-y-2 text-sm">
-                          <div className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                            <span>Older than 30 days</span>
-                            <Badge variant="secondary">{auditStats.logsOlderThan30Days.toLocaleString()}</Badge>
-                          </div>
-                          <div className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                            <span>Older than 90 days</span>
-                            <Badge variant="secondary">{auditStats.logsOlderThan90Days.toLocaleString()}</Badge>
-                          </div>
-                          <div className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                            <span>Older than 180 days</span>
-                            <Badge variant="secondary">{auditStats.logsOlderThan180Days.toLocaleString()}</Badge>
-                          </div>
-                          <div className="flex justify-between items-center p-2 bg-orange-50 dark:bg-orange-900/20 rounded">
-                            <span>Older than 365 days</span>
-                            <Badge variant="outline" className="text-orange-600 border-orange-600">{auditStats.logsOlderThan365Days.toLocaleString()}</Badge>
-                          </div>
+                          {auditStats.logsByAge?.map((ageGroup, index) => (
+                            <div 
+                              key={ageGroup.period} 
+                              className={`flex justify-between items-center p-2 rounded ${
+                                index === auditStats.logsByAge.length - 1 
+                                  ? 'bg-orange-50 dark:bg-orange-900/20' 
+                                  : 'bg-gray-50 dark:bg-gray-800'
+                              }`}
+                            >
+                              <span>{ageGroup.period}</span>
+                              <Badge 
+                                variant={index === auditStats.logsByAge.length - 1 ? "outline" : "secondary"}
+                                className={index === auditStats.logsByAge.length - 1 ? "text-orange-600 border-orange-600" : ""}
+                              >
+                                {ageGroup.count?.toLocaleString() ?? 0}
+                              </Badge>
+                            </div>
+                          )) || <div className="text-gray-500">No age data available</div>}
                         </div>
                       </div>
                       
@@ -874,17 +873,10 @@ export default function AuditManagement() {
                         </SelectContent>
                       </Select>
                       
-                      {auditStats && (
+                      {auditStats?.logsByAge && (
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          This will delete approximately{' '}
-                          <strong>
-                            {retentionDays === "30" && auditStats.logsOlderThan30Days.toLocaleString()}
-                            {retentionDays === "60" && auditStats.logsOlderThan30Days.toLocaleString()}
-                            {retentionDays === "90" && auditStats.logsOlderThan90Days.toLocaleString()}
-                            {retentionDays === "180" && auditStats.logsOlderThan180Days.toLocaleString()}
-                            {retentionDays === "365" && auditStats.logsOlderThan365Days.toLocaleString()}
-                          </strong>{' '}
-                          audit logs.
+                          Logs will be deleted based on the selected retention period.
+                          Currently tracking {auditStats.totalLogs?.toLocaleString() ?? 0} total logs.
                         </p>
                       )}
                       
