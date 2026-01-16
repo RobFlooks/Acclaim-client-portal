@@ -2878,7 +2878,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { generateScheduledReportForId } = await import("./scheduled-reports");
       await generateScheduledReportForId(id);
       
-      res.json({ success: true, message: `Test report sent to ${user.email}` });
+      // Show actual recipient email (recipientEmail for org-level, user email for user-level)
+      const actualRecipient = report.recipientEmail || user.email;
+      res.json({ success: true, message: `Test report sent to ${actualRecipient}` });
     } catch (error) {
       console.error("Error sending test report:", error);
       res.status(500).json({ message: "Failed to send test report" });
