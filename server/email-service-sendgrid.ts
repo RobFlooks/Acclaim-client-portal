@@ -340,7 +340,7 @@ class SendGridEmailService {
                   
                   <!-- Header -->
                   <tr>
-                    <td style="background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                    <td style="background-color: #008b8b; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
                       <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
                       <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Case Update</h1>
                       ${data.caseReference ? `<p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Reference: ${data.caseReference}</p>` : ''}
@@ -353,7 +353,7 @@ class SendGridEmailService {
                       
                       <!-- Update Type Badge -->
                       <div style="text-align: center; margin-bottom: 30px;">
-                        <span style="display: inline-block; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <span style="display: inline-block; background-color: #e0f2f1; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
                           ${data.messageType}
                         </span>
                       </div>
@@ -524,7 +524,7 @@ Portal: https://acclaim-api.azurewebsites.net/auth
                   
                   <!-- Header -->
                   <tr>
-                    <td style="background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                    <td style="background-color: #008b8b; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
                       <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
                       <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">New Message</h1>
                       ${data.caseReference ? `<p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
@@ -537,7 +537,7 @@ Portal: https://acclaim-api.azurewebsites.net/auth
                       
                       <!-- Email Type Badge -->
                       <div style="text-align: center; margin-bottom: 30px;">
-                        <span style="display: inline-block; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <span style="display: inline-block; background-color: #e0f2f1; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
                           User Message
                         </span>
                       </div>
@@ -730,7 +730,7 @@ Please log in to the Acclaim Portal to view and respond to this message.
                   
                   <!-- Header -->
                   <tr>
-                    <td style="background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                    <td style="background-color: #008b8b; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
                       <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
                       <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Message from Acclaim</h1>
                       ${data.caseReference ? `<p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
@@ -743,7 +743,7 @@ Please log in to the Acclaim Portal to view and respond to this message.
                       
                       <!-- Email Type Badge -->
                       <div style="text-align: center; margin-bottom: 30px;">
-                        <span style="display: inline-block; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <span style="display: inline-block; background-color: #e0f2f1; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
                           Admin Message
                         </span>
                       </div>
@@ -899,7 +899,7 @@ Portal: https://acclaim-api.azurewebsites.net/auth
                   
                   <!-- Header -->
                   <tr>
-                    <td style="background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                    <td style="background-color: #008b8b; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
                       <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
                       <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Welcome to Acclaim</h1>
                       <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Your account is ready</p>
@@ -912,7 +912,7 @@ Portal: https://acclaim-api.azurewebsites.net/auth
                       
                       <!-- Email Type Badge -->
                       <div style="text-align: center; margin-bottom: 30px;">
-                        <span style="display: inline-block; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <span style="display: inline-block; background-color: #e0f2f1; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
                           New Account
                         </span>
                       </div>
@@ -1045,7 +1045,7 @@ If you have any questions, please contact our support team.
                   
                   <!-- Header -->
                   <tr>
-                    <td style="background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                    <td style="background-color: #008b8b; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
                       <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
                       <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Your Temporary Password</h1>
                     </td>
@@ -1057,7 +1057,7 @@ If you have any questions, please contact our support team.
                       
                       <!-- Email Type Badge -->
                       <div style="text-align: center; margin-bottom: 30px;">
-                        <span style="display: inline-block; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <span style="display: inline-block; background-color: #e0f2f1; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
                           Account Setup
                         </span>
                       </div>
@@ -1185,7 +1185,7 @@ If you have any questions, please contact our support team.
                   
                   <!-- Header -->
                   <tr>
-                    <td style="background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                    <td style="background-color: #008b8b; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
                       <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
                       <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Password Reset</h1>
                     </td>
@@ -1197,7 +1197,7 @@ If you have any questions, please contact our support team.
                       
                       <!-- Email Type Badge -->
                       <div style="text-align: center; margin-bottom: 30px;">
-                        <span style="display: inline-block; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <span style="display: inline-block; background-color: #e0f2f1; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
                           Security
                         </span>
                       </div>
@@ -1518,7 +1518,7 @@ Need help? Contact us at email@acclaim.law
                   
                   <!-- Header -->
                   <tr>
-                    <td style="background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                    <td style="background-color: #008b8b; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
                       <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
                       <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">New Case Submission</h1>
                       <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Submission ID: #${data.submissionId}</p>
@@ -1531,7 +1531,7 @@ Need help? Contact us at email@acclaim.law
                       
                       <!-- Email Type Badge -->
                       <div style="text-align: center; margin-bottom: 30px;">
-                        <span style="display: inline-block; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <span style="display: inline-block; background-color: #e0f2f1; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
                           New Case
                         </span>
                       </div>
@@ -1916,7 +1916,7 @@ A detailed Excel spreadsheet and all uploaded files are attached to this email.
                   
                   <!-- Header -->
                   <tr>
-                    <td style="background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                    <td style="background-color: #008b8b; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
                       <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
                       <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Document Uploaded</h1>
                       ${data.caseReference ? `<p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
@@ -1929,7 +1929,7 @@ A detailed Excel spreadsheet and all uploaded files are attached to this email.
                       
                       <!-- Email Type Badge -->
                       <div style="text-align: center; margin-bottom: 30px;">
-                        <span style="display: inline-block; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <span style="display: inline-block; background-color: #e0f2f1; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
                           Document
                         </span>
                       </div>
@@ -2089,7 +2089,7 @@ Please log in to the Acclaim Portal to view this document.
                   
                   <!-- Header -->
                   <tr>
-                    <td style="background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                    <td style="background-color: #008b8b; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
                       <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
                       <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">New Document Available</h1>
                       ${data.caseReference ? `<p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
@@ -2102,7 +2102,7 @@ Please log in to the Acclaim Portal to view this document.
                       
                       <!-- Email Type Badge -->
                       <div style="text-align: center; margin-bottom: 30px;">
-                        <span style="display: inline-block; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <span style="display: inline-block; background-color: #e0f2f1; background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%); color: #00695c; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
                           Document
                         </span>
                       </div>
@@ -2249,7 +2249,7 @@ Portal: https://acclaim-api.azurewebsites.net/auth
                   
                   <!-- Header -->
                   <tr>
-                    <td style="background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                    <td style="background-color: #008b8b; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
                       <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
                       <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">New Member Request</h1>
                       <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Organisation: ${data.orgName}</p>
@@ -2409,7 +2409,7 @@ This request was submitted via the Acclaim Client Portal.
                   
                   <!-- Header -->
                   <tr>
-                    <td style="background: linear-gradient(135deg, ${isRemoval ? '#dc2626' : isOwnershipRemoval ? '#ea580c' : '#f59e0b'} 0%, ${isRemoval ? '#b91c1c' : isOwnershipRemoval ? '#c2410c' : '#d97706'} 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                    <td style="background-color: ${isRemoval ? '#dc2626' : isOwnershipRemoval ? '#ea580c' : '#f59e0b'}; background: linear-gradient(135deg, ${isRemoval ? '#dc2626' : isOwnershipRemoval ? '#ea580c' : '#f59e0b'} 0%, ${isRemoval ? '#b91c1c' : isOwnershipRemoval ? '#c2410c' : '#d97706'} 100%); padding: 40px 40px 30px 40px; text-align: center;">
                       <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
                       <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">${headerTitle}</h1>
                       <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Organisation: ${data.orgName}</p>
@@ -2543,7 +2543,7 @@ export async function sendScheduledReportEmailWithAttachments(
               <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
                 <!-- Header -->
                 <tr>
-                  <td style="background: linear-gradient(135deg, #0d9488 0%, #115e59 100%); padding: 32px; text-align: center; border-radius: 12px 12px 0 0;">
+                  <td style="background-color: #0d9488; background: linear-gradient(135deg, #0d9488 0%, #115e59 100%); padding: 32px; text-align: center; border-radius: 12px 12px 0 0;">
                     <img src="cid:logo" alt="Acclaim" style="height: 50px; margin-bottom: 16px;">
                     <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600;">${frequencyText} Report - ${today}</h1>
                   </td>
