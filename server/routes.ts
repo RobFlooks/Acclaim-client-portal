@@ -69,6 +69,42 @@ const isAdmin: RequestHandler = async (req, res, next) => {
   }
 };
 
+// Helper function to log admin actions to audit trail
+async function logAdminAction(params: {
+  adminUser: { id: string; email?: string | null; firstName?: string | null; lastName?: string | null };
+  tableName: string;
+  recordId: string;
+  operation: 'INSERT' | 'UPDATE' | 'DELETE';
+  description: string;
+  fieldName?: string;
+  oldValue?: string;
+  newValue?: string;
+  organisationId?: number;
+  ipAddress?: string;
+  userAgent?: string;
+}) {
+  try {
+    const adminName = [params.adminUser.firstName, params.adminUser.lastName].filter(Boolean).join(' ') || params.adminUser.email || 'Unknown Admin';
+    
+    await storage.logAuditEvent({
+      tableName: params.tableName,
+      recordId: params.recordId,
+      operation: params.operation,
+      fieldName: params.fieldName,
+      oldValue: params.oldValue,
+      newValue: params.newValue,
+      userId: params.adminUser.id,
+      userEmail: params.adminUser.email || undefined,
+      organisationId: params.organisationId,
+      ipAddress: params.ipAddress,
+      userAgent: params.userAgent,
+      description: `[Admin: ${adminName}] ${params.description}`,
+    });
+  } catch (error) {
+    console.error('Failed to log admin action to audit trail:', error);
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
