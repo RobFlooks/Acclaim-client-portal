@@ -6079,12 +6079,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.params;
       const { organisationId } = req.body;
+      const adminUser = await storage.getUser(req.user.id);
 
       if (!organisationId) {
         return res.status(400).json({ message: "Organisation ID is required" });
       }
 
+      // Get user and org details for audit log
+      const targetUser = await storage.getUser(userId);
+      const organisation = await storage.getOrganisation(organisationId);
+      
       const userOrg = await storage.addUserToOrganisation(userId, organisationId);
+      
+      // Log admin action
+      if (adminUser && targetUser && organisation) {
+        const userName = [targetUser.firstName, targetUser.lastName].filter(Boolean).join(' ') || targetUser.email;
+        await logAdminAction({
+          adminUser,
+          tableName: 'user_organisations',
+          recordId: `${userId}-${organisationId}`,
+          operation: 'INSERT',
+          description: `Assigned user "${userName}" to organisation "${organisation.name}"`,
+          newValue: JSON.stringify({ userId, organisationId, organisationName: organisation.name }),
+          organisationId,
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        });
+      }
+      
       res.status(201).json(userOrg);
     } catch (error) {
       console.error("Error adding user to organisation:", error);
@@ -6097,6 +6119,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId, organisationId } = req.params;
       const currentUserId = req.user.id;
+      const adminUser = await storage.getUser(currentUserId);
+      
+      // Get user and org details for audit log before removal
+      const targetUser = await storage.getUser(userId);
+      const organisation = await storage.getOrganisation(parseInt(organisationId));
       
       console.log(`Admin ${currentUserId} attempting to remove user ${userId} from organisation ${organisationId}`);
       
@@ -6145,6 +6172,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const newPrimaryOrgId = otherOrgs.length > 0 ? otherOrgs[0].organisationId : null;
         
         await storage.updateUserOrganisation(userId, newPrimaryOrgId);
+        
+        // Log admin action
+        if (adminUser && targetUser && organisation) {
+          const userName = [targetUser.firstName, targetUser.lastName].filter(Boolean).join(' ') || targetUser.email;
+          await logAdminAction({
+            adminUser,
+            tableName: 'user_organisations',
+            recordId: `${userId}-${organisationId}`,
+            operation: 'DELETE',
+            description: `Removed user "${userName}" from organisation "${organisation.name}"`,
+            oldValue: JSON.stringify({ userId, organisationId: parseInt(organisationId), organisationName: organisation.name }),
+            organisationId: parseInt(organisationId),
+            ipAddress: req.ip,
+            userAgent: req.get('user-agent'),
+          });
+        }
+        
         res.status(200).json({ message: "User removed from organisation successfully" });
       } else if (isJunctionOrg) {
         // Remove from junction table
@@ -6155,6 +6199,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const remainingOrgs = userOrgs.filter(uo => uo.organisationId !== parseInt(organisationId));
           const newPrimaryOrgId = remainingOrgs.length > 0 ? remainingOrgs[0].organisationId : null;
           await storage.updateUserOrganisation(userId, newPrimaryOrgId);
+        }
+        
+        // Log admin action
+        if (adminUser && targetUser && organisation) {
+          const userName = [targetUser.firstName, targetUser.lastName].filter(Boolean).join(' ') || targetUser.email;
+          await logAdminAction({
+            adminUser,
+            tableName: 'user_organisations',
+            recordId: `${userId}-${organisationId}`,
+            operation: 'DELETE',
+            description: `Removed user "${userName}" from organisation "${organisation.name}"`,
+            oldValue: JSON.stringify({ userId, organisationId: parseInt(organisationId), organisationName: organisation.name }),
+            organisationId: parseInt(organisationId),
+            ipAddress: req.ip,
+            userAgent: req.get('user-agent'),
+          });
         }
         
         res.status(200).json({ message: "User removed from organisation successfully" });
