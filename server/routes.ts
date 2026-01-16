@@ -2702,6 +2702,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin: Get scheduled reports for a specific organisation
+  app.get('/api/admin/organisations/:id/scheduled-reports', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const orgId = parseInt(req.params.id);
+      const allReports = await storage.getAllScheduledReports();
+      
+      // Filter reports for this organisation
+      const orgReports = allReports.filter(report => report.organisationId === orgId);
+      
+      // Get user info for each report
+      const reportsWithUsers = await Promise.all(
+        orgReports.map(async (report) => {
+          const user = await storage.getUser(report.userId);
+          return {
+            ...report,
+            userEmail: user?.email,
+            userName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'Unknown',
+          };
+        })
+      );
+      res.json(reportsWithUsers);
+    } catch (error) {
+      console.error("Error fetching organisation scheduled reports:", error);
+      res.status(500).json({ message: "Failed to fetch organisation scheduled reports" });
+    }
+  });
+
   // Admin: Get all users with their scheduled report settings
   app.get('/api/admin/scheduled-reports', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
