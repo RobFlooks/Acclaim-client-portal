@@ -22,6 +22,7 @@ import ApiGuideDownload from "@/components/ApiGuideDownload";
 import UserGuideDownload from "@/components/UserGuideDownload";
 import UserGuideWordDownload from "@/components/UserGuideWordDownload";
 import CaseManagementGuideDownload from "@/components/CaseManagementGuideDownload";
+import ClosedCaseManagement from "@/components/ClosedCaseManagement";
 
 // Documents List Component
 function DocumentsList({ submissionId }: { submissionId: number }) {
@@ -2019,6 +2020,9 @@ export default function AdminEnhanced() {
   const [selectedOrgForReports, setSelectedOrgForReports] = useState<Organisation | null>(null);
   const [editingOrgReport, setEditingOrgReport] = useState<any | null>(null);
   const [showEditOrgReportForm, setShowEditOrgReportForm] = useState(false);
+  
+  // State for closed case management
+  const [showClosedCaseManagement, setShowClosedCaseManagement] = useState(false);
 
   // State for user management
   const [showCreateUser, setShowCreateUser] = useState(false);
@@ -2923,9 +2927,23 @@ export default function AdminEnhanced() {
               <span className="sm:hidden">Audit</span>
             </Button>
           </Link>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setShowClosedCaseManagement(true)}
+          >
+            <Archive className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Closed Case Management</span>
+            <span className="sm:hidden">Closed Cases</span>
+          </Button>
         </div>
       </div>
 
+      {/* Closed Case Management View */}
+      {showClosedCaseManagement ? (
+        <ClosedCaseManagement onBack={() => setShowClosedCaseManagement(false)} />
+      ) : (
+      <>
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
@@ -5114,6 +5132,8 @@ export default function AdminEnhanced() {
           )}
         </DialogContent>
       </Dialog>
+      </>
+      )}
     </div>
   );
 }
