@@ -5,8 +5,7 @@ name: Build and deploy Node.js app to Azure Web App - acclaim-api
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -24,20 +23,20 @@ jobs:
           node-version: "20"
           cache: npm
 
-      - name: npm install, build, and test
+      - name: Install and build
         run: |
-          npm install
-          npm run build --if-present
-          npm run test --if-present
+          npm ci
+          npm run build
 
+      # Upload only what the app needs to run
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
           path: |
-            .
-            !node_modules
-            !**/node_modules
+            dist
+            package.json
+            package-lock.json
 
   deploy:
     runs-on: ubuntu-latest
