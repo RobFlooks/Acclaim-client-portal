@@ -44,6 +44,7 @@ export const users = pgTable("users", {
   emailNotifications: boolean("email_notifications").default(true), // User preference for email notifications (messages)
   documentNotifications: boolean("document_notifications").default(true), // User preference for document upload notifications
   pushNotifications: boolean("push_notifications").default(true), // User preference for push notifications
+  loginNotifications: boolean("login_notifications").default(true), // User preference for login alert emails
   canSubmitCases: boolean("can_submit_cases").default(true), // Admin-controlled permission to submit new cases
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
