@@ -843,7 +843,8 @@ export class DatabaseStorage implements IStorage {
 
   async getClosedCasesWithDateFilter(startDate?: Date, endDate?: Date): Promise<Case[]> {
     // Admin only - get closed cases with optional date filter on updatedAt
-    let conditions = [eq(cases.status, 'closed')];
+    // Use 'Closed' with capital C to match database convention
+    let conditions = [eq(cases.status, 'Closed')];
     
     if (startDate) {
       conditions.push(gte(cases.updatedAt, startDate));
