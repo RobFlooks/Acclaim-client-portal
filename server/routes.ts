@@ -312,13 +312,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Log the user in
-      (req as any).login(user, (err: any) => {
+      const ipAddress = req.ip || req.socket?.remoteAddress || 'unknown';
+      const userAgent = req.get('user-agent') || 'unknown';
+      
+      (req as any).login(user, async (err: any) => {
         if (err) {
           console.error("Login error after OTP verification:", err);
           return res.status(500).json({ message: "Login failed" });
         }
 
         console.log(`[Password Reset] User ${email} logged in with OTP, must change password`);
+        
+        // Send login notification if user has it enabled
+        try {
+          const fullUser = await storage.getUser(user.id);
+          if (fullUser && fullUser.email && (fullUser as any).loginNotifications !== false) {
+            const { sendGridEmailService } = await import('./email-service-sendgrid');
+            sendGridEmailService.sendLoginNotification({
+              userEmail: fullUser.email,
+              userName: `${fullUser.firstName || ''} ${fullUser.lastName || ''}`.trim() || 'User',
+              loginTime: new Date(),
+              ipAddress: ipAddress,
+              userAgent: userAgent,
+              loginMethod: 'otp'
+            }).catch(err => {
+              console.error('Failed to send login notification:', err);
+            });
+          }
+        } catch (notifyErr) {
+          console.error('Failed to send login notification:', notifyErr);
+        }
         
         res.json({
           message: "Login successful. Please change your password.",

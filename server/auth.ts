@@ -7,6 +7,7 @@ import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 import { loginRateLimiter } from "./rate-limiter";
+import { sendGridEmailService } from "./email-service-sendgrid";
 
 declare global {
   namespace Express {
@@ -226,6 +227,21 @@ export function setupAuth(app: Express) {
             ipAddress,
             userAgent,
           });
+          
+          // Send login notification email if user has it enabled
+          const fullUser = await storage.getUser(user.id);
+          if (fullUser && fullUser.email && (fullUser as any).loginNotifications !== false) {
+            sendGridEmailService.sendLoginNotification({
+              userEmail: fullUser.email,
+              userName: `${fullUser.firstName || ''} ${fullUser.lastName || ''}`.trim() || 'User',
+              loginTime: new Date(),
+              ipAddress: ipAddress,
+              userAgent: userAgent,
+              loginMethod: 'password'
+            }).catch(err => {
+              console.error('Failed to send login notification:', err);
+            });
+          }
         } catch (logErr) {
           console.error('Failed to record login attempt:', logErr);
         }

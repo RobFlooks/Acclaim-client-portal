@@ -1,6 +1,7 @@
 import * as msal from "@azure/msal-node";
 import { Express, RequestHandler } from "express";
 import { storage } from "./storage";
+import { sendGridEmailService } from "./email-service-sendgrid";
 
 const AZURE_CLIENT_ID = process.env.AZURE_CLIENT_ID;
 const AZURE_TENANT_ID = process.env.AZURE_TENANT_ID;
@@ -144,11 +145,34 @@ export function setupAzureAuth(app: Express): void {
 
       (req.session as any).passport = { user: user.id };
 
-      req.session.save((err) => {
+      req.session.save(async (err) => {
         if (err) {
           console.error("[Azure Auth] Session save error:", err);
           return res.redirect("/auth?error=session_error");
         }
+        
+        // Send login notification if user has it enabled
+        const ipAddress = req.ip || req.socket?.remoteAddress || 'unknown';
+        const userAgent = req.get('user-agent') || 'unknown';
+        
+        try {
+          const fullUser = await storage.getUser(user!.id);
+          if (fullUser && fullUser.email && (fullUser as any).loginNotifications !== false) {
+            sendGridEmailService.sendLoginNotification({
+              userEmail: fullUser.email,
+              userName: `${fullUser.firstName || ''} ${fullUser.lastName || ''}`.trim() || 'User',
+              loginTime: new Date(),
+              ipAddress: ipAddress,
+              userAgent: userAgent,
+              loginMethod: 'azure_sso'
+            }).catch(err => {
+              console.error('[Azure Auth] Failed to send login notification:', err);
+            });
+          }
+        } catch (notifyErr) {
+          console.error('[Azure Auth] Failed to send login notification:', notifyErr);
+        }
+        
         res.redirect("/");
       });
     } catch (error) {
