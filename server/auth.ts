@@ -6,6 +6,7 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
+import { loginRateLimiter } from "./rate-limiter";
 
 declare global {
   namespace Express {
@@ -118,9 +119,21 @@ export function setupAuth(app: Express) {
     const ipAddress = req.ip || req.socket?.remoteAddress || 'unknown';
     const userAgent = req.get('user-agent') || 'unknown';
 
+    // Check if IP is locked out due to too many failed attempts
+    const lockStatus = loginRateLimiter.isLocked(ipAddress);
+    if (lockStatus.locked) {
+      const remainingMinutes = Math.ceil((lockStatus.remainingSeconds || 0) / 60);
+      return res.status(429).json({
+        message: `Too many failed login attempts. Please try again in ${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}.`,
+        lockedOut: true,
+        remainingSeconds: lockStatus.remainingSeconds,
+      });
+    }
+
     passport.authenticate("local", async (err: any, user: any, info: any) => {
       if (err) {
         // Record failed login attempt due to error
+        loginRateLimiter.recordFailedAttempt(ipAddress, email.toLowerCase());
         try {
           await storage.logLoginAttempt({
             email: email.toLowerCase(),
@@ -135,7 +148,8 @@ export function setupAuth(app: Express) {
         return next(err);
       }
       if (!user) {
-        // Record failed login attempt
+        // Record failed login attempt with rate limiting
+        const result = loginRateLimiter.recordFailedAttempt(ipAddress, email.toLowerCase());
         try {
           await storage.logLoginAttempt({
             email: email.toLowerCase(),
@@ -144,17 +158,40 @@ export function setupAuth(app: Express) {
             userAgent,
             failureReason: info?.message || 'Invalid credentials',
           });
+          
+          // Log lockout event if account is now locked
+          if (result.locked) {
+            await storage.logAuditEvent({
+              tableName: 'security',
+              recordId: ipAddress,
+              operation: 'UPDATE',
+              description: `IP address ${ipAddress} locked out after 5 failed login attempts (attempted email: ${email.toLowerCase()})`,
+              ipAddress,
+              userAgent,
+            });
+          }
         } catch (logErr) {
           console.error('Failed to record login attempt:', logErr);
         }
+        
+        if (result.locked) {
+          return res.status(429).json({
+            message: "Too many failed login attempts. Your account has been temporarily locked for 15 minutes.",
+            lockedOut: true,
+            remainingSeconds: 15 * 60,
+          });
+        }
+        
         return res.status(401).json({ 
-          message: info?.message || "Invalid email or password" 
+          message: info?.message || "Invalid email or password",
+          attemptsRemaining: result.attemptsRemaining,
         });
       }
 
       req.login(user, async (err) => {
         if (err) {
           // Record failed login due to session error
+          loginRateLimiter.recordFailedAttempt(ipAddress, email.toLowerCase());
           try {
             await storage.logLoginAttempt({
               email: email.toLowerCase(),
@@ -168,6 +205,9 @@ export function setupAuth(app: Express) {
           }
           return next(err);
         }
+        
+        // Clear rate limiting on successful login
+        loginRateLimiter.recordSuccessfulLogin(ipAddress);
         
         // Record successful login
         try {

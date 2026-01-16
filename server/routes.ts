@@ -40,6 +40,7 @@ import { emailService } from "./email-service";
 import { sendGridEmailService } from "./email-service-sendgrid";
 import { setupAzureAuth } from "./azure-auth";
 import ExcelJS from "exceljs";
+import { loginRateLimiter } from "./rate-limiter";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -4072,6 +4073,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching failed login attempts:", error);
       res.status(500).json({ message: "Failed to fetch failed login attempts" });
+    }
+  });
+
+  // Rate limiting / lockout management endpoints
+  app.get("/api/admin/system/rate-limit/stats", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const stats = loginRateLimiter.getStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching rate limit stats:", error);
+      res.status(500).json({ message: "Failed to fetch rate limit statistics" });
+    }
+  });
+
+  app.get("/api/admin/system/rate-limit/locked", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const locked = loginRateLimiter.getLockedAccounts();
+      res.json(locked);
+    } catch (error) {
+      console.error("Error fetching locked accounts:", error);
+      res.status(500).json({ message: "Failed to fetch locked accounts" });
+    }
+  });
+
+  app.get("/api/admin/system/rate-limit/attempts", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const attempts = loginRateLimiter.getAllAttempts();
+      res.json(attempts);
+    } catch (error) {
+      console.error("Error fetching rate limit attempts:", error);
+      res.status(500).json({ message: "Failed to fetch rate limit attempts" });
+    }
+  });
+
+  app.post("/api/admin/system/rate-limit/unlock", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { identifier } = req.body;
+      
+      if (!identifier) {
+        return res.status(400).json({ message: "Identifier (IP address) is required" });
+      }
+      
+      const unlocked = loginRateLimiter.unlockAccount(identifier);
+      
+      if (unlocked) {
+        // Log the admin action
+        const adminUser = await storage.getUser(req.user.id);
+        if (adminUser) {
+          await storage.logAuditEvent({
+            tableName: 'security',
+            recordId: identifier,
+            operation: 'UPDATE',
+            description: `Admin "${adminUser.email}" manually unlocked IP address ${identifier}`,
+            userId: req.user.id,
+            userEmail: adminUser.email,
+            ipAddress: req.ip,
+            userAgent: req.get('user-agent'),
+          });
+        }
+        
+        res.json({ success: true, message: `Successfully unlocked ${identifier}` });
+      } else {
+        res.status(404).json({ message: "IP address not found in lockout list" });
+      }
+    } catch (error) {
+      console.error("Error unlocking account:", error);
+      res.status(500).json({ message: "Failed to unlock account" });
     }
   });
 
