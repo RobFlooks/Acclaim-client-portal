@@ -4279,7 +4279,10 @@ export default function AdminEnhanced() {
                               <span className="text-gray-500 text-sm">({report.recipientName})</span>
                             )}
                           </div>
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <div className="flex items-center gap-2 text-sm text-gray-600 flex-wrap">
+                            <Badge variant={report.recipientEmail ? "outline" : "secondary"} className={report.recipientEmail ? "border-acclaim-teal text-acclaim-teal" : "border-purple-500 text-purple-600"}>
+                              {report.recipientEmail ? "Organisation" : "User"}
+                            </Badge>
                             <Badge variant={report.enabled ? "default" : "secondary"}>
                               {report.enabled ? "Active" : "Disabled"}
                             </Badge>
