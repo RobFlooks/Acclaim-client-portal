@@ -288,93 +288,183 @@ export default function AuditManagement() {
 
           <TabsContent value="logs">
             <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
+              <CardHeader className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <CardTitle>System Audit Logs</CardTitle>
-                    <CardDescription>Detailed record of all system changes and updates</CardDescription>
+                    <CardTitle className="text-lg sm:text-xl">System Audit Logs</CardTitle>
+                    <CardDescription className="text-xs sm:text-sm">Detailed record of all system changes and updates</CardDescription>
                   </div>
                   <Button 
                     onClick={() => exportAuditData(filteredLogs, 'audit-logs')}
                     variant="outline"
                     size="sm"
                     disabled={filteredLogs.length === 0}
+                    className="w-full sm:w-auto"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Export CSV
                   </Button>
                 </div>
                 
-                <div className="flex flex-wrap items-center gap-4 mt-4">
-                  <div className="flex items-center gap-2">
-                    <Search className="w-4 h-4 text-gray-500" />
+                <div className="flex flex-col gap-3">
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 transform -translate-y-1/2" />
                     <Input
                       placeholder="Search logs..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-64"
+                      className="pl-9 w-full"
                     />
                   </div>
                   
-                  <Select value={tableFilter} onValueChange={setTableFilter}>
-                    <SelectTrigger className="w-40">
-                      <SelectValue placeholder="All Tables" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Tables</SelectItem>
-                      <SelectItem value="users">Users</SelectItem>
-                      <SelectItem value="cases">Cases</SelectItem>
-                      <SelectItem value="messages">Messages</SelectItem>
-                      <SelectItem value="documents">Documents</SelectItem>
-                      <SelectItem value="organisations">Organisations</SelectItem>
-                      <SelectItem value="payments">Payments</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <Select value={tableFilter} onValueChange={setTableFilter}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="All Tables" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Tables</SelectItem>
+                        <SelectItem value="users">Users</SelectItem>
+                        <SelectItem value="cases">Cases</SelectItem>
+                        <SelectItem value="messages">Messages</SelectItem>
+                        <SelectItem value="documents">Documents</SelectItem>
+                        <SelectItem value="organisations">Organisations</SelectItem>
+                        <SelectItem value="scheduled_reports">Reports</SelectItem>
+                        <SelectItem value="user_organisations">User Orgs</SelectItem>
+                      </SelectContent>
+                    </Select>
 
-                  <Select value={operationFilter} onValueChange={setOperationFilter}>
-                    <SelectTrigger className="w-40">
-                      <SelectValue placeholder="All Operations" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Operations</SelectItem>
-                      <SelectItem value="INSERT">Create</SelectItem>
-                      <SelectItem value="UPDATE">Update</SelectItem>
-                      <SelectItem value="DELETE">Delete</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <Select value={operationFilter} onValueChange={setOperationFilter}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="All Ops" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Ops</SelectItem>
+                        <SelectItem value="INSERT">Create</SelectItem>
+                        <SelectItem value="UPDATE">Update</SelectItem>
+                        <SelectItem value="DELETE">Delete</SelectItem>
+                      </SelectContent>
+                    </Select>
 
-                  <Select value={limitResults} onValueChange={setLimitResults}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="50">50 records</SelectItem>
-                      <SelectItem value="100">100 records</SelectItem>
-                      <SelectItem value="250">250 records</SelectItem>
-                      <SelectItem value="500">500 records</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <Select value={limitResults} onValueChange={setLimitResults}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="50">50 records</SelectItem>
+                        <SelectItem value="100">100 records</SelectItem>
+                        <SelectItem value="250">250 records</SelectItem>
+                        <SelectItem value="500">500 records</SelectItem>
+                      </SelectContent>
+                    </Select>
 
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => refetchLogs()}
-                  >
-                    <Filter className="w-4 h-4 mr-2" />
-                    Refresh
-                  </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => refetchLogs()}
+                      className="w-full"
+                    >
+                      <Filter className="w-4 h-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Refresh</span>
+                      <span className="sm:hidden">Go</span>
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="rounded-md border">
+              <CardContent className="px-3 sm:px-6">
+                {/* Mobile Card Layout */}
+                <div className="block md:hidden space-y-3">
+                  {logsLoading ? (
+                    <div className="text-center py-8">Loading audit logs...</div>
+                  ) : filteredLogs.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">No audit logs found matching the current filters.</div>
+                  ) : (
+                    filteredLogs.map((log) => (
+                      <div key={log.id} className="border rounded-lg p-3 bg-white dark:bg-gray-800">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            {getTableIcon(log.tableName)}
+                            <span className="capitalize font-medium truncate">{log.tableName}</span>
+                            {getOperationBadge(log.operation)}
+                          </div>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="ghost" size="sm" className="shrink-0">
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                              <DialogHeader>
+                                <DialogTitle className="text-lg">Audit Log Details</DialogTitle>
+                                <DialogDescription>
+                                  Log #{log.id}
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4 text-sm">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <div><strong>Timestamp:</strong> {format(new Date(log.timestamp), 'MMM dd, yyyy HH:mm:ss')}</div>
+                                  <div><strong>Operation:</strong> {log.operation}</div>
+                                  <div><strong>Table:</strong> {log.tableName}</div>
+                                  <div><strong>Record ID:</strong> <span className="font-mono text-xs">{log.recordId}</span></div>
+                                  <div><strong>Field:</strong> {log.fieldName || 'N/A'}</div>
+                                  <div><strong>User:</strong> {log.userEmail || 'System'}</div>
+                                </div>
+                                {log.description && (
+                                  <div>
+                                    <strong>Description:</strong>
+                                    <p className="mt-1 text-gray-600 dark:text-gray-400">{log.description}</p>
+                                  </div>
+                                )}
+                                {(log.oldValue || log.newValue) && (
+                                  <div className="space-y-2">
+                                    {log.oldValue && (
+                                      <div>
+                                        <strong>Old Value:</strong>
+                                        <pre className="mt-1 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-xs overflow-x-auto whitespace-pre-wrap break-all">{log.oldValue}</pre>
+                                      </div>
+                                    )}
+                                    {log.newValue && (
+                                      <div>
+                                        <strong>New Value:</strong>
+                                        <pre className="mt-1 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded text-xs overflow-x-auto whitespace-pre-wrap break-all">{log.newValue}</pre>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                {log.ipAddress && <div><strong>IP Address:</strong> {log.ipAddress}</div>}
+                                {log.userAgent && (
+                                  <div>
+                                    <strong>User Agent:</strong>
+                                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-400 break-all">{log.userAgent}</p>
+                                  </div>
+                                )}
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                        <div className="text-xs text-gray-500 mb-1">
+                          {format(new Date(log.timestamp), 'MMM dd, HH:mm:ss')} • {log.userEmail || 'System'}
+                        </div>
+                        {log.description && (
+                          <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">{log.description}</p>
+                        )}
+                        {!log.description && log.fieldName && (
+                          <p className="text-xs text-gray-600 dark:text-gray-400">Field: {log.fieldName}</p>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Desktop Table Layout */}
+                <div className="hidden md:block rounded-md border overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Timestamp</TableHead>
                         <TableHead>Table</TableHead>
                         <TableHead>Operation</TableHead>
-                        <TableHead>Record ID</TableHead>
-                        <TableHead>Field</TableHead>
+                        <TableHead>Description</TableHead>
                         <TableHead>User</TableHead>
                         <TableHead>Details</TableHead>
                       </TableRow>
@@ -382,20 +472,20 @@ export default function AuditManagement() {
                     <TableBody>
                       {logsLoading ? (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center py-8">
+                          <TableCell colSpan={6} className="text-center py-8">
                             Loading audit logs...
                           </TableCell>
                         </TableRow>
                       ) : filteredLogs.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center py-8">
+                          <TableCell colSpan={6} className="text-center py-8">
                             No audit logs found matching the current filters.
                           </TableCell>
                         </TableRow>
                       ) : (
                         filteredLogs.map((log) => (
                           <TableRow key={log.id}>
-                            <TableCell className="font-mono text-sm">
+                            <TableCell className="font-mono text-sm whitespace-nowrap">
                               {format(new Date(log.timestamp), 'MMM dd, HH:mm:ss')}
                             </TableCell>
                             <TableCell>
@@ -405,13 +495,15 @@ export default function AuditManagement() {
                               </div>
                             </TableCell>
                             <TableCell>{getOperationBadge(log.operation)}</TableCell>
-                            <TableCell className="font-mono text-sm">{log.recordId}</TableCell>
-                            <TableCell>{log.fieldName || '-'}</TableCell>
+                            <TableCell className="max-w-xs">
+                              <p className="text-sm truncate" title={log.description || log.fieldName || '-'}>
+                                {log.description || log.fieldName || '-'}
+                              </p>
+                            </TableCell>
                             <TableCell>
                               {log.userEmail ? (
                                 <div>
-                                  <div className="font-medium">{log.userEmail}</div>
-                                  <div className="text-xs text-gray-500">{log.userId}</div>
+                                  <div className="font-medium text-sm truncate max-w-[150px]" title={log.userEmail}>{log.userEmail}</div>
                                 </div>
                               ) : (
                                 <span className="text-gray-500">System</span>
@@ -424,7 +516,7 @@ export default function AuditManagement() {
                                     <Eye className="w-4 h-4" />
                                   </Button>
                                 </DialogTrigger>
-                                <DialogContent className="max-w-2xl">
+                                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                                   <DialogHeader>
                                     <DialogTitle>Audit Log Details</DialogTitle>
                                     <DialogDescription>
@@ -505,7 +597,7 @@ export default function AuditManagement() {
                 </div>
                 
                 {filteredLogs.length > 0 && (
-                  <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="mt-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                     Showing {filteredLogs.length} of {auditLogs?.length || 0} audit logs
                     {searchTerm && ` matching "${searchTerm}"`}
                   </div>
