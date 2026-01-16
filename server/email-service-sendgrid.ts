@@ -2545,8 +2545,7 @@ export async function sendScheduledReportEmailWithAttachments(
                 <tr>
                   <td style="background: linear-gradient(135deg, #0d9488 0%, #115e59 100%); padding: 32px; text-align: center; border-radius: 12px 12px 0 0;">
                     <img src="cid:logo" alt="Acclaim" style="height: 50px; margin-bottom: 16px;">
-                    <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600;">Your ${frequencyText} Report</h1>
-                    <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.8); font-size: 14px;">${today}</p>
+                    <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600;">${frequencyText} Report - ${today}</h1>
                   </td>
                 </tr>
                 
