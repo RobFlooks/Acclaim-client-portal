@@ -2666,29 +2666,30 @@ export class DatabaseStorage implements IStorage {
 
   // Session management methods
   async invalidateUserSessions(userId: string): Promise<number> {
-    // The sessions table stores user data in the sess JSONB column
-    // The structure is: { passport: { user: userId } }
-    const result = await db.delete(sessions)
-      .where(sql`${sessions.sess}->>'passport' IS NOT NULL AND ${sessions.sess}->'passport'->>'user' = ${userId}`);
+    // The user_sessions table stores user data in the sess JSONB column
+    // The structure is: { cookie: {...}, passport: { user: userId } }
+    // Note: The actual table name is 'user_sessions' not 'sessions'
+    const result = await db.execute(
+      sql`DELETE FROM user_sessions WHERE sess->'passport'->>'user' = ${userId}`
+    );
     
-    return result.rowCount || 0;
+    return (result as any).rowCount || 0;
   }
 
   async getUserActiveSessions(userId: string): Promise<{ sid: string; lastAccess: Date; userAgent?: string; ipAddress?: string }[]> {
-    const userSessions = await db
-      .select({
-        sid: sessions.sid,
-        sess: sessions.sess,
-        expire: sessions.expire,
-      })
-      .from(sessions)
-      .where(sql`${sessions.sess}->>'passport' IS NOT NULL AND ${sessions.sess}->'passport'->>'user' = ${userId} AND ${sessions.expire} > NOW()`);
+    // Query the user_sessions table directly
+    const result = await db.execute(
+      sql`SELECT sid, sess, expire FROM user_sessions 
+          WHERE sess->'passport'->>'user' = ${userId} 
+          AND expire > NOW()`
+    );
 
-    return userSessions.map(session => {
-      const sessData = session.sess as any;
+    const rows = (result as any).rows || [];
+    return rows.map((row: any) => {
+      const sessData = row.sess as any;
       return {
-        sid: session.sid,
-        lastAccess: session.expire, // expire is the closest we have to last access
+        sid: row.sid,
+        lastAccess: new Date(row.expire),
         userAgent: sessData?.userAgent,
         ipAddress: sessData?.ipAddress,
       };
