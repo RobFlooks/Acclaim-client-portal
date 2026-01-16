@@ -195,7 +195,7 @@ async function generatePdfReport(
   });
 
   // Build messages rows - match Excel columns exactly
-  // Column order: Date & Time, Case Name, Account Number, Subject, From, Message, Attachment
+  // Column order: Date & Time, Case Name, Account Number, Subject, From, Message
   let messagesRows = '';
   messages.forEach((m: any) => {
     // Show "Acclaim" for admin senders
@@ -203,17 +203,15 @@ async function generatePdfReport(
     const caseNameHtml = m.caseOrganisationName 
       ? `${m.caseName || 'General'} <span class="org-name">(${m.caseOrganisationName})</span>` 
       : (m.caseName || 'General');
-    const hasAttachment = m.attachmentFilename ? `${m.attachmentFilename}` : '';
     
     messagesRows += `
       <tr>
         <td>${formatDate(m.createdAt)}</td>
         <td>${caseNameHtml}</td>
-        <td>${m.caseAccountNumber || ''}</td>
+        <td>${m.accountNumber || ''}</td>
         <td>${m.subject || ''}</td>
         <td>${sender}</td>
         <td class="message-preview">${truncateMessage(m.content, 120)}</td>
-        <td>${hasAttachment}</td>
       </tr>
     `;
   });
@@ -328,7 +326,6 @@ async function generatePdfReport(
                   <th>Subject</th>
                   <th>From</th>
                   <th>Message</th>
-                  <th>Attachment</th>
                 </tr>
               </thead>
               <tbody>
@@ -548,7 +545,6 @@ function addMessagesSheet(workbook: ExcelJS.Workbook, messages: any[], frequency
     { header: "Subject", key: "subject", width: 35 },
     { header: "From", key: "senderName", width: 18 },
     { header: "Message", key: "content", width: 50 },
-    { header: "Attachment", key: "hasAttachment", width: 12 },
   ];
 
   // Style header row
@@ -571,7 +567,6 @@ function addMessagesSheet(workbook: ExcelJS.Workbook, messages: any[], frequency
       subject: "",
       senderName: "",
       content: "",
-      hasAttachment: "",
     });
     emptyRow.font = { italic: true, color: { argb: "FF666666" } };
   } else {
@@ -583,7 +578,6 @@ function addMessagesSheet(workbook: ExcelJS.Workbook, messages: any[], frequency
         subject: m.subject || "",
         senderName: m.senderName || "",
         content: truncateMessage(m.content, 200),
-        hasAttachment: m.hasAttachment ? "Yes" : "",
       });
       
       // Alternate row colours for readability
@@ -601,7 +595,7 @@ function addMessagesSheet(workbook: ExcelJS.Workbook, messages: any[], frequency
   // Enable autofilter for all columns
   sheet.autoFilter = {
     from: "A1",
-    to: "G1",
+    to: "F1",
   };
   
   // Freeze the header row
