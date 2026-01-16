@@ -224,6 +224,15 @@ interface DocumentUploadNotificationData {
   uploadedAt: Date;
 }
 
+interface LoginNotificationData {
+  userEmail: string;
+  userName: string;
+  loginTime: Date;
+  ipAddress: string;
+  userAgent: string;
+  loginMethod: 'password' | 'azure_sso' | 'otp';
+}
+
 class SendGridEmailService {
   private initialized = false;
 
@@ -2505,6 +2514,212 @@ This request was submitted via the Acclaim Client Portal.
       console.error('❌ Failed to send org owner request:', error);
       return false;
     }
+  }
+
+  async sendLoginNotification(data: LoginNotificationData): Promise<boolean> {
+    if (!this.initialized) {
+      console.log('[Email] Login notification not sent - service not initialized');
+      return false;
+    }
+
+    try {
+      const loginTime = new Date(data.loginTime).toLocaleString('en-GB', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'short'
+      });
+
+      // Parse user agent for friendly display
+      const browserInfo = this.parseUserAgent(data.userAgent);
+      
+      const loginMethodDisplay = {
+        'password': 'Password',
+        'azure_sso': 'Microsoft Account (Azure SSO)',
+        'otp': 'One-Time Password'
+      }[data.loginMethod] || data.loginMethod;
+
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f3f4f6;">
+            <tr>
+              <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                  <!-- Header -->
+                  <tr>
+                    <td style="background-color: #0d9488; background: linear-gradient(135deg, #0d9488 0%, #115e59 100%); padding: 32px; text-align: center; border-radius: 12px 12px 0 0;">
+                      <img src="cid:logo" alt="Acclaim" style="height: 50px; margin-bottom: 16px;">
+                      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600;">New Login to Your Account</h1>
+                    </td>
+                  </tr>
+                  
+                  <!-- Content -->
+                  <tr>
+                    <td style="padding: 32px;">
+                      <p style="margin: 0 0 16px 0; color: #374151; font-size: 16px; line-height: 24px;">
+                        Dear ${data.userName},
+                      </p>
+                      
+                      <p style="margin: 0 0 24px 0; color: #374151; font-size: 16px; line-height: 24px;">
+                        We detected a new login to your Acclaim Portal account. If this was you, no action is required.
+                      </p>
+                      
+                      <!-- Login Details Box -->
+                      <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f9fafb; border-radius: 8px; margin-bottom: 24px;">
+                        <tr>
+                          <td style="padding: 20px;">
+                            <h3 style="margin: 0 0 16px 0; color: #1f2937; font-size: 16px; font-weight: 600;">Login Details</h3>
+                            <table width="100%" cellspacing="0" cellpadding="0">
+                              <tr>
+                                <td style="padding: 8px 0; color: #6b7280; font-size: 14px; width: 120px; vertical-align: top;">Time:</td>
+                                <td style="padding: 8px 0; color: #1f2937; font-size: 14px; font-weight: 500;">${loginTime}</td>
+                              </tr>
+                              <tr>
+                                <td style="padding: 8px 0; color: #6b7280; font-size: 14px; vertical-align: top;">Method:</td>
+                                <td style="padding: 8px 0; color: #1f2937; font-size: 14px; font-weight: 500;">${loginMethodDisplay}</td>
+                              </tr>
+                              <tr>
+                                <td style="padding: 8px 0; color: #6b7280; font-size: 14px; vertical-align: top;">Browser:</td>
+                                <td style="padding: 8px 0; color: #1f2937; font-size: 14px; font-weight: 500;">${browserInfo}</td>
+                              </tr>
+                              <tr>
+                                <td style="padding: 8px 0; color: #6b7280; font-size: 14px; vertical-align: top;">IP Address:</td>
+                                <td style="padding: 8px 0; color: #1f2937; font-size: 14px; font-weight: 500;">${data.ipAddress}</td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                      </table>
+                      
+                      <!-- Warning Box -->
+                      <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b; margin-bottom: 24px;">
+                        <tr>
+                          <td style="padding: 16px;">
+                            <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 20px;">
+                              <strong>Wasn't you?</strong><br>
+                              If you didn't log in at this time, please contact your administrator immediately to secure your account.
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
+                      
+                      <p style="margin: 0; color: #6b7280; font-size: 14px;">
+                        Kind regards,<br>
+                        The Acclaim Credit Management Team
+                      </p>
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background-color: #1f2937; padding: 24px; text-align: center; border-radius: 0 0 12px 12px;">
+                      <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                        This is a security notification from the Acclaim Client Portal.<br>
+                        You can disable these notifications in your profile settings.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `;
+
+      const textContent = `
+Dear ${data.userName},
+
+We detected a new login to your Acclaim Portal account.
+
+Login Details:
+- Time: ${loginTime}
+- Method: ${loginMethodDisplay}
+- Browser: ${browserInfo}
+- IP Address: ${data.ipAddress}
+
+If this was you, no action is required.
+
+Wasn't you?
+If you didn't log in at this time, please contact your administrator immediately to secure your account.
+
+Kind regards,
+The Acclaim Credit Management Team
+
+---
+This is a security notification from the Acclaim Client Portal.
+You can disable these notifications in your profile settings.
+      `;
+
+      const attachments: Array<{ content: string; filename: string; type: string; disposition?: string; content_id?: string }> = [];
+      const logoBase64 = getLogoBase64();
+      if (logoBase64) {
+        attachments.push(logoBase64);
+      }
+
+      const result = await this.sendViaAPIM({
+        to: data.userEmail,
+        subject: 'New Login to Your Acclaim Portal Account',
+        textContent: textContent,
+        htmlContent: htmlContent,
+        attachments: attachments
+      });
+
+      if (result) {
+        console.log(`[Email] Login notification sent to ${data.userEmail}`);
+      }
+      return result;
+    } catch (error) {
+      console.error('❌ Failed to send login notification:', error);
+      return false;
+    }
+  }
+
+  private parseUserAgent(userAgent: string): string {
+    if (!userAgent || userAgent === 'unknown') {
+      return 'Unknown browser';
+    }
+    
+    // Extract browser and OS info
+    let browser = 'Unknown browser';
+    let os = '';
+    
+    if (userAgent.includes('Chrome') && !userAgent.includes('Edg')) {
+      const match = userAgent.match(/Chrome\/(\d+)/);
+      browser = match ? `Chrome ${match[1]}` : 'Chrome';
+    } else if (userAgent.includes('Firefox')) {
+      const match = userAgent.match(/Firefox\/(\d+)/);
+      browser = match ? `Firefox ${match[1]}` : 'Firefox';
+    } else if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) {
+      const match = userAgent.match(/Version\/(\d+)/);
+      browser = match ? `Safari ${match[1]}` : 'Safari';
+    } else if (userAgent.includes('Edg')) {
+      const match = userAgent.match(/Edg\/(\d+)/);
+      browser = match ? `Microsoft Edge ${match[1]}` : 'Microsoft Edge';
+    }
+    
+    if (userAgent.includes('Windows')) {
+      os = 'Windows';
+    } else if (userAgent.includes('Mac OS')) {
+      os = 'macOS';
+    } else if (userAgent.includes('Linux')) {
+      os = 'Linux';
+    } else if (userAgent.includes('iPhone') || userAgent.includes('iPad')) {
+      os = 'iOS';
+    } else if (userAgent.includes('Android')) {
+      os = 'Android';
+    }
+    
+    return os ? `${browser} on ${os}` : browser;
   }
 }
 
