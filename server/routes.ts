@@ -2755,6 +2755,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create organisation
   app.post('/api/admin/organisations', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
+      const adminUser = await storage.getUser(req.user.id);
       console.log('Creating organisation with data:', JSON.stringify(req.body, null, 2));
       const validatedData = createOrganisationSchema.parse(req.body);
       console.log('Parsed organisation data:', JSON.stringify(validatedData, null, 2));
@@ -2768,6 +2769,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const organisation = await storage.createOrganisation(orgData);
       console.log('Created organisation:', JSON.stringify(organisation, null, 2));
+      
+      // Log admin action
+      if (adminUser) {
+        await logAdminAction({
+          adminUser,
+          tableName: 'organisations',
+          recordId: String(organisation.id),
+          operation: 'INSERT',
+          description: `Created organisation "${organisation.name}"`,
+          newValue: JSON.stringify({ name: organisation.name, externalRef: organisation.externalRef }),
+          organisationId: organisation.id,
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        });
+      }
+      
       res.status(201).json(organisation);
     } catch (error) {
       console.error("Error creating organisation:", error);
@@ -2779,8 +2796,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/admin/organisations/:id', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const orgId = parseInt(req.params.id);
+      const adminUser = await storage.getUser(req.user.id);
+      const existingOrg = await storage.getOrganisation(orgId);
+      
       const orgData = updateOrganisationSchema.parse(req.body);
       const organisation = await storage.updateOrganisation(orgId, orgData);
+      
+      // Log admin action
+      if (adminUser && existingOrg) {
+        await logAdminAction({
+          adminUser,
+          tableName: 'organisations',
+          recordId: String(orgId),
+          operation: 'UPDATE',
+          description: `Updated organisation "${existingOrg.name}"`,
+          oldValue: JSON.stringify({ name: existingOrg.name, externalRef: existingOrg.externalRef }),
+          newValue: JSON.stringify({ name: organisation?.name, externalRef: organisation?.externalRef }),
+          organisationId: orgId,
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        });
+      }
+      
       res.json(organisation);
     } catch (error) {
       console.error("Error updating organisation:", error);
@@ -2792,7 +2829,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/admin/organisations/:id', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const orgId = parseInt(req.params.id);
+      const adminUser = await storage.getUser(req.user.id);
+      const existingOrg = await storage.getOrganisation(orgId);
+      
       await storage.deleteOrganisation(orgId);
+      
+      // Log admin action
+      if (adminUser && existingOrg) {
+        await logAdminAction({
+          adminUser,
+          tableName: 'organisations',
+          recordId: String(orgId),
+          operation: 'DELETE',
+          description: `Deleted organisation "${existingOrg.name}"`,
+          oldValue: JSON.stringify({ name: existingOrg.name, externalRef: existingOrg.externalRef }),
+          organisationId: orgId,
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        });
+      }
+      
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting organisation:", error);
