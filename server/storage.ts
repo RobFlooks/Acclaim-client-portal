@@ -260,6 +260,10 @@ export interface IStorage {
     logsByAge: { period: string; count: number }[];
   }>;
   
+  // Session management
+  invalidateUserSessions(userId: string): Promise<number>; // Returns count of deleted sessions
+  getUserActiveSessions(userId: string): Promise<{ sid: string; lastAccess: Date; userAgent?: string; ipAddress?: string }[]>;
+  
   getSystemAnalytics(): Promise<{
     totalUsers: number;
     activeUsers: number;
@@ -2658,6 +2662,37 @@ export class DatabaseStorage implements IStorage {
         { period: 'Over 1 year', count: olderThanYear.count },
       ],
     };
+  }
+
+  // Session management methods
+  async invalidateUserSessions(userId: string): Promise<number> {
+    // The sessions table stores user data in the sess JSONB column
+    // The structure is: { passport: { user: userId } }
+    const result = await db.delete(sessions)
+      .where(sql`${sessions.sess}->>'passport' IS NOT NULL AND ${sessions.sess}->'passport'->>'user' = ${userId}`);
+    
+    return result.rowCount || 0;
+  }
+
+  async getUserActiveSessions(userId: string): Promise<{ sid: string; lastAccess: Date; userAgent?: string; ipAddress?: string }[]> {
+    const userSessions = await db
+      .select({
+        sid: sessions.sid,
+        sess: sessions.sess,
+        expire: sessions.expire,
+      })
+      .from(sessions)
+      .where(sql`${sessions.sess}->>'passport' IS NOT NULL AND ${sessions.sess}->'passport'->>'user' = ${userId} AND ${sessions.expire} > NOW()`);
+
+    return userSessions.map(session => {
+      const sessData = session.sess as any;
+      return {
+        sid: session.sid,
+        lastAccess: session.expire, // expire is the closest we have to last access
+        userAgent: sessData?.userAgent,
+        ipAddress: sessData?.ipAddress,
+      };
+    });
   }
 
   // Helper method to create audit records for database changes

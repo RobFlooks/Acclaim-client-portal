@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, EyeOff, Mail, Bell, BellOff, FilePlus, FileX, BarChart3, Search, Crown, Calendar, CalendarOff, Pencil } from "lucide-react";
+import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, EyeOff, Mail, Bell, BellOff, FilePlus, FileX, BarChart3, Search, Crown, Calendar, CalendarOff, Pencil, LogOut } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrganisationSchema } from "@shared/schema";
@@ -2743,6 +2743,38 @@ export default function AdminEnhanced() {
     },
   });
 
+  // Force logout mutation (invalidate all sessions for a user)
+  const forceLogoutMutation = useMutation({
+    mutationFn: async ({ userId, reason }: { userId: string; reason?: string }) => {
+      const response = await apiRequest("POST", `/api/admin/users/${userId}/force-logout`, { reason });
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "User Logged Out",
+        description: data.message,
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to force logout user",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Copy temp password to clipboard
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -3480,6 +3512,22 @@ export default function AdminEnhanced() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
+                          const confirmation = confirm(`Force logout ${user.firstName} ${user.lastName}? This will end all their active sessions and require them to log in again.`);
+                          if (confirmation) {
+                            forceLogoutMutation.mutate({ userId: user.id, reason: 'Admin initiated force logout' });
+                          }
+                        }}
+                        disabled={forceLogoutMutation.isPending}
+                        className="text-orange-600 hover:text-orange-700"
+                        title="Force logout user (end all sessions)"
+                      >
+                        <LogOut className="h-3 w-3 mr-1" />
+                        Logout
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
                           const confirmation = confirm(`Are you sure you want to permanently delete ${user.firstName} ${user.lastName}? This action cannot be undone.`);
                           if (confirmation) {
                             deleteUserMutation.mutate(user.id);
@@ -3738,6 +3786,21 @@ export default function AdminEnhanced() {
                               ) : (
                                 <FileX className="h-3 w-3 text-gray-400" />
                               )}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const confirmation = confirm(`Force logout ${user.firstName} ${user.lastName}? This will end all their active sessions.`);
+                                if (confirmation) {
+                                  forceLogoutMutation.mutate({ userId: user.id, reason: 'Admin initiated force logout' });
+                                }
+                              }}
+                              disabled={forceLogoutMutation.isPending}
+                              className="text-orange-600 hover:text-orange-700"
+                              title="Force logout user (end all sessions)"
+                            >
+                              <LogOut className="h-3 w-3" />
                             </Button>
                             <Button
                               variant="outline"

@@ -4143,6 +4143,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Session invalidation (force logout) endpoints
+  app.get("/api/admin/users/:userId/sessions", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const sessions = await storage.getUserActiveSessions(userId);
+      res.json({ sessions, count: sessions.length });
+    } catch (error) {
+      console.error("Error fetching user sessions:", error);
+      res.status(500).json({ message: "Failed to fetch user sessions" });
+    }
+  });
+
+  app.post("/api/admin/users/:userId/force-logout", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { reason } = req.body;
+      
+      // Get the target user info for audit logging
+      const targetUser = await storage.getUser(userId);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Invalidate all sessions for the user
+      const deletedCount = await storage.invalidateUserSessions(userId);
+      
+      // Log the admin action
+      const adminUser = await storage.getUser(req.user.id);
+      if (adminUser) {
+        await storage.logAuditEvent({
+          tableName: 'sessions',
+          recordId: userId,
+          operation: 'DELETE',
+          description: `Admin "${adminUser.email}" force logged out user "${targetUser.email}"${reason ? ` - Reason: ${reason}` : ''}`,
+          userId: req.user.id,
+          userEmail: adminUser.email,
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        });
+      }
+      
+      res.json({ 
+        success: true, 
+        message: `Successfully invalidated ${deletedCount} session(s) for ${targetUser.email}`,
+        sessionsInvalidated: deletedCount
+      });
+    } catch (error) {
+      console.error("Error forcing user logout:", error);
+      res.status(500).json({ message: "Failed to force user logout" });
+    }
+  });
+
   app.get("/api/admin/system/metrics", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { metricName, limit } = req.query;
