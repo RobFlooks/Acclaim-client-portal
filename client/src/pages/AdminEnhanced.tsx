@@ -4394,25 +4394,50 @@ export default function AdminEnhanced() {
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="editRecipientEmail">Recipient Email</Label>
-                <Input
-                  id="editRecipientEmail"
-                  type="email"
-                  value={orgScheduleForm.recipientEmail}
-                  onChange={(e) => setOrgScheduleForm({ ...orgScheduleForm, recipientEmail: e.target.value })}
-                  placeholder="email@example.com"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="editRecipientName">Recipient Name (optional)</Label>
-                <Input
-                  id="editRecipientName"
-                  value={orgScheduleForm.recipientName}
-                  onChange={(e) => setOrgScheduleForm({ ...orgScheduleForm, recipientName: e.target.value })}
-                  placeholder="Enter recipient name"
-                />
-              </div>
+              {/* Show read-only user info for user-level reports, editable fields for org-level reports */}
+              {editingOrgReport && !editingOrgReport.recipientEmail ? (
+                <>
+                  <div className="space-y-2">
+                    <Label>User Email</Label>
+                    <Input
+                      value={editingOrgReport.userEmail || ''}
+                      disabled
+                      className="bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>User Name</Label>
+                    <Input
+                      value={editingOrgReport.userName || ''}
+                      disabled
+                      className="bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500">This is a user-level report. The recipient cannot be changed.</p>
+                </>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="editRecipientEmail">Recipient Email</Label>
+                    <Input
+                      id="editRecipientEmail"
+                      type="email"
+                      value={orgScheduleForm.recipientEmail}
+                      onChange={(e) => setOrgScheduleForm({ ...orgScheduleForm, recipientEmail: e.target.value })}
+                      placeholder="email@example.com"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="editRecipientName">Recipient Name (optional)</Label>
+                    <Input
+                      id="editRecipientName"
+                      value={orgScheduleForm.recipientName}
+                      onChange={(e) => setOrgScheduleForm({ ...orgScheduleForm, recipientName: e.target.value })}
+                      placeholder="Enter recipient name"
+                    />
+                  </div>
+                </>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Frequency</Label>
