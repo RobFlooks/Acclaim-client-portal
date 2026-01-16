@@ -194,25 +194,57 @@ async function generatePdfReport(
     `;
   });
 
-  // Build messages rows - match Excel columns exactly
-  // Column order: Date & Time, Case Name, Account Number, Subject, From, Message
-  let messagesRows = '';
+  // Group messages by case for PDF
+  const messagesByCase = new Map<string, { caseName: string; accountNumber: string; messages: any[] }>();
   messages.forEach((m: any) => {
-    // Show "Acclaim" for admin senders
-    const sender = m.isAdminSender ? 'Acclaim' : (m.senderName || 'Unknown');
-    const caseNameHtml = m.caseOrganisationName 
-      ? `${m.caseName || 'General'} <span class="org-name">(${m.caseOrganisationName})</span>` 
-      : (m.caseName || 'General');
+    const caseKey = m.caseId ? String(m.caseId) : 'general';
+    if (!messagesByCase.has(caseKey)) {
+      messagesByCase.set(caseKey, {
+        caseName: m.caseName || 'General Messages',
+        accountNumber: m.accountNumber || '',
+        messages: []
+      });
+    }
+    messagesByCase.get(caseKey)!.messages.push(m);
+  });
+
+  // Build messages sections grouped by case
+  let messagesSections = '';
+  messagesByCase.forEach((caseData, caseKey) => {
+    const caseHeader = caseData.accountNumber 
+      ? `${caseData.caseName} (${caseData.accountNumber})`
+      : caseData.caseName;
     
-    messagesRows += `
-      <tr>
-        <td>${formatDate(m.createdAt)}</td>
-        <td>${caseNameHtml}</td>
-        <td>${m.accountNumber || ''}</td>
-        <td>${m.subject || ''}</td>
-        <td>${sender}</td>
-        <td class="message-preview">${truncateMessage(m.content, 120)}</td>
-      </tr>
+    let caseMessagesRows = '';
+    caseData.messages.forEach((m: any) => {
+      const sender = m.isAdminSender ? 'Acclaim' : (m.senderName || 'Unknown');
+      caseMessagesRows += `
+        <tr>
+          <td>${formatDate(m.createdAt)}</td>
+          <td>${m.subject || ''}</td>
+          <td>${sender}</td>
+          <td class="message-preview">${truncateMessage(m.content, 120)}</td>
+        </tr>
+      `;
+    });
+    
+    messagesSections += `
+      <div class="case-messages">
+        <h3 class="case-header">${caseHeader}</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Date & Time</th>
+              <th>Subject</th>
+              <th>From</th>
+              <th>Message</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${caseMessagesRows}
+          </tbody>
+        </table>
+      </div>
     `;
   });
 
@@ -244,7 +276,9 @@ async function generatePdfReport(
         .totals-row { font-weight: bold; background-color: #e5e7eb !important; }
         .footer { text-align: center; margin-top: 40px; color: #666; font-size: 12px; }
         .no-data { color: #666; font-style: italic; padding: 20px; text-align: center; }
-        .message-preview { max-width: 200px; word-wrap: break-word; }
+        .message-preview { max-width: 300px; word-wrap: break-word; }
+        .case-messages { margin-bottom: 20px; }
+        .case-header { font-size: 14px; color: #0d9488; margin: 15px 0 8px 0; padding-bottom: 5px; border-bottom: 2px solid #0d9488; }
       </style>
     </head>
     <body>
@@ -316,23 +350,7 @@ async function generatePdfReport(
       ${settings.includeActivityReport ? `
         <div class="section">
           <h2>Messages Report</h2>
-          ${messages.length > 0 ? `
-            <table>
-              <thead>
-                <tr>
-                  <th>Date & Time</th>
-                  <th>Case Name</th>
-                  <th>Account Number</th>
-                  <th>Subject</th>
-                  <th>From</th>
-                  <th>Message</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${messagesRows}
-              </tbody>
-            </table>
-          ` : `<div class="no-data">No messages in the ${settings.frequency === "daily" ? "last 24 hours" : settings.frequency === "weekly" ? "last 7 days" : "last month"}</div>`}
+          ${messages.length > 0 ? messagesSections : `<div class="no-data">No messages in the ${settings.frequency === "daily" ? "last 24 hours" : settings.frequency === "weekly" ? "last 7 days" : "last month"}</div>`}
         </div>
       ` : ''}
       
