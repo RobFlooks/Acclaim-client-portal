@@ -21,7 +21,23 @@ export default function Home() {
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Close mobile menu when screen size or orientation changes
+  useEffect(() => {
+    const handleResize = () => {
+      setMobileMenuOpen(false);
+    };
 
+    // Listen for resize events (includes orientation changes)
+    window.addEventListener('resize', handleResize);
+    
+    // Also listen for orientation change events (for older browsers)
+    window.addEventListener('orientationchange', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, []);
 
   // Handle URL parameters for navigation
   useEffect(() => {
