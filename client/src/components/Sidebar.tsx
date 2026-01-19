@@ -45,7 +45,9 @@ export default function Sidebar({ activeSection, setActiveSection }: SidebarProp
           onClick={() => setActiveSection('dashboard')}
           className="flex items-center hover:bg-teal-700 dark:hover:bg-gray-800 px-3 py-2 rounded-lg transition-colors"
         >
-          <img src={logoImage} alt="Acclaim Logo" className="w-8 h-8 mr-3 filter brightness-0 invert dark:brightness-100 dark:invert-0" />
+          {/* Light mode: white inverted logo, Dark mode: teal rose logo */}
+          <img src={logoImage} alt="Acclaim Logo" className="w-8 h-8 mr-3 filter brightness-0 invert dark:hidden" />
+          <img src={acclaimRoseLogo} alt="Acclaim Logo" className="w-8 h-8 mr-3 hidden dark:block" />
           <div className="text-white">
             <div className="text-lg font-bold ml-[0px] mr-[0px] text-left">Acclaim</div>
             <div className="text-xs opacity-80 text-left">Credit Management & Recovery</div>
