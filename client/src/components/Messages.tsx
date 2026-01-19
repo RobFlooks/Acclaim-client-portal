@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-import { Send, MessageSquare, Plus, User, Paperclip, Download, Trash2, Search, Filter, Calendar, X, FileSpreadsheet, Info } from "lucide-react";
+import { Send, MessageSquare, Plus, User, Paperclip, Download, Trash2, Search, Filter, Calendar, X, FileSpreadsheet, Info, History, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/use-auth";
@@ -30,6 +30,10 @@ export default function Messages() {
   const [linkedCaseId, setLinkedCaseId] = useState<string>("");
   const [selectedCase, setSelectedCase] = useState<any>(null);
   const [caseDialogOpen, setCaseDialogOpen] = useState(false);
+  
+  // Audit dialog state (admin only)
+  const [auditDialogOpen, setAuditDialogOpen] = useState(false);
+  const [auditMessageId, setAuditMessageId] = useState<number | null>(null);
   
   // Search state
   const [searchTerm, setSearchTerm] = useState("");
@@ -183,6 +187,25 @@ export default function Messages() {
     },
   });
 
+  // Mutation to track message views
+  const trackViewMutation = useMutation({
+    mutationFn: async (messageId: number) => {
+      await apiRequest("POST", "/api/track/view", { type: "message", id: messageId });
+    },
+  });
+
+  // Query for message audit history (admin only)
+  const { data: messageAuditLogs, isLoading: auditLoading } = useQuery({
+    queryKey: ["/api/admin/audit/item/message", auditMessageId],
+    queryFn: async () => {
+      if (!auditMessageId) return [];
+      const response = await fetch(`/api/admin/audit/item/message/${auditMessageId}`);
+      if (!response.ok) throw new Error("Failed to fetch audit logs");
+      return response.json();
+    },
+    enabled: !!auditMessageId && user?.isAdmin,
+  });
+
   const handleSendMessage = () => {
     if (!newMessage.trim() || !newSubject.trim()) {
       toast({
@@ -237,6 +260,13 @@ export default function Messages() {
   const handleMessageClick = (message: any) => {
     setViewingMessage(message);
     setMessageViewOpen(true);
+    // Track the view for read receipts
+    trackViewMutation.mutate(message.id);
+  };
+
+  const handleOpenAuditDialog = (messageId: number) => {
+    setAuditMessageId(messageId);
+    setAuditDialogOpen(true);
   };
 
   const handleCloseMessageView = () => {
@@ -739,21 +769,33 @@ export default function Messages() {
                       Reply
                     </Button>
                     {user?.isAdmin && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          if (confirm("Are you sure you want to delete this message?")) {
-                            deleteMessageMutation.mutate(viewingMessage.id);
-                            handleCloseMessageView();
-                          }
-                        }}
-                        className="text-red-600 border-red-600 hover:bg-red-600 hover:text-white"
-                        disabled={deleteMessageMutation.isPending}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        {deleteMessageMutation.isPending ? "Deleting..." : "Delete"}
-                      </Button>
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenAuditDialog(viewingMessage.id)}
+                          className="text-purple-600 border-purple-600 hover:bg-purple-600 hover:text-white"
+                          title="View read receipts"
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          Views
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (confirm("Are you sure you want to delete this message?")) {
+                              deleteMessageMutation.mutate(viewingMessage.id);
+                              handleCloseMessageView();
+                            }
+                          }}
+                          className="text-red-600 border-red-600 hover:bg-red-600 hover:text-white"
+                          disabled={deleteMessageMutation.isPending}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          {deleteMessageMutation.isPending ? "Deleting..." : "Delete"}
+                        </Button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -990,6 +1032,69 @@ export default function Messages() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Message Audit Dialog (Admin Only) */}
+      {user?.isAdmin && (
+        <Dialog open={auditDialogOpen} onOpenChange={(open) => {
+          setAuditDialogOpen(open);
+          if (!open) setAuditMessageId(null);
+        }}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Eye className="h-5 w-5 text-purple-600" />
+                Message View History
+              </DialogTitle>
+              <DialogDescription>
+                See who has viewed this message and when.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              {auditLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                </div>
+              ) : messageAuditLogs && messageAuditLogs.length > 0 ? (
+                <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                  {messageAuditLogs.map((log: any) => (
+                    <div key={log.id} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center flex-shrink-0">
+                        <User className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {log.userEmail || 'Unknown User'}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {new Date(log.timestamp).toLocaleDateString('en-GB', {
+                            weekday: 'short',
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                        {log.ipAddress && (
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                            IP: {log.ipAddress}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Eye className="h-12 w-12 mx-auto mb-2 opacity-30" />
+                  <p>No views recorded yet</p>
+                  <p className="text-xs mt-1">Views are tracked when users open messages</p>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
