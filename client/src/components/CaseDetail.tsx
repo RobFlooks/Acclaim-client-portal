@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/use-auth";
@@ -46,6 +47,8 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   const [messageSearch, setMessageSearch] = useState("");
   const [documentSearch, setDocumentSearch] = useState("");
   const [notifyOnUpload, setNotifyOnUpload] = useState(true);
+  const [selectedMessageForView, setSelectedMessageForView] = useState<any | null>(null);
+  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -482,6 +485,27 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
       });
     },
   });
+
+  // Track message view mutation
+  const trackMessageViewMutation = useMutation({
+    mutationFn: async (messageId: number) => {
+      await apiRequest("POST", "/api/track/view", { itemType: "message", itemId: messageId });
+    },
+  });
+
+  // Helper to truncate message content for preview
+  const truncateContent = (content: string, maxLength: number = 100) => {
+    if (!content) return "";
+    if (content.length <= maxLength) return content;
+    return content.substring(0, maxLength).trim() + "...";
+  };
+
+  // Handle opening message popup and track view
+  const handleOpenMessage = (message: any) => {
+    setSelectedMessageForView(message);
+    setMessageDialogOpen(true);
+    trackMessageViewMutation.mutate(message.id);
+  };
 
   const handleSendMessage = () => {
     if (!newMessage.trim()) return;
@@ -1541,7 +1565,11 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                       );
                     })
                     .map((message: any) => (
-                    <div key={message.id} className="p-3 border rounded-lg bg-gray-50 border-gray-200">
+                    <div 
+                      key={message.id} 
+                      className="p-3 border rounded-lg bg-gray-50 border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={() => handleOpenMessage(message)}
+                    >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
                           <p className="font-medium text-sm">{message.subject}</p>
@@ -1552,7 +1580,8 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 if (confirm("Are you sure you want to delete this message?")) {
                                   deleteMessageMutation.mutate(message.id);
                                 }
@@ -1566,28 +1595,14 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                         </div>
                       </div>
                       <p className="text-xs text-gray-600 mb-2">From: {message.senderName || 'Unknown'}</p>
-                      <p className="text-sm text-gray-700 whitespace-pre-wrap">{message.content}</p>
+                      <p className="text-sm text-gray-700">{truncateContent(message.content, 120)}</p>
                       {message.attachmentFileName && (
-                        <div className="mt-2 p-2 bg-gray-50 rounded-md">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <FileText className="h-4 w-4 text-acclaim-teal" />
-                              <span className="text-sm font-medium">{message.attachmentFileName}</span>
-                              <span className="text-xs text-gray-500">
-                                ({message.attachmentFileSize ? Math.round(message.attachmentFileSize / 1024) : 0}KB)
-                              </span>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => window.open(`/api/messages/${message.id}/download`, '_blank')}
-                              className="text-acclaim-teal hover:text-acclaim-teal"
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
-                          </div>
+                        <div className="mt-2 flex items-center space-x-2 text-xs text-acclaim-teal">
+                          <FileText className="h-3 w-3" />
+                          <span>{message.attachmentFileName}</span>
                         </div>
                       )}
+                      <p className="text-xs text-acclaim-teal mt-2">Click to read full message</p>
                     </div>
                   ))}
                 </div>
@@ -1750,6 +1765,46 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Message View Dialog */}
+      <Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold">
+              {selectedMessageForView?.subject || "Message"}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-500">
+              From: {selectedMessageForView?.senderName || "Unknown"} • {selectedMessageForView ? formatDate(selectedMessageForView.createdAt) : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4">
+            <p className="text-sm text-gray-700 whitespace-pre-wrap">
+              {selectedMessageForView?.content}
+            </p>
+            {selectedMessageForView?.attachmentFileName && (
+              <div className="mt-4 p-3 bg-gray-50 rounded-md">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <FileText className="h-4 w-4 text-acclaim-teal" />
+                    <span className="text-sm font-medium">{selectedMessageForView.attachmentFileName}</span>
+                    <span className="text-xs text-gray-500">
+                      ({selectedMessageForView.attachmentFileSize ? Math.round(selectedMessageForView.attachmentFileSize / 1024) : 0}KB)
+                    </span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => window.open(`/api/messages/${selectedMessageForView?.id}/download`, '_blank')}
+                    className="text-acclaim-teal hover:text-acclaim-teal"
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
