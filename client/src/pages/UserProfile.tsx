@@ -698,9 +698,19 @@ export default function UserProfile() {
     }
   };
 
+  // Mutation to track document views
+  const trackDocumentViewMutation = useMutation({
+    mutationFn: async (documentId: number) => {
+      await apiRequest("POST", "/api/track/view", { type: "document", id: documentId });
+    },
+  });
+
   // Handle document download
   const handleDocumentDownload = async (doc: any) => {
     try {
+      // Track the view for read receipts
+      trackDocumentViewMutation.mutate(doc.id);
+      
       const response = await fetch(`/api/documents/${doc.id}/download`, {
         credentials: "include",
       });

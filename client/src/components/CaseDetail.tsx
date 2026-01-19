@@ -574,7 +574,16 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
     });
   };
 
+  // Mutation to track document views
+  const trackDocumentViewMutation = useMutation({
+    mutationFn: async (documentId: number) => {
+      await apiRequest("POST", "/api/track/view", { type: "document", id: documentId });
+    },
+  });
+
   const handleDownload = (documentId: number) => {
+    // Track the view for read receipts
+    trackDocumentViewMutation.mutate(documentId);
     window.open(`/api/documents/${documentId}/download`, '_blank');
   };
 
