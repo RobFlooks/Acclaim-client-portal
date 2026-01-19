@@ -4311,6 +4311,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Track message/document first view for read receipts
+  app.post("/api/track/view", isAuthenticated, async (req: any, res) => {
+    try {
+      const { type, id } = req.body;
+      
+      if (!type || !id) {
+        return res.status(400).json({ message: "Type and ID are required" });
+      }
+      
+      if (!['message', 'document'].includes(type)) {
+        return res.status(400).json({ message: "Type must be 'message' or 'document'" });
+      }
+      
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+      
+      // Check if this user has already viewed this item
+      const existingView = await storage.getAuditLogs({
+        tableName: type === 'message' ? 'messages' : 'documents',
+        recordId: String(id),
+        operation: 'VIEW',
+        userId: req.user.id,
+        limit: 1
+      });
+      
+      // Only log if this is the first view by this user
+      if (existingView.length === 0) {
+        const userName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email || 'User';
+        
+        await storage.logAuditEvent({
+          tableName: type === 'message' ? 'messages' : 'documents',
+          recordId: String(id),
+          operation: 'VIEW',
+          description: `${userName} viewed this ${type} for the first time`,
+          userId: req.user.id,
+          userEmail: user.email || undefined,
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        });
+      }
+      
+      res.json({ success: true, firstView: existingView.length === 0 });
+    } catch (error) {
+      console.error("Error tracking view:", error);
+      res.status(500).json({ message: "Failed to track view" });
+    }
+  });
+
+  // Get audit history for a specific message or document (admin only)
+  app.get("/api/admin/audit/item/:type/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { type, id } = req.params;
+      
+      if (!['message', 'document'].includes(type)) {
+        return res.status(400).json({ message: "Type must be 'message' or 'document'" });
+      }
+      
+      const tableName = type === 'message' ? 'messages' : 'documents';
+      
+      const logs = await storage.getAuditLogs({
+        tableName,
+        recordId: id,
+        operation: 'VIEW'
+      });
+      
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching item audit history:", error);
+      res.status(500).json({ message: "Failed to fetch audit history" });
+    }
+  });
+
   // Advanced reporting endpoints
   app.get("/api/admin/reports/cross-organisation", isAuthenticated, isAdmin, async (req, res) => {
     try {
