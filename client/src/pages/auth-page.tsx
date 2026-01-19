@@ -177,7 +177,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-gray-50">
+    <div className="min-h-screen flex flex-col md:flex-row bg-gray-50 dark:bg-gray-900">
       {/* Left side - Form */}
       <div className="flex-1 flex items-center justify-center p-4 md:p-8">
         <div className="w-full max-w-md">
@@ -187,14 +187,14 @@ export default function AuthPage() {
               <img 
                 src={acclaimLogo} 
                 alt="Acclaim Credit Management" 
-                className="h-16 w-16 mr-3"
+                className="h-16 w-16 mr-3 dark:brightness-75 dark:contrast-125"
               />
               <div className="text-left">
-                <h1 className="text-2xl font-bold text-slate-800">Acclaim</h1>
+                <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Acclaim</h1>
                 <p className="text-sm text-muted-foreground">Credit Management & Recovery</p>
               </div>
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Welcome to your Portal</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Welcome to your Portal</h2>
             <p className="text-muted-foreground text-sm">Access your cases</p>
           </div>
 
