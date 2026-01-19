@@ -810,8 +810,32 @@ export default function Messages() {
                   </div>
                 </div>
               </div>
+              
+              {/* Case info - shown prominently after sender */}
+              {viewingMessage.caseId && (
+                <div className="bg-acclaim-teal/5 border border-acclaim-teal/20 p-3 rounded-lg">
+                  <p className="text-sm">
+                    <span className="font-medium text-gray-700 dark:text-gray-300">Case:</span>{" "}
+                    <button
+                      onClick={() => handleCaseClick(viewingMessage.caseId)}
+                      className="text-acclaim-teal hover:text-acclaim-teal/80 font-medium underline cursor-pointer"
+                    >
+                      {getCaseAccountNumber(viewingMessage.caseId)}
+                    </button>
+                    {(() => {
+                      const caseData = cases?.find((c: any) => c.id === viewingMessage.caseId);
+                      return caseData?.caseName ? (
+                        <span className="text-gray-600 dark:text-gray-400 ml-1">
+                          — {caseData.caseName}
+                        </span>
+                      ) : null;
+                    })()}
+                  </p>
+                </div>
+              )}
+              
               <div className="prose max-w-none">
-                <div className="whitespace-pre-wrap text-gray-700">
+                <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-300">
                   {viewingMessage.content}
                 </div>
               </div>
@@ -838,27 +862,6 @@ export default function Messages() {
                       Download
                     </Button>
                   </div>
-                </div>
-              )}
-              {viewingMessage.caseId && (
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-sm text-gray-600">
-                    <span className="font-medium">Related to case:</span>{" "}
-                    <button
-                      onClick={() => handleCaseClick(viewingMessage.caseId)}
-                      className="text-acclaim-teal hover:text-acclaim-teal/80 font-medium underline cursor-pointer"
-                    >
-                      {getCaseAccountNumber(viewingMessage.caseId)}
-                    </button>
-                    {(() => {
-                      const caseData = cases?.find((c: any) => c.id === viewingMessage.caseId);
-                      return caseData?.caseName ? (
-                        <span className="text-gray-500 ml-2">
-                          - {caseData.caseName}
-                        </span>
-                      ) : null;
-                    })()}
-                  </p>
                 </div>
               )}
             </div>
