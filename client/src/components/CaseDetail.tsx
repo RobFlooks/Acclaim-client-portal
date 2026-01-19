@@ -49,6 +49,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   const [notifyOnUpload, setNotifyOnUpload] = useState(true);
   const [selectedMessageForView, setSelectedMessageForView] = useState<any | null>(null);
   const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+  const [dialogReplyMessage, setDialogReplyMessage] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -483,7 +484,29 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   const handleOpenMessage = (message: any) => {
     setSelectedMessageForView(message);
     setMessageDialogOpen(true);
+    setDialogReplyMessage("");
     trackMessageViewMutation.mutate(message.id);
+  };
+
+  // Handle reply from message dialog
+  const handleDialogReply = () => {
+    if (!dialogReplyMessage.trim() || !selectedMessageForView) return;
+    
+    const fromName = selectedMessageForView.senderName || selectedMessageForView.senderEmail || 'Unknown';
+    const replyContent = `${dialogReplyMessage}\n\n--- Original Message ---\nFrom: ${fromName}\nDate: ${formatDate(selectedMessageForView.createdAt)}\nSubject: ${selectedMessageForView.subject}\n\n${selectedMessageForView.content}`;
+    
+    sendMessageMutation.mutate({
+      caseId: caseData.id,
+      recipientType: "organisation",
+      recipientId: "support",
+      subject: `Re: ${selectedMessageForView.subject || 'Message'}`,
+      content: replyContent,
+    }, {
+      onSuccess: () => {
+        setDialogReplyMessage("");
+        setMessageDialogOpen(false);
+      }
+    });
   };
 
   const handleSendMessage = () => {
@@ -1574,7 +1597,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                         </div>
                       </div>
                       <p className="text-xs text-gray-600 mb-2">From: {message.senderName || 'Unknown'}</p>
-                      <p className="text-sm text-gray-700">{truncateContent(message.content, 120)}</p>
+                      <p className="text-sm text-gray-700">{truncateContent(message.content, 250)}</p>
                       {message.attachmentFileName && (
                         <div className="mt-2 flex items-center space-x-2 text-xs text-acclaim-teal">
                           <FileText className="h-3 w-3" />
@@ -1781,6 +1804,26 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                 </div>
               </div>
             )}
+          </div>
+          
+          {/* Reply Section */}
+          <div className="mt-4 pt-4 border-t">
+            <Label className="text-sm font-medium">Reply</Label>
+            <Textarea
+              placeholder="Type your reply..."
+              value={dialogReplyMessage}
+              onChange={(e) => setDialogReplyMessage(e.target.value)}
+              className="mt-2"
+              rows={3}
+            />
+            <Button
+              onClick={handleDialogReply}
+              disabled={!dialogReplyMessage.trim() || sendMessageMutation.isPending}
+              className="mt-3 bg-acclaim-teal hover:bg-acclaim-teal/90 w-full"
+            >
+              <Send className="h-4 w-4 mr-2" />
+              {sendMessageMutation.isPending ? "Sending..." : "Send Reply"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

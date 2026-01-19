@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { FolderOpen, CheckCircle, PoundSterling, TrendingUp, User, Building, Clock, FileText, Check, AlertTriangle, Store, UserCheck, Plus, Info } from "lucide-react";
+import { FolderOpen, CheckCircle, PoundSterling, TrendingUp, User, Building, Clock, FileText, Check, AlertTriangle, Store, UserCheck, Plus, Info, Send } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -29,6 +30,7 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
   const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+  const [dialogReplyMessage, setDialogReplyMessage] = useState("");
   const [showAccessibleOnly, setShowAccessibleOnly] = useState(false);
 
   // Check if user has any case restrictions
@@ -122,6 +124,32 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
   const trackViewMutation = useMutation({
     mutationFn: async (messageId: number) => {
       await apiRequest("POST", "/api/track/view", { type: "message", id: messageId });
+    },
+  });
+
+  // Query client for cache invalidation
+  const queryClient = useQueryClient();
+
+  // Mutation to send message reply
+  const sendReplyMutation = useMutation({
+    mutationFn: async (data: { caseId: number; subject: string; content: string }) => {
+      return await apiRequest("POST", "/api/messages", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Reply Sent",
+        description: "Your reply has been sent successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
+      setDialogReplyMessage("");
+      setMessageDialogOpen(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to send reply. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -230,8 +258,34 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
   const handleMessageClick = (messageData: any) => {
     setSelectedMessage(messageData);
     setMessageDialogOpen(true);
+    setDialogReplyMessage("");
     // Track view for read receipts
     trackViewMutation.mutate(messageData.id);
+  };
+
+  // Format date for display
+  const formatFullDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Handle reply from message dialog
+  const handleDialogReply = () => {
+    if (!dialogReplyMessage.trim() || !selectedMessage) return;
+    
+    const fromName = selectedMessage.senderName || selectedMessage.senderEmail || 'Unknown';
+    const replyContent = `${dialogReplyMessage}\n\n--- Original Message ---\nFrom: ${fromName}\nDate: ${formatFullDate(selectedMessage.createdAt)}\nSubject: ${selectedMessage.subject}\n\n${selectedMessage.content}`;
+    
+    sendReplyMutation.mutate({
+      caseId: selectedMessage.caseId,
+      subject: `Re: ${selectedMessage.subject || 'Message'}`,
+      content: replyContent,
+    });
   };
 
   const getCaseAccountNumber = (caseId: number) => {
@@ -599,6 +653,28 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
                       ) : null;
                     })()}
                   </p>
+                </div>
+              )}
+              
+              {/* Reply Section - only show if message has a case */}
+              {selectedMessage.caseId && (
+                <div className="mt-4 pt-4 border-t">
+                  <Label className="text-sm font-medium">Reply</Label>
+                  <Textarea
+                    placeholder="Type your reply..."
+                    value={dialogReplyMessage}
+                    onChange={(e) => setDialogReplyMessage(e.target.value)}
+                    className="mt-2"
+                    rows={3}
+                  />
+                  <Button
+                    onClick={handleDialogReply}
+                    disabled={!dialogReplyMessage.trim() || sendReplyMutation.isPending}
+                    className="mt-3 bg-acclaim-teal hover:bg-acclaim-teal/90 w-full"
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    {sendReplyMutation.isPending ? "Sending..." : "Send Reply"}
+                  </Button>
                 </div>
               )}
             </div>
