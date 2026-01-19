@@ -156,14 +156,17 @@ export default function Cases() {
   };
 
   const getDebtorIcon = (debtorType: string) => {
-    switch (debtorType) {
+    const normalizedType = debtorType?.toLowerCase().replace(/[\s-]/g, '_') || '';
+    switch (normalizedType) {
       case 'individual':
         return <User className="text-acclaim-teal h-5 w-5" />;
       case 'company':
         return <Building className="text-acclaim-teal h-5 w-5" />;
       case 'sole_trader':
+      case 'soletrader':
         return <Store className="text-acclaim-teal h-5 w-5" />;
       case 'company_and_individual':
+      case 'companyandindividual':
         return <UserCheck className="text-acclaim-teal h-5 w-5" />;
       default:
         return <User className="text-acclaim-teal h-5 w-5" />;
