@@ -45,54 +45,54 @@ app.use((req, res, next) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
-    // Log the error but DO NOT throw (throwing can crash the process on Azure)
-    console.error(err);
-
-    if (!res.headersSent) {
-      res.status(status).json({ message });
-    }
+    res.status(status).json({ message });
+    throw err;
   });
 
+  // importantly only setup vite in development and after
+  // setting up all the other routes so the catch-all route
+  // doesn't interfere with the other routes
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
     serveStatic(app);
   }
 
-  // Prefer Azure-provided port vars; default to 8080 for Linux containers
-  const port = Number(process.env.PORT || process.env.WEBSITES_PORT || 8080);
-
-  server.listen(
-    {
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    },
-    () => {
-      log(`serving on port ${port}`);
-
-      scheduleReportProcessor();
-
-      const AUDIT_LOG_RETENTION_DAYS = 365;
-
-      const runAuditLogCleanup = async () => {
-        try {
-          const deletedCount =
-            await storage.deleteOldAuditLogs(AUDIT_LOG_RETENTION_DAYS);
-          if (deletedCount > 0) {
-            log(
-              `Audit log cleanup: deleted ${deletedCount} logs older than ${AUDIT_LOG_RETENTION_DAYS} days`
-            );
-          }
-        } catch (error) {
-          console.error("Error during audit log cleanup:", error);
+  // ALWAYS serve the app on the port specified in the environment variable PORT
+  // Other ports are firewalled. Default to 5000 if not specified.
+  // this serves both the API and the client.
+  // It is the only port that is not firewalled.
+  const port = parseInt(process.env.PORT || '5000', 10);
+  server.listen({
+    port,
+    host: "0.0.0.0",
+    reusePort: true,
+  }, () => {
+    log(`serving on port ${port}`);
+    
+    // Start the scheduled report processor
+    scheduleReportProcessor();
+    
+    // Start audit log retention cleanup (runs daily at midnight)
+    const AUDIT_LOG_RETENTION_DAYS = 365; // Keep logs for 1 year by default
+    
+    const runAuditLogCleanup = async () => {
+      try {
+        const deletedCount = await storage.deleteOldAuditLogs(AUDIT_LOG_RETENTION_DAYS);
+        if (deletedCount > 0) {
+          log(`Audit log cleanup: deleted ${deletedCount} logs older than ${AUDIT_LOG_RETENTION_DAYS} days`);
         }
-      };
-
-      setTimeout(runAuditLogCleanup, 30000);
-      setInterval(runAuditLogCleanup, 24 * 60 * 60 * 1000);
-
-      log("Audit log retention cleanup scheduled (runs daily, 365-day retention)");
-    }
-  );
+      } catch (error) {
+        console.error("Error during audit log cleanup:", error);
+      }
+    };
+    
+    // Run cleanup once at startup (after 30 seconds)
+    setTimeout(runAuditLogCleanup, 30000);
+    
+    // Then run daily (every 24 hours)
+    setInterval(runAuditLogCleanup, 24 * 60 * 60 * 1000);
+    
+    log("Audit log retention cleanup scheduled (runs daily, 365-day retention)");
+  });
 })();
