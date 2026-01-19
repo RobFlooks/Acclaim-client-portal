@@ -9,7 +9,7 @@
   "main": "dist/server/index.js",
   "scripts": {
     "dev": "NODE_ENV=development tsx server/index.ts",
-    "build": "vite build && node -e \"const esbuild=require('esbuild'); esbuild.buildSync({ entryPoints:['server/index.ts'], platform:'node', format:'esm', bundle:true, outfile:'dist/server/index.js', sourcemap:true });\"",
+    "build": "vite build && node -e \"const esbuild=require('esbuild'); esbuild.buildSync({ entryPoints:['server/index.ts'], platform:'node', format:'esm', bundle:true, packages:'external', outfile:'dist/server/index.js', sourcemap:true, external:['readable-stream/transform','readable-stream/passthrough','@babel/preset-typescript/package.json','lightningcss','lightningcss/node','lightningcss/node/index.js','lightningcss-wasm'] });\"",
     "start": "node dist/server/index.js",
     "start:prod": "NODE_ENV=production node dist/server/index.js",
     "check": "tsc",
@@ -98,6 +98,7 @@
     "react-icons": "^5.4.0",
     "react-resizable-panels": "^2.1.7",
     "recharts": "^2.15.2",
+    "readable-stream": "^4.7.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "tw-animate-css": "^1.2.5",
