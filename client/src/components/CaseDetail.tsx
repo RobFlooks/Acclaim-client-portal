@@ -154,27 +154,6 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
     },
   });
 
-  // Track message views when messages are displayed inline
-  const [viewedMessageIds, setViewedMessageIds] = useState<Set<number>>(new Set());
-  
-  const trackMessageViewMutation = useMutation({
-    mutationFn: async (messageId: number) => {
-      await apiRequest("POST", "/api/track/view", { type: "message", id: messageId });
-    },
-  });
-
-  // Track views for messages when they are loaded/displayed
-  useEffect(() => {
-    if (messages && Array.isArray(messages)) {
-      messages.forEach((message: any) => {
-        if (!viewedMessageIds.has(message.id)) {
-          trackMessageViewMutation.mutate(message.id);
-          setViewedMessageIds(prev => new Set(prev).add(message.id));
-        }
-      });
-    }
-  }, [messages]);
-
   const { data: payments, isLoading: paymentsLoading, refetch: refetchPayments } = useQuery({
     queryKey: ["/api/cases", caseData.id, "payments"],
     enabled: !!caseData.id,
