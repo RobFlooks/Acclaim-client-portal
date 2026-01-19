@@ -2597,7 +2597,7 @@ This request was submitted via the Acclaim Client Portal.
                           <td style="padding: 16px;">
                             <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 20px;">
                               <strong>Wasn't you?</strong><br>
-                              If you didn't log in at this time, please contact Acclaim immediately on <strong>0113 225 8811</strong> or <a href="mailto:email@acclaim.law" style="color: #92400e;">email@acclaim.law</a> to secure your account.
+                              If you didn't log in at this time, please contact Acclaim immediately to secure your account.
                             </p>
                           </td>
                         </tr>
@@ -2643,7 +2643,7 @@ Login Details:
 If this was you, no action is required.
 
 Wasn't you?
-If you didn't log in at this time, please contact Acclaim immediately on 0113 225 8811 or email@acclaim.law to secure your account.
+If you didn't log in at this time, please contact Acclaim immediately to secure your account.
 
 Kind regards,
 The Acclaim Team
