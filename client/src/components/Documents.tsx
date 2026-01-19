@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Download, Search, Upload, Calendar, User, Trash2, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { FileText, Download, Search, Upload, Calendar, User, Trash2, X, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/use-auth";
@@ -26,6 +26,10 @@ export default function Documents() {
   const [caseDetailsOpen, setCaseDetailsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const documentsPerPage = 20;
+  
+  // Audit dialog state (admin only)
+  const [auditDialogOpen, setAuditDialogOpen] = useState(false);
+  const [auditDocumentId, setAuditDocumentId] = useState<number | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -200,7 +204,28 @@ export default function Documents() {
     },
   });
 
+  // Mutation to track document views
+  const trackViewMutation = useMutation({
+    mutationFn: async (documentId: number) => {
+      await apiRequest("POST", "/api/track/view", { type: "document", id: documentId });
+    },
+  });
+
+  // Query for document audit history (admin only)
+  const { data: documentAuditLogs, isLoading: auditLoading } = useQuery({
+    queryKey: ["/api/admin/audit/item/document", auditDocumentId],
+    queryFn: async () => {
+      if (!auditDocumentId) return [];
+      const response = await fetch(`/api/admin/audit/item/document/${auditDocumentId}`);
+      if (!response.ok) throw new Error("Failed to fetch audit logs");
+      return response.json();
+    },
+    enabled: !!auditDocumentId && user?.isAdmin,
+  });
+
   const handleDownload = (documentId: number) => {
+    // Track the view for read receipts
+    trackViewMutation.mutate(documentId);
     window.open(`/api/documents/${documentId}/download`, '_blank');
   };
 
@@ -242,6 +267,11 @@ export default function Documents() {
       setSelectedCase(caseData);
       setCaseDetailsOpen(true);
     }
+  };
+
+  const handleOpenAuditDialog = (documentId: number) => {
+    setAuditDocumentId(documentId);
+    setAuditDialogOpen(true);
   };
 
   const formatDate = (dateString: string) => {
@@ -568,19 +598,30 @@ export default function Documents() {
                               <span className="ml-1 text-xs sm:hidden">Download</span>
                             </Button>
                             {user?.isAdmin && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  if (confirm("Are you sure you want to delete this document?")) {
-                                    deleteDocumentMutation.mutate(doc.id);
-                                  }
-                                }}
-                                className="text-red-600 hover:text-red-700 h-8 px-2"
-                                disabled={deleteDocumentMutation.isPending}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleOpenAuditDialog(doc.id)}
+                                  className="text-purple-600 hover:text-purple-700 h-8 px-2"
+                                  title="View download history"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    if (confirm("Are you sure you want to delete this document?")) {
+                                      deleteDocumentMutation.mutate(doc.id);
+                                    }
+                                  }}
+                                  className="text-red-600 hover:text-red-700 h-8 px-2"
+                                  disabled={deleteDocumentMutation.isPending}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </>
                             )}
                           </div>
                         </div>
@@ -649,6 +690,69 @@ export default function Documents() {
               </DialogDescription>
             </DialogHeader>
             <CaseDetail case={selectedCase} />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Document Audit Dialog (Admin Only) */}
+      {user?.isAdmin && (
+        <Dialog open={auditDialogOpen} onOpenChange={(open) => {
+          setAuditDialogOpen(open);
+          if (!open) setAuditDocumentId(null);
+        }}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Eye className="h-5 w-5 text-purple-600" />
+                Document Download History
+              </DialogTitle>
+              <DialogDescription>
+                See who has downloaded this document and when.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              {auditLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                </div>
+              ) : documentAuditLogs && documentAuditLogs.length > 0 ? (
+                <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                  {documentAuditLogs.map((log: any) => (
+                    <div key={log.id} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center flex-shrink-0">
+                        <User className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {log.userEmail || 'Unknown User'}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {new Date(log.timestamp).toLocaleDateString('en-GB', {
+                            weekday: 'short',
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                        {log.ipAddress && (
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                            IP: {log.ipAddress}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Eye className="h-12 w-12 mx-auto mb-2 opacity-30" />
+                  <p>No downloads recorded yet</p>
+                  <p className="text-xs mt-1">Downloads are tracked when users access documents</p>
+                </div>
+              )}
+            </div>
           </DialogContent>
         </Dialog>
       )}
