@@ -199,8 +199,15 @@ export default function Messages() {
     queryKey: ["/api/admin/audit/item/message", auditMessageId],
     queryFn: async () => {
       if (!auditMessageId) return [];
-      const response = await fetch(`/api/admin/audit/item/message/${auditMessageId}`);
-      if (!response.ok) throw new Error("Failed to fetch audit logs");
+      const response = await fetch(`/api/admin/audit/item/message/${auditMessageId}`, {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Unauthorized");
+        }
+        throw new Error("Failed to fetch audit logs");
+      }
       return response.json();
     },
     enabled: !!auditMessageId && user?.isAdmin,

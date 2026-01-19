@@ -216,8 +216,15 @@ export default function Documents() {
     queryKey: ["/api/admin/audit/item/document", auditDocumentId],
     queryFn: async () => {
       if (!auditDocumentId) return [];
-      const response = await fetch(`/api/admin/audit/item/document/${auditDocumentId}`);
-      if (!response.ok) throw new Error("Failed to fetch audit logs");
+      const response = await fetch(`/api/admin/audit/item/document/${auditDocumentId}`, {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Unauthorized");
+        }
+        throw new Error("Failed to fetch audit logs");
+      }
       return response.json();
     },
     enabled: !!auditDocumentId && user?.isAdmin,
@@ -229,7 +236,7 @@ export default function Documents() {
     window.open(`/api/documents/${documentId}/download`, '_blank');
   };
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (event: { target: { files: FileList | null } }) => {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
