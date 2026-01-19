@@ -11,7 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Eye, EyeOff, Loader2, FileText, MessageSquare, TrendingUp, Shield, Mail, KeyRound } from "lucide-react";
-import acclaimLogo from "@assets/Acclaim rose.Cur_1752271300769.png";
+import acclaimLogo from "@assets/acclaim_rose_transparent_1768474381340.png";
 
 const MicrosoftIcon = () => (
   <svg className="h-4 w-4" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -187,7 +187,7 @@ export default function AuthPage() {
               <img 
                 src={acclaimLogo} 
                 alt="Acclaim Credit Management" 
-                className="h-16 w-16 mr-3 dark:brightness-75 dark:contrast-125"
+                className="h-16 w-16 mr-3"
               />
               <div className="text-left">
                 <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Acclaim</h1>
