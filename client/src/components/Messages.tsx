@@ -739,18 +739,19 @@ export default function Messages() {
           {viewingMessage && (
             <div className="space-y-4">
               <div className="border-b pb-3">
-                <div className="flex items-center justify-between">
+                {/* Mobile: Stack vertically, Desktop: Side by side */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex items-center space-x-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden ${viewingMessage.senderIsAdmin ? 'bg-white border-2 border-acclaim-teal' : 'bg-white border-2 border-blue-300'}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 ${viewingMessage.senderIsAdmin ? 'bg-white border-2 border-acclaim-teal' : 'bg-white border-2 border-blue-300'}`}>
                       {viewingMessage.senderIsAdmin ? (
                         <img src={acclaimRoseLogo} alt="Acclaim" className="w-8 h-8 object-contain" />
                       ) : (
                         <User className="h-5 w-5 text-acclaim-teal" />
                       )}
                     </div>
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <p className="font-medium text-gray-900 dark:text-gray-100">
+                    <div className="min-w-0">
+                      <div className="flex items-center space-x-2 flex-wrap">
+                        <p className="font-medium text-gray-900 dark:text-gray-100 truncate">
                           {viewingMessage.senderName || viewingMessage.senderEmail || 'Unknown'}
                         </p>
                         <Badge variant="secondary" className="text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300">
@@ -762,7 +763,8 @@ export default function Messages() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  {/* Action buttons - responsive layout */}
+                  <div className="flex items-center space-x-2 sm:flex-shrink-0">
                     <Button
                       variant="outline"
                       size="sm"
@@ -772,8 +774,8 @@ export default function Messages() {
                       }}
                       className="text-acclaim-teal border-acclaim-teal hover:bg-acclaim-teal hover:text-white"
                     >
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Reply
+                      <MessageSquare className="h-4 w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Reply</span>
                     </Button>
                     {user?.isAdmin && (
                       <>
@@ -784,8 +786,8 @@ export default function Messages() {
                           className="text-purple-600 border-purple-600 hover:bg-purple-600 hover:text-white"
                           title="View read receipts"
                         >
-                          <Eye className="h-4 w-4 mr-2" />
-                          Views
+                          <Eye className="h-4 w-4 sm:mr-2" />
+                          <span className="hidden sm:inline">Views</span>
                         </Button>
                         <Button
                           variant="outline"
@@ -798,9 +800,10 @@ export default function Messages() {
                           }}
                           className="text-red-600 border-red-600 hover:bg-red-600 hover:text-white"
                           disabled={deleteMessageMutation.isPending}
+                          title="Delete message"
                         >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          {deleteMessageMutation.isPending ? "Deleting..." : "Delete"}
+                          <Trash2 className="h-4 w-4 sm:mr-2" />
+                          <span className="hidden sm:inline">{deleteMessageMutation.isPending ? "Deleting..." : "Delete"}</span>
                         </Button>
                       </>
                     )}
