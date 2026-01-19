@@ -9,7 +9,7 @@
   "main": "dist/server/index.js",
   "scripts": {
     "dev": "NODE_ENV=development tsx server/index.ts",
-    "build": "vite build && node -e \"const esbuild=require('esbuild'); esbuild.buildSync({ entryPoints:['server/index.ts'], platform:'node', format:'esm', bundle:false, outdir:'dist/server', outbase:'.', sourcemap:true });\"",
+    "build": "vite build && node -e \"const esbuild=require('esbuild'); esbuild.buildSync({ entryPoints:['server/index.ts'], platform:'node', format:'esm', bundle:false, outfile:'dist/server/index.js', sourcemap:true });\"",
     "start": "node dist/server/index.js",
     "start:prod": "NODE_ENV=production node dist/server/index.js",
     "check": "tsc",
