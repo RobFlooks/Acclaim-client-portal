@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
@@ -117,6 +118,13 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
     },
   });
 
+  // Mutation to track message views (read receipts)
+  const trackViewMutation = useMutation({
+    mutationFn: async (messageId: number) => {
+      await apiRequest("POST", "/api/track/view", { type: "message", id: messageId });
+    },
+  });
+
   const getStageBadge = (status: string, stage: string) => {
     if (status === "resolved" || status?.toLowerCase() === "closed") {
       return <Badge className="bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300"><Check className="w-3 h-3 mr-1" />Closed</Badge>;
@@ -222,6 +230,8 @@ export default function Dashboard({ setActiveSection }: DashboardProps) {
   const handleMessageClick = (messageData: any) => {
     setSelectedMessage(messageData);
     setMessageDialogOpen(true);
+    // Track view for read receipts
+    trackViewMutation.mutate(messageData.id);
   };
 
   const getCaseAccountNumber = (caseId: number) => {
