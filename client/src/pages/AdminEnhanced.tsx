@@ -3412,6 +3412,41 @@ export default function AdminEnhanced() {
                       </div>
                     </div>
                     
+                    {/* Scheduled Reports Row */}
+                    <div className="flex items-center justify-between pt-2 pb-2 border-t border-gray-200">
+                      <span className="text-sm text-gray-600">Scheduled Reports:</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="p-1 h-auto"
+                        onClick={() => openScheduledReportDialog(user)}
+                        title="Configure scheduled reports"
+                      >
+                        {scheduledReportsMap[user.id]?.length > 0 ? (
+                          (() => {
+                            const reports = scheduledReportsMap[user.id];
+                            const enabledCount = reports.filter((r: any) => r.enabled).length;
+                            return enabledCount > 0 ? (
+                              <div className="flex items-center text-green-600">
+                                <Calendar className="h-4 w-4 mr-1" />
+                                <span className="text-xs">{enabledCount} active</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center text-gray-400">
+                                <CalendarOff className="h-4 w-4 mr-1" />
+                                <span className="text-xs">{reports.length} (off)</span>
+                              </div>
+                            );
+                          })()
+                        ) : (
+                          <div className="flex items-center text-gray-400">
+                            <CalendarOff className="h-4 w-4 mr-1" />
+                            <span className="text-xs">None</span>
+                          </div>
+                        )}
+                      </Button>
+                    </div>
+                    
                     <div className="grid grid-cols-4 gap-2 pt-2">
                       <Button
                         variant="outline"
@@ -3929,110 +3964,220 @@ export default function AdminEnhanced() {
                   {orgSearchFilter && ` (filtered from ${organisations?.length || 0})`}
                 </div>
               </div>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Organisation</TableHead>
-                    <TableHead>Users</TableHead>
-                    <TableHead>Scheduled Reports</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paginatedOrgs?.map((org: Organisation) => {
-                    const orgReportCount = orgScheduledReportsMap[org.id]?.length || 0;
-                    return (
-                    <TableRow key={org.id}>
-                      <TableCell>
-                        <div className="font-medium">{org.name}</div>
-                        <div className="text-sm text-gray-500">ID: {org.id}</div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{org.userCount} users</Badge>
-                      </TableCell>
-                      <TableCell>
-                        {orgReportCount > 0 ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-acclaim-teal hover:text-acclaim-teal/80"
-                            onClick={() => {
-                              setSelectedOrgForReports(org);
-                              setShowOrgReportsDialog(true);
-                            }}
-                            title="View and manage scheduled reports"
-                          >
-                            <Calendar className="h-4 w-4 mr-1" />
-                            <span>{orgReportCount} report{orgReportCount !== 1 ? 's' : ''}</span>
-                          </Button>
-                        ) : (
-                          <span className="text-gray-400 text-sm">None</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(org.createdAt).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => {
-                              setSelectedOrgForSchedule(org);
-                              setOrgScheduleForm({
-                                recipientEmail: '',
-                                recipientName: '',
-                                frequency: 'weekly',
-                                dayOfWeek: 1,
-                                dayOfMonth: 1,
-                                timeOfDay: 9,
-                                includeCaseSummary: true,
-                                includeActivityReport: true,
-                                caseStatusFilter: 'active',
-                              });
-                              setShowOrgScheduleDialog(true);
-                            }}
-                            title="Schedule a new report for this organisation"
-                            className="text-acclaim-teal hover:text-acclaim-teal/80"
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => {
-                              setEditingOrg(org);
-                              setOrgFormData({ 
-                                name: org.name, 
-                                externalRef: org.externalRef || undefined 
-                              });
-                              setShowEditOrg(true);
-                            }}
-                            title="Edit organisation details"
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => {
-                              if (confirm(`Are you sure you want to delete "${org.name}"? This action cannot be undone.`)) {
-                                deleteOrganisationMutation.mutate(org.id);
-                              }
-                            }}
-                            disabled={deleteOrganisationMutation.isPending}
-                            className="text-red-600 hover:text-red-700"
-                            title="Delete organisation permanently"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+              {/* Mobile Card Layout */}
+              <div className="block sm:hidden space-y-4">
+                {paginatedOrgs?.map((org: Organisation) => {
+                  const orgReportCount = orgScheduledReportsMap[org.id]?.length || 0;
+                  return (
+                    <div key={org.id} className="bg-gray-50 rounded-lg p-4 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-medium">{org.name}</div>
+                          <div className="text-sm text-gray-500">ID: {org.id}</div>
+                          {org.externalRef && (
+                            <div className="text-xs text-gray-400">Code: {org.externalRef}</div>
+                          )}
                         </div>
-                      </TableCell>
+                        <Badge variant="outline">{org.userCount} users</Badge>
+                      </div>
+                      
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600">Created:</span>
+                          <span>{new Date(org.createdAt).toLocaleDateString('en-GB')}</span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600">Scheduled Reports:</span>
+                          {orgReportCount > 0 ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-acclaim-teal hover:text-acclaim-teal/80 p-1 h-auto"
+                              onClick={() => {
+                                setSelectedOrgForReports(org);
+                                setShowOrgReportsDialog(true);
+                              }}
+                              title="View and manage scheduled reports"
+                            >
+                              <Calendar className="h-4 w-4 mr-1" />
+                              <span className="text-xs">{orgReportCount} report{orgReportCount !== 1 ? 's' : ''}</span>
+                            </Button>
+                          ) : (
+                            <span className="text-gray-400 text-xs">None</span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-gray-200">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            setSelectedOrgForSchedule(org);
+                            setOrgScheduleForm({
+                              recipientEmail: '',
+                              recipientName: '',
+                              frequency: 'weekly',
+                              dayOfWeek: 1,
+                              dayOfMonth: 1,
+                              timeOfDay: 9,
+                              includeCaseSummary: true,
+                              includeActivityReport: true,
+                              caseStatusFilter: 'active',
+                            });
+                            setShowOrgScheduleDialog(true);
+                          }}
+                          title="Schedule a new report for this organisation"
+                          className="text-acclaim-teal hover:text-acclaim-teal/80"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Report
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            setEditingOrg(org);
+                            setOrgFormData({ 
+                              name: org.name, 
+                              externalRef: org.externalRef || undefined 
+                            });
+                            setShowEditOrg(true);
+                          }}
+                          title="Edit organisation details"
+                        >
+                          <Edit className="h-3 w-3 mr-1" />
+                          Edit
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            if (confirm(`Are you sure you want to delete "${org.name}"? This action cannot be undone.`)) {
+                              deleteOrganisationMutation.mutate(org.id);
+                            }
+                          }}
+                          disabled={deleteOrganisationMutation.isPending}
+                          className="text-red-600 hover:text-red-700"
+                          title="Delete organisation permanently"
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop Table Layout */}
+              <div className="hidden sm:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Organisation</TableHead>
+                      <TableHead>Users</TableHead>
+                      <TableHead>Scheduled Reports</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  );})}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedOrgs?.map((org: Organisation) => {
+                      const orgReportCount = orgScheduledReportsMap[org.id]?.length || 0;
+                      return (
+                      <TableRow key={org.id}>
+                        <TableCell>
+                          <div className="font-medium">{org.name}</div>
+                          <div className="text-sm text-gray-500">ID: {org.id}</div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{org.userCount} users</Badge>
+                        </TableCell>
+                        <TableCell>
+                          {orgReportCount > 0 ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-acclaim-teal hover:text-acclaim-teal/80"
+                              onClick={() => {
+                                setSelectedOrgForReports(org);
+                                setShowOrgReportsDialog(true);
+                              }}
+                              title="View and manage scheduled reports"
+                            >
+                              <Calendar className="h-4 w-4 mr-1" />
+                              <span>{orgReportCount} report{orgReportCount !== 1 ? 's' : ''}</span>
+                            </Button>
+                          ) : (
+                            <span className="text-gray-400 text-sm">None</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(org.createdAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedOrgForSchedule(org);
+                                setOrgScheduleForm({
+                                  recipientEmail: '',
+                                  recipientName: '',
+                                  frequency: 'weekly',
+                                  dayOfWeek: 1,
+                                  dayOfMonth: 1,
+                                  timeOfDay: 9,
+                                  includeCaseSummary: true,
+                                  includeActivityReport: true,
+                                  caseStatusFilter: 'active',
+                                });
+                                setShowOrgScheduleDialog(true);
+                              }}
+                              title="Schedule a new report for this organisation"
+                              className="text-acclaim-teal hover:text-acclaim-teal/80"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setEditingOrg(org);
+                                setOrgFormData({ 
+                                  name: org.name, 
+                                  externalRef: org.externalRef || undefined 
+                                });
+                                setShowEditOrg(true);
+                              }}
+                              title="Edit organisation details"
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                if (confirm(`Are you sure you want to delete "${org.name}"? This action cannot be undone.`)) {
+                                  deleteOrganisationMutation.mutate(org.id);
+                                }
+                              }}
+                              disabled={deleteOrganisationMutation.isPending}
+                              className="text-red-600 hover:text-red-700"
+                              title="Delete organisation permanently"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );})}
+                  </TableBody>
+                </Table>
+              </div>
               {/* Pagination */}
               <Pagination 
                 currentPage={orgsPage} 
