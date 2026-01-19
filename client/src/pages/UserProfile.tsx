@@ -13,9 +13,9 @@ import { useTheme } from "@/hooks/use-theme";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 import { useQueryClient } from "@tanstack/react-query";
-import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft, Bell, Building2, FileText, Download, Trash2, Upload, Search, Sun, Moon, HelpCircle, Briefcase, MessageSquare, BarChart3, Crown, ShieldCheck, ShieldOff, Loader2, Users, ChevronDown, ChevronUp, UserPlus, UserMinus, Send } from "lucide-react";
+import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft, Bell, Building2, FileText, Download, Trash2, Upload, Search, Sun, Moon, HelpCircle, Briefcase, MessageSquare, BarChart3, Crown, ShieldCheck, ShieldOff, Loader2, Users, ChevronDown, ChevronUp, UserPlus, UserMinus, Send, Eye } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
@@ -95,6 +95,10 @@ export default function UserProfile() {
   const [notifyOnUpload, setNotifyOnUpload] = useState(true);
   const [documentPage, setDocumentPage] = useState(1);
   const DOCS_PER_PAGE = 10;
+
+  // Document audit dialog state (admin only)
+  const [auditDocumentId, setAuditDocumentId] = useState<number | null>(null);
+  const [auditDialogOpen, setAuditDialogOpen] = useState(false);
 
   // Case notifications state
   const [caseSearch, setCaseSearch] = useState("");
@@ -443,6 +447,13 @@ export default function UserProfile() {
         variant: "destructive",
       });
     },
+  });
+
+  // Fetch document audit logs (admin only)
+  const { data: documentAuditLogs, isLoading: auditLoading } = useQuery<any[]>({
+    queryKey: ["/api/admin/audit/item/document", auditDocumentId],
+    enabled: !!auditDocumentId && auditDialogOpen && userProfile?.isAdmin === true,
+    retry: false,
   });
 
   // Get the list of organisations available for upload (all orgs for admin, user's orgs otherwise)
@@ -2168,6 +2179,20 @@ export default function UserProfile() {
                                   </div>
                                 </div>
                                 <div className="flex items-center space-x-2 flex-shrink-0">
+                                  {userProfile?.isAdmin && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        setAuditDocumentId(doc.id);
+                                        setAuditDialogOpen(true);
+                                      }}
+                                      className="text-purple-600 hover:text-purple-800 hover:bg-purple-50"
+                                      title="View Audit Log"
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                  )}
                                   <Button
                                     variant="ghost"
                                     size="sm"
@@ -2235,6 +2260,39 @@ export default function UserProfile() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Document Audit Dialog (Admin Only) */}
+      <Dialog open={auditDialogOpen} onOpenChange={setAuditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-purple-700">
+              <Eye className="h-5 w-5" />
+              Document Views
+            </DialogTitle>
+            <DialogDescription>
+              View history for this document
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[300px] overflow-y-auto">
+            {auditLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="h-6 w-6 animate-spin text-purple-600" />
+              </div>
+            ) : documentAuditLogs && documentAuditLogs.length > 0 ? (
+              <div className="space-y-2">
+                {documentAuditLogs.map((log: any) => (
+                  <div key={log.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 bg-purple-50 rounded text-sm gap-1">
+                    <span className="font-medium text-purple-900">{log.userName}</span>
+                    <span className="text-purple-600 text-xs">{new Date(log.createdAt).toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-gray-500 py-4">No views recorded yet.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
