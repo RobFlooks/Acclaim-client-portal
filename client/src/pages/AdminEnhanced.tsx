@@ -3908,10 +3908,10 @@ export default function AdminEnhanced() {
                           id="externalRef"
                           value={newOrgExternalRef}
                           onChange={(e) => setNewOrgExternalRef(e.target.value)}
-                          placeholder="Enter client code from case management system"
+                          placeholder="e.g., ABC123 or ABC123,DEF456,GHI789"
                         />
                         <p className="text-sm text-muted-foreground">
-                          This is the client code as it appears in your case management system (e.g., SOS).
+                          Client code from your case management system (e.g., SOS). For multiple codes, separate with commas (e.g., ABC123,DEF456).
                         </p>
                       </div>
                     </div>
@@ -4256,10 +4256,10 @@ export default function AdminEnhanced() {
                 id="editOrgExternalRef"
                 value={orgFormData.externalRef || ""}
                 onChange={(e) => setOrgFormData({ ...orgFormData, externalRef: e.target.value || undefined })}
-                placeholder="Enter client code from case management system"
+                placeholder="e.g., ABC123 or ABC123,DEF456,GHI789"
               />
               <p className="text-sm text-muted-foreground">
-                This is the client code as it appears in your case management system (e.g., SOS).
+                Client code from your case management system (e.g., SOS). For multiple codes, separate with commas (e.g., ABC123,DEF456).
               </p>
             </div>
           </div>
