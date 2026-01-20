@@ -2500,51 +2500,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Toggle canManageAdmins permission (ONLY mattperry@chadlaw.co.uk can use this)
-  app.put('/api/admin/users/:userId/toggle-can-manage-admins', isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const { userId } = req.params;
-      const { canManageAdmins } = req.body;
-      const adminUser = await storage.getUser(req.user.id);
-      
-      // CRITICAL: Only mattperry@chadlaw.co.uk can assign/unassign canManageAdmins
-      if (adminUser?.email?.toLowerCase() !== 'mattperry@chadlaw.co.uk') {
-        return res.status(403).json({ 
-          message: "Only mattperry@chadlaw.co.uk can manage admin management permissions" 
-        });
-      }
-      
-      const targetUser = await storage.getUser(userId);
-      if (!targetUser) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      // Update the user's canManageAdmins field
-      const user = await storage.updateUser(userId, { canManageAdmins });
-      
-      // Log admin action
-      const userName = [targetUser.firstName, targetUser.lastName].filter(Boolean).join(' ') || targetUser.email;
-      await logAdminAction({
-        adminUser,
-        tableName: 'users',
-        recordId: userId,
-        operation: 'UPDATE',
-        fieldName: 'canManageAdmins',
-        description: `${canManageAdmins ? 'Granted' : 'Removed'} admin management permission for user "${userName}"`,
-        oldValue: String(targetUser.canManageAdmins || false),
-        newValue: String(canManageAdmins),
-        ipAddress: req.ip,
-        userAgent: req.get('user-agent'),
-      });
-      
-      const action = canManageAdmins ? 'granted' : 'removed';
-      res.json({ user, message: `Admin management permission ${action} for user` });
-    } catch (error) {
-      console.error("Error toggling canManageAdmins permission:", error);
-      res.status(500).json({ message: "Failed to update admin management permission" });
-    }
-  });
-
   // Toggle case submission permission
   app.put('/api/admin/users/:userId/case-submission', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
