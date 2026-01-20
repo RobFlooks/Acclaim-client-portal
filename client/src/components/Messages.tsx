@@ -42,6 +42,7 @@ export default function Messages() {
   const [searchSender, setSearchSender] = useState("");
   const [searchCaseId, setSearchCaseId] = useState("");
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [caseSearchTerm, setCaseSearchTerm] = useState("");
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -518,12 +519,31 @@ export default function Messages() {
                         <SelectValue placeholder="Select a case to link this message to..." />
                       </SelectTrigger>
                       <SelectContent>
+                        <div className="p-2 border-b">
+                          <Input
+                            placeholder="Search cases..."
+                            value={caseSearchTerm}
+                            onChange={(e) => setCaseSearchTerm(e.target.value)}
+                            className="h-8"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
                         <SelectItem value="none">No case (general message)</SelectItem>
-                        {cases?.map((c: any) => (
-                          <SelectItem key={c.id} value={c.id.toString()}>
-                            {c.accountNumber} - {c.caseName}
-                          </SelectItem>
-                        ))}
+                        {cases
+                          ?.filter((c: any) => {
+                            if (!caseSearchTerm) return true;
+                            const search = caseSearchTerm.toLowerCase();
+                            return (
+                              c.caseName?.toLowerCase().includes(search) ||
+                              c.accountNumber?.toLowerCase().includes(search) ||
+                              c.debtorName?.toLowerCase().includes(search)
+                            );
+                          })
+                          .map((c: any) => (
+                            <SelectItem key={c.id} value={c.id.toString()}>
+                              {c.accountNumber} - {c.caseName}
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                     {linkedCaseId && linkedCaseId !== "none" ? (
