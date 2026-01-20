@@ -12,8 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, EyeOff, Mail, Bell, BellOff, FilePlus, FileX, BarChart3, Search, Crown, Calendar, CalendarOff, Pencil, LogOut } from "lucide-react";
+import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, EyeOff, Mail, Bell, BellOff, FilePlus, FileX, BarChart3, Search, Crown, Calendar, CalendarOff, Pencil, LogOut, UserCog } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrganisationSchema } from "@shared/schema";
 import { z } from "zod";
@@ -1985,6 +1986,10 @@ function CaseSubmissionsTab() {
 export default function AdminEnhanced() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user: currentUser } = useAuth();
+  
+  // Check if current user can manage admin permissions (only mattperry@chadlaw.co.uk)
+  const canManageAdminPermissions = currentUser?.email?.toLowerCase() === 'mattperry@chadlaw.co.uk';
   
   // State for organisation management
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -2672,6 +2677,39 @@ export default function AdminEnhanced() {
       toast({
         title: "Error",
         description: error.message || "Failed to update case submission permission",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Toggle canManageAdmins permission mutation (only for mattperry@chadlaw.co.uk)
+  const toggleCanManageAdminsMutation = useMutation({
+    mutationFn: async ({ userId, canManageAdmins }: { userId: string; canManageAdmins: boolean }) => {
+      const response = await apiRequest("PUT", `/api/admin/users/${userId}/toggle-can-manage-admins`, { canManageAdmins });
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Success",
+        description: data.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users-with-orgs"] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update admin management permission",
         variant: "destructive",
       });
     },
@@ -3519,6 +3557,32 @@ export default function AdminEnhanced() {
                         )}
                         Admin
                       </Button>
+                      {canManageAdminPermissions && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const currentValue = (user as any).canManageAdmins === true;
+                            const action = currentValue ? 'remove admin management permission from' : 'grant admin management permission to';
+                            const confirmation = confirm(`Are you sure you want to ${action} ${user.firstName} ${user.lastName}?`);
+                            if (confirmation) {
+                              toggleCanManageAdminsMutation.mutate({
+                                userId: user.id,
+                                canManageAdmins: !currentValue
+                              });
+                            }
+                          }}
+                          disabled={toggleCanManageAdminsMutation.isPending}
+                          title={(user as any).canManageAdmins ? "Can manage admin privileges - click to remove" : "Cannot manage admin privileges - click to grant"}
+                        >
+                          {(user as any).canManageAdmins ? (
+                            <UserCog className="h-3 w-3 text-purple-600" />
+                          ) : (
+                            <UserCog className="h-3 w-3 text-gray-400" />
+                          )}
+                          Mgr
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
@@ -3799,6 +3863,31 @@ export default function AdminEnhanced() {
                                 <Shield className="h-3 w-3" />
                               )}
                             </Button>
+                            {canManageAdminPermissions && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const currentValue = (user as any).canManageAdmins === true;
+                                  const action = currentValue ? 'remove admin management permission from' : 'grant admin management permission to';
+                                  const confirmation = confirm(`Are you sure you want to ${action} ${user.firstName} ${user.lastName}?`);
+                                  if (confirmation) {
+                                    toggleCanManageAdminsMutation.mutate({
+                                      userId: user.id,
+                                      canManageAdmins: !currentValue
+                                    });
+                                  }
+                                }}
+                                disabled={toggleCanManageAdminsMutation.isPending}
+                                title={(user as any).canManageAdmins ? "Can manage admin privileges - click to remove" : "Cannot manage admin privileges - click to grant"}
+                              >
+                                {(user as any).canManageAdmins ? (
+                                  <UserCog className="h-3 w-3 text-purple-600" />
+                                ) : (
+                                  <UserCog className="h-3 w-3 text-gray-400" />
+                                )}
+                              </Button>
+                            )}
                             <Button
                               variant="outline"
                               size="sm"
