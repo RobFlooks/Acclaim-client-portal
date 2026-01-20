@@ -2719,13 +2719,13 @@ You can disable these login notifications in your Profile Settings.
 // Export singleton instance
 export const sendGridEmailService = new SendGridEmailService();
 
-// Standalone function for sending scheduled reports with Excel attachment
+// Standalone function for sending scheduled reports with Excel and HTML attachments
 export async function sendScheduledReportEmailWithAttachments(
   recipientEmail: string,
   recipientName: string,
   frequencyText: string,
   excelBuffer: Buffer,
-  pdfBuffer: Buffer,
+  htmlBuffer: Buffer,
   baseFileName: string
 ): Promise<boolean> {
   try {
@@ -2774,7 +2774,7 @@ export async function sendScheduledReportEmailWithAttachments(
                     
                     <p style="margin: 0 0 24px 0; color: #374151; font-size: 16px; line-height: 24px;">
                       <strong>Two files are attached:</strong><br>
-                      - <strong>PDF</strong> for quick viewing and printing<br>
+                      - <strong>HTML</strong> for quick viewing in any browser<br>
                       - <strong>Excel</strong> for detailed analysis with separate tabs
                     </p>
                     
@@ -2815,7 +2815,7 @@ This report contains:
 - Messages Report: Recent messages and document activity
 
 Two files are attached:
-- PDF for quick viewing and printing
+- HTML for quick viewing in any browser
 - Excel for detailed analysis with separate tabs
 
 Kind regards,
@@ -2830,11 +2830,11 @@ The Acclaim Team
       attachments.push(logoBase64);
     }
 
-    // Add PDF report first (easier to preview)
+    // Add HTML report first (easy to view in any browser)
     attachments.push({
-      content: pdfBuffer.toString('base64'),
-      filename: baseFileName + '.pdf',
-      type: 'application/pdf',
+      content: htmlBuffer.toString('base64'),
+      filename: baseFileName + '.html',
+      type: 'text/html',
       disposition: 'attachment'
     });
 
