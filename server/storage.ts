@@ -467,8 +467,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getOrganisationByExternalRef(externalRef: string): Promise<Organization | undefined> {
-    const [organisation] = await db.select().from(organisations).where(eq(organisations.externalRef, externalRef));
-    return organisation;
+    // Support comma-separated external refs in the database field
+    // Match if: exact match, starts with "ref,", contains ",ref,", or ends with ",ref"
+    const result = await db.select().from(organisations).where(
+      or(
+        eq(organisations.externalRef, externalRef),
+        sql`${organisations.externalRef} LIKE ${externalRef + ',%'}`,
+        sql`${organisations.externalRef} LIKE ${'%,' + externalRef + ',%'}`,
+        sql`${organisations.externalRef} LIKE ${'%,' + externalRef}`
+      )
+    );
+    return result[0];
   }
 
   async getOrganisationStats(id: number): Promise<{
