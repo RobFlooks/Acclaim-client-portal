@@ -1101,7 +1101,6 @@ export default function UserProfile() {
                   id="darkMode"
                   checked={theme === "dark"}
                   onCheckedChange={toggleTheme}
-                  className="data-[state=unchecked]:bg-gray-300 data-[state=unchecked]:border-gray-400"
                 />
               </div>
             </CardContent>

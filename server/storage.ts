@@ -221,8 +221,6 @@ export interface IStorage {
   checkMustChangePassword(userId: string): Promise<boolean>;
   
   deleteUser(userId: string): Promise<void>;
-  
-  updateUserSuperAdmin(userId: string, canManageAdmins: boolean): Promise<User | null>;
 
   // System monitoring operations
   logUserActivity(activity: InsertUserActivityLog): Promise<UserActivityLog>;
@@ -1907,16 +1905,6 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db
       .update(users)
       .set({ canSubmitCases, updatedAt: new Date() })
-      .where(eq(users.id, userId))
-      .returning();
-
-    return user || null;
-  }
-  
-  async updateUserSuperAdmin(userId: string, canManageAdmins: boolean): Promise<User | null> {
-    const [user] = await db
-      .update(users)
-      .set({ canManageAdmins, updatedAt: new Date() })
       .where(eq(users.id, userId))
       .returning();
 

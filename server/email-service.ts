@@ -456,7 +456,6 @@ Please log in to the Acclaim Portal to respond to this message.
           
           <div style="background: #1e293b; color: white; padding: 15px; text-align: center; font-size: 12px;">
             <p style="margin: 0;">This is an automated notification from Acclaim Credit Management & Recovery Portal</p>
-            <p style="margin: 8px 0 0 0; opacity: 0.7;">To manage your notification preferences, visit your Profile settings in the portal.</p>
           </div>
         </div>
       `;
@@ -482,8 +481,6 @@ Message:
 ${data.messageContent}
 
 Please log in to the Acclaim Portal to view and respond to this message.
-
-To manage your notification preferences, visit your Profile settings in the portal.
       `;
 
       const info = await this.transporter.sendMail({
@@ -641,7 +638,6 @@ To manage your notification preferences, visit your Profile settings in the port
           
           <div style="background: #1e293b; color: white; padding: 15px; text-align: center; font-size: 12px;">
             <p style="margin: 0;">This is an automated notification from Acclaim Credit Management & Recovery Portal</p>
-            <p style="margin: 8px 0 0 0; opacity: 0.7;">To manage your notification preferences, visit your Profile settings in the portal.</p>
           </div>
         </div>
       `;
@@ -669,8 +665,6 @@ ${data.messageContent}
 
 This is an automated update from your external case management system.
 Please log in to the Acclaim Portal to view full case details and respond if needed.
-
-To manage your notification preferences, visit your Profile settings in the portal.
       `;
 
       const info = await this.transporter.sendMail({

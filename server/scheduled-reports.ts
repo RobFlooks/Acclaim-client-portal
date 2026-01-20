@@ -1,7 +1,7 @@
 import ExcelJS from "exceljs";
+import puppeteer from "puppeteer";
 import { storage } from "./storage";
 import { sendScheduledReportEmailWithAttachments } from "./email-service-sendgrid";
-import type { InsertAuditLog } from "@shared/schema";
 
 export interface ScheduledReportSettings {
   id: number;
@@ -23,7 +23,7 @@ export interface ScheduledReportSettings {
 
 export interface ReportBuffers {
   excel: Buffer;
-  html: Buffer;
+  pdf: Buffer;
 }
 
 // Generate a report by report ID (for test send and processing)
@@ -58,7 +58,7 @@ export async function generateScheduledReportForId(reportId: number): Promise<vo
     recipientName,
     frequencyText,
     reportBuffers.excel,
-    reportBuffers.html,
+    reportBuffers.pdf,
     baseFileName
   );
 }
@@ -125,21 +125,21 @@ export async function generateScheduledReport(
 
   const excelBuffer = await workbook.xlsx.writeBuffer();
 
-  // Generate HTML report (replaces PDF for better compatibility)
-  const htmlBuffer = generateHtmlReport(cases, messages, settings, user);
+  // Generate PDF
+  const pdfBuffer = await generatePdfReport(cases, messages, settings, user);
 
   return {
     excel: Buffer.from(excelBuffer),
-    html: htmlBuffer
+    pdf: pdfBuffer
   };
 }
 
-function generateHtmlReport(
+async function generatePdfReport(
   cases: any[],
   messages: any[],
   settings: ScheduledReportSettings,
   user: any
-): Buffer {
+): Promise<Buffer> {
   const currentDate = new Date().toLocaleDateString('en-GB', { 
     day: 'numeric', 
     month: 'long', 
@@ -361,8 +361,28 @@ function generateHtmlReport(
     </html>
   `;
 
-  // Return HTML content as Buffer (works on all environments without browser dependencies)
-  return Buffer.from(htmlContent, 'utf-8');
+  // Generate PDF using puppeteer with system chromium
+  const browser = await puppeteer.launch({ 
+    headless: true,
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/nix/store/zi4f80l169xlmivz8vja8wlphq74qqk0-chromium-125.0.6422.141/bin/chromium',
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--disable-dev-shm-usage']
+  });
+  
+  try {
+    const page = await browser.newPage();
+    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+    
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      landscape: true,
+      printBackground: true,
+      margin: { top: '15px', right: '15px', bottom: '15px', left: '15px' }
+    });
+    
+    return Buffer.from(pdfBuffer);
+  } finally {
+    await browser.close();
+  }
 }
 
 function addCaseSummarySheet(workbook: ExcelJS.Workbook, cases: any[]) {
@@ -732,64 +752,20 @@ export async function processScheduledReports(): Promise<void> {
       const emailTo = (settings as any).recipientEmail || user.email;
       const recipientName = (settings as any).recipientName || `${user.firstName} ${user.lastName}`;
 
-      const emailSuccess = await sendScheduledReportEmailWithAttachments(
+      await sendScheduledReportEmailWithAttachments(
         emailTo,
         recipientName,
         frequencyText,
         reportBuffers.excel,
-        reportBuffers.html,
+        reportBuffers.pdf,
         baseFileName
       );
 
-      if (emailSuccess) {
-        await storage.updateScheduledReportLastSent(settings.id);
-        console.log(`Sent scheduled report #${settings.id} to ${emailTo}`);
-        
-        // Log success to audit
-        const auditEntry: InsertAuditLog = {
-          tableName: 'scheduled_reports',
-          recordId: String(settings.id),
-          operation: 'SEND',
-          userId: settings.userId,
-          userEmail: user.email,
-          description: `Scheduled ${frequencyText.toLowerCase()} report sent successfully to ${emailTo}`,
-          newValue: JSON.stringify({ recipient: emailTo, frequency: frequencyText, organisationId: settings.organisationId || 'combined' }),
-        };
-        await storage.logAuditEvent(auditEntry);
-      } else {
-        console.error(`Failed to send scheduled report #${settings.id} - email delivery failed`);
-        
-        // Log failure to audit
-        const auditEntry: InsertAuditLog = {
-          tableName: 'scheduled_reports',
-          recordId: String(settings.id),
-          operation: 'SEND_FAILED',
-          userId: settings.userId,
-          userEmail: user.email,
-          description: `Scheduled ${frequencyText.toLowerCase()} report failed to send to ${emailTo}`,
-          newValue: JSON.stringify({ recipient: emailTo, frequency: frequencyText, error: 'Email delivery failed' }),
-        };
-        await storage.logAuditEvent(auditEntry);
-      }
+      await storage.updateScheduledReportLastSent(settings.id);
+
+      console.log(`Sent scheduled report #${settings.id} to ${emailTo}`);
     } catch (error) {
       console.error(`Failed to send scheduled report for user ${settings.userId}:`, error);
-      
-      // Log error to audit
-      try {
-        const user = await storage.getUser(settings.userId);
-        const auditEntry: InsertAuditLog = {
-          tableName: 'scheduled_reports',
-          recordId: String(settings.id),
-          operation: 'SEND_ERROR',
-          userId: settings.userId,
-          userEmail: user?.email || 'unknown',
-          description: `Scheduled report error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          newValue: JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-        };
-        await storage.logAuditEvent(auditEntry);
-      } catch (auditError) {
-        console.error('Failed to log audit entry for report error:', auditError);
-      }
     }
   }
 }
