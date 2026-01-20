@@ -3911,7 +3911,7 @@ export default function AdminEnhanced() {
                           placeholder="e.g., ABC123 or ABC123,DEF456,GHI789"
                         />
                         <p className="text-sm text-muted-foreground">
-                          Client code from your case management system. For multiple codes, separate with commas.
+                          Client code from your case management system. For multiple codes, separate with commas (e.g., ABC123,DEF456).
                         </p>
                       </div>
                     </div>
@@ -4259,7 +4259,7 @@ export default function AdminEnhanced() {
                 placeholder="e.g., ABC123 or ABC123,DEF456,GHI789"
               />
               <p className="text-sm text-muted-foreground">
-                Client code from your case management system. For multiple codes, separate with commas.
+                Client code from your case management system. For multiple codes, separate with commas (e.g., ABC123,DEF456).
               </p>
             </div>
           </div>
