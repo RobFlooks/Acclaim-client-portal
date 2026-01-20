@@ -1,5 +1,4 @@
 import ExcelJS from "exceljs";
-import puppeteer from "puppeteer";
 import { storage } from "./storage";
 import { sendScheduledReportEmailWithAttachments } from "./email-service-sendgrid";
 
@@ -23,7 +22,7 @@ export interface ScheduledReportSettings {
 
 export interface ReportBuffers {
   excel: Buffer;
-  pdf: Buffer;
+  html: Buffer;
 }
 
 // Generate a report by report ID (for test send and processing)
@@ -58,7 +57,7 @@ export async function generateScheduledReportForId(reportId: number): Promise<vo
     recipientName,
     frequencyText,
     reportBuffers.excel,
-    reportBuffers.pdf,
+    reportBuffers.html,
     baseFileName
   );
 }
@@ -125,21 +124,21 @@ export async function generateScheduledReport(
 
   const excelBuffer = await workbook.xlsx.writeBuffer();
 
-  // Generate PDF
-  const pdfBuffer = await generatePdfReport(cases, messages, settings, user);
+  // Generate HTML report (replaces PDF for better compatibility)
+  const htmlBuffer = generateHtmlReport(cases, messages, settings, user);
 
   return {
     excel: Buffer.from(excelBuffer),
-    pdf: pdfBuffer
+    html: htmlBuffer
   };
 }
 
-async function generatePdfReport(
+function generateHtmlReport(
   cases: any[],
   messages: any[],
   settings: ScheduledReportSettings,
   user: any
-): Promise<Buffer> {
+): Buffer {
   const currentDate = new Date().toLocaleDateString('en-GB', { 
     day: 'numeric', 
     month: 'long', 
@@ -361,28 +360,8 @@ async function generatePdfReport(
     </html>
   `;
 
-  // Generate PDF using puppeteer with system chromium
-  const browser = await puppeteer.launch({ 
-    headless: true,
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/nix/store/zi4f80l169xlmivz8vja8wlphq74qqk0-chromium-125.0.6422.141/bin/chromium',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--disable-dev-shm-usage']
-  });
-  
-  try {
-    const page = await browser.newPage();
-    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-    
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      landscape: true,
-      printBackground: true,
-      margin: { top: '15px', right: '15px', bottom: '15px', left: '15px' }
-    });
-    
-    return Buffer.from(pdfBuffer);
-  } finally {
-    await browser.close();
-  }
+  // Return HTML content as Buffer (works on all environments without browser dependencies)
+  return Buffer.from(htmlContent, 'utf-8');
 }
 
 function addCaseSummarySheet(workbook: ExcelJS.Workbook, cases: any[]) {
