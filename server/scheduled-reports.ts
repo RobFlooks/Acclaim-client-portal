@@ -1,6 +1,7 @@
 import ExcelJS from "exceljs";
 import { storage } from "./storage";
 import { sendScheduledReportEmailWithAttachments } from "./email-service-sendgrid";
+import type { InsertAuditLog } from "@shared/schema";
 
 export interface ScheduledReportSettings {
   id: number;
@@ -731,20 +732,64 @@ export async function processScheduledReports(): Promise<void> {
       const emailTo = (settings as any).recipientEmail || user.email;
       const recipientName = (settings as any).recipientName || `${user.firstName} ${user.lastName}`;
 
-      await sendScheduledReportEmailWithAttachments(
+      const emailSuccess = await sendScheduledReportEmailWithAttachments(
         emailTo,
         recipientName,
         frequencyText,
         reportBuffers.excel,
-        reportBuffers.pdf,
+        reportBuffers.html,
         baseFileName
       );
 
-      await storage.updateScheduledReportLastSent(settings.id);
-
-      console.log(`Sent scheduled report #${settings.id} to ${emailTo}`);
+      if (emailSuccess) {
+        await storage.updateScheduledReportLastSent(settings.id);
+        console.log(`Sent scheduled report #${settings.id} to ${emailTo}`);
+        
+        // Log success to audit
+        const auditEntry: InsertAuditLog = {
+          tableName: 'scheduled_reports',
+          recordId: String(settings.id),
+          operation: 'SEND',
+          userId: settings.userId,
+          userEmail: user.email,
+          description: `Scheduled ${frequencyText.toLowerCase()} report sent successfully to ${emailTo}`,
+          newValue: JSON.stringify({ recipient: emailTo, frequency: frequencyText, organisationId: settings.organisationId || 'combined' }),
+        };
+        await storage.logAuditEvent(auditEntry);
+      } else {
+        console.error(`Failed to send scheduled report #${settings.id} - email delivery failed`);
+        
+        // Log failure to audit
+        const auditEntry: InsertAuditLog = {
+          tableName: 'scheduled_reports',
+          recordId: String(settings.id),
+          operation: 'SEND_FAILED',
+          userId: settings.userId,
+          userEmail: user.email,
+          description: `Scheduled ${frequencyText.toLowerCase()} report failed to send to ${emailTo}`,
+          newValue: JSON.stringify({ recipient: emailTo, frequency: frequencyText, error: 'Email delivery failed' }),
+        };
+        await storage.logAuditEvent(auditEntry);
+      }
     } catch (error) {
       console.error(`Failed to send scheduled report for user ${settings.userId}:`, error);
+      
+      // Log error to audit
+      try {
+        const user = await storage.getUser(settings.userId);
+        const auditEntry: InsertAuditLog = {
+          tableName: 'scheduled_reports',
+          recordId: String(settings.id),
+          operation: 'SEND_ERROR',
+          userId: settings.userId,
+          userEmail: user?.email || 'unknown',
+          description: `Scheduled report error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          newValue: JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+        };
+        await storage.logAuditEvent(auditEntry);
+      } catch (auditError) {
+        console.error('Failed to log audit entry for report error:', auditError);
+      }
     }
   }
 }
