@@ -255,6 +255,7 @@ export function setupAuth(app: Express) {
           isAdmin: user.isAdmin,
           mustChangePassword: user.mustChangePassword,
           canSubmitCases: user.canSubmitCases,
+          canManageAdmins: user.canManageAdmins,
         });
       });
     })(req, res, next);
