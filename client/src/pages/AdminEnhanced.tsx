@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, EyeOff, Mail, Bell, BellOff, FilePlus, FileX, BarChart3, Search, Crown, Calendar, CalendarOff, Pencil, LogOut } from "lucide-react";
+import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ShieldAlert, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, EyeOff, Mail, Bell, BellOff, FilePlus, FileX, BarChart3, Search, Crown, Calendar, CalendarOff, Pencil, LogOut } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrganisationSchema } from "@shared/schema";
@@ -2677,6 +2677,50 @@ export default function AdminEnhanced() {
     },
   });
 
+  // Query to check if current user is a super admin
+  const { data: superAdminStatus } = useQuery({
+    queryKey: ['/api/admin/super-admin-status'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/admin/super-admin-status');
+      return await response.json();
+    },
+  });
+  
+  const isSuperAdmin = superAdminStatus?.isSuperAdmin || false;
+
+  // Toggle super admin status mutation (super admins only)
+  const toggleSuperAdminMutation = useMutation({
+    mutationFn: async ({ userId, canManageAdmins }: { userId: string; canManageAdmins: boolean }) => {
+      const response = await apiRequest("PUT", `/api/admin/users/${userId}/super-admin`, { canManageAdmins });
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Success",
+        description: data.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users-with-orgs"] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update super admin status",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
@@ -3519,6 +3563,34 @@ export default function AdminEnhanced() {
                         )}
                         Admin
                       </Button>
+                      {/* Super Admin toggle - only visible to super admins for @chadlaw.co.uk admins */}
+                      {isSuperAdmin && user.isAdmin && user.email?.endsWith('@chadlaw.co.uk') && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const currentValue = (user as any).canManageAdmins === true;
+                            const action = currentValue ? 'revoke super admin status from' : 'grant super admin status to';
+                            const confirmation = confirm(`Are you sure you want to ${action} ${user.firstName} ${user.lastName}?`);
+                            if (confirmation) {
+                              toggleSuperAdminMutation.mutate({
+                                userId: user.id,
+                                canManageAdmins: !currentValue
+                              });
+                            }
+                          }}
+                          disabled={toggleSuperAdminMutation.isPending}
+                          className={(user as any).canManageAdmins ? 'border-amber-500' : ''}
+                          title={(user as any).canManageAdmins ? "Super Admin - click to revoke" : "Grant super admin status"}
+                        >
+                          {(user as any).canManageAdmins ? (
+                            <ShieldAlert className="h-3 w-3 text-amber-600" />
+                          ) : (
+                            <ShieldAlert className="h-3 w-3 text-gray-400" />
+                          )}
+                          Super
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
@@ -3799,6 +3871,33 @@ export default function AdminEnhanced() {
                                 <Shield className="h-3 w-3" />
                               )}
                             </Button>
+                            {/* Super Admin toggle - mobile view */}
+                            {isSuperAdmin && user.isAdmin && user.email?.endsWith('@chadlaw.co.uk') && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const currentValue = (user as any).canManageAdmins === true;
+                                  const action = currentValue ? 'revoke super admin status from' : 'grant super admin status to';
+                                  const confirmation = confirm(`Are you sure you want to ${action} ${user.firstName} ${user.lastName}?`);
+                                  if (confirmation) {
+                                    toggleSuperAdminMutation.mutate({
+                                      userId: user.id,
+                                      canManageAdmins: !currentValue
+                                    });
+                                  }
+                                }}
+                                disabled={toggleSuperAdminMutation.isPending}
+                                className={(user as any).canManageAdmins ? 'border-amber-500' : ''}
+                                title={(user as any).canManageAdmins ? "Super Admin - click to revoke" : "Grant super admin status"}
+                              >
+                                {(user as any).canManageAdmins ? (
+                                  <ShieldAlert className="h-3 w-3 text-amber-600" />
+                                ) : (
+                                  <ShieldAlert className="h-3 w-3 text-gray-400" />
+                                )}
+                              </Button>
+                            )}
                             <Button
                               variant="outline"
                               size="sm"
