@@ -23,6 +23,7 @@ export default function Documents() {
   const [selectedCaseId, setSelectedCaseId] = useState<string>("");
   const [notifyOnUpload, setNotifyOnUpload] = useState(true);
   const [selectedCase, setSelectedCase] = useState<any>(null);
+  const [caseSearchTerm, setCaseSearchTerm] = useState("");
   const [caseDetailsOpen, setCaseDetailsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const documentsPerPage = 20;
@@ -357,11 +358,31 @@ export default function Documents() {
                         <SelectValue placeholder="Select a case..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {cases?.map((caseItem: any) => (
-                          <SelectItem key={caseItem.id} value={caseItem.id.toString()}>
-                            {caseItem.accountNumber} - {caseItem.caseName}
-                          </SelectItem>
-                        ))}
+                        <div className="p-2 border-b" onKeyDown={(e) => e.stopPropagation()}>
+                          <Input
+                            placeholder="Search cases..."
+                            value={caseSearchTerm}
+                            onChange={(e) => setCaseSearchTerm(e.target.value)}
+                            className="h-8"
+                            onClick={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                        {cases
+                          ?.filter((caseItem: any) => {
+                            if (!caseSearchTerm) return true;
+                            const search = caseSearchTerm.toLowerCase();
+                            return (
+                              caseItem.caseName?.toLowerCase().includes(search) ||
+                              caseItem.accountNumber?.toLowerCase().includes(search) ||
+                              caseItem.debtorName?.toLowerCase().includes(search)
+                            );
+                          })
+                          .map((caseItem: any) => (
+                            <SelectItem key={caseItem.id} value={caseItem.id.toString()}>
+                              {caseItem.accountNumber} - {caseItem.caseName}
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                   </div>
