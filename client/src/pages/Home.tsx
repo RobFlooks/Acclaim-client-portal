@@ -7,7 +7,7 @@ import Reports from "@/components/Reports";
 import Documents from "@/components/Documents";
 import ChadwickLawrence from "@/components/ChadwickLawrence";
 
-import { Bell, Menu, X, FilePlus, FileX } from "lucide-react";
+import { Bell, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
@@ -168,17 +168,6 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
-              {user?.canSubmitCases ? (
-                <div className="flex items-center gap-1.5 text-green-600 dark:text-green-400" title="You can submit new cases">
-                  <FilePlus className="h-4 w-4" />
-                  <span className="text-xs font-medium hidden sm:inline">Can Submit</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1.5 text-gray-400" title="Case submission is disabled for your account">
-                  <FileX className="h-4 w-4" />
-                  <span className="text-xs font-medium hidden sm:inline">No Submit</span>
-                </div>
-              )}
               <Button variant="ghost" size="icon" className="relative" onClick={handleNotificationClick}>
                 <Bell className="h-5 w-5" />
               </Button>
