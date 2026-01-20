@@ -46,7 +46,6 @@ export const users = pgTable("users", {
   pushNotifications: boolean("push_notifications").default(true), // User preference for push notifications
   loginNotifications: boolean("login_notifications").default(true), // User preference for login alert emails
   canSubmitCases: boolean("can_submit_cases").default(true), // Admin-controlled permission to submit new cases
-  canManageAdmins: boolean("can_manage_admins").default(false), // Permission to manage admin privileges for other users
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
