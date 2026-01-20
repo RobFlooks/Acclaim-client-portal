@@ -7,7 +7,7 @@ import Reports from "@/components/Reports";
 import Documents from "@/components/Documents";
 import ChadwickLawrence from "@/components/ChadwickLawrence";
 
-import { Bell, Menu, X, ShieldCheck } from "lucide-react";
+import { Bell, Menu, X, ShieldCheck, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
@@ -172,6 +172,12 @@ export default function Home() {
                 <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400" title="Admin privileges enabled">
                   <ShieldCheck className="h-4 w-4" />
                   <span className="text-xs font-medium hidden sm:inline">Admin</span>
+                </div>
+              )}
+              {user?.canManageAdmins && (
+                <div className="flex items-center gap-1.5 text-purple-600 dark:text-purple-400" title="Can manage admin privileges">
+                  <UserCog className="h-4 w-4" />
+                  <span className="text-xs font-medium hidden sm:inline">Manage Admins</span>
                 </div>
               )}
               <Button variant="ghost" size="icon" className="relative" onClick={handleNotificationClick}>
