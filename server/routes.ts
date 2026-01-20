@@ -70,7 +70,18 @@ const isAdmin: RequestHandler = async (req, res, next) => {
   }
 };
 
-// Super Admin helper - checks if user email is in the SUPER_ADMIN_EMAILS environment variable
+// Super Admin helper - checks if user is a super admin via database field OR environment variable
+function isSuperAdminUser(user: { email?: string | null; canManageAdmins?: boolean | null } | null | undefined): boolean {
+  if (!user) return false;
+  // Check database field first
+  if (user.canManageAdmins === true) return true;
+  // Fallback to environment variable
+  if (!user.email) return false;
+  const superAdminEmails = (process.env.SUPER_ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
+  return superAdminEmails.includes(user.email.toLowerCase());
+}
+
+// Legacy helper for email-only checks (used in some places)
 function isSuperAdminEmail(email: string | null | undefined): boolean {
   if (!email) return false;
   const superAdminEmails = (process.env.SUPER_ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
@@ -90,7 +101,7 @@ const isSuperAdmin: RequestHandler = async (req, res, next) => {
       return res.status(403).json({ message: "Admin access required" });
     }
 
-    if (!isSuperAdminEmail(user.email)) {
+    if (!isSuperAdminUser(user)) {
       return res.status(403).json({ message: "Super admin access required for this action" });
     }
 
@@ -2365,8 +2376,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/admin/super-admin-status', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const user = await storage.getUser(req.user.id);
-      const isSuperAdminUser = isSuperAdminEmail(user?.email);
-      res.json({ isSuperAdmin: isSuperAdminUser });
+      const isSuperAdmin = isSuperAdminUser(user);
+      res.json({ isSuperAdmin });
     } catch (error) {
       console.error("Error checking super admin status:", error);
       res.status(500).json({ message: "Failed to check super admin status" });
@@ -2540,6 +2551,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error removing admin privileges:", error);
       res.status(500).json({ message: "Failed to remove admin privileges" });
+    }
+  });
+
+  // Grant/revoke super admin status - Super Admin only
+  app.put('/api/admin/users/:userId/super-admin', isAuthenticated, isSuperAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { canManageAdmins } = req.body;
+      const adminUser = await storage.getUser(req.user.id);
+      const targetUser = await storage.getUser(userId);
+      
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Prevent removing own super admin status
+      if (userId === req.user.id && !canManageAdmins) {
+        return res.status(400).json({ message: "You cannot remove your own super admin status" });
+      }
+      
+      // Super admin can only be granted to @chadlaw.co.uk admins
+      if (canManageAdmins) {
+        if (!targetUser.email?.toLowerCase().endsWith('@chadlaw.co.uk')) {
+          return res.status(400).json({ 
+            message: "Super admin status can only be assigned to @chadlaw.co.uk email addresses" 
+          });
+        }
+        if (!targetUser.isAdmin) {
+          return res.status(400).json({ 
+            message: "User must be an admin before being granted super admin status" 
+          });
+        }
+      }
+      
+      const user = await storage.updateUserSuperAdmin(userId, canManageAdmins);
+      
+      // Log admin action
+      if (adminUser) {
+        const userName = [targetUser.firstName, targetUser.lastName].filter(Boolean).join(' ') || targetUser.email;
+        await logAdminAction({
+          adminUser,
+          tableName: 'users',
+          recordId: userId,
+          operation: 'UPDATE',
+          fieldName: 'canManageAdmins',
+          description: canManageAdmins 
+            ? `Granted super admin status to user "${userName}"` 
+            : `Revoked super admin status from user "${userName}"`,
+          oldValue: String(targetUser.canManageAdmins || false),
+          newValue: String(canManageAdmins),
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        });
+      }
+      
+      res.json({ 
+        user, 
+        message: canManageAdmins ? "Super admin status granted" : "Super admin status revoked" 
+      });
+    } catch (error) {
+      console.error("Error updating super admin status:", error);
+      res.status(500).json({ message: "Failed to update super admin status" });
     }
   });
 
