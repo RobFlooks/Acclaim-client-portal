@@ -21,6 +21,7 @@ export function Toaster() {
               {description && (
                 <ToastDescription>{description}</ToastDescription>
               )}
+              <p className="text-[10px] text-muted-foreground/70 sm:hidden mt-1">Swipe right to dismiss</p>
             </div>
             {action}
             <ToastClose />
