@@ -519,13 +519,14 @@ export default function Messages() {
                         <SelectValue placeholder="Select a case to link this message to..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <div className="p-2 border-b">
+                        <div className="p-2 border-b" onKeyDown={(e) => e.stopPropagation()}>
                           <Input
                             placeholder="Search cases..."
                             value={caseSearchTerm}
                             onChange={(e) => setCaseSearchTerm(e.target.value)}
                             className="h-8"
                             onClick={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => e.stopPropagation()}
                           />
                         </div>
                         <SelectItem value="none">No case (general message)</SelectItem>
