@@ -635,7 +635,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUsersWithOrganisations(): Promise<(User & { organisations: (Organization & { role?: string })[] })[]> {
-    const allUsers = await db.select().from(users);
+    const allUsers = await db.select().from(users).orderBy(users.lastName, users.firstName);
     
     const usersWithOrgs = await Promise.all(
       allUsers.map(async (user) => {
