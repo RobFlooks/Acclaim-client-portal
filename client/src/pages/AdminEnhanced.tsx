@@ -2037,6 +2037,7 @@ export default function AdminEnhanced() {
     includeCaseSummary: true,
     includeActivityReport: true,
     caseStatusFilter: 'active' as 'active' | 'all' | 'closed',
+    enabled: true,
   });
   
   // State for viewing/managing org scheduled reports
@@ -5040,6 +5041,7 @@ export default function AdminEnhanced() {
                                 includeCaseSummary: report.includeCaseSummary ?? true,
                                 includeActivityReport: report.includeActivityReport ?? true,
                                 caseStatusFilter: report.caseStatusFilter || 'active',
+                                enabled: report.enabled ?? true,
                               });
                               setShowEditOrgReportForm(true);
                             }}
@@ -5249,6 +5251,20 @@ export default function AdminEnhanced() {
                 <Label htmlFor="editIncludeActivityReport">Include Activity Report (Messages)</Label>
               </div>
               
+              <div className="flex items-center space-x-2 pt-4 border-t">
+                <Switch
+                  id="editReportEnabled"
+                  checked={orgScheduleForm.enabled}
+                  onCheckedChange={(checked) => setOrgScheduleForm({ ...orgScheduleForm, enabled: checked })}
+                />
+                <Label htmlFor="editReportEnabled" className="font-medium">
+                  Report Enabled
+                </Label>
+                <span className="text-xs text-muted-foreground ml-2">
+                  {orgScheduleForm.enabled ? '(Report will be sent on schedule)' : '(Report is paused)'}
+                </span>
+              </div>
+              
               <div className="flex justify-end space-x-2 pt-4 border-t">
                 <Button variant="outline" onClick={() => {
                   setShowEditOrgReportForm(false);
@@ -5271,6 +5287,7 @@ export default function AdminEnhanced() {
                         includeCaseSummary: orgScheduleForm.includeCaseSummary,
                         includeActivityReport: orgScheduleForm.includeActivityReport,
                         caseStatusFilter: orgScheduleForm.caseStatusFilter,
+                        enabled: orgScheduleForm.enabled,
                       }
                     });
                   }}
