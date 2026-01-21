@@ -4589,7 +4589,7 @@ export default function AdminEnhanced() {
                                 </Badge>
                               </div>
                             </div>
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t">
                               <div className="text-xs text-muted-foreground">
                                 {report.lastSentAt ? (
                                   <>Last sent: {new Date(report.lastSentAt).toLocaleDateString('en-GB', {
@@ -4602,10 +4602,72 @@ export default function AdminEnhanced() {
                                 {' • '}Created: {new Date(report.createdAt).toLocaleDateString('en-GB', {
                                   day: 'numeric', month: 'short', year: 'numeric'
                                 })}
+                                {' • '}ID: {report.id}
                               </div>
-                              <div className="text-xs text-muted-foreground">
-                                Report ID: {report.id}
-                              </div>
+                              {isSuperAdmin && (
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      sendTestReportMutation.mutate(report.id);
+                                    }}
+                                    disabled={sendTestReportMutation.isPending}
+                                  >
+                                    {sendTestReportMutation.isPending ? (
+                                      <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                                    ) : (
+                                      <Send className="h-3 w-3 mr-1" />
+                                    )}
+                                    Send Test
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (isOrgLevelReport) {
+                                        setEditingOrgReport(report);
+                                        setOrgScheduleForm({
+                                          recipientEmail: report.recipientEmail || '',
+                                          recipientName: report.recipientName || '',
+                                          frequency: report.frequency || 'weekly',
+                                          dayOfWeek: report.dayOfWeek ?? 1,
+                                          dayOfMonth: report.dayOfMonth ?? 1,
+                                          timeOfDay: report.timeOfDay ?? 9,
+                                          includeCaseSummary: report.includeCaseSummary ?? true,
+                                          includeActivityReport: report.includeActivityReport ?? true,
+                                          caseStatusFilter: report.caseStatusFilter || 'active',
+                                        });
+                                        setShowEditOrgReportForm(true);
+                                      } else {
+                                        const user = users?.find((u: any) => u.id === report.userId);
+                                        if (user) {
+                                          setScheduledReportUser(user);
+                                          setEditingReportId(report.id);
+                                          setReportForm({
+                                            organisationId: report.organisationId?.toString() || 'combined',
+                                            enabled: report.enabled ?? false,
+                                            frequency: report.frequency || 'weekly',
+                                            dayOfWeek: report.dayOfWeek ?? 1,
+                                            dayOfMonth: report.dayOfMonth ?? 1,
+                                            timeOfDay: report.timeOfDay ?? 9,
+                                            includeCaseSummary: report.includeCaseSummary ?? true,
+                                            includeActivityReport: report.includeActivityReport ?? true,
+                                            caseStatusFilter: report.caseStatusFilter || 'active',
+                                          });
+                                          setShowReportEditForm(true);
+                                          setShowScheduledReportDialog(true);
+                                        }
+                                      }
+                                    }}
+                                  >
+                                    <Edit className="h-3 w-3 mr-1" />
+                                    Edit
+                                  </Button>
+                                </div>
+                              )}
                             </div>
                           </div>
                         )}
