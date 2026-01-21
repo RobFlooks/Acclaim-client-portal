@@ -292,14 +292,14 @@ export function EmailBroadcast() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-fuchsia-100 dark:bg-fuchsia-900/30 rounded-lg">
+        <CardHeader className="pb-4">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="p-2 bg-fuchsia-100 dark:bg-fuchsia-900/30 rounded-lg flex-shrink-0">
               <Mail className="h-5 w-5 text-fuchsia-600 dark:text-fuchsia-400" />
             </div>
-            <div>
-              <CardTitle>Email Broadcast</CardTitle>
-              <CardDescription>
+            <div className="min-w-0">
+              <CardTitle className="text-lg sm:text-xl">Email Broadcast</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 Send emails to users, organisations, or admins. All recipients are BCC'd for data protection.
               </CardDescription>
             </div>
@@ -364,9 +364,9 @@ export function EmailBroadcast() {
                 </p>
 
                 <div className="space-y-3">
-                  <div className="flex flex-wrap gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <div
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-colors ${
+                      className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border cursor-pointer transition-colors ${
                         selectAllUsers
                           ? 'bg-blue-50 border-blue-300 dark:bg-blue-900/30 dark:border-blue-700'
                           : 'hover:bg-muted'
@@ -374,15 +374,15 @@ export function EmailBroadcast() {
                       onClick={() => setSelectAllUsers(!selectAllUsers)}
                     >
                       <Checkbox checked={selectAllUsers} />
-                      <Users className="h-4 w-4" />
-                      <span className="text-sm font-medium">All Users</span>
-                      <Badge variant="secondary" className="ml-1">
+                      <Users className="h-4 w-4 flex-shrink-0" />
+                      <span className="text-sm font-medium whitespace-nowrap">All Users</span>
+                      <Badge variant="secondary" className="ml-auto">
                         {activeUsers.length}
                       </Badge>
                     </div>
 
                     <div
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-colors ${
+                      className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border cursor-pointer transition-colors ${
                         selectAllAdmins
                           ? 'bg-amber-50 border-amber-300 dark:bg-amber-900/30 dark:border-amber-700'
                           : 'hover:bg-muted'
@@ -390,15 +390,15 @@ export function EmailBroadcast() {
                       onClick={() => setSelectAllAdmins(!selectAllAdmins)}
                     >
                       <Checkbox checked={selectAllAdmins} />
-                      <ShieldCheck className="h-4 w-4" />
-                      <span className="text-sm font-medium">All Admins</span>
-                      <Badge variant="secondary" className="ml-1">
+                      <ShieldCheck className="h-4 w-4 flex-shrink-0" />
+                      <span className="text-sm font-medium whitespace-nowrap">All Admins</span>
+                      <Badge variant="secondary" className="ml-auto">
                         {activeUsers.filter((u) => u.isAdmin).length}
                       </Badge>
                     </div>
 
                     <div
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-colors ${
+                      className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border cursor-pointer transition-colors ${
                         selectAllSuperAdmins
                           ? 'bg-fuchsia-50 border-fuchsia-300 dark:bg-fuchsia-900/30 dark:border-fuchsia-700'
                           : 'hover:bg-muted'
@@ -406,9 +406,9 @@ export function EmailBroadcast() {
                       onClick={() => setSelectAllSuperAdmins(!selectAllSuperAdmins)}
                     >
                       <Checkbox checked={selectAllSuperAdmins} />
-                      <ShieldCheck className="h-4 w-4 text-fuchsia-600" />
-                      <span className="text-sm font-medium">Admin+</span>
-                      <Badge variant="secondary" className="ml-1">
+                      <ShieldCheck className="h-4 w-4 text-fuchsia-600 flex-shrink-0" />
+                      <span className="text-sm font-medium whitespace-nowrap">Admin+</span>
+                      <Badge variant="secondary" className="ml-auto">
                         {activeUsers.filter((u) => u.isSuperAdmin).length}
                       </Badge>
                     </div>
@@ -464,35 +464,39 @@ export function EmailBroadcast() {
                         className="pl-8 h-9"
                       />
                     </div>
-                    <ScrollArea className="h-[120px] border rounded-md p-2">
+                    <ScrollArea className="h-[140px] border rounded-md p-2">
                       <div className="space-y-1">
                         {filteredUsers.map((user) => (
                           <div
                             key={user.id}
-                            className={`flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer text-sm ${
+                            className={`flex items-center gap-2 px-2 py-2 rounded cursor-pointer text-sm ${
                               selectedIndividuals.includes(user.id)
                                 ? 'bg-blue-50 dark:bg-blue-900/30'
                                 : 'hover:bg-muted'
                             }`}
                             onClick={() => toggleIndividual(user.id)}
                           >
-                            <Checkbox checked={selectedIndividuals.includes(user.id)} />
-                            <span className="truncate">
-                              {user.firstName} {user.lastName}
-                            </span>
-                            <span className="text-muted-foreground truncate text-xs">
-                              ({user.email})
-                            </span>
-                            {user.isSuperAdmin && (
-                              <Badge className="ml-auto bg-fuchsia-200 text-fuchsia-700 text-[10px] px-1">
-                                Admin+
-                              </Badge>
-                            )}
-                            {user.isAdmin && !user.isSuperAdmin && (
-                              <Badge className="ml-auto bg-amber-200 text-amber-700 text-[10px] px-1">
-                                Admin
-                              </Badge>
-                            )}
+                            <Checkbox checked={selectedIndividuals.includes(user.id)} className="flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className="truncate font-medium">
+                                  {user.firstName} {user.lastName}
+                                </span>
+                                {user.isSuperAdmin && (
+                                  <Badge className="flex-shrink-0 bg-fuchsia-200 text-fuchsia-700 dark:bg-fuchsia-900 dark:text-fuchsia-300 text-[10px] px-1">
+                                    Admin+
+                                  </Badge>
+                                )}
+                                {user.isAdmin && !user.isSuperAdmin && (
+                                  <Badge className="flex-shrink-0 bg-amber-200 text-amber-700 dark:bg-amber-900 dark:text-amber-300 text-[10px] px-1">
+                                    Admin
+                                  </Badge>
+                                )}
+                              </div>
+                              <span className="text-muted-foreground truncate text-xs block">
+                                {user.email}
+                              </span>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -550,12 +554,15 @@ export function EmailBroadcast() {
       </Card>
 
       <AlertDialog open={showPreview} onOpenChange={setShowPreview}>
-        <AlertDialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <AlertDialogContent className="w-[95vw] max-w-2xl max-h-[85vh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <Eye className="h-5 w-5" />
               Email Preview
             </AlertDialogTitle>
+            <AlertDialogDescription className="sr-only">
+              Preview of the email that will be sent to recipients
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-4">
             <div>
@@ -564,21 +571,21 @@ export function EmailBroadcast() {
             </div>
             <div>
               <Label className="text-xs text-muted-foreground">SUBJECT</Label>
-              <p className="font-medium">{subject}</p>
+              <p className="font-medium break-words">{subject}</p>
             </div>
             <Separator />
-            <div className="bg-white dark:bg-gray-900 border rounded-lg p-4">
-              <pre className="whitespace-pre-wrap font-sans text-sm">{body}</pre>
+            <div className="bg-white dark:bg-gray-900 border rounded-lg p-3 sm:p-4">
+              <pre className="whitespace-pre-wrap font-sans text-sm break-words">{body}</pre>
             </div>
           </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Close</AlertDialogCancel>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel className="w-full sm:w-auto">Close</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       <AlertDialog open={showConfirmSend} onOpenChange={setShowConfirmSend}>
-        <AlertDialogContent>
+        <AlertDialogContent className="w-[95vw] max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <Send className="h-5 w-5 text-fuchsia-600" />
@@ -589,11 +596,11 @@ export function EmailBroadcast() {
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmSend}
-              className="bg-fuchsia-600 hover:bg-fuchsia-700"
+              className="w-full sm:w-auto bg-fuchsia-600 hover:bg-fuchsia-700"
             >
               <CheckCircle2 className="h-4 w-4 mr-2" />
               Send Now
