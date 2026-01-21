@@ -291,7 +291,7 @@ function Pagination({ currentPage, totalPages, onPageChange }: { currentPage: nu
   );
 }
 
-function CaseManagementTab() {
+function CaseManagementTab({ isSuperAdmin = false }: { isSuperAdmin?: boolean }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [deleteConfirmCase, setDeleteConfirmCase] = useState<Case | null>(null);
@@ -4344,7 +4344,7 @@ export default function AdminEnhanced() {
               </div>
             </CardHeader>
             <CardContent>
-              <CaseManagementTab />
+              <CaseManagementTab isSuperAdmin={isSuperAdmin} />
             </CardContent>
           </Card>
         </TabsContent>
