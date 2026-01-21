@@ -4646,17 +4646,15 @@ export default function AdminEnhanced() {
                                         if (user) {
                                           setScheduledReportUser(user);
                                           setEditingReportId(report.id);
-                                          setReportForm({
-                                            organisationId: report.organisationId?.toString() || 'combined',
-                                            enabled: report.enabled ?? false,
-                                            frequency: report.frequency || 'weekly',
-                                            dayOfWeek: report.dayOfWeek ?? 1,
-                                            dayOfMonth: report.dayOfMonth ?? 1,
-                                            timeOfDay: report.timeOfDay ?? 9,
-                                            includeCaseSummary: report.includeCaseSummary ?? true,
-                                            includeActivityReport: report.includeActivityReport ?? true,
-                                            caseStatusFilter: report.caseStatusFilter || 'active',
-                                          });
+                                          setScheduledReportOrgId(report.organisationId || null);
+                                          setScheduledReportEnabled(report.enabled ?? false);
+                                          setScheduledReportFrequency(report.frequency || 'weekly');
+                                          setScheduledReportDayOfWeek(report.dayOfWeek ?? 1);
+                                          setScheduledReportDayOfMonth(report.dayOfMonth ?? 1);
+                                          setScheduledReportTimeOfDay(report.timeOfDay ?? 9);
+                                          setScheduledReportCaseSummary(report.includeCaseSummary ?? true);
+                                          setScheduledReportActivity(report.includeActivityReport ?? true);
+                                          setScheduledReportCaseStatusFilter(report.caseStatusFilter || 'active');
                                           setShowReportEditForm(true);
                                           setShowScheduledReportDialog(true);
                                         }
