@@ -231,6 +231,7 @@ export interface IStorage {
   logLoginAttempt(attempt: InsertLoginAttempt): Promise<LoginAttempt>;
   getLoginAttempts(limit?: number): Promise<LoginAttempt[]>;
   getFailedLoginAttempts(limit?: number): Promise<LoginAttempt[]>;
+  isNewLoginLocation(email: string, ipAddress: string, userAgent: string): Promise<boolean>;
   
   recordSystemMetric(metric: InsertSystemMetric): Promise<SystemMetric>;
   getSystemMetrics(metricName?: string, limit?: number): Promise<SystemMetric[]>;
@@ -2080,6 +2081,24 @@ export class DatabaseStorage implements IStorage {
       .where(eq(loginAttempts.success, false))
       .orderBy(desc(loginAttempts.createdAt))
       .limit(limit);
+  }
+
+  async isNewLoginLocation(email: string, ipAddress: string, userAgent: string): Promise<boolean> {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const previousLogins = await db.select().from(loginAttempts)
+      .where(
+        and(
+          eq(loginAttempts.email, email.toLowerCase()),
+          eq(loginAttempts.success, true),
+          eq(loginAttempts.ipAddress, ipAddress),
+          gte(loginAttempts.createdAt, sevenDaysAgo)
+        )
+      )
+      .limit(1);
+    
+    return previousLogins.length === 0;
   }
 
   async recordSystemMetric(metric: InsertSystemMetric): Promise<SystemMetric> {

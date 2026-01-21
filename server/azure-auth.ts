@@ -151,23 +151,26 @@ export function setupAzureAuth(app: Express): void {
           return res.redirect("/auth?error=session_error");
         }
         
-        // Send login notification if user has it enabled
+        // Send login notification if user has it enabled and it's a new IP
         const ipAddress = req.ip || req.socket?.remoteAddress || 'unknown';
         const userAgent = req.get('user-agent') || 'unknown';
         
         try {
           const fullUser = await storage.getUser(user!.id);
           if (fullUser && fullUser.email && (fullUser as any).loginNotifications !== false) {
-            sendGridEmailService.sendLoginNotification({
-              userEmail: fullUser.email,
-              userName: `${fullUser.firstName || ''} ${fullUser.lastName || ''}`.trim() || 'User',
-              loginTime: new Date(),
-              ipAddress: ipAddress,
-              userAgent: userAgent,
-              loginMethod: 'azure_sso'
-            }).catch(err => {
-              console.error('[Azure Auth] Failed to send login notification:', err);
-            });
+            const isNewLocation = await storage.isNewLoginLocation(fullUser.email, ipAddress, userAgent);
+            if (isNewLocation) {
+              sendGridEmailService.sendLoginNotification({
+                userEmail: fullUser.email,
+                userName: `${fullUser.firstName || ''} ${fullUser.lastName || ''}`.trim() || 'User',
+                loginTime: new Date(),
+                ipAddress: ipAddress,
+                userAgent: userAgent,
+                loginMethod: 'azure_sso'
+              }).catch(err => {
+                console.error('[Azure Auth] Failed to send login notification:', err);
+              });
+            }
           }
         } catch (notifyErr) {
           console.error('[Azure Auth] Failed to send login notification:', notifyErr);

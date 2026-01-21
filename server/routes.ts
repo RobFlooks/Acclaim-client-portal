@@ -343,21 +343,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         console.log(`[Password Reset] User ${email} logged in with OTP, must change password`);
         
-        // Send login notification if user has it enabled
+        // Send login notification if user has it enabled and it's a new IP
         try {
           const fullUser = await storage.getUser(user.id);
           if (fullUser && fullUser.email && (fullUser as any).loginNotifications !== false) {
-            const { sendGridEmailService } = await import('./email-service-sendgrid');
-            sendGridEmailService.sendLoginNotification({
-              userEmail: fullUser.email,
-              userName: `${fullUser.firstName || ''} ${fullUser.lastName || ''}`.trim() || 'User',
-              loginTime: new Date(),
-              ipAddress: ipAddress,
-              userAgent: userAgent,
-              loginMethod: 'otp'
-            }).catch(err => {
-              console.error('Failed to send login notification:', err);
-            });
+            const isNewLocation = await storage.isNewLoginLocation(fullUser.email, ipAddress, userAgent);
+            if (isNewLocation) {
+              const { sendGridEmailService } = await import('./email-service-sendgrid');
+              sendGridEmailService.sendLoginNotification({
+                userEmail: fullUser.email,
+                userName: `${fullUser.firstName || ''} ${fullUser.lastName || ''}`.trim() || 'User',
+                loginTime: new Date(),
+                ipAddress: ipAddress,
+                userAgent: userAgent,
+                loginMethod: 'otp'
+              }).catch(err => {
+                console.error('Failed to send login notification:', err);
+              });
+            }
           }
         } catch (notifyErr) {
           console.error('Failed to send login notification:', notifyErr);
