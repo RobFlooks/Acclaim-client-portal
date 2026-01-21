@@ -253,6 +253,7 @@ export function setupAuth(app: Express) {
           email: user.email,
           organisationId: user.organisationId,
           isAdmin: user.isAdmin,
+          isSuperAdmin: user.isSuperAdmin,
           mustChangePassword: user.mustChangePassword,
           canSubmitCases: user.canSubmitCases,
         });
