@@ -3108,10 +3108,12 @@ export default function AdminEnhanced() {
               <span className="sm:hidden">Submits</span>
             </TabsTrigger>
 
-            <TabsTrigger value="integration" className="flex-1 text-xs sm:text-sm">
-              <span className="hidden sm:inline">Integration</span>
-              <span className="sm:hidden">API</span>
-            </TabsTrigger>
+            {isSuperAdmin && (
+              <TabsTrigger value="integration" className="flex-1 text-xs sm:text-sm">
+                <span className="hidden sm:inline">Integration</span>
+                <span className="sm:hidden">API</span>
+              </TabsTrigger>
+            )}
             {isSuperAdmin && (
               <TabsTrigger value="broadcast" className="flex-1 text-xs sm:text-sm">
                 <span className="hidden sm:inline">Email Broadcast</span>
@@ -4394,10 +4396,12 @@ export default function AdminEnhanced() {
 
 
 
-        {/* User Guide Tab */}
-        <TabsContent value="integration">
-          <CaseManagementGuideDownload />
-        </TabsContent>
+        {/* Integration Tab - Super Admin Only */}
+        {isSuperAdmin && (
+          <TabsContent value="integration">
+            <CaseManagementGuideDownload />
+          </TabsContent>
+        )}
 
         {/* Email Broadcast Tab - Super Admin Only */}
         {isSuperAdmin && (
