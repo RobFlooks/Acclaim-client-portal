@@ -4393,7 +4393,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get users with organisation assignments for broadcast feature
   app.get("/api/admin/users/with-organisations", isAuthenticated, isAdmin, isSuperAdmin, async (req: any, res) => {
     try {
-      const allUsers = await storage.getUsers();
+      const allUsers = await storage.getAllUsers();
       const allOrgs = await storage.getOrganisations();
       
       // Get all user-organisation assignments in one query for efficiency
@@ -4446,7 +4446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Get all recipient users
-      const allUsers = await storage.getUsers();
+      const allUsers = await storage.getAllUsers();
       const recipients = allUsers.filter(u => recipientIds.includes(u.id) && u.email && !u.mustChangePassword);
       
       if (recipients.length === 0) {
