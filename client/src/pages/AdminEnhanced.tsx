@@ -4628,19 +4628,24 @@ export default function AdminEnhanced() {
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       if (isOrgLevelReport) {
-                                        setEditingOrgReport(report);
-                                        setOrgScheduleForm({
-                                          recipientEmail: report.recipientEmail || '',
-                                          recipientName: report.recipientName || '',
-                                          frequency: report.frequency || 'weekly',
-                                          dayOfWeek: report.dayOfWeek ?? 1,
-                                          dayOfMonth: report.dayOfMonth ?? 1,
-                                          timeOfDay: report.timeOfDay ?? 9,
-                                          includeCaseSummary: report.includeCaseSummary ?? true,
-                                          includeActivityReport: report.includeActivityReport ?? true,
-                                          caseStatusFilter: report.caseStatusFilter || 'active',
-                                        });
-                                        setShowEditOrgReportForm(true);
+                                        const reportOrg = organisations?.find((o: any) => o.id === report.organisationId);
+                                        if (reportOrg) {
+                                          setSelectedOrgForReports(reportOrg);
+                                          setEditingOrgReport(report);
+                                          setOrgScheduleForm({
+                                            recipientEmail: report.recipientEmail || '',
+                                            recipientName: report.recipientName || '',
+                                            frequency: report.frequency || 'weekly',
+                                            dayOfWeek: report.dayOfWeek ?? 1,
+                                            dayOfMonth: report.dayOfMonth ?? 1,
+                                            timeOfDay: report.timeOfDay ?? 9,
+                                            includeCaseSummary: report.includeCaseSummary ?? true,
+                                            includeActivityReport: report.includeActivityReport ?? true,
+                                            caseStatusFilter: report.caseStatusFilter || 'active',
+                                          });
+                                          setShowEditOrgReportForm(true);
+                                          setShowOrgReportsDialog(true);
+                                        }
                                       } else {
                                         const user = users?.find((u: any) => u.id === report.userId);
                                         if (user) {
@@ -4654,7 +4659,7 @@ export default function AdminEnhanced() {
                                           setScheduledReportTimeOfDay(report.timeOfDay ?? 9);
                                           setScheduledReportCaseSummary(report.includeCaseSummary ?? true);
                                           setScheduledReportActivity(report.includeActivityReport ?? true);
-                                          setScheduledReportCaseStatusFilter(report.caseStatusFilter || 'active');
+                                          setScheduledReportCaseFilter(report.caseStatusFilter || 'active');
                                           setShowReportEditForm(true);
                                           setShowScheduledReportDialog(true);
                                         }
