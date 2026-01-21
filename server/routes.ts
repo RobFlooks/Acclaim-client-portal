@@ -4437,8 +4437,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get audit history for a specific message or document (admin only)
-  app.get("/api/admin/audit/item/:type/:id", isAuthenticated, isAdmin, isSuperAdmin, async (req, res) => {
+  // Get audit history for a specific message or document (all admins can view)
+  app.get("/api/admin/audit/item/:type/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { type, id } = req.params;
       
