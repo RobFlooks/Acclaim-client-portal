@@ -2106,7 +2106,7 @@ export default function AdminEnhanced() {
   });
 
   // Fetch scheduled reports settings for all users
-  const { data: scheduledReports = [] } = useQuery<any[]>({
+  const { data: scheduledReports = [], isFetching: scheduledReportsFetching } = useQuery<any[]>({
     queryKey: ["/api/admin/scheduled-reports"],
     retry: false,
   });
@@ -4427,9 +4427,10 @@ export default function AdminEnhanced() {
                     variant="outline"
                     size="sm"
                     onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/admin/scheduled-reports"] })}
+                    disabled={scheduledReportsFetching}
                   >
-                    <RefreshCw className="h-4 w-4 mr-1" />
-                    Refresh
+                    <RefreshCw className={`h-4 w-4 mr-1 ${scheduledReportsFetching ? 'animate-spin' : ''}`} />
+                    {scheduledReportsFetching ? 'Loading...' : 'Refresh'}
                   </Button>
                   <Badge variant="secondary">
                     {scheduledReports.length} report{scheduledReports.length !== 1 ? 's' : ''}
