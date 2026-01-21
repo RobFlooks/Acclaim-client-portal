@@ -703,6 +703,12 @@ export async function processScheduledReports(): Promise<void> {
     try {
       const user = await storage.getUser(settings.userId);
       if (!user || !user.email) continue;
+      
+      // Skip users who haven't logged in for the first time (still have temporary password)
+      if (user.mustChangePassword) {
+        console.log(`  Skipping - user ${user.email} has not completed first login`);
+        continue;
+      }
 
       // Check if user's organisations have scheduled reports enabled
       const userOrgs = await storage.getUserOrganisations(settings.userId);
