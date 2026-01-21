@@ -70,6 +70,26 @@ const isAdmin: RequestHandler = async (req, res, next) => {
   }
 };
 
+// Super Admin middleware - checks if user is a super admin (for destructive operations)
+const isSuperAdmin: RequestHandler = async (req, res, next) => {
+  try {
+    const userId = (req as any).user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const user = await storage.getUser(userId);
+    if (!user || !user.isSuperAdmin) {
+      return res.status(403).json({ message: "Super admin access required for this action" });
+    }
+
+    next();
+  } catch (error) {
+    console.error("Super admin check error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // Helper function to log admin actions to audit trail
 async function logAdminAction(params: {
   adminUser: { id: string; email?: string | null; firstName?: string | null; lastName?: string | null };
@@ -895,7 +915,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/admin/case-submissions/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.delete('/api/admin/case-submissions/:id', isAuthenticated, isAdmin, isSuperAdmin, async (req: any, res) => {
     try {
       const submissionId = parseInt(req.params.id);
 
@@ -2237,7 +2257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin-only delete routes
-  app.delete('/api/admin/messages/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.delete('/api/admin/messages/:id', isAuthenticated, isAdmin, isSuperAdmin, async (req: any, res) => {
     try {
       const messageId = parseInt(req.params.id);
       const adminUser = await storage.getUser(req.user.id);
@@ -2274,7 +2294,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/admin/documents/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.delete('/api/admin/documents/:id', isAuthenticated, isAdmin, isSuperAdmin, async (req: any, res) => {
     try {
       const documentId = parseInt(req.params.id);
       const adminUser = await storage.getUser(req.user.id);
@@ -2497,6 +2517,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error removing admin privileges:", error);
       res.status(500).json({ message: "Failed to remove admin privileges" });
+    }
+  });
+
+  // Toggle super admin status (super admin only)
+  app.put('/api/admin/users/:userId/super-admin', isAuthenticated, isAdmin, isSuperAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { isSuperAdmin: newSuperAdminStatus } = req.body;
+      const adminUser = await storage.getUser(req.user.id);
+      
+      const existingUser = await storage.getUser(userId);
+      if (!existingUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Cannot demote yourself as super admin
+      if (userId === req.user.id && !newSuperAdminStatus) {
+        return res.status(400).json({ message: "You cannot remove your own super admin privileges" });
+      }
+
+      // Only @chadlaw.co.uk emails can be super admins
+      if (newSuperAdminStatus && !existingUser.email?.endsWith('@chadlaw.co.uk')) {
+        return res.status(400).json({ 
+          message: "Super admin privileges can only be assigned to @chadlaw.co.uk email addresses" 
+        });
+      }
+
+      const user = await storage.updateSuperAdminStatus(userId, newSuperAdminStatus);
+      
+      // Log admin action
+      if (adminUser) {
+        const userName = [existingUser.firstName, existingUser.lastName].filter(Boolean).join(' ') || existingUser.email;
+        await logAdminAction({
+          adminUser,
+          tableName: 'users',
+          recordId: userId,
+          operation: 'UPDATE',
+          fieldName: 'isSuperAdmin',
+          description: newSuperAdminStatus 
+            ? `Granted super admin privileges to user "${userName}"`
+            : `Removed super admin privileges from user "${userName}"`,
+          oldValue: String(existingUser.isSuperAdmin || false),
+          newValue: String(newSuperAdminStatus),
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        });
+      }
+      
+      res.json({ 
+        user, 
+        message: newSuperAdminStatus ? "Super admin privileges granted" : "Super admin privileges removed" 
+      });
+    } catch (error) {
+      console.error("Error updating super admin status:", error);
+      res.status(500).json({ message: "Failed to update super admin privileges" });
     }
   });
 
@@ -2729,7 +2804,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete user
-  app.delete('/api/admin/users/:userId', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.delete('/api/admin/users/:userId', isAuthenticated, isAdmin, isSuperAdmin, async (req: any, res) => {
     try {
       const { userId } = req.params;
       const currentUser = req.user;
@@ -2850,7 +2925,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete organisation
-  app.delete('/api/admin/organisations/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.delete('/api/admin/organisations/:id', isAuthenticated, isAdmin, isSuperAdmin, async (req: any, res) => {
     try {
       const orgId = parseInt(req.params.id);
       const adminUser = await storage.getUser(req.user.id);
@@ -2909,7 +2984,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin: Create org-level scheduled report with custom email recipient
-  app.post('/api/admin/organisations/:id/scheduled-reports', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.post('/api/admin/organisations/:id/scheduled-reports', isAuthenticated, isAdmin, isSuperAdmin, async (req: any, res) => {
     try {
       const orgId = parseInt(req.params.id);
       const adminUserId = req.user.id;
@@ -3032,7 +3107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin: Create a new scheduled report for a user
-  app.post('/api/admin/users/:userId/scheduled-reports', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.post('/api/admin/users/:userId/scheduled-reports', isAuthenticated, isAdmin, isSuperAdmin, async (req: any, res) => {
     try {
       const { userId } = req.params;
       const { organisationId, enabled, frequency, dayOfWeek, dayOfMonth, timeOfDay, includeCaseSummary, includeActivityReport, organisationIds, caseStatusFilter } = req.body;
@@ -3080,7 +3155,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin: Update a specific scheduled report
-  app.put('/api/admin/scheduled-reports/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.put('/api/admin/scheduled-reports/:id', isAuthenticated, isAdmin, isSuperAdmin, async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
       const adminUser = await storage.getUser(req.user.id);
@@ -3144,7 +3219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin: Delete a specific scheduled report
-  app.delete('/api/admin/scheduled-reports/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.delete('/api/admin/scheduled-reports/:id', isAuthenticated, isAdmin, isSuperAdmin, async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
       const adminUser = await storage.getUser(req.user.id);
@@ -3190,7 +3265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin: Send test scheduled report for a specific report
-  app.post('/api/admin/scheduled-reports/:id/test-send', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.post('/api/admin/scheduled-reports/:id/test-send', isAuthenticated, isAdmin, isSuperAdmin, async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
       
@@ -4233,7 +4308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Comprehensive audit endpoints
-  app.get("/api/admin/audit/logs", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/audit/logs", isAuthenticated, isAdmin, isSuperAdmin, async (req, res) => {
     try {
       const { tableName, recordId, operation, userId, startDate, endDate, limit } = req.query;
       
@@ -4254,7 +4329,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/admin/audit/summary", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/audit/summary", isAuthenticated, isAdmin, isSuperAdmin, async (req, res) => {
     try {
       const summary = await storage.getAuditSummary();
       res.json(summary);
@@ -4265,7 +4340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Audit log retention endpoints
-  app.get("/api/admin/audit/stats", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/audit/stats", isAuthenticated, isAdmin, isSuperAdmin, async (req, res) => {
     try {
       const stats = await storage.getAuditLogStats();
       res.json(stats);
@@ -4275,7 +4350,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/audit/cleanup", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.post("/api/admin/audit/cleanup", isAuthenticated, isAdmin, isSuperAdmin, async (req: any, res) => {
     try {
       const { retentionDays } = req.body;
       
@@ -4362,7 +4437,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get audit history for a specific message or document (admin only)
-  app.get("/api/admin/audit/item/:type/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.get("/api/admin/audit/item/:type/:id", isAuthenticated, isAdmin, isSuperAdmin, async (req, res) => {
     try {
       const { type, id } = req.params;
       
@@ -5869,7 +5944,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Bulk delete cases
-  app.post("/api/admin/cases/bulk-delete", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.post("/api/admin/cases/bulk-delete", isAuthenticated, isAdmin, isSuperAdmin, async (req: any, res) => {
     try {
       const { caseIds } = req.body;
       const adminUser = await storage.getUser(req.user.id);
