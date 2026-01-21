@@ -23,6 +23,7 @@ import AdminPaymentPerformanceReport from "@/pages/AdminPaymentPerformanceReport
 import SimpleReports from "@/pages/SimpleReports";
 import AuditManagement from "@/pages/AuditManagement";
 import OrgSettings from "@/pages/OrgSettings";
+import PrivacyNotice from "@/pages/PrivacyNotice";
 
 function Router() {
   return (
@@ -44,6 +45,7 @@ function Router() {
       <ProtectedRoute path="/admin-payment-performance-report" component={AdminPaymentPerformanceReport} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/change-password" component={ChangePasswordPage} />
+      <Route path="/privacy" component={PrivacyNotice} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -309,6 +309,11 @@ export default function AuthPage() {
               )}
               
               <div className="mt-6 text-center text-xs text-muted-foreground">Need assistance? Please contact us at email@acclaim.law | 0113 225 8811</div>
+              <div className="mt-3 text-center">
+                <Link href="/privacy" className="text-xs text-muted-foreground hover:text-primary hover:underline">
+                  Privacy Notice
+                </Link>
+              </div>
             </CardContent>
           </Card>
         </div>
