@@ -169,9 +169,18 @@ export default function Home() {
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
               {user?.isAdmin && (
-                <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400" title="Admin privileges enabled">
+                <div 
+                  className={`flex items-center gap-1.5 ${
+                    (user as any).isSuperAdmin 
+                      ? 'text-fuchsia-600 dark:text-fuchsia-400' 
+                      : 'text-amber-600 dark:text-amber-400'
+                  }`} 
+                  title={(user as any).isSuperAdmin ? "Super admin privileges enabled" : "Admin privileges enabled"}
+                >
                   <ShieldCheck className="h-4 w-4" />
-                  <span className="text-xs font-medium hidden sm:inline">Admin</span>
+                  <span className="text-xs font-medium hidden sm:inline">
+                    {(user as any).isSuperAdmin ? 'Admin+' : 'Admin'}
+                  </span>
                 </div>
               )}
               <Button variant="ghost" size="icon" className="relative" onClick={handleNotificationClick}>
