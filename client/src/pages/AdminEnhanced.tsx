@@ -2072,7 +2072,7 @@ export default function AdminEnhanced() {
   // Search filter state
   const [userSearchFilter, setUserSearchFilter] = useState("");
   const [orgSearchFilter, setOrgSearchFilter] = useState("");
-  const [userTypeFilter, setUserTypeFilter] = useState<"all" | "admin" | "user">("all");
+  const [userTypeFilter, setUserTypeFilter] = useState<"all" | "admin" | "user" | "not_registered">("all");
 
   // Scheduled reports configuration dialog state
   const [showScheduledReportDialog, setShowScheduledReportDialog] = useState(false);
@@ -2935,6 +2935,7 @@ export default function AdminEnhanced() {
     // Filter by user type
     if (userTypeFilter === "admin" && !user.isAdmin) return false;
     if (userTypeFilter === "user" && user.isAdmin) return false;
+    if (userTypeFilter === "not_registered" && !(user as any).mustChangePassword) return false;
     
     // Filter by search term
     if (userSearchFilter.trim()) {
@@ -3329,18 +3330,19 @@ export default function AdminEnhanced() {
                 </div>
                 <Select 
                   value={userTypeFilter} 
-                  onValueChange={(value: "all" | "admin" | "user") => {
+                  onValueChange={(value: "all" | "admin" | "user" | "not_registered") => {
                     setUserTypeFilter(value);
                     setUsersPage(1);
                   }}
                 >
-                  <SelectTrigger className="w-full sm:w-36">
+                  <SelectTrigger className="w-full sm:w-44">
                     <SelectValue placeholder="All Users" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Users</SelectItem>
                     <SelectItem value="admin">Admins Only</SelectItem>
                     <SelectItem value="user">Non-Admins Only</SelectItem>
+                    <SelectItem value="not_registered">Not Registered</SelectItem>
                   </SelectContent>
                 </Select>
                 <div className="text-sm text-gray-600">
