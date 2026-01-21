@@ -263,7 +263,7 @@ export default function ChadwickLawrence() {
                 href="https://www.chadwicklawrence.co.uk/seminars/business-services-seminars/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-white text-[#2e3192] px-4 py-2 rounded-lg font-medium hover:bg-white/90 transition-colors"
+                className="inline-flex items-center gap-2 bg-white dark:bg-white text-[#2e3192] dark:text-[#2e3192] px-4 py-2 rounded-lg font-medium hover:bg-white/90 dark:hover:bg-gray-100 transition-colors"
               >
                 <Calendar className="h-4 w-4" />
                 View Upcoming Events
