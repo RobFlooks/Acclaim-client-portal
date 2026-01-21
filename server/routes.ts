@@ -4623,6 +4623,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create message linked to the case
       const newMessage = await storage.createMessage({
         senderId: systemUserId,
+        senderName: senderName, // Use the sender name from the API request
         recipientType: 'case',
         recipientId: case_.id.toString(),
         caseId: case_.id, // Set the caseId for proper filtering
