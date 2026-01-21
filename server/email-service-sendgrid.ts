@@ -2771,17 +2771,16 @@ You can disable these login notifications in your Profile Settings.
                   
                   <!-- Header -->
                   <tr>
-                    <td style="background-color: #d946ef; background: linear-gradient(135deg, #d946ef 0%, #a855f7 100%); padding: 40px 40px 30px 40px; text-align: center;">
-                      <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
-                      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Acclaim Portal</h1>
-                      <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Broadcast Message</p>
+                    <td style="background-color: #008b8b; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                      <img src="cid:logo" alt="Acclaim" style="height: 48px; width: auto; margin-bottom: 12px;" />
+                      <h1 style="margin: 0; color: #ffffff; font-size: 26px; font-weight: 600; letter-spacing: -0.5px;">Acclaim Portal</h1>
                     </td>
                   </tr>
                   
                   <!-- Content -->
                   <tr>
                     <td style="padding: 40px;">
-                      <h2 style="margin: 0 0 16px 0; color: #1f2937; font-size: 18px; font-weight: 600;">${data.subject}</h2>
+                      <h2 style="margin: 0 0 20px 0; color: #008b8b; font-size: 20px; font-weight: 600;">${data.subject}</h2>
                       <div style="margin-top: 16px;">
                         ${htmlBody}
                       </div>
@@ -2791,9 +2790,6 @@ You can disable these login notifications in your Profile Settings.
                   <!-- Footer -->
                   <tr>
                     <td style="background-color: #1f2937; padding: 24px; text-align: center;">
-                      <p style="margin: 0 0 8px 0; color: #d1d5db; font-size: 13px;">
-                        Sent by ${data.senderName} via Acclaim Portal
-                      </p>
                       <p style="margin: 0; color: #9ca3af; font-size: 12px;">
                         Chadwick Lawrence LLP | &copy; ${new Date().getFullYear()}
                       </p>
