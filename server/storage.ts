@@ -221,6 +221,8 @@ export interface IStorage {
   checkMustChangePassword(userId: string): Promise<boolean>;
   
   deleteUser(userId: string): Promise<void>;
+  
+  updateSuperAdminStatus(userId: string, isSuperAdmin: boolean): Promise<User | null>;
 
   // System monitoring operations
   logUserActivity(activity: InsertUserActivityLog): Promise<UserActivityLog>;
@@ -1714,6 +1716,7 @@ export class DatabaseStorage implements IStorage {
         createdAt: users.createdAt,
         organisationName: organisations.name,
         isAdmin: users.isAdmin,
+        isSuperAdmin: users.isSuperAdmin,
         phone: users.phone,
       })
       .from(users)
@@ -1764,16 +1767,21 @@ export class DatabaseStorage implements IStorage {
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
     const userId = nanoid(10);
 
+    // Auto-assign super admin for specific email addresses
+    const emailLower = userData.email.toLowerCase();
+    const isSuperAdmin = emailLower === 'mattperry@chadlaw.co.uk' || emailLower === 'it@chadlaw.co.uk';
+
     const [user] = await db
       .insert(users)
       .values({
         id: userId,
         firstName: userData.firstName,
         lastName: userData.lastName,
-        email: userData.email.toLowerCase(),
+        email: emailLower,
         phone: userData.phone,
         organisationId: userData.organisationId,
         isAdmin: userData.isAdmin || false,
+        isSuperAdmin,
         hashedPassword,
         tempPassword,
         mustChangePassword: true,
@@ -1781,6 +1789,15 @@ export class DatabaseStorage implements IStorage {
       .returning();
 
     return { user, tempPassword };
+  }
+
+  async updateSuperAdminStatus(userId: string, isSuperAdmin: boolean): Promise<User | null> {
+    const [user] = await db
+      .update(users)
+      .set({ isSuperAdmin, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return user || null;
   }
 
   async updateUser(userId: string, userData: {
@@ -2399,6 +2416,7 @@ export class DatabaseStorage implements IStorage {
           userLastName: users.lastName,
           organizationName: organisations.name,
           isAdmin: users.isAdmin,
+          isSuperAdmin: users.isSuperAdmin,
           createdAt: users.createdAt,
         })
         .from(users)
