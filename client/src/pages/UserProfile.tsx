@@ -2282,9 +2282,9 @@ export default function UserProfile() {
             ) : documentAuditLogs && documentAuditLogs.length > 0 ? (
               <div className="space-y-2">
                 {documentAuditLogs.map((log: any) => (
-                  <div key={log.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 bg-purple-50 rounded text-sm gap-1">
-                    <span className="font-medium text-purple-900">{log.userName}</span>
-                    <span className="text-purple-600 text-xs">{new Date(log.createdAt).toLocaleString()}</span>
+                  <div key={log.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 bg-purple-50 dark:bg-purple-900/20 rounded text-sm gap-1">
+                    <span className="font-medium text-purple-900 dark:text-purple-100">{log.userEmail || 'Unknown'}</span>
+                    <span className="text-purple-600 dark:text-purple-300 text-xs">{log.timestamp ? new Date(log.timestamp).toLocaleString() : 'Unknown'}</span>
                   </div>
                 ))}
               </div>
