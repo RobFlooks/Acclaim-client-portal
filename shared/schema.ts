@@ -35,6 +35,7 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   organisationId: integer("organisation_id").references(() => organisations.id),
   isAdmin: boolean("is_admin").default(false),
+  isSuperAdmin: boolean("is_super_admin").default(false),
   phone: varchar("phone"),
   hashedPassword: varchar("hashed_password"),
   tempPassword: varchar("temp_password"),
