@@ -12,7 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, EyeOff, Mail, Bell, BellOff, FilePlus, FileX, BarChart3, Search, Crown, Calendar, CalendarOff, Pencil, LogOut } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ShieldAlert, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, EyeOff, Mail, Bell, BellOff, FilePlus, FileX, BarChart3, Search, Crown, Calendar, CalendarOff, Pencil, LogOut } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrganisationSchema } from "@shared/schema";
@@ -1249,7 +1250,7 @@ function CaseManagementTab() {
   );
 }
 
-function CaseSubmissionsTab() {
+function CaseSubmissionsTab({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
@@ -1747,20 +1748,22 @@ function CaseSubmissionsTab() {
                           </Button>
                         </>
                       )}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          if (confirm('Are you sure you want to delete this submission?')) {
-                            deleteSubmissionMutation.mutate(submission.id);
-                          }
-                        }}
-                        disabled={deleteSubmissionMutation.isPending}
-                        className="text-red-600 hover:text-red-700"
-                        title="Delete submission permanently"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                      {isSuperAdmin && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            if (confirm('Are you sure you want to delete this submission?')) {
+                              deleteSubmissionMutation.mutate(submission.id);
+                            }
+                          }}
+                          disabled={deleteSubmissionMutation.isPending}
+                          className="text-red-600 hover:text-red-700"
+                          title="Delete submission permanently"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -1984,7 +1987,11 @@ function CaseSubmissionsTab() {
 
 export default function AdminEnhanced() {
   const { toast } = useToast();
+  const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
+  
+  // Check if current user is super admin for destructive operations
+  const isSuperAdmin = currentUser?.isSuperAdmin ?? false;
   
   // State for organisation management
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -2644,6 +2651,39 @@ export default function AdminEnhanced() {
     },
   });
 
+  // Toggle super admin status mutation (super admins only)
+  const toggleSuperAdminMutation = useMutation({
+    mutationFn: async ({ userId, makeSuperAdmin }: { userId: string; makeSuperAdmin: boolean }) => {
+      const response = await apiRequest("PUT", `/api/admin/users/${userId}/super-admin`, { isSuperAdmin: makeSuperAdmin });
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Success",
+        description: data.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users-with-orgs"] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update super admin status",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Toggle case submission permission mutation
   const toggleCaseSubmissionMutation = useMutation({
     mutationFn: async ({ userId, canSubmitCases }: { userId: string; canSubmitCases: boolean }) => {
@@ -2952,13 +2992,15 @@ export default function AdminEnhanced() {
               <span className="sm:hidden">Recovery</span>
             </Button>
           </Link>
-          <Link href="/audit-management">
-            <Button variant="outline" size="sm">
-              <Shield className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Audit Management</span>
-              <span className="sm:hidden">Audit</span>
-            </Button>
-          </Link>
+          {isSuperAdmin && (
+            <Link href="/audit-management">
+              <Button variant="outline" size="sm">
+                <Shield className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Audit Management</span>
+                <span className="sm:hidden">Audit</span>
+              </Button>
+            </Link>
+          )}
           <Button 
             variant="outline" 
             size="sm"
@@ -3303,7 +3345,12 @@ export default function AdminEnhanced() {
                         <div className="text-sm text-gray-500">{user.id}</div>
                       </div>
                       <div className="flex gap-1">
-                        {user.isAdmin && (
+                        {(user as any).isSuperAdmin && (
+                          <Badge variant="default" className="bg-purple-100 text-purple-800 text-xs">
+                            Super Admin
+                          </Badge>
+                        )}
+                        {user.isAdmin && !(user as any).isSuperAdmin && (
                           <Badge variant="default" className="bg-blue-100 text-blue-800 text-xs">
                             Admin
                           </Badge>
@@ -3412,40 +3459,42 @@ export default function AdminEnhanced() {
                       </div>
                     </div>
                     
-                    {/* Scheduled Reports Row */}
-                    <div className="flex items-center justify-between pt-2 pb-2 border-t border-gray-200">
-                      <span className="text-sm text-gray-600">Scheduled Reports:</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="p-1 h-auto"
-                        onClick={() => openScheduledReportDialog(user)}
-                        title="Configure scheduled reports"
-                      >
-                        {scheduledReportsMap[user.id]?.length > 0 ? (
-                          (() => {
-                            const reports = scheduledReportsMap[user.id];
-                            const enabledCount = reports.filter((r: any) => r.enabled).length;
-                            return enabledCount > 0 ? (
-                              <div className="flex items-center text-green-600">
-                                <Calendar className="h-4 w-4 mr-1" />
-                                <span className="text-xs">{enabledCount} active</span>
-                              </div>
-                            ) : (
-                              <div className="flex items-center text-gray-400">
-                                <CalendarOff className="h-4 w-4 mr-1" />
-                                <span className="text-xs">{reports.length} (off)</span>
-                              </div>
-                            );
-                          })()
-                        ) : (
-                          <div className="flex items-center text-gray-400">
-                            <CalendarOff className="h-4 w-4 mr-1" />
-                            <span className="text-xs">None</span>
-                          </div>
-                        )}
-                      </Button>
-                    </div>
+                    {/* Scheduled Reports Row - Super Admin Only */}
+                    {isSuperAdmin && (
+                      <div className="flex items-center justify-between pt-2 pb-2 border-t border-gray-200">
+                        <span className="text-sm text-gray-600">Scheduled Reports:</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="p-1 h-auto"
+                          onClick={() => openScheduledReportDialog(user)}
+                          title="Configure scheduled reports"
+                        >
+                          {scheduledReportsMap[user.id]?.length > 0 ? (
+                            (() => {
+                              const reports = scheduledReportsMap[user.id];
+                              const enabledCount = reports.filter((r: any) => r.enabled).length;
+                              return enabledCount > 0 ? (
+                                <div className="flex items-center text-green-600">
+                                  <Calendar className="h-4 w-4 mr-1" />
+                                  <span className="text-xs">{enabledCount} active</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center text-gray-400">
+                                  <CalendarOff className="h-4 w-4 mr-1" />
+                                  <span className="text-xs">{reports.length} (off)</span>
+                                </div>
+                              );
+                            })()
+                          ) : (
+                            <div className="flex items-center text-gray-400">
+                              <CalendarOff className="h-4 w-4 mr-1" />
+                              <span className="text-xs">None</span>
+                            </div>
+                          )}
+                        </Button>
+                      </div>
+                    )}
                     
                     <div className="grid grid-cols-4 gap-2 pt-2">
                       <Button
@@ -3519,6 +3568,36 @@ export default function AdminEnhanced() {
                         )}
                         Admin
                       </Button>
+                      {isSuperAdmin && user.isAdmin && user.email?.endsWith('@chadlaw.co.uk') && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (user.id === currentUser?.id) {
+                              alert('You cannot change your own super admin status.');
+                              return;
+                            }
+                            const action = (user as any).isSuperAdmin ? 'remove super admin privileges from' : 'grant super admin privileges to';
+                            const confirmation = confirm(`Are you sure you want to ${action} ${user.firstName} ${user.lastName}?`);
+                            if (confirmation) {
+                              toggleSuperAdminMutation.mutate({
+                                userId: user.id,
+                                makeSuperAdmin: !(user as any).isSuperAdmin
+                              });
+                            }
+                          }}
+                          disabled={toggleSuperAdminMutation.isPending || user.id === currentUser?.id}
+                          className={(user as any).isSuperAdmin ? 'border-purple-300' : ''}
+                          title={(user as any).isSuperAdmin ? "Remove super admin privileges" : "Grant super admin privileges"}
+                        >
+                          {(user as any).isSuperAdmin ? (
+                            <ShieldAlert className="h-3 w-3 text-purple-600" />
+                          ) : (
+                            <ShieldAlert className="h-3 w-3 text-gray-400" />
+                          )}
+                          Super
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
@@ -3559,22 +3638,24 @@ export default function AdminEnhanced() {
                         <LogOut className="h-3 w-3 mr-1" />
                         Logout
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const confirmation = confirm(`Are you sure you want to permanently delete ${user.firstName} ${user.lastName}? This action cannot be undone.`);
-                          if (confirmation) {
-                            deleteUserMutation.mutate(user.id);
-                          }
-                        }}
-                        disabled={deleteUserMutation.isPending}
-                        className="text-red-600 hover:text-red-700"
-                        title="Delete user permanently"
-                      >
-                        <Trash2 className="h-3 w-3 mr-1" />
-                        Delete
-                      </Button>
+                      {isSuperAdmin && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const confirmation = confirm(`Are you sure you want to permanently delete ${user.firstName} ${user.lastName}? This action cannot be undone.`);
+                            if (confirmation) {
+                              deleteUserMutation.mutate(user.id);
+                            }
+                          }}
+                          disabled={deleteUserMutation.isPending}
+                          className="text-red-600 hover:text-red-700"
+                          title="Delete user permanently"
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Delete
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -3590,7 +3671,7 @@ export default function AdminEnhanced() {
                       <TableHead>Phone</TableHead>
                       <TableHead>Organisation</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Reports</TableHead>
+                      {isSuperAdmin && <TableHead>Reports</TableHead>}
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -3690,7 +3771,12 @@ export default function AdminEnhanced() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">
-                            {user.isAdmin && (
+                            {(user as any).isSuperAdmin && (
+                              <Badge variant="default" className="bg-purple-100 text-purple-800">
+                                Super Admin
+                              </Badge>
+                            )}
+                            {user.isAdmin && !(user as any).isSuperAdmin && (
                               <Badge variant="default" className="bg-blue-100 text-blue-800">
                                 Admin
                               </Badge>
@@ -3698,37 +3784,39 @@ export default function AdminEnhanced() {
                             <Badge variant="outline">Active</Badge>
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="p-1 h-auto"
-                            onClick={() => openScheduledReportDialog(user)}
-                            title="Configure scheduled reports"
-                          >
-                            {scheduledReportsMap[user.id]?.length > 0 ? (
-                              (() => {
-                                const reports = scheduledReportsMap[user.id];
-                                const enabledCount = reports.filter((r: any) => r.enabled).length;
-                                return enabledCount > 0 ? (
-                                  <div className="flex items-center text-green-600">
-                                    <Calendar className="h-4 w-4 mr-1" />
-                                    <span className="text-xs">{enabledCount} active</span>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center text-gray-400">
-                                    <CalendarOff className="h-4 w-4 mr-1" />
-                                    <span className="text-xs">{reports.length} (off)</span>
-                                  </div>
-                                );
-                              })()
-                            ) : (
-                              <div className="flex items-center text-gray-300">
-                                <CalendarOff className="h-4 w-4" />
-                              </div>
-                            )}
-                          </Button>
-                        </TableCell>
+                        {isSuperAdmin && (
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="p-1 h-auto"
+                              onClick={() => openScheduledReportDialog(user)}
+                              title="Configure scheduled reports"
+                            >
+                              {scheduledReportsMap[user.id]?.length > 0 ? (
+                                (() => {
+                                  const reports = scheduledReportsMap[user.id];
+                                  const enabledCount = reports.filter((r: any) => r.enabled).length;
+                                  return enabledCount > 0 ? (
+                                    <div className="flex items-center text-green-600">
+                                      <Calendar className="h-4 w-4 mr-1" />
+                                      <span className="text-xs">{enabledCount} active</span>
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center text-gray-400">
+                                      <CalendarOff className="h-4 w-4 mr-1" />
+                                      <span className="text-xs">{reports.length} (off)</span>
+                                    </div>
+                                  );
+                                })()
+                              ) : (
+                                <div className="flex items-center text-gray-300">
+                                  <CalendarOff className="h-4 w-4" />
+                                </div>
+                              )}
+                            </Button>
+                          </TableCell>
+                        )}
                         <TableCell>
                           <div className="flex items-center space-x-2">
                             <Button
@@ -3799,6 +3887,35 @@ export default function AdminEnhanced() {
                                 <Shield className="h-3 w-3" />
                               )}
                             </Button>
+                            {isSuperAdmin && user.isAdmin && user.email?.endsWith('@chadlaw.co.uk') && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  if (user.id === currentUser?.id) {
+                                    alert('You cannot change your own super admin status.');
+                                    return;
+                                  }
+                                  const action = (user as any).isSuperAdmin ? 'remove super admin privileges from' : 'grant super admin privileges to';
+                                  const confirmation = confirm(`Are you sure you want to ${action} ${user.firstName} ${user.lastName}?`);
+                                  if (confirmation) {
+                                    toggleSuperAdminMutation.mutate({
+                                      userId: user.id,
+                                      makeSuperAdmin: !(user as any).isSuperAdmin
+                                    });
+                                  }
+                                }}
+                                disabled={toggleSuperAdminMutation.isPending || user.id === currentUser?.id}
+                                className={(user as any).isSuperAdmin ? 'border-purple-300' : ''}
+                                title={(user as any).isSuperAdmin ? "Remove super admin privileges" : "Grant super admin privileges"}
+                              >
+                                {(user as any).isSuperAdmin ? (
+                                  <ShieldAlert className="h-3 w-3 text-purple-600" />
+                                ) : (
+                                  <ShieldAlert className="h-3 w-3 text-gray-400" />
+                                )}
+                              </Button>
+                            )}
                             <Button
                               variant="outline"
                               size="sm"
@@ -3837,21 +3954,23 @@ export default function AdminEnhanced() {
                             >
                               <LogOut className="h-3 w-3" />
                             </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const confirmation = confirm(`Are you sure you want to permanently delete ${user.firstName} ${user.lastName}? This action cannot be undone.`);
-                                if (confirmation) {
-                                  deleteUserMutation.mutate(user.id);
-                                }
-                              }}
-                              disabled={deleteUserMutation.isPending}
-                              className="text-red-600 hover:text-red-700"
-                              title="Delete user permanently"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
+                            {isSuperAdmin && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const confirmation = confirm(`Are you sure you want to permanently delete ${user.firstName} ${user.lastName}? This action cannot be undone.`);
+                                  if (confirmation) {
+                                    deleteUserMutation.mutate(user.id);
+                                  }
+                                }}
+                                disabled={deleteUserMutation.isPending}
+                                className="text-red-600 hover:text-red-700"
+                                title="Delete user permanently"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -3987,53 +4106,57 @@ export default function AdminEnhanced() {
                           <span>{new Date(org.createdAt).toLocaleDateString('en-GB')}</span>
                         </div>
                         
-                        <div className="flex items-center justify-between">
-                          <span className="text-gray-600">Scheduled Reports:</span>
-                          {orgReportCount > 0 ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-acclaim-teal hover:text-acclaim-teal/80 p-1 h-auto"
-                              onClick={() => {
-                                setSelectedOrgForReports(org);
-                                setShowOrgReportsDialog(true);
-                              }}
-                              title="View and manage scheduled reports"
-                            >
-                              <Calendar className="h-4 w-4 mr-1" />
-                              <span className="text-xs">{orgReportCount} report{orgReportCount !== 1 ? 's' : ''}</span>
-                            </Button>
-                          ) : (
-                            <span className="text-gray-400 text-xs">None</span>
-                          )}
-                        </div>
+                        {isSuperAdmin && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-gray-600">Scheduled Reports:</span>
+                            {orgReportCount > 0 ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-acclaim-teal hover:text-acclaim-teal/80 p-1 h-auto"
+                                onClick={() => {
+                                  setSelectedOrgForReports(org);
+                                  setShowOrgReportsDialog(true);
+                                }}
+                                title="View and manage scheduled reports"
+                              >
+                                <Calendar className="h-4 w-4 mr-1" />
+                                <span className="text-xs">{orgReportCount} report{orgReportCount !== 1 ? 's' : ''}</span>
+                              </Button>
+                            ) : (
+                              <span className="text-gray-400 text-xs">None</span>
+                            )}
+                          </div>
+                        )}
                       </div>
                       
-                      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-gray-200">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {
-                            setSelectedOrgForSchedule(org);
-                            setOrgScheduleForm({
-                              recipientEmail: '',
-                              recipientName: '',
-                              frequency: 'weekly',
-                              dayOfWeek: 1,
-                              dayOfMonth: 1,
-                              timeOfDay: 9,
-                              includeCaseSummary: true,
-                              includeActivityReport: true,
-                              caseStatusFilter: 'active',
-                            });
-                            setShowOrgScheduleDialog(true);
-                          }}
-                          title="Schedule a new report for this organisation"
-                          className="text-acclaim-teal hover:text-acclaim-teal/80"
-                        >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Report
-                        </Button>
+                      <div className={`grid ${isSuperAdmin ? 'grid-cols-3' : 'grid-cols-2'} gap-2 pt-2 border-t border-gray-200`}>
+                        {isSuperAdmin && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedOrgForSchedule(org);
+                              setOrgScheduleForm({
+                                recipientEmail: '',
+                                recipientName: '',
+                                frequency: 'weekly',
+                                dayOfWeek: 1,
+                                dayOfMonth: 1,
+                                timeOfDay: 9,
+                                includeCaseSummary: true,
+                                includeActivityReport: true,
+                                caseStatusFilter: 'active',
+                              });
+                              setShowOrgScheduleDialog(true);
+                            }}
+                            title="Schedule a new report for this organisation"
+                            className="text-acclaim-teal hover:text-acclaim-teal/80"
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Report
+                          </Button>
+                        )}
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -4050,21 +4173,23 @@ export default function AdminEnhanced() {
                           <Edit className="h-3 w-3 mr-1" />
                           Edit
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {
-                            if (confirm(`Are you sure you want to delete "${org.name}"? This action cannot be undone.`)) {
-                              deleteOrganisationMutation.mutate(org.id);
-                            }
-                          }}
-                          disabled={deleteOrganisationMutation.isPending}
-                          className="text-red-600 hover:text-red-700"
-                          title="Delete organisation permanently"
-                        >
-                          <Trash2 className="h-3 w-3 mr-1" />
-                          Delete
-                        </Button>
+                        {isSuperAdmin && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              if (confirm(`Are you sure you want to delete "${org.name}"? This action cannot be undone.`)) {
+                                deleteOrganisationMutation.mutate(org.id);
+                              }
+                            }}
+                            disabled={deleteOrganisationMutation.isPending}
+                            className="text-red-600 hover:text-red-700"
+                            title="Delete organisation permanently"
+                          >
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            Delete
+                          </Button>
+                        )}
                       </div>
                     </div>
                   );
@@ -4078,7 +4203,7 @@ export default function AdminEnhanced() {
                     <TableRow>
                       <TableHead>Organisation</TableHead>
                       <TableHead>Users</TableHead>
-                      <TableHead>Scheduled Reports</TableHead>
+                      {isSuperAdmin && <TableHead>Scheduled Reports</TableHead>}
                       <TableHead>Created</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
@@ -4095,53 +4220,57 @@ export default function AdminEnhanced() {
                         <TableCell>
                           <Badge variant="outline">{org.userCount} users</Badge>
                         </TableCell>
-                        <TableCell>
-                          {orgReportCount > 0 ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-acclaim-teal hover:text-acclaim-teal/80"
-                              onClick={() => {
-                                setSelectedOrgForReports(org);
-                                setShowOrgReportsDialog(true);
-                              }}
-                              title="View and manage scheduled reports"
-                            >
-                              <Calendar className="h-4 w-4 mr-1" />
-                              <span>{orgReportCount} report{orgReportCount !== 1 ? 's' : ''}</span>
-                            </Button>
-                          ) : (
-                            <span className="text-gray-400 text-sm">None</span>
-                          )}
-                        </TableCell>
+                        {isSuperAdmin && (
+                          <TableCell>
+                            {orgReportCount > 0 ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-acclaim-teal hover:text-acclaim-teal/80"
+                                onClick={() => {
+                                  setSelectedOrgForReports(org);
+                                  setShowOrgReportsDialog(true);
+                                }}
+                                title="View and manage scheduled reports"
+                              >
+                                <Calendar className="h-4 w-4 mr-1" />
+                                <span>{orgReportCount} report{orgReportCount !== 1 ? 's' : ''}</span>
+                              </Button>
+                            ) : (
+                              <span className="text-gray-400 text-sm">None</span>
+                            )}
+                          </TableCell>
+                        )}
                         <TableCell>
                           {new Date(org.createdAt).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => {
-                                setSelectedOrgForSchedule(org);
-                                setOrgScheduleForm({
-                                  recipientEmail: '',
-                                  recipientName: '',
-                                  frequency: 'weekly',
-                                  dayOfWeek: 1,
-                                  dayOfMonth: 1,
-                                  timeOfDay: 9,
-                                  includeCaseSummary: true,
-                                  includeActivityReport: true,
-                                  caseStatusFilter: 'active',
-                                });
-                                setShowOrgScheduleDialog(true);
-                              }}
-                              title="Schedule a new report for this organisation"
-                              className="text-acclaim-teal hover:text-acclaim-teal/80"
-                            >
-                              <Plus className="h-3 w-3" />
-                            </Button>
+                            {isSuperAdmin && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedOrgForSchedule(org);
+                                  setOrgScheduleForm({
+                                    recipientEmail: '',
+                                    recipientName: '',
+                                    frequency: 'weekly',
+                                    dayOfWeek: 1,
+                                    dayOfMonth: 1,
+                                    timeOfDay: 9,
+                                    includeCaseSummary: true,
+                                    includeActivityReport: true,
+                                    caseStatusFilter: 'active',
+                                  });
+                                  setShowOrgScheduleDialog(true);
+                                }}
+                                title="Schedule a new report for this organisation"
+                                className="text-acclaim-teal hover:text-acclaim-teal/80"
+                              >
+                                <Plus className="h-3 w-3" />
+                              </Button>
+                            )}
                             <Button 
                               variant="outline" 
                               size="sm"
@@ -4157,20 +4286,22 @@ export default function AdminEnhanced() {
                             >
                               <Edit className="h-3 w-3" />
                             </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => {
-                                if (confirm(`Are you sure you want to delete "${org.name}"? This action cannot be undone.`)) {
-                                  deleteOrganisationMutation.mutate(org.id);
-                                }
-                              }}
-                              disabled={deleteOrganisationMutation.isPending}
-                              className="text-red-600 hover:text-red-700"
-                              title="Delete organisation permanently"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
+                            {isSuperAdmin && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  if (confirm(`Are you sure you want to delete "${org.name}"? This action cannot be undone.`)) {
+                                    deleteOrganisationMutation.mutate(org.id);
+                                  }
+                                }}
+                                disabled={deleteOrganisationMutation.isPending}
+                                className="text-red-600 hover:text-red-700"
+                                title="Delete organisation permanently"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -4217,7 +4348,7 @@ export default function AdminEnhanced() {
               </div>
             </CardHeader>
             <CardContent>
-              <CaseSubmissionsTab />
+              <CaseSubmissionsTab isSuperAdmin={isSuperAdmin} />
             </CardContent>
           </Card>
         </TabsContent>
