@@ -24,6 +24,7 @@ import UserGuideDownload from "@/components/UserGuideDownload";
 import UserGuideWordDownload from "@/components/UserGuideWordDownload";
 import CaseManagementGuideDownload from "@/components/CaseManagementGuideDownload";
 import ClosedCaseManagement from "@/components/ClosedCaseManagement";
+import { EmailBroadcast } from "@/components/EmailBroadcast";
 
 // Documents List Component
 function DocumentsList({ submissionId }: { submissionId: number }) {
@@ -3108,6 +3109,12 @@ export default function AdminEnhanced() {
               <span className="hidden sm:inline">Integration</span>
               <span className="sm:hidden">API</span>
             </TabsTrigger>
+            {isSuperAdmin && (
+              <TabsTrigger value="broadcast" className="flex-1 text-xs sm:text-sm">
+                <span className="hidden sm:inline">Email Broadcast</span>
+                <span className="sm:hidden">Email</span>
+              </TabsTrigger>
+            )}
           </TabsList>
         </div>
 
@@ -4384,6 +4391,13 @@ export default function AdminEnhanced() {
         <TabsContent value="integration">
           <CaseManagementGuideDownload />
         </TabsContent>
+
+        {/* Email Broadcast Tab - Super Admin Only */}
+        {isSuperAdmin && (
+          <TabsContent value="broadcast">
+            <EmailBroadcast />
+          </TabsContent>
+        )}
 
       </Tabs>
 

@@ -4390,6 +4390,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get users with organisation assignments for broadcast feature
+  app.get("/api/admin/users/with-organisations", isAuthenticated, isAdmin, isSuperAdmin, async (req: any, res) => {
+    try {
+      const allUsers = await storage.getUsers();
+      const allOrgs = await storage.getOrganisations();
+      
+      // Get all user-organisation assignments in one query for efficiency
+      const allUserOrgs = await storage.getAllUserOrganisations();
+      
+      // Group org IDs by user (userId is a string)
+      const userOrgMap = new Map<string, number[]>();
+      for (const uo of allUserOrgs) {
+        const userId = uo.userId;
+        if (!userOrgMap.has(userId)) {
+          userOrgMap.set(userId, []);
+        }
+        userOrgMap.get(userId)!.push(uo.organisationId);
+      }
+      
+      const usersWithOrgs = allUsers.map((user) => ({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        isAdmin: user.isAdmin,
+        isSuperAdmin: (user as any).isSuperAdmin || false,
+        mustChangePassword: user.mustChangePassword,
+        organisationIds: userOrgMap.get(user.id) || [],
+      }));
+      
+      res.json({ users: usersWithOrgs, organisations: allOrgs });
+    } catch (error) {
+      console.error("Error fetching users with organisations:", error);
+      res.status(500).json({ message: "Failed to fetch users with organisations" });
+    }
+  });
+
+  // Email Broadcast - Super Admin Only
+  app.post("/api/admin/email-broadcast", isAuthenticated, isAdmin, isSuperAdmin, async (req: any, res) => {
+    try {
+      const { subject, body, recipientIds } = req.body;
+      
+      if (!subject || !body) {
+        return res.status(400).json({ message: "Subject and body are required" });
+      }
+      
+      if (!Array.isArray(recipientIds) || recipientIds.length === 0) {
+        return res.status(400).json({ message: "At least one recipient is required" });
+      }
+      
+      const adminUser = await storage.getUser(req.user.id);
+      if (!adminUser) {
+        return res.status(401).json({ message: "Admin user not found" });
+      }
+      
+      // Get all recipient users
+      const allUsers = await storage.getUsers();
+      const recipients = allUsers.filter(u => recipientIds.includes(u.id) && u.email && !u.mustChangePassword);
+      
+      if (recipients.length === 0) {
+        return res.status(400).json({ message: "No valid recipients found" });
+      }
+      
+      // Send emails via SendGrid with BCC for data protection
+      const { sendGridEmailService } = await import('./email-service-sendgrid');
+      
+      let sentCount = 0;
+      let failedCount = 0;
+      
+      // Send to all recipients using BCC - send in batches of 100
+      const batchSize = 100;
+      for (let i = 0; i < recipients.length; i += batchSize) {
+        const batch = recipients.slice(i, i + batchSize);
+        const bccEmails = batch.map(u => u.email!);
+        
+        try {
+          await sendGridEmailService.sendBroadcastEmail({
+            toEmail: 'email@acclaim.law', // Primary recipient (sender)
+            bccEmails: bccEmails,
+            subject: subject,
+            body: body,
+            senderName: `${adminUser.firstName || ''} ${adminUser.lastName || ''}`.trim() || 'Acclaim Portal'
+          });
+          sentCount += batch.length;
+        } catch (err) {
+          console.error(`Failed to send batch ${i / batchSize + 1}:`, err);
+          failedCount += batch.length;
+        }
+      }
+      
+      // Log the broadcast action
+      await storage.logAuditEvent({
+        tableName: 'email_broadcast',
+        recordId: new Date().toISOString(),
+        operation: 'CREATE',
+        description: `Admin "${adminUser.email}" sent email broadcast "${subject}" to ${sentCount} recipient(s)${failedCount > 0 ? ` (${failedCount} failed)` : ''}`,
+        userId: req.user.id,
+        userEmail: adminUser.email,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        newValues: { subject, recipientCount: sentCount, failedCount },
+      });
+      
+      res.json({ 
+        success: true, 
+        sentCount,
+        failedCount,
+        message: `Email broadcast sent to ${sentCount} recipient(s)${failedCount > 0 ? `. ${failedCount} failed.` : ''}` 
+      });
+    } catch (error) {
+      console.error("Error sending email broadcast:", error);
+      res.status(500).json({ message: "Failed to send email broadcast" });
+    }
+  });
+
   // Track message/document first view for read receipts
   app.post("/api/track/view", isAuthenticated, async (req: any, res) => {
     try {

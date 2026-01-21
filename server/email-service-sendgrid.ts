@@ -255,9 +255,13 @@ class SendGridEmailService {
   // Send email via Azure APIM to SendGrid HTTP API
   private async sendViaAPIM(payload: {
     to: string;
+    bcc?: string[];
     subject: string;
-    textContent: string;
-    htmlContent: string;
+    textContent?: string;
+    htmlContent?: string;
+    text?: string;
+    html?: string;
+    attachLogo?: boolean;
     attachments?: Array<{
       content: string;
       filename: string;
@@ -272,26 +276,28 @@ class SendGridEmailService {
     }
 
     try {
-         // 🔎 DEBUG (add these)
-    console.log("APIM key present:", !!process.env.APIM_SUBSCRIPTION_KEY);
-    console.log("APIM endpoint:", APIM_ENDPOINT);
-    console.log("fetch exists:", typeof fetch);
-
+      const textContent = payload.textContent || payload.text || '';
+      const htmlContent = payload.htmlContent || payload.html || '';
+      
+      const personalization: any = {
+        to: [{ email: payload.to }]
+      };
+      
+      // Add BCC recipients if provided
+      if (payload.bcc && payload.bcc.length > 0) {
+        personalization.bcc = payload.bcc.map(email => ({ email }));
+      }
       
       const emailPayload: any = {
-        personalizations: [
-          {
-            to: [{ email: payload.to }]
-          }
-        ],
+        personalizations: [personalization],
         from: {
           email: 'email@acclaim.law',
           name: 'Acclaim Credit Management & Recovery'
         },
         subject: payload.subject,
         content: [
-          { type: 'text/plain', value: payload.textContent },
-          { type: 'text/html', value: payload.htmlContent }
+          { type: 'text/plain', value: textContent },
+          { type: 'text/html', value: htmlContent }
         ]
       };
 
@@ -2713,6 +2719,97 @@ You can disable these login notifications in your Profile Settings.
     }
     
     return os ? `${browser} on ${os}` : browser;
+  }
+
+  async sendBroadcastEmail(data: {
+    toEmail: string;
+    bccEmails: string[];
+    subject: string;
+    body: string;
+    senderName: string;
+  }): Promise<boolean> {
+    if (!this.initialized) {
+      console.log('❌ SendGrid not configured - broadcast email not sent');
+      return false;
+    }
+
+    try {
+      const plainTextBody = data.body;
+      const htmlBody = data.body.split('\n').map(line => {
+        if (line.trim() === '') return '<br/>';
+        if (line.startsWith('•')) return `<li style="margin-left: 20px;">${line.substring(1).trim()}</li>`;
+        return `<p style="margin: 0 0 8px 0; color: #1f2937; font-size: 15px; line-height: 1.6;">${line}</p>`;
+      }).join('');
+
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f0f4f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f0f4f8;">
+            <tr>
+              <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width: 600px; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+                  
+                  <!-- Header -->
+                  <tr>
+                    <td style="background-color: #d946ef; background: linear-gradient(135deg, #d946ef 0%, #a855f7 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                      <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
+                      <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Acclaim Portal</h1>
+                      <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Broadcast Message</p>
+                    </td>
+                  </tr>
+                  
+                  <!-- Content -->
+                  <tr>
+                    <td style="padding: 40px;">
+                      <h2 style="margin: 0 0 16px 0; color: #1f2937; font-size: 18px; font-weight: 600;">${data.subject}</h2>
+                      <div style="margin-top: 16px;">
+                        ${htmlBody}
+                      </div>
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background-color: #1f2937; padding: 24px; text-align: center;">
+                      <p style="margin: 0 0 8px 0; color: #d1d5db; font-size: 13px;">
+                        Sent by ${data.senderName} via Acclaim Portal
+                      </p>
+                      <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                        Chadwick Lawrence LLP | &copy; ${new Date().getFullYear()}
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `;
+
+      const success = await this.sendViaAPIM({
+        to: data.toEmail,
+        bcc: data.bccEmails,
+        subject: data.subject,
+        html: htmlContent,
+        text: plainTextBody,
+        attachLogo: true
+      });
+
+      if (success) {
+        console.log(`✅ Broadcast email sent to ${data.bccEmails.length} recipients (via BCC)`);
+      }
+
+      return success;
+    } catch (error) {
+      console.error('Error sending broadcast email:', error);
+      return false;
+    }
   }
 }
 

@@ -90,6 +90,7 @@ export interface IStorage {
   getCasesForOrganisation(organisationId: number): Promise<Case[]>;
   getCasesForUser(userId: string): Promise<Case[]>;
   getUserOrganisations(userId: string): Promise<UserOrganisation[]>;
+  getAllUserOrganisations(): Promise<UserOrganisation[]>;
   addUserToOrganisation(userId: string, organisationId: number, role?: string): Promise<UserOrganisation>;
   removeUserFromOrganisation(userId: string, organisationId: number): Promise<void>;
   setUserOrgRole(userId: string, organisationId: number, role: string): Promise<UserOrganisation | null>;
@@ -557,6 +558,10 @@ export class DatabaseStorage implements IStorage {
 
   async getUserOrganisations(userId: string): Promise<UserOrganisation[]> {
     return await db.select().from(userOrganisations).where(eq(userOrganisations.userId, userId));
+  }
+
+  async getAllUserOrganisations(): Promise<UserOrganisation[]> {
+    return await db.select().from(userOrganisations);
   }
 
   async addUserToOrganisation(userId: string, organisationId: number, role: string = 'member'): Promise<UserOrganisation> {
