@@ -3368,6 +3368,11 @@ export default function AdminEnhanced() {
                             Admin
                           </Badge>
                         )}
+                        {(user as any).mustChangePassword && (
+                          <Badge variant="default" className="bg-amber-100 text-amber-700 dark:bg-amber-100 dark:text-amber-700 text-xs">
+                            Not Registered
+                          </Badge>
+                        )}
                         <Badge variant="outline" className="text-xs">Active</Badge>
                       </div>
                     </div>
@@ -3792,6 +3797,11 @@ export default function AdminEnhanced() {
                             {user.isAdmin && !(user as any).isSuperAdmin && (
                               <Badge variant="default" className="bg-blue-100 text-blue-800">
                                 Admin
+                              </Badge>
+                            )}
+                            {(user as any).mustChangePassword && (
+                              <Badge variant="default" className="bg-amber-100 text-amber-700 dark:bg-amber-100 dark:text-amber-700">
+                                Not Registered
                               </Badge>
                             )}
                             <Badge variant="outline">Active</Badge>
