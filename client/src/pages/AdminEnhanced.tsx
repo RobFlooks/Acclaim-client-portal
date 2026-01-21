@@ -3115,6 +3115,10 @@ export default function AdminEnhanced() {
                 <span className="sm:hidden">Email</span>
               </TabsTrigger>
             )}
+            <TabsTrigger value="reports" className="flex-1 text-xs sm:text-sm">
+              <span className="hidden sm:inline">Scheduled Reports</span>
+              <span className="sm:hidden">Reports</span>
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -4398,6 +4402,144 @@ export default function AdminEnhanced() {
             <EmailBroadcast />
           </TabsContent>
         )}
+
+        {/* Scheduled Reports Overview Tab */}
+        <TabsContent value="reports" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                    <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <CardTitle>All Scheduled Reports</CardTitle>
+                    <CardDescription>
+                      View and manage all scheduled reports across all users
+                    </CardDescription>
+                  </div>
+                </div>
+                <Badge variant="secondary" className="w-fit">
+                  {scheduledReports.length} report{scheduledReports.length !== 1 ? 's' : ''} configured
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {scheduledReports.length === 0 ? (
+                <div className="text-center py-8">
+                  <CalendarOff className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                  <h3 className="font-medium text-lg mb-1">No Scheduled Reports</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Configure scheduled reports for users via the Users tab.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>User</TableHead>
+                          <TableHead>Organisation</TableHead>
+                          <TableHead className="hidden sm:table-cell">Frequency</TableHead>
+                          <TableHead className="hidden md:table-cell">Time</TableHead>
+                          <TableHead className="hidden lg:table-cell">Recipient</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="hidden md:table-cell">Last Sent</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {scheduledReports.map((report: any) => {
+                          const org = organisations?.find((o: any) => o.id === report.organisationId);
+                          const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                          const formatTime = (hour: number) => {
+                            const ampm = hour >= 12 ? 'PM' : 'AM';
+                            const h = hour % 12 || 12;
+                            return `${h}:00 ${ampm}`;
+                          };
+                          const frequencyLabel = report.frequency === 'daily' 
+                            ? 'Daily' 
+                            : report.frequency === 'weekly' 
+                              ? `Weekly (${dayNames[report.dayOfWeek || 0]})`
+                              : `Monthly (${report.dayOfMonth || 1}${['st','nd','rd'][((report.dayOfMonth || 1) - 1) % 10] || 'th'})`;
+                          
+                          return (
+                            <TableRow key={report.id}>
+                              <TableCell>
+                                <div className="min-w-0">
+                                  <p className="font-medium truncate">{report.userName || 'Unknown'}</p>
+                                  <p className="text-xs text-muted-foreground truncate">{report.userEmail}</p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {report.organisationId ? (
+                                  <Badge variant="outline" className="truncate max-w-[120px]">
+                                    {org?.name || `Org #${report.organisationId}`}
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="secondary">Combined</Badge>
+                                )}
+                              </TableCell>
+                              <TableCell className="hidden sm:table-cell">
+                                <span className="text-sm">{frequencyLabel}</span>
+                              </TableCell>
+                              <TableCell className="hidden md:table-cell">
+                                <span className="text-sm">{formatTime(report.timeOfDay || 9)}</span>
+                              </TableCell>
+                              <TableCell className="hidden lg:table-cell">
+                                {report.recipientEmail ? (
+                                  <div className="min-w-0">
+                                    <p className="text-sm truncate max-w-[150px]">{report.recipientName || 'Custom'}</p>
+                                    <p className="text-xs text-muted-foreground truncate max-w-[150px]">{report.recipientEmail}</p>
+                                  </div>
+                                ) : (
+                                  <span className="text-sm text-muted-foreground">User email</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {report.enabled ? (
+                                  <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                    <Bell className="h-3 w-3 mr-1" />
+                                    Active
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="secondary" className="text-muted-foreground">
+                                    <BellOff className="h-3 w-3 mr-1" />
+                                    Disabled
+                                  </Badge>
+                                )}
+                              </TableCell>
+                              <TableCell className="hidden md:table-cell">
+                                {report.lastSentAt ? (
+                                  <span className="text-sm text-muted-foreground">
+                                    {new Date(report.lastSentAt).toLocaleDateString('en-GB', {
+                                      day: 'numeric',
+                                      month: 'short',
+                                      year: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </span>
+                                ) : (
+                                  <span className="text-sm text-muted-foreground italic">Never</span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  <div className="text-xs text-muted-foreground mt-4 flex items-center gap-2">
+                    <Activity className="h-4 w-4" />
+                    <span>To configure reports, use the Calendar icon in the Users tab. Super admins can edit and delete reports.</span>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
       </Tabs>
 
