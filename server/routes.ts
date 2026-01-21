@@ -5807,7 +5807,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/admin/cases/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+  app.delete("/api/admin/cases/:id", isAuthenticated, isAdmin, isSuperAdmin, async (req: any, res) => {
     try {
       const caseId = parseInt(req.params.id);
       

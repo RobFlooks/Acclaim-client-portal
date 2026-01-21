@@ -625,7 +625,16 @@ function CaseManagementTab() {
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/cases/all'] });
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      const isForbidden = error?.message?.includes('403') || error?.message?.includes('Super admin');
+      if (isForbidden) {
+        toast({
+          title: "Access Denied",
+          description: "Only super admins can delete cases. Please contact a super admin to perform this action.",
+          variant: "destructive",
+        });
+        return;
+      }
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
@@ -799,16 +808,18 @@ function CaseManagementTab() {
               >
                 <EyeOff className="h-3 w-3" />
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setDeleteConfirmCase(case_)}
-                disabled={deleteCaseMutation.isPending}
-                className="text-red-600 hover:text-red-700"
-              >
-                <Trash2 className="h-3 w-3 mr-1" />
-                Delete
-              </Button>
+              {isSuperAdmin && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDeleteConfirmCase(case_)}
+                  disabled={deleteCaseMutation.isPending}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Delete
+                </Button>
+              )}
             </div>
           </div>
         ))}
@@ -888,16 +899,18 @@ function CaseManagementTab() {
                     >
                       <EyeOff className="h-3 w-3" />
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setDeleteConfirmCase(case_)}
-                      disabled={deleteCaseMutation.isPending}
-                      className="text-red-600 hover:text-red-700"
-                      title="Permanently delete case"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
+                    {isSuperAdmin && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDeleteConfirmCase(case_)}
+                        disabled={deleteCaseMutation.isPending}
+                        className="text-red-600 hover:text-red-700"
+                        title="Permanently delete case"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
@@ -3015,7 +3028,7 @@ export default function AdminEnhanced() {
 
       {/* Closed Case Management View */}
       {showClosedCaseManagement ? (
-        <ClosedCaseManagement onBack={() => setShowClosedCaseManagement(false)} />
+        <ClosedCaseManagement onBack={() => setShowClosedCaseManagement(false)} isSuperAdmin={isSuperAdmin} />
       ) : (
       <>
       {/* Overview Cards */}

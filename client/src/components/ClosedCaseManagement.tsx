@@ -30,9 +30,10 @@ interface ClosedCase {
 
 interface ClosedCaseManagementProps {
   onBack: () => void;
+  isSuperAdmin?: boolean;
 }
 
-export default function ClosedCaseManagement({ onBack }: ClosedCaseManagementProps) {
+export default function ClosedCaseManagement({ onBack, isSuperAdmin = false }: ClosedCaseManagementProps) {
   const { toast } = useToast();
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -95,10 +96,13 @@ export default function ClosedCaseManagement({ onBack }: ClosedCaseManagementPro
       queryClient.invalidateQueries({ queryKey: ["/api/admin/closed-cases"] });
       queryClient.invalidateQueries({ queryKey: ["/api/cases"] });
     },
-    onError: () => {
+    onError: (error: any) => {
+      const isForbidden = error?.message?.includes('403') || error?.message?.includes('Super admin');
       toast({
-        title: "Error",
-        description: "Failed to delete cases",
+        title: isForbidden ? "Access Denied" : "Error",
+        description: isForbidden 
+          ? "Only super admins can delete cases. Please contact a super admin to perform this action."
+          : "Failed to delete cases",
         variant: "destructive",
       });
     },
@@ -223,14 +227,16 @@ export default function ClosedCaseManagement({ onBack }: ClosedCaseManagementPro
                   <Archive className="h-4 w-4" />
                   Archive Selected
                 </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => setShowDeleteDialog(true)}
-                  className="gap-2"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Delete Selected
-                </Button>
+                {isSuperAdmin && (
+                  <Button
+                    variant="destructive"
+                    onClick={() => setShowDeleteDialog(true)}
+                    className="gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Selected
+                  </Button>
+                )}
               </div>
             </div>
           )}
