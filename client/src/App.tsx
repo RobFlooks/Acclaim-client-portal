@@ -24,6 +24,7 @@ import SimpleReports from "@/pages/SimpleReports";
 import AuditManagement from "@/pages/AuditManagement";
 import OrgSettings from "@/pages/OrgSettings";
 import PrivacyNotice from "@/pages/PrivacyNotice";
+import TermsOfUse from "@/pages/TermsOfUse";
 
 function Router() {
   return (
@@ -46,6 +47,7 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       <Route path="/change-password" component={ChangePasswordPage} />
       <Route path="/privacy" component={PrivacyNotice} />
+      <Route path="/terms" component={TermsOfUse} />
       <Route component={NotFound} />
     </Switch>
   );

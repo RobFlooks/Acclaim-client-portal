@@ -309,8 +309,12 @@ export default function AuthPage() {
               )}
               
               <div className="mt-6 text-center text-xs text-muted-foreground">Need assistance? Please contact us at email@acclaim.law | 0113 225 8811</div>
-              <div className="mt-3 text-center">
-                <Link href="/privacy" className="text-xs text-muted-foreground hover:text-primary hover:underline">
+              <div className="mt-3 text-center text-xs text-muted-foreground">
+                <Link href="/terms" className="hover:text-primary hover:underline">
+                  Terms of Use
+                </Link>
+                <span className="mx-2">|</span>
+                <Link href="/privacy" className="hover:text-primary hover:underline">
                   Privacy Notice
                 </Link>
               </div>
