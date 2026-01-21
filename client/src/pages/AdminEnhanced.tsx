@@ -3361,7 +3361,7 @@ export default function AdminEnhanced() {
                       </div>
                       <div className="flex gap-1">
                         {(user as any).isSuperAdmin && (
-                          <Badge variant="default" className="bg-purple-100 text-purple-700 dark:bg-purple-100 dark:text-purple-700 text-xs">
+                          <Badge variant="default" className="bg-fuchsia-200 text-fuchsia-700 dark:bg-fuchsia-200 dark:text-fuchsia-700 text-xs font-semibold">
                             Admin+
                           </Badge>
                         )}
@@ -3792,7 +3792,7 @@ export default function AdminEnhanced() {
                         <TableCell>
                           <div className="flex items-center space-x-2">
                             {(user as any).isSuperAdmin && (
-                              <Badge variant="default" className="bg-purple-100 text-purple-700 dark:bg-purple-100 dark:text-purple-700">
+                              <Badge variant="default" className="bg-fuchsia-200 text-fuchsia-700 dark:bg-fuchsia-200 dark:text-fuchsia-700 font-semibold">
                                 Admin+
                               </Badge>
                             )}
