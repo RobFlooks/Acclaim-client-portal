@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ShieldAlert, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, EyeOff, Mail, Bell, BellOff, FilePlus, FileX, BarChart3, Search, Crown, Calendar, CalendarOff, Pencil, LogOut } from "lucide-react";
+import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ShieldAlert, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, EyeOff, Mail, Bell, BellOff, FilePlus, FileX, BarChart3, Search, Crown, Calendar, CalendarOff, Pencil, LogOut, RefreshCw, ChevronDown, ChevronUp, Clock, Send } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrganisationSchema } from "@shared/schema";
@@ -2024,6 +2024,9 @@ export default function AdminEnhanced() {
   // Org-level scheduled report state
   const [showOrgScheduleDialog, setShowOrgScheduleDialog] = useState(false);
   const [selectedOrgForSchedule, setSelectedOrgForSchedule] = useState<Organisation | null>(null);
+  
+  // Scheduled reports overview state
+  const [expandedReportId, setExpandedReportId] = useState<number | null>(null);
   const [orgScheduleForm, setOrgScheduleForm] = useState({
     recipientEmail: '',
     recipientName: '',
@@ -4415,13 +4418,23 @@ export default function AdminEnhanced() {
                   <div>
                     <CardTitle>All Scheduled Reports</CardTitle>
                     <CardDescription>
-                      View and manage all scheduled reports across all users
+                      View and manage all scheduled reports across all users and organisations
                     </CardDescription>
                   </div>
                 </div>
-                <Badge variant="secondary" className="w-fit">
-                  {scheduledReports.length} report{scheduledReports.length !== 1 ? 's' : ''} configured
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/admin/scheduled-reports"] })}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-1" />
+                    Refresh
+                  </Button>
+                  <Badge variant="secondary">
+                    {scheduledReports.length} report{scheduledReports.length !== 1 ? 's' : ''}
+                  </Badge>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -4430,110 +4443,182 @@ export default function AdminEnhanced() {
                   <CalendarOff className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
                   <h3 className="font-medium text-lg mb-1">No Scheduled Reports</h3>
                   <p className="text-sm text-muted-foreground">
-                    Configure scheduled reports for users via the Users tab.
+                    Configure scheduled reports for users via the Users tab, or for organisations via the Organisations tab.
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>User</TableHead>
-                          <TableHead>Organisation</TableHead>
-                          <TableHead className="hidden sm:table-cell">Frequency</TableHead>
-                          <TableHead className="hidden md:table-cell">Time</TableHead>
-                          <TableHead className="hidden lg:table-cell">Recipient</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead className="hidden md:table-cell">Last Sent</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {scheduledReports.map((report: any) => {
-                          const org = organisations?.find((o: any) => o.id === report.organisationId);
-                          const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                          const formatTime = (hour: number) => {
-                            const ampm = hour >= 12 ? 'PM' : 'AM';
-                            const h = hour % 12 || 12;
-                            return `${h}:00 ${ampm}`;
-                          };
-                          const frequencyLabel = report.frequency === 'daily' 
-                            ? 'Daily' 
-                            : report.frequency === 'weekly' 
-                              ? `Weekly (${dayNames[report.dayOfWeek || 0]})`
-                              : `Monthly (${report.dayOfMonth || 1}${['st','nd','rd'][((report.dayOfMonth || 1) - 1) % 10] || 'th'})`;
-                          
-                          return (
-                            <TableRow key={report.id}>
-                              <TableCell>
-                                <div className="min-w-0">
-                                  <p className="font-medium truncate">{report.userName || 'Unknown'}</p>
-                                  <p className="text-xs text-muted-foreground truncate">{report.userEmail}</p>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                {report.organisationId ? (
-                                  <Badge variant="outline" className="truncate max-w-[120px]">
-                                    {org?.name || `Org #${report.organisationId}`}
-                                  </Badge>
-                                ) : (
-                                  <Badge variant="secondary">Combined</Badge>
-                                )}
-                              </TableCell>
-                              <TableCell className="hidden sm:table-cell">
-                                <span className="text-sm">{frequencyLabel}</span>
-                              </TableCell>
-                              <TableCell className="hidden md:table-cell">
-                                <span className="text-sm">{formatTime(report.timeOfDay || 9)}</span>
-                              </TableCell>
-                              <TableCell className="hidden lg:table-cell">
-                                {report.recipientEmail ? (
-                                  <div className="min-w-0">
-                                    <p className="text-sm truncate max-w-[150px]">{report.recipientName || 'Custom'}</p>
-                                    <p className="text-xs text-muted-foreground truncate max-w-[150px]">{report.recipientEmail}</p>
-                                  </div>
-                                ) : (
-                                  <span className="text-sm text-muted-foreground">User email</span>
-                                )}
-                              </TableCell>
-                              <TableCell>
+                <div className="space-y-3">
+                  {scheduledReports.map((report: any) => {
+                    const org = organisations?.find((o: any) => o.id === report.organisationId);
+                    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                    const formatTime = (hour: number) => {
+                      const ampm = hour >= 12 ? 'PM' : 'AM';
+                      const h = hour % 12 || 12;
+                      return `${h}:00 ${ampm}`;
+                    };
+                    const frequencyLabel = report.frequency === 'daily' 
+                      ? 'Daily' 
+                      : report.frequency === 'weekly' 
+                        ? `Weekly on ${dayNames[report.dayOfWeek || 0]}`
+                        : `Monthly on day ${report.dayOfMonth || 1}`;
+                    const isExpanded = expandedReportId === report.id;
+                    const isOrgLevelReport = !!report.recipientEmail;
+                    
+                    return (
+                      <div 
+                        key={report.id} 
+                        className={`border rounded-lg transition-all ${isExpanded ? 'ring-2 ring-blue-200 dark:ring-blue-800' : ''}`}
+                      >
+                        <div 
+                          className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/50"
+                          onClick={() => setExpandedReportId(isExpanded ? null : report.id)}
+                        >
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className={`p-2 rounded-lg flex-shrink-0 ${
+                              isOrgLevelReport 
+                                ? 'bg-purple-100 dark:bg-purple-900/30' 
+                                : 'bg-blue-100 dark:bg-blue-900/30'
+                            }`}>
+                              {isOrgLevelReport ? (
+                                <Building className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                              ) : (
+                                <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-medium truncate">
+                                  {isOrgLevelReport 
+                                    ? `${org?.name || 'Unknown Org'} → ${report.recipientName || report.recipientEmail}`
+                                    : report.userName || 'Unknown User'
+                                  }
+                                </span>
                                 {report.enabled ? (
-                                  <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                                    <Bell className="h-3 w-3 mr-1" />
+                                  <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs">
                                     Active
                                   </Badge>
                                 ) : (
-                                  <Badge variant="secondary" className="text-muted-foreground">
-                                    <BellOff className="h-3 w-3 mr-1" />
-                                    Disabled
+                                  <Badge variant="secondary" className="text-xs">Disabled</Badge>
+                                )}
+                                {isOrgLevelReport && (
+                                  <Badge variant="outline" className="text-xs bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800">
+                                    Org Report
                                   </Badge>
                                 )}
-                              </TableCell>
-                              <TableCell className="hidden md:table-cell">
-                                {report.lastSentAt ? (
-                                  <span className="text-sm text-muted-foreground">
-                                    {new Date(report.lastSentAt).toLocaleDateString('en-GB', {
-                                      day: 'numeric',
-                                      month: 'short',
-                                      year: 'numeric',
-                                      hour: '2-digit',
-                                      minute: '2-digit'
-                                    })}
-                                  </span>
-                                ) : (
-                                  <span className="text-sm text-muted-foreground italic">Never</span>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {frequencyLabel} at {formatTime(report.timeOfDay || 9)}
+                                {org && !isOrgLevelReport && ` • ${org.name}`}
+                                {!report.organisationId && !isOrgLevelReport && ' • Combined (all orgs)'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {report.lastSentAt && (
+                              <span className="text-xs text-muted-foreground hidden sm:block">
+                                Last: {new Date(report.lastSentAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                              </span>
+                            )}
+                            {isExpanded ? (
+                              <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </div>
+                        </div>
+                        
+                        {isExpanded && (
+                          <div className="border-t px-4 py-3 bg-muted/30 space-y-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                              <div>
+                                <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Users className="h-3 w-3" /> Created By
+                                </Label>
+                                <p className="text-sm font-medium">{report.userName}</p>
+                                <p className="text-xs text-muted-foreground">{report.userEmail}</p>
+                              </div>
+                              <div>
+                                <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Building className="h-3 w-3" /> Organisation
+                                </Label>
+                                <p className="text-sm font-medium">
+                                  {report.organisationId 
+                                    ? org?.name || `Org #${report.organisationId}` 
+                                    : 'Combined (all user orgs)'
+                                  }
+                                </p>
+                              </div>
+                              <div>
+                                <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Send className="h-3 w-3" /> Sends To
+                                </Label>
+                                <p className="text-sm font-medium">
+                                  {report.recipientEmail || report.userEmail}
+                                </p>
+                                {report.recipientName && (
+                                  <p className="text-xs text-muted-foreground">({report.recipientName})</p>
                                 )}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
+                              </div>
+                              <div>
+                                <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Clock className="h-3 w-3" /> Schedule
+                                </Label>
+                                <p className="text-sm font-medium">{frequencyLabel}</p>
+                                <p className="text-xs text-muted-foreground">at {formatTime(report.timeOfDay || 9)}</p>
+                              </div>
+                              <div>
+                                <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <FileText className="h-3 w-3" /> Content
+                                </Label>
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {report.includeCaseSummary && (
+                                    <Badge variant="secondary" className="text-xs">Case Summary</Badge>
+                                  )}
+                                  {report.includeActivityReport && (
+                                    <Badge variant="secondary" className="text-xs">Messages</Badge>
+                                  )}
+                                </div>
+                              </div>
+                              <div>
+                                <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Activity className="h-3 w-3" /> Case Filter
+                                </Label>
+                                <Badge variant="outline" className="text-xs mt-1">
+                                  {report.caseStatusFilter === 'active' ? 'Active Cases' : 
+                                   report.caseStatusFilter === 'closed' ? 'Closed Cases' : 'All Cases'}
+                                </Badge>
+                              </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t">
+                              <div className="text-xs text-muted-foreground">
+                                {report.lastSentAt ? (
+                                  <>Last sent: {new Date(report.lastSentAt).toLocaleDateString('en-GB', {
+                                    day: 'numeric', month: 'short', year: 'numeric',
+                                    hour: '2-digit', minute: '2-digit'
+                                  })}</>
+                                ) : (
+                                  <span className="italic">Never sent</span>
+                                )}
+                                {' • '}Created: {new Date(report.createdAt).toLocaleDateString('en-GB', {
+                                  day: 'numeric', month: 'short', year: 'numeric'
+                                })}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                Report ID: {report.id}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
 
-                  <div className="text-xs text-muted-foreground mt-4 flex items-center gap-2">
-                    <Activity className="h-4 w-4" />
-                    <span>To configure reports, use the Calendar icon in the Users tab. Super admins can edit and delete reports.</span>
+                  <div className="text-xs text-muted-foreground mt-4 p-3 bg-muted/30 rounded-lg flex items-start gap-2">
+                    <Activity className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p><strong>User reports:</strong> Configure via the Calendar icon in the Users tab.</p>
+                      <p><strong>Organisation reports:</strong> Configure via the Calendar icon in the Organisations tab (sends to external recipients).</p>
+                    </div>
                   </div>
                 </div>
               )}
