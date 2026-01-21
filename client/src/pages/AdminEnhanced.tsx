@@ -4453,7 +4453,15 @@ export default function AdminEnhanced() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {scheduledReports.map((report: any) => {
+                  {[...scheduledReports].sort((a: any, b: any) => {
+                    const orgA = organisations?.find((o: any) => o.id === a.organisationId);
+                    const orgB = organisations?.find((o: any) => o.id === b.organisationId);
+                    const nameA = a.recipientEmail ? (a.recipientName || a.recipientEmail) : (a.userName || '');
+                    const nameB = b.recipientEmail ? (b.recipientName || b.recipientEmail) : (b.userName || '');
+                    const nameCompare = nameA.localeCompare(nameB);
+                    if (nameCompare !== 0) return nameCompare;
+                    return (orgA?.name || '').localeCompare(orgB?.name || '');
+                  }).map((report: any) => {
                     const org = organisations?.find((o: any) => o.id === report.organisationId);
                     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
                     const formatTime = (hour: number) => {
