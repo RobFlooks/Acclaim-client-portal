@@ -168,7 +168,16 @@ export default function Messages() {
         description: "Message deleted successfully",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      const isForbidden = error?.message?.includes('403') || error?.message?.includes('Super admin');
+      if (isForbidden) {
+        toast({
+          title: "Access Denied",
+          description: "Only super admins can delete messages. Please contact a super admin to perform this action.",
+          variant: "destructive",
+        });
+        return;
+      }
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
