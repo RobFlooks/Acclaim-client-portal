@@ -2045,6 +2045,7 @@ export default function AdminEnhanced() {
   const [selectedOrgForReports, setSelectedOrgForReports] = useState<Organisation | null>(null);
   const [editingOrgReport, setEditingOrgReport] = useState<any | null>(null);
   const [showEditOrgReportForm, setShowEditOrgReportForm] = useState(false);
+  const [editingFromReportsTab, setEditingFromReportsTab] = useState(false);
   
   // State for closed case management
   const [showClosedCaseManagement, setShowClosedCaseManagement] = useState(false);
@@ -2304,6 +2305,13 @@ export default function AdminEnhanced() {
       setShowEditOrgReportForm(false);
       setEditingReportId(null);
       setEditingOrgReport(null);
+      if (editingFromReportsTab) {
+        setShowOrgReportsDialog(false);
+        setShowScheduledReportDialog(false);
+        setSelectedOrgForReports(null);
+        setScheduledReportUser(null);
+        setEditingFromReportsTab(false);
+      }
     },
     onError: () => {
       toast({
@@ -4641,6 +4649,7 @@ export default function AdminEnhanced() {
                                     size="sm"
                                     onClick={(e) => {
                                       e.stopPropagation();
+                                      setEditingFromReportsTab(true);
                                       if (isOrgLevelReport) {
                                         const reportOrg = organisations?.find((o: any) => o.id === report.organisationId);
                                         if (reportOrg) {
@@ -4656,6 +4665,7 @@ export default function AdminEnhanced() {
                                             includeCaseSummary: report.includeCaseSummary ?? true,
                                             includeActivityReport: report.includeActivityReport ?? true,
                                             caseStatusFilter: report.caseStatusFilter || 'active',
+                                            enabled: report.enabled ?? true,
                                           });
                                           setShowEditOrgReportForm(true);
                                           setShowOrgReportsDialog(true);
@@ -5269,6 +5279,11 @@ export default function AdminEnhanced() {
                 <Button variant="outline" onClick={() => {
                   setShowEditOrgReportForm(false);
                   setEditingOrgReport(null);
+                  if (editingFromReportsTab) {
+                    setShowOrgReportsDialog(false);
+                    setSelectedOrgForReports(null);
+                    setEditingFromReportsTab(false);
+                  }
                 }}>
                   Cancel
                 </Button>
@@ -5795,8 +5810,15 @@ export default function AdminEnhanced() {
               </div>
 
               <div className="flex justify-between pt-4 border-t">
-                <Button variant="outline" onClick={() => setShowReportEditForm(false)}>
-                  Back
+                <Button variant="outline" onClick={() => {
+                  setShowReportEditForm(false);
+                  if (editingFromReportsTab) {
+                    setShowScheduledReportDialog(false);
+                    setScheduledReportUser(null);
+                    setEditingFromReportsTab(false);
+                  }
+                }}>
+                  {editingFromReportsTab ? 'Cancel' : 'Back'}
                 </Button>
                 <Button
                   onClick={() => {
