@@ -302,8 +302,23 @@ class SendGridEmailService {
       };
 
       // Add attachments if present
-      if (payload.attachments && payload.attachments.length > 0) {
-        emailPayload.attachments = payload.attachments;
+      const attachments = [...(payload.attachments || [])];
+      
+      // Add logo if requested
+      if (payload.attachLogo) {
+        const logoBase64 = getLogoBase64();
+        if (logoBase64) {
+          attachments.push(logoBase64);
+        }
+      }
+      
+      if (attachments.length > 0) {
+        emailPayload.attachments = attachments;
+      }
+      
+      // Log BCC info for debugging
+      if (payload.bcc && payload.bcc.length > 0) {
+        console.log(`📧 Sending email with ${payload.bcc.length} BCC recipient(s)`);
       }
 
       const response = await fetch(APIM_ENDPOINT, {
