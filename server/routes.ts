@@ -4394,7 +4394,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/users/with-organisations", isAuthenticated, isAdmin, isSuperAdmin, async (req: any, res) => {
     try {
       const allUsers = await storage.getAllUsers();
-      const allOrgs = await storage.getOrganisations();
+      const allOrgs = await storage.getAllOrganisations();
       
       // Get all user-organisation assignments in one query for efficiency
       const allUserOrgs = await storage.getAllUserOrganisations();
