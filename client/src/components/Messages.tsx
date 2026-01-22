@@ -523,7 +523,13 @@ export default function Messages() {
                   </div>
                   <div>
                     <Label htmlFor="linkedCase">Link to Case (optional)</Label>
-                    <Select value={linkedCaseId} onValueChange={setLinkedCaseId}>
+                    <Select value={linkedCaseId} onValueChange={(value) => {
+                      setLinkedCaseId(value);
+                      if (value === "none" || !value) {
+                        setSelectedFile(null);
+                        setCustomFileName("");
+                      }
+                    }}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a case to link this message to..." />
                       </SelectTrigger>
@@ -567,17 +573,25 @@ export default function Messages() {
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="attachment">Attachment (optional)</Label>
-                    <input
-                      id="attachment"
-                      type="file"
-                      onChange={(e) => {
-                        setSelectedFile(e.target.files?.[0] || null);
-                        setCustomFileName("");
-                      }}
-                      accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar,.xls,.xlsx,.csv,.mp4,.webm,.mov,.avi,.mkv,.m4v,.wmv"
-                      className="block w-full text-sm text-gray-500 mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 file:cursor-pointer cursor-pointer"
-                    />
+                    <Label htmlFor="attachment" className={(!linkedCaseId || linkedCaseId === "none") ? "text-gray-400" : ""}>
+                      Attachment {linkedCaseId && linkedCaseId !== "none" ? "(optional)" : "(requires case link)"}
+                    </Label>
+                    {(!linkedCaseId || linkedCaseId === "none") ? (
+                      <p className="text-xs text-amber-600 mt-1">
+                        To attach a file, please link this message to a case above.
+                      </p>
+                    ) : (
+                      <input
+                        id="attachment"
+                        type="file"
+                        onChange={(e) => {
+                          setSelectedFile(e.target.files?.[0] || null);
+                          setCustomFileName("");
+                        }}
+                        accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar,.xls,.xlsx,.csv,.mp4,.webm,.mov,.avi,.mkv,.m4v,.wmv"
+                        className="block w-full text-sm text-gray-500 mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 file:cursor-pointer cursor-pointer"
+                      />
+                    )}
                     {selectedFile && (
                       <div className="mt-2 space-y-2">
                         <p className="text-sm text-gray-600 dark:text-gray-300">
