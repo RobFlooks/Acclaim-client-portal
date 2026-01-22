@@ -237,6 +237,17 @@ export function EmailBroadcast() {
       .map((u) => u!.email);
   }, [selectedRecipients, activeUsers]);
 
+  const recipientDetails = useMemo(() => {
+    return selectedRecipients
+      .map((id) => activeUsers.find((u) => u.id === id))
+      .filter((u): u is User => !!u && !!u.email)
+      .sort((a, b) => {
+        const nameA = `${a.firstName || ''} ${a.lastName || ''}`.trim().toLowerCase();
+        const nameB = `${b.firstName || ''} ${b.lastName || ''}`.trim().toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
+  }, [selectedRecipients, activeUsers]);
+
   const handleTemplateChange = (templateId: string) => {
     setSelectedTemplate(templateId);
     const template = quickTemplates.find((t) => t.id === templateId);
@@ -277,16 +288,26 @@ export function EmailBroadcast() {
       return;
     }
 
-    setShowConfirmSend(true);
+    // Force preview before sending
+    setShowPreview(true);
   };
 
   const confirmSend = () => {
     setShowConfirmSend(false);
+    setShowPreview(false);
     sendBroadcastMutation.mutate({
       subject,
       body,
       recipientIds: selectedRecipients,
     });
+  };
+
+  const handleEditRecipients = () => {
+    setShowPreview(false);
+    // Scroll to recipients section
+    setTimeout(() => {
+      document.getElementById('recipients-section')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   return (
@@ -354,7 +375,7 @@ export function EmailBroadcast() {
             </div>
 
             <div className="space-y-4">
-              <div>
+              <div id="recipients-section">
                 <Label className="text-base font-semibold flex items-center gap-2">
                   <Users className="h-4 w-4 text-blue-500" />
                   Recipients
@@ -525,16 +546,8 @@ export function EmailBroadcast() {
 
           <div className="flex flex-col sm:flex-row gap-3 justify-end">
             <Button
-              variant="outline"
-              onClick={() => setShowPreview(true)}
-              disabled={!subject.trim() || !body.trim()}
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              Preview Email
-            </Button>
-            <Button
               onClick={handleSend}
-              disabled={sendBroadcastMutation.isPending || selectedRecipients.length === 0}
+              disabled={sendBroadcastMutation.isPending || selectedRecipients.length === 0 || !subject.trim() || !body.trim()}
               className="bg-fuchsia-600 hover:bg-fuchsia-700"
             >
               {sendBroadcastMutation.isPending ? (
@@ -544,8 +557,8 @@ export function EmailBroadcast() {
                 </>
               ) : (
                 <>
-                  <Send className="h-4 w-4 mr-2" />
-                  Send Broadcast
+                  <Eye className="h-4 w-4 mr-2" />
+                  Preview &amp; Send
                 </>
               )}
             </Button>
@@ -558,56 +571,94 @@ export function EmailBroadcast() {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <Eye className="h-5 w-5" />
-              Email Preview
+              Review &amp; Send Email
             </AlertDialogTitle>
-            <AlertDialogDescription className="sr-only">
-              Preview of the email that will be sent to recipients
+            <AlertDialogDescription>
+              Please review the recipients and email content before sending.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-4">
             <div>
-              <Label className="text-xs text-muted-foreground">TO (BCC)</Label>
-              <p className="text-sm">{recipientEmails.length} recipient(s) - addresses hidden for data protection</p>
-            </div>
-            <div>
-              <Label className="text-xs text-muted-foreground">SUBJECT</Label>
-              <p className="font-medium break-words">{subject}</p>
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-xs text-muted-foreground uppercase">Recipients ({recipientDetails.length})</Label>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleEditRecipients}
+                  className="h-7 text-xs"
+                >
+                  <Users className="h-3 w-3 mr-1" />
+                  Edit Recipients
+                </Button>
+              </div>
+              <ScrollArea className="h-[150px] border rounded-md p-2 bg-gray-50 dark:bg-gray-900">
+                <div className="space-y-1">
+                  {recipientDetails.map((user) => (
+                    <div key={user.id} className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <span className="text-sm font-medium block truncate">
+                            {user.firstName} {user.lastName}
+                          </span>
+                          <span className="text-xs text-muted-foreground block truncate">
+                            {user.email}
+                          </span>
+                        </div>
+                      </div>
+                      {user.isSuperAdmin && (
+                        <Badge className="flex-shrink-0 bg-fuchsia-200 text-fuchsia-700 dark:bg-fuchsia-900 dark:text-fuchsia-300 text-[10px] px-1 ml-2">
+                          Admin+
+                        </Badge>
+                      )}
+                      {user.isAdmin && !user.isSuperAdmin && (
+                        <Badge className="flex-shrink-0 bg-amber-200 text-amber-700 dark:bg-amber-900 dark:text-amber-300 text-[10px] px-1 ml-2">
+                          Admin
+                        </Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+              <p className="text-xs text-muted-foreground mt-1">
+                Emails sent via BCC - recipients cannot see each other's addresses.
+              </p>
             </div>
             <Separator />
-            <div className="bg-white dark:bg-gray-900 border rounded-lg p-3 sm:p-4">
-              <pre className="whitespace-pre-wrap font-sans text-sm break-words">{body}</pre>
+            <div>
+              <Label className="text-xs text-muted-foreground uppercase">Subject</Label>
+              <p className="font-medium break-words mt-1">{subject}</p>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground uppercase">Message</Label>
+              <div className="bg-white dark:bg-gray-900 border rounded-lg p-3 sm:p-4 mt-1">
+                <pre className="whitespace-pre-wrap font-sans text-sm break-words">{body}</pre>
+              </div>
             </div>
           </div>
-          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-            <AlertDialogCancel className="w-full sm:w-auto">Close</AlertDialogCancel>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2 mt-4">
+            <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
+            <Button
+              onClick={confirmSend}
+              disabled={sendBroadcastMutation.isPending}
+              className="w-full sm:w-auto bg-fuchsia-600 hover:bg-fuchsia-700"
+            >
+              {sendBroadcastMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  Confirm &amp; Send ({recipientDetails.length})
+                </>
+              )}
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={showConfirmSend} onOpenChange={setShowConfirmSend}>
-        <AlertDialogContent className="w-[95vw] max-w-md">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <Send className="h-5 w-5 text-fuchsia-600" />
-              Confirm Send
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              You are about to send this email to <strong>{selectedRecipients.length}</strong> recipient(s).
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-            <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmSend}
-              className="w-full sm:w-auto bg-fuchsia-600 hover:bg-fuchsia-700"
-            >
-              <CheckCircle2 className="h-4 w-4 mr-2" />
-              Send Now
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
