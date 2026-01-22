@@ -367,7 +367,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
       
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/cases", caseData.id, "documents"] });
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       setSelectedFile(null);
@@ -377,10 +377,19 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
       const fileInput = document.getElementById("file-upload") as HTMLInputElement;
       if (fileInput) fileInput.value = "";
       
-      toast({
-        title: "Success",
-        description: "Document uploaded successfully",
-      });
+      // Show retention message for video files
+      if (data?.isVideo && data?.retentionMessage) {
+        toast({
+          title: "Video Uploaded",
+          description: data.retentionMessage,
+          duration: 8000,
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Document uploaded successfully",
+        });
+      }
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {

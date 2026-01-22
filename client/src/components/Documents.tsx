@@ -142,17 +142,27 @@ export default function Documents() {
 
       return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       setSelectedFile(null);
       setCustomFileName("");
       setSelectedCaseId("");
       setNotifyOnUpload(true);
       setUploadDialogOpen(false);
-      toast({
-        title: "Success",
-        description: "Document uploaded successfully",
-      });
+      
+      // Show retention message for video files
+      if (data?.isVideo && data?.retentionMessage) {
+        toast({
+          title: "Video Uploaded",
+          description: data.retentionMessage,
+          duration: 8000,
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Document uploaded successfully",
+        });
+      }
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
