@@ -115,13 +115,8 @@ app.use((req, res, next) => {
         }
       };
 
-      // Run cleanup once at startup (after 30 seconds) - TESTING
-      setTimeout(runVideoCleanup, 30000);
-
-      // Then run every 2 minutes - TESTING (change back to 6 * 60 * 60 * 1000 for 6 hours)
-      setInterval(runVideoCleanup, 2 * 60 * 1000);
-
-      log("Video retention cleanup scheduled (TESTING: runs every 2 minutes, 7-day undownloaded / 10-min after download)");
+      // Auto-delete disabled - videos can be manually deleted from Audit Management
+      log("Video retention tracking active (auto-delete disabled, manual deletion available in Audit Management)");
     }
   );
 })();

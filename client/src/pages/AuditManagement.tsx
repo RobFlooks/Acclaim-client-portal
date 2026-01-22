@@ -158,6 +158,28 @@ export default function AuditManagement() {
     },
   });
 
+  // Delete video mutation
+  const deleteVideoMutation = useMutation({
+    mutationFn: async (documentId: number) => {
+      const res = await apiRequest("DELETE", `/api/admin/documents/${documentId}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Video Deleted",
+        description: "The video file has been permanently deleted.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/video-retention"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Delete Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCleanup = () => {
     const days = parseInt(retentionDays);
     if (days < 30) {
@@ -992,7 +1014,7 @@ export default function AuditManagement() {
                               <TableHead>Uploaded By</TableHead>
                               <TableHead>Case</TableHead>
                               <TableHead>Status</TableHead>
-                              <TableHead>Time Remaining</TableHead>
+                              <TableHead>Actions</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -1065,12 +1087,19 @@ export default function AuditManagement() {
                                   )}
                                 </TableCell>
                                 <TableCell>
-                                  <Badge 
-                                    variant={video.daysRemaining <= 2 ? "destructive" : video.daysRemaining <= 5 ? "default" : "secondary"}
-                                    className={video.daysRemaining <= 2 ? "" : video.daysRemaining <= 5 ? "bg-amber-500" : ""}
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() => {
+                                      if (confirm(`Are you sure you want to permanently delete "${video.fileName}"? This action cannot be undone.`)) {
+                                        deleteVideoMutation.mutate(video.documentId);
+                                      }
+                                    }}
+                                    disabled={deleteVideoMutation.isPending}
                                   >
-                                    {video.daysRemaining} day{video.daysRemaining !== 1 ? 's' : ''} left
-                                  </Badge>
+                                    <Trash2 className="h-4 w-4 mr-1" />
+                                    Delete
+                                  </Button>
                                 </TableCell>
                               </TableRow>
                             ))}
@@ -1079,9 +1108,9 @@ export default function AuditManagement() {
                       </div>
                       
                       <div className="text-sm text-gray-500 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                        <strong>Retention Policy:</strong> Videos are automatically deleted after the retention period expires. 
-                        Cleanup runs every 6 hours. Videos marked as "Awaiting" require the opposite party 
-                        (admin or user) to download them to start the 72-hour post-download retention period.
+                        <strong>Video Management:</strong> Videos must be manually deleted using the Delete button. 
+                        Videos marked as "Awaiting" require the opposite party (admin or user) to download them. 
+                        Once downloaded, the video can be safely deleted.
                       </div>
                     </div>
                   )}
