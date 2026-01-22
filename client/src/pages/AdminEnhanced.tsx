@@ -2562,14 +2562,23 @@ export default function AdminEnhanced() {
       const response = await apiRequest("POST", `/api/admin/users/${userId}/organisations`, { organisationId });
       return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: "Success",
         description: "User added to organisation successfully",
       });
       // Invalidate admin queries
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users-with-orgs"] });
-      queryClient.refetchQueries({ queryKey: ["/api/admin/users-with-orgs"] });
+      await queryClient.refetchQueries({ queryKey: ["/api/admin/users-with-orgs"] });
+      
+      // Update selectedUser with fresh data from the cache
+      if (selectedUser) {
+        const freshUsers = queryClient.getQueryData<User[]>(["/api/admin/users-with-orgs"]);
+        const updatedUser = freshUsers?.find(u => u.id === selectedUser.id);
+        if (updatedUser) {
+          setSelectedUser(updatedUser);
+        }
+      }
       
       // Invalidate user access queries - access may have changed for any user
       queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
@@ -2591,14 +2600,23 @@ export default function AdminEnhanced() {
       const response = await apiRequest("DELETE", `/api/admin/users/${userId}/organisations/${organisationId}`);
       return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: "Success", 
         description: "User removed from organisation successfully",
       });
       // Invalidate admin queries
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users-with-orgs"] });
-      queryClient.refetchQueries({ queryKey: ["/api/admin/users-with-orgs"] });
+      await queryClient.refetchQueries({ queryKey: ["/api/admin/users-with-orgs"] });
+      
+      // Update selectedUser with fresh data from the cache
+      if (selectedUser) {
+        const freshUsers = queryClient.getQueryData<User[]>(["/api/admin/users-with-orgs"]);
+        const updatedUser = freshUsers?.find(u => u.id === selectedUser.id);
+        if (updatedUser) {
+          setSelectedUser(updatedUser);
+        }
+      }
       
       // Invalidate user access queries - access may have changed for any user
       queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
