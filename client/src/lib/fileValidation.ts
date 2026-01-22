@@ -3,15 +3,15 @@ export const MAX_FILE_SIZE_MB = 25;
 
 export const ACCEPTED_FILE_EXTENSIONS = [
   '.pdf', '.doc', '.docx', '.txt',
-  '.jpg', '.jpeg', '.png', '.gif',
+  '.jpg', '.jpeg', '.png', '.gif', '.heic', '.heif',
   '.xls', '.xlsx', '.csv',
   '.zip', '.rar',
-  '.mp4', '.mov', '.avi', '.webm', '.mkv'
+  '.mp4', '.mov', '.avi', '.webm', '.mkv', '.m4v', '.3gp', '.3gpp'
 ];
 
 export const ACCEPTED_FILE_TYPES_STRING = ACCEPTED_FILE_EXTENSIONS.join(',');
 
-export const ACCEPTED_FILE_TYPES_DISPLAY = 'PDF, DOC, DOCX, TXT, JPG, JPEG, PNG, GIF, XLS, XLSX, CSV, ZIP, RAR, MP4, MOV, AVI, WEBM, MKV';
+export const ACCEPTED_FILE_TYPES_DISPLAY = 'PDF, DOC, DOCX, TXT, JPG, JPEG, PNG, GIF, HEIC, XLS, XLSX, CSV, ZIP, RAR, MP4, MOV, AVI, WEBM, MKV, M4V, 3GP';
 
 export interface FileValidationResult {
   isValid: boolean;
