@@ -56,19 +56,12 @@ const __dirname = path.dirname(__filename);
 
 const upload = multer({
   dest: "uploads/",
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  limits: { fileSize: 200 * 1024 * 1024 }, // 200MB limit (videos allowed)
 });
 
-const videoUpload = multer({
+const standardUpload = multer({
   dest: "uploads/",
-  limits: { fileSize: 200 * 1024 * 1024 }, // 200MB limit for videos
-  fileFilter: (req, file, cb) => {
-    if (isVideoFile(file.originalname)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only video files are allowed for this endpoint'));
-    }
-  }
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit for non-video files
 });
 
 // Admin middleware - checks if user is an admin
@@ -1647,6 +1640,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
+      // Check file size limits: 200MB for videos, 10MB for other files
+      const maxNonVideoSize = 10 * 1024 * 1024; // 10MB
+      if (!isVideoFile(req.file.originalname) && req.file.size > maxNonVideoSize) {
+        // Clean up the uploaded file
+        fs.unlinkSync(req.file.path);
+        return res.status(400).json({ 
+          message: "File too large. Maximum size for non-video files is 10MB." 
+        });
+      }
+
       const caseId = parseInt(req.body.caseId);
       
       if (!caseId || isNaN(caseId)) {
@@ -1780,158 +1783,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Video upload endpoint with larger file size limit (200MB)
-  app.post('/api/documents/upload-video', isAuthenticated, videoUpload.single('file'), async (req: any, res) => {
-    try {
-      const userId = req.user.id;
-      const user = await storage.getUser(userId);
-      
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      const userOrgs = await storage.getUserOrganisations(userId);
-      const allUserOrgIds = new Set<number>();
-      
-      if (user.organisationId) {
-        allUserOrgIds.add(user.organisationId);
-      }
-      userOrgs.forEach(uo => allUserOrgIds.add(uo.organisationId));
-      
-      if (!user.isAdmin && allUserOrgIds.size === 0) {
-        return res.status(404).json({ message: "User organisation not found" });
-      }
-
-      if (!req.file) {
-        return res.status(400).json({ message: "No video file uploaded" });
-      }
-
-      if (!isVideoFile(req.file.originalname)) {
-        fs.unlinkSync(req.file.path);
-        return res.status(400).json({ message: "Only video files (mp4, webm, mov, avi, mkv, m4v, wmv) are allowed" });
-      }
-
-      const caseId = parseInt(req.body.caseId);
-      
-      if (!caseId || isNaN(caseId)) {
-        fs.unlinkSync(req.file.path);
-        return res.status(400).json({ message: "Case ID is required" });
-      }
-
-      let case_ = null;
-      let caseOrgId = null;
-      
-      if (user.isAdmin) {
-        const allOrgs = await storage.getAllOrganisations();
-        for (const org of allOrgs) {
-          case_ = await storage.getCase(caseId, org.id);
-          if (case_) {
-            caseOrgId = org.id;
-            break;
-          }
-        }
-      } else {
-        for (const orgId of allUserOrgIds) {
-          case_ = await storage.getCase(caseId, orgId);
-          if (case_) {
-            caseOrgId = orgId;
-            break;
-          }
-        }
-      }
-      
-      if (!case_) {
-        fs.unlinkSync(req.file.path);
-        return res.status(404).json({ message: "Case not found" });
-      }
-
-      const finalFileName = req.body.customFileName || req.file.originalname;
-
-      const document = await storage.createDocument({
-        caseId,
-        fileName: finalFileName,
-        fileSize: req.file.size,
-        fileType: req.file.mimetype,
-        filePath: req.file.path,
-        uploadedBy: userId,
-        organisationId: caseOrgId!,
-      });
-
-      // Track video for retention management
-      trackVideoUpload(
-        document.id,
-        req.file.path,
-        finalFileName,
-        userId,
-        user.isAdmin,
-        caseOrgId!,
-        caseId
-      );
-
-      // Handle email notifications (same as regular upload)
-      const notifyAdmin = req.body.notifyAdmin === 'true' || req.body.notifyAdmin === true;
-      const notifyUsers = req.body.notifyUsers === 'true' || req.body.notifyUsers === true;
-      
-      const org = await storage.getOrganisation(caseOrgId!);
-      const organisationName = org?.name || 'Unknown Organisation';
-      
-      if (!user.isAdmin && notifyAdmin) {
-        try {
-          await sendGridEmailService.sendDocumentUploadNotificationToAdmin({
-            uploaderName: `${user.firstName} ${user.lastName}`,
-            uploaderEmail: user.email,
-            organisationName,
-            fileName: finalFileName,
-            fileSize: req.file.size,
-            fileType: req.file.mimetype,
-            filePath: req.file.path,
-            caseReference: case_.accountNumber,
-            caseName: case_.caseName,
-            uploadedAt: new Date(),
-          }, 'email@acclaim.law');
-          console.log('[Documents] Sent video upload notification to admin');
-        } catch (emailError) {
-          console.error('[Documents] Failed to send admin notification:', emailError);
-        }
-      } else if (user.isAdmin && notifyUsers) {
-        try {
-          const orgUsers = await storage.getUsersByOrganisationId(caseOrgId!);
-          for (const orgUser of orgUsers) {
-            const isCaseMuted = case_.id ? await storage.isCaseMuted(orgUser.id, case_.id) : false;
-            const isBlockedFromCase = case_.id ? await storage.isUserBlockedFromCase(orgUser.id, case_.id) : false;
-            if (isCaseMuted || isBlockedFromCase) continue;
-            if (!orgUser.isAdmin && orgUser.documentNotifications !== false) {
-              await sendGridEmailService.sendDocumentUploadNotificationToUser({
-                uploaderName: 'Acclaim Credit Management',
-                uploaderEmail: 'email@acclaim.law',
-                organisationName,
-                fileName: finalFileName,
-                fileSize: req.file.size,
-                fileType: req.file.mimetype,
-                filePath: req.file.path,
-                caseReference: case_.accountNumber,
-                caseName: case_.caseName,
-                uploadedAt: new Date(),
-              }, orgUser.email);
-              console.log(`[Documents] Sent video upload notification to user: ${orgUser.email}`);
-            }
-          }
-        } catch (emailError) {
-          console.error('[Documents] Failed to send user notifications:', emailError);
-        }
-      }
-
-      res.json({
-        ...document,
-        isVideo: true,
-        retentionInfo: getVideoRetentionInfo(document.id)
-      });
-    } catch (error) {
-      console.error("Error uploading video:", error);
-      res.status(500).json({ message: "Failed to upload video" });
-    }
-  });
-
   // Get video retention info for a document
   app.get('/api/documents/:id/retention', isAuthenticated, async (req: any, res) => {
     try {
@@ -2042,6 +1893,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      // Check file size limits: 200MB for videos, 10MB for other files
+      const maxNonVideoSize = 10 * 1024 * 1024; // 10MB
+      if (!isVideoFile(req.file.originalname) && req.file.size > maxNonVideoSize) {
+        fs.unlinkSync(req.file.path);
+        return res.status(400).json({ 
+          message: "File too large. Maximum size for non-video files is 10MB." 
+        });
       }
 
       // Determine which organisation to upload to
