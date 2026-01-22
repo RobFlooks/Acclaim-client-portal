@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { scheduleReportProcessor } from "./scheduled-reports";
 import { storage } from "./storage";
+import { cleanupExpiredVideos } from "./video-retention";
 
 const app = express();
 app.use(express.json());
@@ -97,6 +98,30 @@ app.use((req, res, next) => {
       setInterval(runAuditLogCleanup, 24 * 60 * 60 * 1000);
 
       log("Audit log retention cleanup scheduled (runs daily, 365-day retention)");
+
+      // Start video retention cleanup (runs every 6 hours)
+      const runVideoCleanup = async () => {
+        try {
+          const deleteDocumentCallback = async (documentId: number) => {
+            await storage.deleteDocumentById(documentId);
+          };
+          
+          const result = await cleanupExpiredVideos(deleteDocumentCallback);
+          if (result.deleted > 0 || result.errors > 0) {
+            log(`Video retention cleanup: deleted ${result.deleted} expired videos, ${result.errors} errors`);
+          }
+        } catch (error) {
+          console.error("Error during video retention cleanup:", error);
+        }
+      };
+
+      // Run cleanup once at startup (after 1 minute)
+      setTimeout(runVideoCleanup, 60000);
+
+      // Then run every 6 hours
+      setInterval(runVideoCleanup, 6 * 60 * 60 * 1000);
+
+      log("Video retention cleanup scheduled (runs every 6 hours, 14-day undownloaded / 7-day after download)");
     }
   );
 })();

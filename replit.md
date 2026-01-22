@@ -20,7 +20,7 @@ Language preference: British English (organisation not organization, colour not 
 - **Language**: TypeScript with ES modules.
 - **Database**: PostgreSQL with Drizzle ORM, hosted on Neon serverless PostgreSQL.
 - **Session Management**: Express sessions with PostgreSQL storage.
-- **File Handling**: Multer for file uploads (10MB limit).
+- **File Handling**: Multer for file uploads (10MB standard limit, 200MB for videos).
 - **Security**: bcrypt for password hashing.
 
 ### Authentication & Authorization

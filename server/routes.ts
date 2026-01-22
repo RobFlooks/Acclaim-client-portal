@@ -41,6 +41,15 @@ import { sendGridEmailService } from "./email-service-sendgrid";
 import { setupAzureAuth } from "./azure-auth";
 import ExcelJS from "exceljs";
 import { loginRateLimiter } from "./rate-limiter";
+import { 
+  isVideoFile, 
+  trackVideoUpload, 
+  recordVideoDownload, 
+  getVideoRetentionInfo,
+  removeVideoTracking,
+  cleanupExpiredVideos,
+  getAllTrackedVideos
+} from "./video-retention";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -48,6 +57,18 @@ const __dirname = path.dirname(__filename);
 const upload = multer({
   dest: "uploads/",
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+});
+
+const videoUpload = multer({
+  dest: "uploads/",
+  limits: { fileSize: 200 * 1024 * 1024 }, // 200MB limit for videos
+  fileFilter: (req, file, cb) => {
+    if (isVideoFile(file.originalname)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only video files are allowed for this endpoint'));
+    }
+  }
 });
 
 // Admin middleware - checks if user is an admin
@@ -1739,10 +1760,209 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      // Track video files for retention management
+      if (isVideoFile(finalFileName)) {
+        trackVideoUpload(
+          document.id,
+          req.file.path,
+          finalFileName,
+          userId,
+          user.isAdmin,
+          caseOrgId!,
+          caseId
+        );
+      }
+
       res.json(document);
     } catch (error) {
       console.error("Error uploading document:", error);
       res.status(500).json({ message: "Failed to upload document" });
+    }
+  });
+
+  // Video upload endpoint with larger file size limit (200MB)
+  app.post('/api/documents/upload-video', isAuthenticated, videoUpload.single('file'), async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const userOrgs = await storage.getUserOrganisations(userId);
+      const allUserOrgIds = new Set<number>();
+      
+      if (user.organisationId) {
+        allUserOrgIds.add(user.organisationId);
+      }
+      userOrgs.forEach(uo => allUserOrgIds.add(uo.organisationId));
+      
+      if (!user.isAdmin && allUserOrgIds.size === 0) {
+        return res.status(404).json({ message: "User organisation not found" });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: "No video file uploaded" });
+      }
+
+      if (!isVideoFile(req.file.originalname)) {
+        fs.unlinkSync(req.file.path);
+        return res.status(400).json({ message: "Only video files (mp4, webm, mov, avi, mkv, m4v, wmv) are allowed" });
+      }
+
+      const caseId = parseInt(req.body.caseId);
+      
+      if (!caseId || isNaN(caseId)) {
+        fs.unlinkSync(req.file.path);
+        return res.status(400).json({ message: "Case ID is required" });
+      }
+
+      let case_ = null;
+      let caseOrgId = null;
+      
+      if (user.isAdmin) {
+        const allOrgs = await storage.getAllOrganisations();
+        for (const org of allOrgs) {
+          case_ = await storage.getCase(caseId, org.id);
+          if (case_) {
+            caseOrgId = org.id;
+            break;
+          }
+        }
+      } else {
+        for (const orgId of allUserOrgIds) {
+          case_ = await storage.getCase(caseId, orgId);
+          if (case_) {
+            caseOrgId = orgId;
+            break;
+          }
+        }
+      }
+      
+      if (!case_) {
+        fs.unlinkSync(req.file.path);
+        return res.status(404).json({ message: "Case not found" });
+      }
+
+      const finalFileName = req.body.customFileName || req.file.originalname;
+
+      const document = await storage.createDocument({
+        caseId,
+        fileName: finalFileName,
+        fileSize: req.file.size,
+        fileType: req.file.mimetype,
+        filePath: req.file.path,
+        uploadedBy: userId,
+        organisationId: caseOrgId!,
+      });
+
+      // Track video for retention management
+      trackVideoUpload(
+        document.id,
+        req.file.path,
+        finalFileName,
+        userId,
+        user.isAdmin,
+        caseOrgId!,
+        caseId
+      );
+
+      // Handle email notifications (same as regular upload)
+      const notifyAdmin = req.body.notifyAdmin === 'true' || req.body.notifyAdmin === true;
+      const notifyUsers = req.body.notifyUsers === 'true' || req.body.notifyUsers === true;
+      
+      const org = await storage.getOrganisation(caseOrgId!);
+      const organisationName = org?.name || 'Unknown Organisation';
+      
+      if (!user.isAdmin && notifyAdmin) {
+        try {
+          await sendGridEmailService.sendDocumentUploadNotificationToAdmin({
+            uploaderName: `${user.firstName} ${user.lastName}`,
+            uploaderEmail: user.email,
+            organisationName,
+            fileName: finalFileName,
+            fileSize: req.file.size,
+            fileType: req.file.mimetype,
+            filePath: req.file.path,
+            caseReference: case_.accountNumber,
+            caseName: case_.caseName,
+            uploadedAt: new Date(),
+          }, 'email@acclaim.law');
+          console.log('[Documents] Sent video upload notification to admin');
+        } catch (emailError) {
+          console.error('[Documents] Failed to send admin notification:', emailError);
+        }
+      } else if (user.isAdmin && notifyUsers) {
+        try {
+          const orgUsers = await storage.getUsersByOrganisationId(caseOrgId!);
+          for (const orgUser of orgUsers) {
+            const isCaseMuted = case_.id ? await storage.isCaseMuted(orgUser.id, case_.id) : false;
+            const isBlockedFromCase = case_.id ? await storage.isUserBlockedFromCase(orgUser.id, case_.id) : false;
+            if (isCaseMuted || isBlockedFromCase) continue;
+            if (!orgUser.isAdmin && orgUser.documentNotifications !== false) {
+              await sendGridEmailService.sendDocumentUploadNotificationToUser({
+                uploaderName: 'Acclaim Credit Management',
+                uploaderEmail: 'email@acclaim.law',
+                organisationName,
+                fileName: finalFileName,
+                fileSize: req.file.size,
+                fileType: req.file.mimetype,
+                filePath: req.file.path,
+                caseReference: case_.accountNumber,
+                caseName: case_.caseName,
+                uploadedAt: new Date(),
+              }, orgUser.email);
+              console.log(`[Documents] Sent video upload notification to user: ${orgUser.email}`);
+            }
+          }
+        } catch (emailError) {
+          console.error('[Documents] Failed to send user notifications:', emailError);
+        }
+      }
+
+      res.json({
+        ...document,
+        isVideo: true,
+        retentionInfo: getVideoRetentionInfo(document.id)
+      });
+    } catch (error) {
+      console.error("Error uploading video:", error);
+      res.status(500).json({ message: "Failed to upload video" });
+    }
+  });
+
+  // Get video retention info for a document
+  app.get('/api/documents/:id/retention', isAuthenticated, async (req: any, res) => {
+    try {
+      const documentId = parseInt(req.params.id);
+      const retentionInfo = getVideoRetentionInfo(documentId);
+      res.json(retentionInfo);
+    } catch (error) {
+      console.error("Error getting video retention info:", error);
+      res.status(500).json({ message: "Failed to get retention info" });
+    }
+  });
+
+  // Admin endpoint to view all tracked videos
+  app.get('/api/admin/tracked-videos', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const videos = getAllTrackedVideos();
+      const enrichedVideos = await Promise.all(videos.map(async (video) => {
+        const document = await storage.getDocumentById(video.documentId);
+        const uploader = await storage.getUser(video.uploadedByUserId);
+        const retentionInfo = getVideoRetentionInfo(video.documentId);
+        return {
+          ...video,
+          documentExists: !!document,
+          uploaderName: uploader ? `${uploader.firstName} ${uploader.lastName}` : 'Unknown',
+          retentionInfo
+        };
+      }));
+      res.json(enrichedVideos);
+    } catch (error) {
+      console.error("Error getting tracked videos:", error);
+      res.status(500).json({ message: "Failed to get tracked videos" });
     }
   });
 
@@ -1947,6 +2167,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "File not found on server" });
       }
 
+      // Track video downloads for retention management
+      if (isVideoFile(document.fileName)) {
+        const downloadResult = recordVideoDownload(documentId, user.isAdmin);
+        if (downloadResult.retentionStarted) {
+          console.log(`[VideoRetention] Required party downloaded video ${documentId}, retention countdown started`);
+        }
+      }
+
       res.download(document.filePath, document.fileName);
     } catch (error) {
       console.error("Error downloading document:", error);
@@ -1991,6 +2219,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Delete the file from disk if it exists
       if (document.filePath && fs.existsSync(document.filePath)) {
         fs.unlinkSync(document.filePath);
+      }
+
+      // Remove video tracking if this was a tracked video
+      if (isVideoFile(document.fileName)) {
+        removeVideoTracking(documentId);
       }
 
       // Delete from database
