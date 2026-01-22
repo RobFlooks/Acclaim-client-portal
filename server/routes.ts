@@ -4500,7 +4500,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const videos = getAllTrackedVideos();
       const allUsers = await storage.getAllUsers();
       const allOrgs = await storage.getAllOrganisations();
-      const allCases = await storage.getAllCasesAdmin();
+      const allCases = await storage.getAllCases();
       
       // Create lookup maps
       const userMap = new Map(allUsers.map(u => [u.id, u]));
