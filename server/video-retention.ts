@@ -5,7 +5,7 @@ const VIDEO_METADATA_FILE = 'uploads/video-metadata.json';
 const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.m4v', '.wmv'];
 
 const RETENTION_DAYS_NO_DOWNLOAD = 7;
-const RETENTION_DAYS_AFTER_DOWNLOAD = 3; // 72 hours
+const RETENTION_DAYS_AFTER_DOWNLOAD = 10 / (24 * 60); // TESTING: 10 minutes (change back to 3 for 72 hours)
 
 export interface VideoMetadata {
   filePath: string;
