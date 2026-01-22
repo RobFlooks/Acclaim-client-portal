@@ -47,7 +47,7 @@ const __dirname = path.dirname(__filename);
 
 const upload = multer({
   dest: "uploads/",
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  limits: { fileSize: 25 * 1024 * 1024 }, // 25MB limit
 });
 
 // Admin middleware - checks if user is an admin
