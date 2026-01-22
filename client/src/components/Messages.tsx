@@ -570,30 +570,38 @@ export default function Messages() {
                   </div>
                   <div>
                     <Label htmlFor="attachment">Attachment (optional)</Label>
-                    <p className="text-xs text-gray-500 mt-1 mb-2">
-                      Max {MAX_FILE_SIZE_MB}MB. Formats: {ACCEPTED_FILE_TYPES_DISPLAY}
-                    </p>
-                    <input
-                      id="attachment"
-                      type="file"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-                        setCustomFileName("");
-                        if (file) {
-                          const validation = validateFile(file);
-                          if (!validation.isValid) {
-                            setFileValidationError(validation.error);
-                            setSelectedFile(null);
-                            e.target.value = '';
-                            return;
-                          }
-                        }
-                        setFileValidationError(null);
-                        setSelectedFile(file);
-                      }}
-                      accept={ACCEPTED_FILE_TYPES_STRING}
-                      className="block w-full text-sm text-gray-500 mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 file:cursor-pointer cursor-pointer"
-                    />
+                    {linkedCaseId && linkedCaseId !== "none" ? (
+                      <>
+                        <p className="text-xs text-gray-500 mt-1 mb-2">
+                          Max {MAX_FILE_SIZE_MB}MB. Formats: {ACCEPTED_FILE_TYPES_DISPLAY}
+                        </p>
+                        <input
+                          id="attachment"
+                          type="file"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] || null;
+                            setCustomFileName("");
+                            if (file) {
+                              const validation = validateFile(file);
+                              if (!validation.isValid) {
+                                setFileValidationError(validation.error);
+                                setSelectedFile(null);
+                                e.target.value = '';
+                                return;
+                              }
+                            }
+                            setFileValidationError(null);
+                            setSelectedFile(file);
+                          }}
+                          accept={ACCEPTED_FILE_TYPES_STRING}
+                          className="block w-full text-sm text-gray-500 mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 file:cursor-pointer cursor-pointer"
+                        />
+                      </>
+                    ) : (
+                      <p className="text-xs text-gray-500 mt-1 mb-2 italic">
+                        File attachments are only available when linking the message to a case.
+                      </p>
+                    )}
                     {fileValidationError && (
                       <p className="text-sm text-red-600 mt-2 bg-red-50 dark:bg-red-900/20 p-2 rounded">
                         {fileValidationError}
