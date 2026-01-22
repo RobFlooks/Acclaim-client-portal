@@ -2216,20 +2216,24 @@ Portal: https://acclaim-api.azurewebsites.net/auth
         attachments.push(logoBase64);
       }
 
-      // Attach the uploaded document if file path is provided
+      // Attach the document if file path is provided (skip video files - too large for email)
       if (data.filePath && fs.existsSync(data.filePath)) {
-        try {
-          const fileContent = fs.readFileSync(data.filePath);
-          const base64Content = fileContent.toString('base64');
-          attachments.push({
-            content: base64Content,
-            filename: data.fileName,
-            type: data.fileType || 'application/octet-stream',
-            disposition: 'attachment'
-          });
-          console.log(`[Email] Attached document for user: ${data.fileName}`);
-        } catch (attachError) {
-          console.error(`[Email] Failed to attach document for user: ${attachError}`);
+        if (isVideoFile(data.fileName)) {
+          console.log(`[Email] Skipping video attachment for user (too large for email): ${data.fileName}`);
+        } else {
+          try {
+            const fileContent = fs.readFileSync(data.filePath);
+            const base64Content = fileContent.toString('base64');
+            attachments.push({
+              content: base64Content,
+              filename: data.fileName,
+              type: data.fileType || 'application/octet-stream',
+              disposition: 'attachment'
+            });
+            console.log(`[Email] Attached document for user: ${data.fileName}`);
+          } catch (attachError) {
+            console.error(`[Email] Failed to attach document for user: ${attachError}`);
+          }
         }
       }
 
