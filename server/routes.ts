@@ -41,27 +41,13 @@ import { sendGridEmailService } from "./email-service-sendgrid";
 import { setupAzureAuth } from "./azure-auth";
 import ExcelJS from "exceljs";
 import { loginRateLimiter } from "./rate-limiter";
-import { 
-  isVideoFile, 
-  trackVideoUpload, 
-  recordVideoDownload, 
-  getVideoRetentionInfo,
-  removeVideoTracking,
-  cleanupExpiredVideos,
-  getAllTrackedVideos
-} from "./video-retention";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const upload = multer({
   dest: "uploads/",
-  limits: { fileSize: 200 * 1024 * 1024 }, // 200MB limit (videos allowed)
-});
-
-const standardUpload = multer({
-  dest: "uploads/",
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit for non-video files
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
 });
 
 // Admin middleware - checks if user is an admin
@@ -1640,16 +1626,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      // Check file size limits: 200MB for videos, 10MB for other files
-      const maxNonVideoSize = 10 * 1024 * 1024; // 10MB
-      if (!isVideoFile(req.file.originalname) && req.file.size > maxNonVideoSize) {
-        // Clean up the uploaded file
-        fs.unlinkSync(req.file.path);
-        return res.status(400).json({ 
-          message: "File too large. Maximum size for non-video files is 10MB." 
-        });
-      }
-
       const caseId = parseInt(req.body.caseId);
       
       if (!caseId || isNaN(caseId)) {
@@ -1763,68 +1739,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Track video files for retention management
-      if (isVideoFile(finalFileName)) {
-        trackVideoUpload(
-          document.id,
-          req.file.path,
-          finalFileName,
-          userId,
-          user.isAdmin,
-          caseOrgId!,
-          caseId
-        );
-        
-        // Return with video retention info
-        const retentionInfo = getVideoRetentionInfo(document.id);
-        return res.json({
-          ...document,
-          isVideo: true,
-          retentionInfo,
-          retentionMessage: user.isAdmin 
-            ? 'This video will be retained for 14 days, or 7 days after the user downloads it.'
-            : 'This video will be retained for 14 days, or 7 days after an admin downloads it.'
-        });
-      }
-
       res.json(document);
     } catch (error) {
       console.error("Error uploading document:", error);
       res.status(500).json({ message: "Failed to upload document" });
-    }
-  });
-
-  // Get video retention info for a document
-  app.get('/api/documents/:id/retention', isAuthenticated, async (req: any, res) => {
-    try {
-      const documentId = parseInt(req.params.id);
-      const retentionInfo = getVideoRetentionInfo(documentId);
-      res.json(retentionInfo);
-    } catch (error) {
-      console.error("Error getting video retention info:", error);
-      res.status(500).json({ message: "Failed to get retention info" });
-    }
-  });
-
-  // Admin endpoint to view all tracked videos
-  app.get('/api/admin/tracked-videos', isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const videos = getAllTrackedVideos();
-      const enrichedVideos = await Promise.all(videos.map(async (video) => {
-        const document = await storage.getDocumentById(video.documentId);
-        const uploader = await storage.getUser(video.uploadedByUserId);
-        const retentionInfo = getVideoRetentionInfo(video.documentId);
-        return {
-          ...video,
-          documentExists: !!document,
-          uploaderName: uploader ? `${uploader.firstName} ${uploader.lastName}` : 'Unknown',
-          retentionInfo
-        };
-      }));
-      res.json(enrichedVideos);
-    } catch (error) {
-      console.error("Error getting tracked videos:", error);
-      res.status(500).json({ message: "Failed to get tracked videos" });
     }
   });
 
@@ -1904,15 +1822,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
-      }
-
-      // Check file size limits: 200MB for videos, 10MB for other files
-      const maxNonVideoSize = 10 * 1024 * 1024; // 10MB
-      if (!isVideoFile(req.file.originalname) && req.file.size > maxNonVideoSize) {
-        fs.unlinkSync(req.file.path);
-        return res.status(400).json({ 
-          message: "File too large. Maximum size for non-video files is 10MB." 
-        });
       }
 
       // Determine which organisation to upload to
@@ -2038,14 +1947,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "File not found on server" });
       }
 
-      // Track video downloads for retention management
-      if (isVideoFile(document.fileName)) {
-        const downloadResult = recordVideoDownload(documentId, user.isAdmin);
-        if (downloadResult.retentionStarted) {
-          console.log(`[VideoRetention] Required party downloaded video ${documentId}, retention countdown started`);
-        }
-      }
-
       res.download(document.filePath, document.fileName);
     } catch (error) {
       console.error("Error downloading document:", error);
@@ -2090,11 +1991,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Delete the file from disk if it exists
       if (document.filePath && fs.existsSync(document.filePath)) {
         fs.unlinkSync(document.filePath);
-      }
-
-      // Remove video tracking if this was a tracked video
-      if (isVideoFile(document.fileName)) {
-        removeVideoTracking(documentId);
       }
 
       // Delete from database
@@ -4491,86 +4387,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error cleaning up audit logs:", error);
       res.status(500).json({ message: "Failed to clean up audit logs" });
-    }
-  });
-
-  // Get video retention data for admin view
-  app.get("/api/admin/video-retention", isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const videos = getAllTrackedVideos();
-      const allUsers = await storage.getAllUsers();
-      const allOrgs = await storage.getAllOrganisations();
-      const allCases = await storage.getAllCases();
-      
-      // Get all document IDs to verify which videos still exist
-      const documentIds = new Set<number>();
-      for (const video of videos) {
-        const doc = await storage.getDocumentById(video.documentId);
-        if (doc) {
-          documentIds.add(video.documentId);
-        }
-      }
-      
-      // Create lookup maps
-      const userMap = new Map(allUsers.map(u => [u.id, u]));
-      const orgMap = new Map(allOrgs.map(o => [o.id, o]));
-      const caseMap = new Map(allCases.map(c => [c.id, c]));
-      
-      // Filter out videos whose documents no longer exist in the database
-      const validVideos = videos.filter(video => {
-        const exists = documentIds.has(video.documentId);
-        if (!exists) {
-          // Clean up stale entry from tracking
-          removeVideoTracking(video.documentId);
-          console.log(`[VideoRetention] Cleaned up stale tracking for deleted document ${video.documentId}`);
-        }
-        return exists;
-      });
-      
-      const now = new Date();
-      const RETENTION_DAYS_NO_DOWNLOAD = 7;
-      const RETENTION_DAYS_AFTER_DOWNLOAD = 10 / (24 * 60); // TESTING: 10 minutes (change back to 3 for 72 hours)
-      
-      const enrichedVideos = validVideos.map(video => {
-        const uploader = userMap.get(video.uploadedByUserId);
-        const org = video.organisationId ? orgMap.get(video.organisationId) : null;
-        const caseInfo = video.caseId ? caseMap.get(video.caseId) : null;
-        
-        // Calculate days remaining
-        let daysRemaining: number;
-        let status: string;
-        
-        if (video.downloadedByRequiredParty && video.downloadedAt) {
-          const downloadDate = new Date(video.downloadedAt);
-          const expiryDate = new Date(downloadDate.getTime() + RETENTION_DAYS_AFTER_DOWNLOAD * 24 * 60 * 60 * 1000);
-          daysRemaining = Math.ceil((expiryDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
-          status = 'downloaded';
-        } else {
-          const uploadDate = new Date(video.uploadedAt);
-          const expiryDate = new Date(uploadDate.getTime() + RETENTION_DAYS_NO_DOWNLOAD * 24 * 60 * 60 * 1000);
-          daysRemaining = Math.ceil((expiryDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
-          status = 'awaiting_download';
-        }
-        
-        return {
-          ...video,
-          uploaderName: uploader ? `${uploader.firstName} ${uploader.lastName}` : 'Unknown',
-          uploaderEmail: uploader?.email || 'Unknown',
-          organisationName: org?.name || null,
-          caseName: caseInfo?.caseName || null,
-          caseAccountNumber: caseInfo?.accountNumber || null,
-          daysRemaining: Math.max(0, daysRemaining),
-          status
-        };
-      });
-      
-      // Sort by days remaining (ascending - most urgent first)
-      enrichedVideos.sort((a, b) => a.daysRemaining - b.daysRemaining);
-      
-      res.json(enrichedVideos);
-    } catch (error) {
-      console.error("Error fetching video retention data:", error);
-      res.status(500).json({ message: "Failed to fetch video retention data" });
     }
   });
 

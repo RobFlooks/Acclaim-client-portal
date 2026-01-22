@@ -19,9 +19,6 @@ import {
   HardDrive,
   Calendar,
   Loader2,
-  Video,
-  CheckCircle,
-  XCircle,
 } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -66,30 +63,9 @@ interface AuditLogStats {
   logsByAge: { period: string; count: number }[];
 }
 
-interface VideoRetentionInfo {
-  filePath: string;
-  fileName: string;
-  uploadedAt: string;
-  uploadedByUserId: string;
-  uploadedByAdmin: boolean;
-  documentId: number;
-  organisationId: number | null;
-  caseId: number | null;
-  downloadedByRequiredParty: boolean;
-  downloadedAt: string | null;
-  requiredDownloaderType: 'admin' | 'user';
-  uploaderName: string;
-  uploaderEmail: string;
-  organisationName: string | null;
-  caseName: string | null;
-  caseAccountNumber: string | null;
-  daysRemaining: number;
-  status: string;
-}
-
 export default function AuditManagement() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<'overview' | 'logs' | 'analysis' | 'retention' | 'videos'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'logs' | 'analysis' | 'retention'>('overview');
   const [searchTerm, setSearchTerm] = useState("");
   const [tableFilter, setTableFilter] = useState("");
   const [operationFilter, setOperationFilter] = useState("");
@@ -128,12 +104,6 @@ export default function AuditManagement() {
     retry: false,
   });
 
-  // Fetch video retention data
-  const { data: videoRetentionData, isLoading: videosLoading, refetch: refetchVideos } = useQuery<VideoRetentionInfo[]>({
-    queryKey: ["/api/admin/video-retention"],
-    retry: false,
-  });
-
   // Cleanup mutation
   const cleanupMutation = useMutation({
     mutationFn: async (days: number) => {
@@ -152,28 +122,6 @@ export default function AuditManagement() {
     onError: (error: Error) => {
       toast({
         title: "Cleanup Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Delete video mutation
-  const deleteVideoMutation = useMutation({
-    mutationFn: async (documentId: number) => {
-      const res = await apiRequest("DELETE", `/api/admin/documents/${documentId}`);
-      return res.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Video Deleted",
-        description: "The video file has been permanently deleted.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/video-retention"] });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Delete Failed",
         description: error.message,
         variant: "destructive",
       });
@@ -275,12 +223,11 @@ export default function AuditManagement() {
         </div>
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="logs">Audit Logs</TabsTrigger>
             <TabsTrigger value="analysis">Analysis</TabsTrigger>
             <TabsTrigger value="retention">Retention</TabsTrigger>
-            <TabsTrigger value="videos">Videos</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -953,167 +900,6 @@ export default function AuditManagement() {
                       </Button>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="videos">
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <Video className="h-5 w-5" />
-                        Video File Retention
-                      </CardTitle>
-                      <CardDescription>
-                        Track video files and their retention status. Videos are deleted 7 days after upload if not downloaded, 
-                        or 72 hours after download by the required party.
-                      </CardDescription>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => refetchVideos()}
-                    >
-                      Refresh
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {videosLoading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-                    </div>
-                  ) : !videoRetentionData || videoRetentionData.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <Video className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-                      <p>No video files are currently being tracked.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                        <span className="flex items-center gap-1">
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                          Downloaded
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-4 w-4 text-amber-500" />
-                          Awaiting Download
-                        </span>
-                      </div>
-                      
-                      <div className="overflow-x-auto">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>File Name</TableHead>
-                              <TableHead>Uploaded</TableHead>
-                              <TableHead>Uploaded By</TableHead>
-                              <TableHead>Case</TableHead>
-                              <TableHead>Status</TableHead>
-                              <TableHead>Actions</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {videoRetentionData.map((video) => (
-                              <TableRow key={video.documentId}>
-                                <TableCell className="font-medium">
-                                  <div className="flex items-center gap-2">
-                                    <Video className="h-4 w-4 text-purple-500" />
-                                    <span className="truncate max-w-[200px]" title={video.fileName}>
-                                      {video.fileName}
-                                    </span>
-                                  </div>
-                                </TableCell>
-                                <TableCell>
-                                  <div className="text-sm">
-                                    {format(new Date(video.uploadedAt), "dd MMM yyyy")}
-                                    <div className="text-xs text-gray-500">
-                                      {format(new Date(video.uploadedAt), "HH:mm")}
-                                    </div>
-                                  </div>
-                                </TableCell>
-                                <TableCell>
-                                  <div className="text-sm">
-                                    {video.uploaderName}
-                                    <div className="text-xs text-gray-500">
-                                      {video.uploaderEmail}
-                                    </div>
-                                    <Badge variant="outline" className={video.uploadedByAdmin ? "text-purple-600 border-purple-500" : "text-blue-600 border-blue-500"}>
-                                      {video.uploadedByAdmin ? "Admin" : "User"}
-                                    </Badge>
-                                  </div>
-                                </TableCell>
-                                <TableCell>
-                                  {video.caseAccountNumber ? (
-                                    <div className="text-sm">
-                                      <span className="font-medium">{video.caseAccountNumber}</span>
-                                      {video.caseName && (
-                                        <div className="text-xs text-gray-500 truncate max-w-[150px]" title={video.caseName}>
-                                          {video.caseName}
-                                        </div>
-                                      )}
-                                    </div>
-                                  ) : (
-                                    <span className="text-gray-400 text-sm">No case linked</span>
-                                  )}
-                                </TableCell>
-                                <TableCell>
-                                  {video.status === 'downloaded' ? (
-                                    <div className="flex items-center gap-1">
-                                      <CheckCircle className="h-4 w-4 text-green-500" />
-                                      <div>
-                                        <span className="text-green-600 text-sm font-medium">Downloaded</span>
-                                        {video.downloadedAt && (
-                                          <div className="text-xs text-gray-500">
-                                            {format(new Date(video.downloadedAt), "dd MMM yyyy HH:mm")}
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <div className="flex items-center gap-1">
-                                      <Clock className="h-4 w-4 text-amber-500" />
-                                      <div>
-                                        <span className="text-amber-600 text-sm font-medium">Awaiting</span>
-                                        <div className="text-xs text-gray-500">
-                                          Needs {video.requiredDownloaderType === 'admin' ? 'admin' : 'user'} download
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-                                </TableCell>
-                                <TableCell>
-                                  <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={() => {
-                                      if (confirm(`Are you sure you want to permanently delete "${video.fileName}"? This action cannot be undone.`)) {
-                                        deleteVideoMutation.mutate(video.documentId);
-                                      }
-                                    }}
-                                    disabled={deleteVideoMutation.isPending}
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-1" />
-                                    Delete
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                      
-                      <div className="text-sm text-gray-500 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                        <strong>Video Management:</strong> Videos must be manually deleted using the Delete button. 
-                        Videos marked as "Awaiting" require the opposite party (admin or user) to download them. 
-                        Once downloaded, the video can be safely deleted.
-                      </div>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             </div>

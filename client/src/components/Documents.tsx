@@ -84,17 +84,12 @@ export default function Documents() {
     // Handle nested document structure
     const docData = doc.documents || doc;
     
-    // Include both case documents and general documents (caseId is null)
-    const caseDetails = docData.caseId ? getCaseDetails(docData.caseId) : null;
-    
-    // For general documents, match on filename, type, or "general"
+    // Exclude documents without a caseId (general documents)
     if (!docData.caseId) {
-      return (
-        (docData.fileName && docData.fileName.toLowerCase().includes(searchLower)) ||
-        (docData.fileType && docData.fileType.toLowerCase().includes(searchLower)) ||
-        "general".includes(searchLower)
-      );
+      return false;
     }
+    
+    const caseDetails = getCaseDetails(docData.caseId);
     
     return (
       (docData.fileName && docData.fileName.toLowerCase().includes(searchLower)) ||
@@ -147,27 +142,17 @@ export default function Documents() {
 
       return await response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       setSelectedFile(null);
       setCustomFileName("");
       setSelectedCaseId("");
       setNotifyOnUpload(true);
       setUploadDialogOpen(false);
-      
-      // Show retention message for video files
-      if (data?.isVideo && data?.retentionMessage) {
-        toast({
-          title: "Video Uploaded",
-          description: data.retentionMessage,
-          duration: 8000,
-        });
-      } else {
-        toast({
-          title: "Success",
-          description: "Document uploaded successfully",
-        });
-      }
+      toast({
+        title: "Success",
+        description: "Document uploaded successfully",
+      });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -340,25 +325,21 @@ export default function Documents() {
   const groupDocumentsByCase = (docs: any[]) => {
     const grouped = docs.reduce((acc: any, doc: any) => {
       const docData = doc.documents || doc;
-      // Use "general" key for documents without a caseId
-      const key = docData.caseId ? docData.caseId.toString() : "general";
-      if (!acc[key]) {
-        acc[key] = [];
+      // Only include documents that have a caseId (exclude general documents)
+      if (!docData.caseId) {
+        return acc;
       }
-      acc[key].push(docData);
+      const caseId = docData.caseId;
+      if (!acc[caseId]) {
+        acc[caseId] = [];
+      }
+      acc[caseId].push(docData);
       return acc;
     }, {});
     return grouped;
   };
 
   const groupedDocuments = groupDocumentsByCase(paginatedDocuments);
-  
-  // Sort grouped documents to show case documents first, then general documents
-  const sortedGroupKeys = Object.keys(groupedDocuments).sort((a, b) => {
-    if (a === "general") return 1;
-    if (b === "general") return -1;
-    return 0;
-  });
 
   return (
     <div className="space-y-6">
@@ -420,13 +401,13 @@ export default function Documents() {
                       id="file-input"
                       type="file"
                       onChange={handleFileSelect}
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.txt,.csv,.xlsx,.xls,.mp4,.webm,.mov,.avi,.mkv,.m4v,.wmv"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.txt,.csv,.xlsx,.xls"
                       className="mt-2"
                     />
                     {selectedFile && (
                       <div className="mt-2 space-y-2">
-                        <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded flex items-center justify-between">
-                          <span className="text-sm text-gray-600 dark:text-gray-300">
+                        <div className="p-2 bg-gray-50 rounded flex items-center justify-between">
+                          <span className="text-sm text-gray-600">
                             {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
                           </span>
                           <Button
@@ -437,16 +418,6 @@ export default function Documents() {
                             <X className="h-4 w-4" />
                           </Button>
                         </div>
-                        {/* Video retention notice */}
-                        {['.mp4', '.webm', '.mov', '.avi', '.mkv', '.m4v', '.wmv'].some(ext => 
-                          selectedFile.name.toLowerCase().endsWith(ext)
-                        ) && (
-                          <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
-                            <p className="text-sm text-amber-800 dark:text-amber-200">
-                              <strong>Video Retention Notice:</strong> This video will be retained for 7 days, or 72 hours after {user?.isAdmin ? 'the user' : 'an admin'} downloads it. Please ensure it is downloaded before the retention period expires.
-                            </p>
-                          </div>
-                        )}
                         <div>
                           <Label htmlFor="custom-filename" className="text-sm text-acclaim-teal font-medium">Rename file (optional)</Label>
                           <div className="flex items-center gap-1 mt-1">
@@ -589,30 +560,22 @@ export default function Documents() {
                 </div>
               ))}
             </div>
-          ) : sortedGroupKeys.length > 0 ? (
+          ) : Object.keys(groupedDocuments).length > 0 ? (
             <div className="space-y-6">
-              {sortedGroupKeys.map((caseId) => (
+              {Object.entries(groupedDocuments).map(([caseId, caseDocuments]: [string, any]) => (
                 <div key={caseId} className="space-y-3">
                   <div className="flex items-center space-x-2">
-                    <Badge 
-                      variant="outline" 
-                      className={caseId === "general" 
-                        ? "text-amber-600 border-amber-500 dark:text-amber-400 dark:border-amber-600" 
-                        : "text-acclaim-teal border-acclaim-teal"}
-                    >
+                    <Badge variant="outline" className="text-acclaim-teal border-acclaim-teal">
                       {(() => {
-                        if (caseId === "general") {
-                          return "General Documents";
-                        }
                         const caseDetails = getCaseDetails(parseInt(caseId));
                         return caseDetails ? `${caseDetails.accountNumber} - ${caseDetails.caseName}` : 'Case Documents';
                       })()}
                     </Badge>
-                    <span className="text-sm text-gray-500">({groupedDocuments[caseId].length} files)</span>
+                    <span className="text-sm text-gray-500">({caseDocuments.length} files)</span>
                   </div>
                   
                   <div className="space-y-2">
-                    {groupedDocuments[caseId].map((doc: any) => (
+                    {caseDocuments.map((doc: any) => (
                       <div
                         key={doc.id}
                         className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border gap-2 sm:gap-4"

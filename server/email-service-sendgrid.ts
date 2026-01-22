@@ -6,13 +6,6 @@ import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.m4v', '.wmv'];
-
-function isVideoFile(fileName: string): boolean {
-  const ext = path.extname(fileName).toLowerCase();
-  return VIDEO_EXTENSIONS.includes(ext);
-}
-
 // APIM endpoint for SendGrid
 const APIM_ENDPOINT = 'https://acclaim-api-apim.azure-api.net/sendgrid/v3/mail/send';
 
@@ -707,25 +700,18 @@ Please log in to the Acclaim Portal to view and respond to this message.
         attachments.push(logoBase64);
       }
 
-      // Add user attachment if present (convert to base64) - skip video files (too large for email)
+      // Add user attachment if present (convert to base64)
       if (data.attachment && data.attachment.filePath) {
-        const isVideoFile = VIDEO_EXTENSIONS.some(ext => 
-          data.attachment!.fileName.toLowerCase().endsWith(ext)
-        );
-        if (isVideoFile) {
-          console.log(`[Email] Skipping video attachment in user-to-admin message (too large for email): ${data.attachment.fileName}`);
-        } else {
-          try {
-            const fileContent = fs.readFileSync(data.attachment.filePath);
-            attachments.push({
-              content: fileContent.toString('base64'),
-              filename: data.attachment.fileName,
-              type: data.attachment.fileType || 'application/octet-stream',
-              disposition: 'attachment'
-            });
-          } catch (error) {
-            console.error('Failed to read attachment file:', error);
-          }
+        try {
+          const fileContent = fs.readFileSync(data.attachment.filePath);
+          attachments.push({
+            content: fileContent.toString('base64'),
+            filename: data.attachment.fileName,
+            type: data.attachment.fileType || 'application/octet-stream',
+            disposition: 'attachment'
+          });
+        } catch (error) {
+          console.error('Failed to read attachment file:', error);
         }
       }
 
@@ -886,26 +872,19 @@ Portal: https://acclaim-api.azurewebsites.net/auth
         attachments.push(logoBase64);
       }
 
-      // Add user attachment if present (convert to base64) - skip video files (too large for email)
+      // Add user attachment if present (convert to base64)
       if (data.attachment && data.attachment.filePath) {
-        const isVideoFile = VIDEO_EXTENSIONS.some(ext => 
-          data.attachment!.fileName.toLowerCase().endsWith(ext)
-        );
-        if (isVideoFile) {
-          console.log(`[Email] Skipping video attachment in admin-to-user message (too large for email): ${data.attachment.fileName}`);
-        } else {
-          try {
-            const fileContent = fs.readFileSync(data.attachment.filePath);
-            attachments.push({
-              content: fileContent.toString('base64'),
-              filename: data.attachment.fileName,
-              type: data.attachment.fileType || 'application/octet-stream',
-              disposition: 'attachment'
-            });
-            console.log(`📎 Including attachment in admin-to-user email: ${data.attachment.fileName}`);
-          } catch (error) {
-            console.error('Failed to read attachment file for admin-to-user email:', error);
-          }
+        try {
+          const fileContent = fs.readFileSync(data.attachment.filePath);
+          attachments.push({
+            content: fileContent.toString('base64'),
+            filename: data.attachment.fileName,
+            type: data.attachment.fileType || 'application/octet-stream',
+            disposition: 'attachment'
+          });
+          console.log(`📎 Including attachment in admin-to-user email: ${data.attachment.fileName}`);
+        } catch (error) {
+          console.error('Failed to read attachment file for admin-to-user email:', error);
         }
       }
 
@@ -1886,16 +1865,9 @@ A detailed Excel spreadsheet and all uploaded files are attached to this email.
         console.error('Failed to read Excel file:', error);
       }
 
-      // Add uploaded files to attachments (skip video files - too large for email)
+      // Add uploaded files to attachments
       if (data.uploadedFiles && data.uploadedFiles.length > 0) {
         data.uploadedFiles.forEach(file => {
-          const isVideoFile = VIDEO_EXTENSIONS.some(ext => 
-            file.fileName.toLowerCase().endsWith(ext)
-          );
-          if (isVideoFile) {
-            console.log(`[Email] Skipping video attachment in case submission (too large for email): ${file.fileName}`);
-            return;
-          }
           try {
             const fileContent = fs.readFileSync(file.filePath);
             attachments.push({
@@ -2074,24 +2046,20 @@ Please log in to the Acclaim Portal to view this document.
         attachments.push(logoBase64);
       }
 
-      // Attach the uploaded document if file path is provided (skip video files - too large for email)
+      // Attach the uploaded document if file path is provided
       if (data.filePath && fs.existsSync(data.filePath)) {
-        if (isVideoFile(data.fileName)) {
-          console.log(`[Email] Skipping video attachment (too large for email): ${data.fileName}`);
-        } else {
-          try {
-            const fileContent = fs.readFileSync(data.filePath);
-            const base64Content = fileContent.toString('base64');
-            attachments.push({
-              content: base64Content,
-              filename: data.fileName,
-              type: data.fileType || 'application/octet-stream',
-              disposition: 'attachment'
-            });
-            console.log(`[Email] Attached document: ${data.fileName}`);
-          } catch (attachError) {
-            console.error(`[Email] Failed to attach document: ${attachError}`);
-          }
+        try {
+          const fileContent = fs.readFileSync(data.filePath);
+          const base64Content = fileContent.toString('base64');
+          attachments.push({
+            content: base64Content,
+            filename: data.fileName,
+            type: data.fileType || 'application/octet-stream',
+            disposition: 'attachment'
+          });
+          console.log(`[Email] Attached document: ${data.fileName}`);
+        } catch (attachError) {
+          console.error(`[Email] Failed to attach document: ${attachError}`);
         }
       }
 
@@ -2237,24 +2205,20 @@ Portal: https://acclaim-api.azurewebsites.net/auth
         attachments.push(logoBase64);
       }
 
-      // Attach the document if file path is provided (skip video files - too large for email)
+      // Attach the uploaded document if file path is provided
       if (data.filePath && fs.existsSync(data.filePath)) {
-        if (isVideoFile(data.fileName)) {
-          console.log(`[Email] Skipping video attachment for user (too large for email): ${data.fileName}`);
-        } else {
-          try {
-            const fileContent = fs.readFileSync(data.filePath);
-            const base64Content = fileContent.toString('base64');
-            attachments.push({
-              content: base64Content,
-              filename: data.fileName,
-              type: data.fileType || 'application/octet-stream',
-              disposition: 'attachment'
-            });
-            console.log(`[Email] Attached document for user: ${data.fileName}`);
-          } catch (attachError) {
-            console.error(`[Email] Failed to attach document for user: ${attachError}`);
-          }
+        try {
+          const fileContent = fs.readFileSync(data.filePath);
+          const base64Content = fileContent.toString('base64');
+          attachments.push({
+            content: base64Content,
+            filename: data.fileName,
+            type: data.fileType || 'application/octet-stream',
+            disposition: 'attachment'
+          });
+          console.log(`[Email] Attached document for user: ${data.fileName}`);
+        } catch (attachError) {
+          console.error(`[Email] Failed to attach document for user: ${attachError}`);
         }
       }
 

@@ -367,7 +367,7 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
       
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cases", caseData.id, "documents"] });
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       setSelectedFile(null);
@@ -377,19 +377,10 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
       const fileInput = document.getElementById("file-upload") as HTMLInputElement;
       if (fileInput) fileInput.value = "";
       
-      // Show retention message for video files
-      if (data?.isVideo && data?.retentionMessage) {
-        toast({
-          title: "Video Uploaded",
-          description: data.retentionMessage,
-          duration: 8000,
-        });
-      } else {
-        toast({
-          title: "Success",
-          description: "Document uploaded successfully",
-        });
-      }
+      toast({
+        title: "Success",
+        description: "Document uploaded successfully",
+      });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -1407,20 +1398,18 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                     id="file-upload"
                     type="file"
                     onChange={handleFileSelect}
-                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.mp4,.webm,.mov,.avi,.mkv,.m4v,.wmv"
+                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
                     className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 file:cursor-pointer cursor-pointer"
                   />
                   {selectedFile && (
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div className="flex items-center space-x-3">
                           <FileText className="h-5 w-5 text-acclaim-teal" />
                           <div>
                             <p className="font-medium text-sm">{selectedFile.name}</p>
                             <p className="text-xs text-gray-500">
-                              {selectedFile.size >= 1024 * 1024 
-                                ? `${(selectedFile.size / (1024 * 1024)).toFixed(1)}MB`
-                                : `${Math.round(selectedFile.size / 1024)}KB`}
+                              {Math.round(selectedFile.size / 1024)}KB
                             </p>
                           </div>
                         </div>
@@ -1434,16 +1423,6 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                           {uploadDocumentMutation.isPending ? "Uploading..." : "Upload"}
                         </Button>
                       </div>
-                      {/* Video retention notice */}
-                      {['.mp4', '.webm', '.mov', '.avi', '.mkv', '.m4v', '.wmv'].some(ext => 
-                        selectedFile.name.toLowerCase().endsWith(ext)
-                      ) && (
-                        <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
-                          <p className="text-sm text-amber-800 dark:text-amber-200">
-                            <strong>Video Retention Notice:</strong> This video will be retained for 7 days, or 72 hours after {user?.isAdmin ? 'the user' : 'an admin'} downloads it. Please ensure it is downloaded before the retention period expires.
-                          </p>
-                        </div>
-                      )}
                       <div>
                         <Label htmlFor="case-custom-filename" className="text-sm text-acclaim-teal font-medium">Rename file (optional)</Label>
                         <div className="flex items-center gap-1 mt-1">
@@ -1679,25 +1658,13 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                     id="message-attachment"
                     type="file"
                     onChange={(e) => setMessageAttachment(e.target.files?.[0] || null)}
-                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar,.xls,.xlsx,.csv,.mp4,.webm,.mov,.avi,.mkv,.m4v,.wmv"
+                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar,.xls,.xlsx,.csv"
                     className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 file:cursor-pointer cursor-pointer"
                   />
                   {messageAttachment && (
-                    <div className="mt-2 space-y-2">
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Selected: {messageAttachment.name} ({(messageAttachment.size / 1024 / 1024).toFixed(2)} MB)
-                      </p>
-                      {/* Video retention notice */}
-                      {['.mp4', '.webm', '.mov', '.avi', '.mkv', '.m4v', '.wmv'].some(ext => 
-                        messageAttachment.name.toLowerCase().endsWith(ext)
-                      ) && (
-                        <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
-                          <p className="text-sm text-amber-800 dark:text-amber-200">
-                            <strong>Video Retention Notice:</strong> This video will be retained for 7 days, or 72 hours after {user?.isAdmin ? 'the user' : 'an admin'} downloads it. Please ensure it is downloaded before the retention period expires.
-                          </p>
-                        </div>
-                      )}
-                    </div>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Selected: {messageAttachment.name} ({(messageAttachment.size / 1024 / 1024).toFixed(2)} MB)
+                    </p>
                   )}
                 </div>
                 
