@@ -4505,7 +4505,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all document IDs to verify which videos still exist
       const documentIds = new Set<number>();
       for (const video of videos) {
-        const doc = await storage.getDocument(video.documentId);
+        const doc = await storage.getDocumentById(video.documentId);
         if (doc) {
           documentIds.add(video.documentId);
         }
