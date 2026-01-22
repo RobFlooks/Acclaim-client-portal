@@ -33,6 +33,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 
 interface AuditLog {
@@ -136,9 +137,91 @@ export default function AuditManagement() {
     retry: false,
   });
 
-  // State for video search
+  // State for video search and filtering
   const [videoSearchTerm, setVideoSearchTerm] = useState("");
   const [videoStatusFilter, setVideoStatusFilter] = useState<'all' | 'downloaded' | 'not_downloaded'>('all');
+  const [videoUploadDateFilter, setVideoUploadDateFilter] = useState("");
+  const [videoDownloadDateFilter, setVideoDownloadDateFilter] = useState("");
+  const [selectedVideos, setSelectedVideos] = useState<Set<number>>(new Set());
+  const [deletingVideos, setDeletingVideos] = useState(false);
+
+  // Delete video mutation
+  const deleteVideoMutation = useMutation({
+    mutationFn: async (videoId: number) => {
+      const res = await apiRequest("DELETE", `/api/documents/${videoId}`);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to delete video");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/audit/videos"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Delete Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Bulk delete videos
+  const handleBulkDeleteVideos = async () => {
+    if (selectedVideos.size === 0) {
+      toast({
+        title: "No Videos Selected",
+        description: "Please select at least one video to delete",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setDeletingVideos(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const videoId of selectedVideos) {
+      try {
+        await deleteVideoMutation.mutateAsync(videoId);
+        successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+
+    setDeletingVideos(false);
+    setSelectedVideos(new Set());
+    
+    toast({
+      title: "Bulk Delete Complete",
+      description: `Successfully deleted ${successCount} video(s)${failCount > 0 ? `, ${failCount} failed` : ''}`,
+    });
+  };
+
+  // Toggle video selection
+  const toggleVideoSelection = (videoId: number) => {
+    const newSelection = new Set(selectedVideos);
+    if (newSelection.has(videoId)) {
+      newSelection.delete(videoId);
+    } else {
+      newSelection.add(videoId);
+    }
+    setSelectedVideos(newSelection);
+  };
+
+  // Select all filtered videos
+  const selectAllFilteredVideos = (filteredVideos: VideoFile[]) => {
+    const newSelection = new Set(filteredVideos.map(v => v.id));
+    setSelectedVideos(newSelection);
+  };
+
+  // Clear all selections
+  const clearVideoSelection = () => {
+    setSelectedVideos(new Set());
+  };
 
   // Cleanup mutation
   const cleanupMutation = useMutation({
@@ -953,31 +1036,73 @@ export default function AuditManagement() {
                   Video File Tracking
                 </CardTitle>
                 <CardDescription>
-                  Track video file uploads and downloads. Shows whether the intended recipient (admin or user) has downloaded the video.
+                  Track video file uploads and downloads. Select videos to delete individually or in bulk.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {/* Search and filter controls */}
-                <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      placeholder="Search by filename, case, organisation, or uploader..."
-                      value={videoSearchTerm}
-                      onChange={(e) => setVideoSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
+                <div className="space-y-4 mb-6">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <Input
+                        placeholder="Search by filename, case, organisation, or uploader..."
+                        value={videoSearchTerm}
+                        onChange={(e) => setVideoSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    <Select value={videoStatusFilter} onValueChange={(value) => setVideoStatusFilter(value as any)}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Filter by status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Videos</SelectItem>
+                        <SelectItem value="downloaded">Downloaded</SelectItem>
+                        <SelectItem value="not_downloaded">Not Downloaded</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <Select value={videoStatusFilter} onValueChange={(value) => setVideoStatusFilter(value as any)}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Filter by status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Videos</SelectItem>
-                      <SelectItem value="downloaded">Downloaded</SelectItem>
-                      <SelectItem value="not_downloaded">Not Downloaded</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  
+                  {/* Date filters */}
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex-1">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                        Uploaded before:
+                      </label>
+                      <Input
+                        type="date"
+                        value={videoUploadDateFilter}
+                        onChange={(e) => setVideoUploadDateFilter(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                        Downloaded before (for downloaded videos):
+                      </label>
+                      <Input
+                        type="date"
+                        value={videoDownloadDateFilter}
+                        onChange={(e) => setVideoDownloadDateFilter(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setVideoUploadDateFilter("");
+                          setVideoDownloadDateFilter("");
+                          setVideoSearchTerm("");
+                          setVideoStatusFilter("all");
+                        }}
+                      >
+                        Clear Filters
+                      </Button>
+                    </div>
+                  </div>
                 </div>
 
                 {videosLoading ? (
@@ -1013,109 +1138,201 @@ export default function AuditManagement() {
                       </div>
                     </div>
 
-                    {/* Videos table */}
-                    <div className="border rounded-lg overflow-hidden">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>File Name</TableHead>
-                            <TableHead className="hidden md:table-cell">Case</TableHead>
-                            <TableHead className="hidden lg:table-cell">Organisation</TableHead>
-                            <TableHead>Uploaded By</TableHead>
-                            <TableHead className="hidden sm:table-cell">Upload Date</TableHead>
-                            <TableHead className="text-center">Status</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {videoFiles
-                            .filter(video => {
-                              // Apply search filter
-                              if (videoSearchTerm) {
-                                const search = videoSearchTerm.toLowerCase();
-                                const matches = 
-                                  video.fileName.toLowerCase().includes(search) ||
-                                  video.caseName?.toLowerCase().includes(search) ||
-                                  video.organisationName.toLowerCase().includes(search) ||
-                                  video.uploaderName.toLowerCase().includes(search) ||
-                                  video.uploaderEmail.toLowerCase().includes(search);
-                                if (!matches) return false;
-                              }
-                              // Apply status filter
-                              if (videoStatusFilter === 'downloaded' && !video.downloaded) return false;
-                              if (videoStatusFilter === 'not_downloaded' && video.downloaded) return false;
-                              return true;
-                            })
-                            .map((video) => (
-                              <TableRow key={video.id}>
-                                <TableCell>
-                                  <div className="flex items-center gap-2">
-                                    <Video className="w-4 h-4 text-purple-500 flex-shrink-0" />
-                                    <div>
-                                      <div className="font-medium truncate max-w-[200px]" title={video.fileName}>
-                                        {video.fileName}
-                                      </div>
-                                      {video.fileSize && (
-                                        <div className="text-xs text-gray-500">
-                                          {(video.fileSize / (1024 * 1024)).toFixed(2)} MB
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </TableCell>
-                                <TableCell className="hidden md:table-cell">
-                                  {video.caseName ? (
-                                    <span className="text-sm">{video.caseName}</span>
-                                  ) : (
-                                    <span className="text-gray-400 text-sm">No case</span>
-                                  )}
-                                </TableCell>
-                                <TableCell className="hidden lg:table-cell">
-                                  <span className="text-sm">{video.organisationName}</span>
-                                </TableCell>
-                                <TableCell>
-                                  <div>
-                                    <div className="font-medium text-sm">{video.uploaderName}</div>
-                                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                                      <Badge 
-                                        variant="outline" 
-                                        className={video.uploaderIsAdmin 
-                                          ? "text-purple-600 border-purple-300 dark:text-purple-400 dark:border-purple-600" 
-                                          : "text-blue-600 border-blue-300 dark:text-blue-400 dark:border-blue-600"
+                    {/* Selection controls */}
+                    {(() => {
+                      const filteredVideos = videoFiles.filter(video => {
+                        if (videoSearchTerm) {
+                          const search = videoSearchTerm.toLowerCase();
+                          const matches = 
+                            video.fileName.toLowerCase().includes(search) ||
+                            video.caseName?.toLowerCase().includes(search) ||
+                            video.organisationName.toLowerCase().includes(search) ||
+                            video.uploaderName.toLowerCase().includes(search) ||
+                            video.uploaderEmail.toLowerCase().includes(search);
+                          if (!matches) return false;
+                        }
+                        if (videoStatusFilter === 'downloaded' && !video.downloaded) return false;
+                        if (videoStatusFilter === 'not_downloaded' && video.downloaded) return false;
+                        if (videoUploadDateFilter && video.createdAt) {
+                          const uploadDate = new Date(video.createdAt);
+                          const filterDate = new Date(videoUploadDateFilter);
+                          filterDate.setHours(23, 59, 59, 999);
+                          if (uploadDate > filterDate) return false;
+                        }
+                        if (videoDownloadDateFilter && video.downloaded && video.downloadInfo?.downloadedAt) {
+                          const downloadDate = new Date(video.downloadInfo.downloadedAt);
+                          const filterDate = new Date(videoDownloadDateFilter);
+                          filterDate.setHours(23, 59, 59, 999);
+                          if (downloadDate > filterDate) return false;
+                        }
+                        return true;
+                      });
+
+                      return (
+                        <>
+                          <div className="flex flex-wrap items-center gap-2 mb-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => selectAllFilteredVideos(filteredVideos)}
+                              disabled={filteredVideos.length === 0}
+                            >
+                              Select All ({filteredVideos.length})
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={clearVideoSelection}
+                              disabled={selectedVideos.size === 0}
+                            >
+                              Clear Selection
+                            </Button>
+                            {selectedVideos.size > 0 && (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={handleBulkDeleteVideos}
+                                disabled={deletingVideos}
+                              >
+                                {deletingVideos ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Deleting...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete Selected ({selectedVideos.size})
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                          </div>
+
+                          {/* Videos table */}
+                          <div className="border rounded-lg overflow-hidden">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead className="w-10">
+                                    <Checkbox 
+                                      checked={filteredVideos.length > 0 && filteredVideos.every(v => selectedVideos.has(v.id))}
+                                      onCheckedChange={(checked) => {
+                                        if (checked) {
+                                          selectAllFilteredVideos(filteredVideos);
+                                        } else {
+                                          clearVideoSelection();
                                         }
-                                      >
-                                        {video.uploaderIsAdmin ? 'Admin' : 'User'}
-                                      </Badge>
-                                    </div>
-                                  </div>
-                                </TableCell>
-                                <TableCell className="hidden sm:table-cell text-sm text-gray-500">
-                                  {video.createdAt ? format(new Date(video.createdAt), 'dd/MM/yyyy HH:mm') : '-'}
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  {video.downloaded ? (
-                                    <div className="flex flex-col items-center gap-1">
-                                      <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 flex items-center gap-1">
-                                        <CheckCircle className="w-3 h-3" />
-                                        Downloaded
-                                      </Badge>
-                                      {video.downloadInfo && (
-                                        <div className="text-xs text-gray-500" title={`Downloaded by ${video.downloadInfo.downloadedBy}`}>
-                                          {format(new Date(video.downloadInfo.downloadedAt), 'dd/MM HH:mm')}
+                                      }}
+                                    />
+                                  </TableHead>
+                                  <TableHead>File Name</TableHead>
+                                  <TableHead className="hidden md:table-cell">Case</TableHead>
+                                  <TableHead className="hidden lg:table-cell">Organisation</TableHead>
+                                  <TableHead>Uploaded By</TableHead>
+                                  <TableHead className="hidden sm:table-cell">Upload Date</TableHead>
+                                  <TableHead className="text-center">Status</TableHead>
+                                  <TableHead className="w-20">Actions</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {filteredVideos.map((video) => (
+                                  <TableRow key={video.id} className={selectedVideos.has(video.id) ? "bg-blue-50 dark:bg-blue-900/20" : ""}>
+                                    <TableCell>
+                                      <Checkbox 
+                                        checked={selectedVideos.has(video.id)}
+                                        onCheckedChange={() => toggleVideoSelection(video.id)}
+                                      />
+                                    </TableCell>
+                                    <TableCell>
+                                      <div className="flex items-center gap-2">
+                                        <Video className="w-4 h-4 text-purple-500 flex-shrink-0" />
+                                        <div>
+                                          <div className="font-medium truncate max-w-[200px]" title={video.fileName}>
+                                            {video.fileName}
+                                          </div>
+                                          {video.fileSize && (
+                                            <div className="text-xs text-gray-500">
+                                              {(video.fileSize / (1024 * 1024)).toFixed(2)} MB
+                                            </div>
+                                          )}
                                         </div>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell className="hidden md:table-cell">
+                                      {video.caseName ? (
+                                        <span className="text-sm">{video.caseName}</span>
+                                      ) : (
+                                        <span className="text-gray-400 text-sm">No case</span>
                                       )}
-                                    </div>
-                                  ) : (
-                                    <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 flex items-center gap-1">
-                                      <XCircle className="w-3 h-3" />
-                                      Pending
-                                    </Badge>
-                                  )}
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                        </TableBody>
-                      </Table>
-                    </div>
+                                    </TableCell>
+                                    <TableCell className="hidden lg:table-cell">
+                                      <span className="text-sm">{video.organisationName}</span>
+                                    </TableCell>
+                                    <TableCell>
+                                      <div>
+                                        <div className="font-medium text-sm">{video.uploaderName}</div>
+                                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                                          <Badge 
+                                            variant="outline" 
+                                            className={video.uploaderIsAdmin 
+                                              ? "text-purple-600 border-purple-300 dark:text-purple-400 dark:border-purple-600" 
+                                              : "text-blue-600 border-blue-300 dark:text-blue-400 dark:border-blue-600"
+                                            }
+                                          >
+                                            {video.uploaderIsAdmin ? 'Admin' : 'User'}
+                                          </Badge>
+                                        </div>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell className="hidden sm:table-cell text-sm text-gray-500">
+                                      {video.createdAt ? format(new Date(video.createdAt), 'dd/MM/yyyy HH:mm') : '-'}
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                      {video.downloaded ? (
+                                        <div className="flex flex-col items-center gap-1">
+                                          <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 flex items-center gap-1">
+                                            <CheckCircle className="w-3 h-3" />
+                                            Downloaded
+                                          </Badge>
+                                          {video.downloadInfo && (
+                                            <div className="text-xs text-gray-500" title={`Downloaded by ${video.downloadInfo.downloadedBy} (${video.downloadInfo.downloadedByEmail})`}>
+                                              {format(new Date(video.downloadInfo.downloadedAt), 'dd/MM/yyyy HH:mm')}
+                                              <br />
+                                              <span className="text-gray-400">by {video.downloadInfo.downloadedBy}</span>
+                                            </div>
+                                          )}
+                                        </div>
+                                      ) : (
+                                        <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 flex items-center gap-1">
+                                          <XCircle className="w-3 h-3" />
+                                          Pending
+                                        </Badge>
+                                      )}
+                                    </TableCell>
+                                    <TableCell>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                        onClick={() => {
+                                          if (confirm(`Are you sure you want to delete "${video.fileName}"?`)) {
+                                            deleteVideoMutation.mutate(video.id);
+                                          }
+                                        }}
+                                        disabled={deleteVideoMutation.isPending}
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </>
+                      );
+                    })()}
 
                     {/* Legend */}
                     <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -1124,6 +1341,7 @@ export default function AuditManagement() {
                         <li>• If an <strong>admin</strong> uploads a video → Shows "Downloaded" when a <strong>user</strong> downloads it</li>
                         <li>• If a <strong>user</strong> uploads a video → Shows "Downloaded" when an <strong>admin</strong> downloads it</li>
                         <li>• Videos are not attached to notification emails due to size constraints</li>
+                        <li>• Use date filters to find old videos, then select and delete in bulk</li>
                       </ul>
                     </div>
                   </>
