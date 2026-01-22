@@ -575,14 +575,24 @@ export default function Messages() {
                         setSelectedFile(e.target.files?.[0] || null);
                         setCustomFileName("");
                       }}
-                      accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar,.xls,.xlsx,.csv"
+                      accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar,.xls,.xlsx,.csv,.mp4,.webm,.mov,.avi,.mkv,.m4v,.wmv"
                       className="block w-full text-sm text-gray-500 mt-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 file:cursor-pointer cursor-pointer"
                     />
                     {selectedFile && (
                       <div className="mt-2 space-y-2">
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
                           Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
                         </p>
+                        {/* Video retention notice */}
+                        {['.mp4', '.webm', '.mov', '.avi', '.mkv', '.m4v', '.wmv'].some(ext => 
+                          selectedFile.name.toLowerCase().endsWith(ext)
+                        ) && (
+                          <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
+                            <p className="text-sm text-amber-800 dark:text-amber-200">
+                              <strong>Video Retention Notice:</strong> This video will be retained for 14 days, or 7 days after {user?.isAdmin ? 'the user' : 'an admin'} downloads it. Please ensure it is downloaded before the retention period expires.
+                            </p>
+                          </div>
+                        )}
                         <div className="flex items-center gap-2">
                           <div className="flex-1">
                             <Label htmlFor="customFileName" className="text-sm font-bold text-acclaim-teal">

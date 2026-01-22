@@ -1679,13 +1679,25 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                     id="message-attachment"
                     type="file"
                     onChange={(e) => setMessageAttachment(e.target.files?.[0] || null)}
-                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar,.xls,.xlsx,.csv"
+                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar,.xls,.xlsx,.csv,.mp4,.webm,.mov,.avi,.mkv,.m4v,.wmv"
                     className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 file:cursor-pointer cursor-pointer"
                   />
                   {messageAttachment && (
-                    <p className="text-sm text-gray-600 mt-1">
-                      Selected: {messageAttachment.name} ({(messageAttachment.size / 1024 / 1024).toFixed(2)} MB)
-                    </p>
+                    <div className="mt-2 space-y-2">
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        Selected: {messageAttachment.name} ({(messageAttachment.size / 1024 / 1024).toFixed(2)} MB)
+                      </p>
+                      {/* Video retention notice */}
+                      {['.mp4', '.webm', '.mov', '.avi', '.mkv', '.m4v', '.wmv'].some(ext => 
+                        messageAttachment.name.toLowerCase().endsWith(ext)
+                      ) && (
+                        <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
+                          <p className="text-sm text-amber-800 dark:text-amber-200">
+                            <strong>Video Retention Notice:</strong> This video will be retained for 14 days, or 7 days after {user?.isAdmin ? 'the user' : 'an admin'} downloads it. Please ensure it is downloaded before the retention period expires.
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
                 
