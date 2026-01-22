@@ -4501,13 +4501,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allUsers = await storage.getAllUsers();
       const allOrgs = await storage.getAllOrganisations();
       const allCases = await storage.getAllCases();
-      const allDocuments = await storage.getDocumentsByOrganisationAdmin();
+      
+      // Get all document IDs to verify which videos still exist
+      const documentIds = new Set<number>();
+      for (const video of videos) {
+        const doc = await storage.getDocument(video.documentId);
+        if (doc) {
+          documentIds.add(video.documentId);
+        }
+      }
       
       // Create lookup maps
       const userMap = new Map(allUsers.map(u => [u.id, u]));
       const orgMap = new Map(allOrgs.map(o => [o.id, o]));
       const caseMap = new Map(allCases.map(c => [c.id, c]));
-      const documentIds = new Set(allDocuments.map(d => d.id));
       
       // Filter out videos whose documents no longer exist in the database
       const validVideos = videos.filter(video => {
