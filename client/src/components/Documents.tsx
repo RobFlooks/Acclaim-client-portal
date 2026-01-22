@@ -84,12 +84,17 @@ export default function Documents() {
     // Handle nested document structure
     const docData = doc.documents || doc;
     
-    // Exclude documents without a caseId (general documents)
-    if (!docData.caseId) {
-      return false;
-    }
+    // Include both case documents and general documents (caseId is null)
+    const caseDetails = docData.caseId ? getCaseDetails(docData.caseId) : null;
     
-    const caseDetails = getCaseDetails(docData.caseId);
+    // For general documents, match on filename, type, or "general"
+    if (!docData.caseId) {
+      return (
+        (docData.fileName && docData.fileName.toLowerCase().includes(searchLower)) ||
+        (docData.fileType && docData.fileType.toLowerCase().includes(searchLower)) ||
+        "general".includes(searchLower)
+      );
+    }
     
     return (
       (docData.fileName && docData.fileName.toLowerCase().includes(searchLower)) ||
@@ -335,21 +340,25 @@ export default function Documents() {
   const groupDocumentsByCase = (docs: any[]) => {
     const grouped = docs.reduce((acc: any, doc: any) => {
       const docData = doc.documents || doc;
-      // Only include documents that have a caseId (exclude general documents)
-      if (!docData.caseId) {
-        return acc;
+      // Use "general" key for documents without a caseId
+      const key = docData.caseId ? docData.caseId.toString() : "general";
+      if (!acc[key]) {
+        acc[key] = [];
       }
-      const caseId = docData.caseId;
-      if (!acc[caseId]) {
-        acc[caseId] = [];
-      }
-      acc[caseId].push(docData);
+      acc[key].push(docData);
       return acc;
     }, {});
     return grouped;
   };
 
   const groupedDocuments = groupDocumentsByCase(paginatedDocuments);
+  
+  // Sort grouped documents to show case documents first, then general documents
+  const sortedGroupKeys = Object.keys(groupedDocuments).sort((a, b) => {
+    if (a === "general") return 1;
+    if (b === "general") return -1;
+    return 0;
+  });
 
   return (
     <div className="space-y-6">
@@ -580,22 +589,30 @@ export default function Documents() {
                 </div>
               ))}
             </div>
-          ) : Object.keys(groupedDocuments).length > 0 ? (
+          ) : sortedGroupKeys.length > 0 ? (
             <div className="space-y-6">
-              {Object.entries(groupedDocuments).map(([caseId, caseDocuments]: [string, any]) => (
+              {sortedGroupKeys.map((caseId) => (
                 <div key={caseId} className="space-y-3">
                   <div className="flex items-center space-x-2">
-                    <Badge variant="outline" className="text-acclaim-teal border-acclaim-teal">
+                    <Badge 
+                      variant="outline" 
+                      className={caseId === "general" 
+                        ? "text-amber-600 border-amber-500 dark:text-amber-400 dark:border-amber-600" 
+                        : "text-acclaim-teal border-acclaim-teal"}
+                    >
                       {(() => {
+                        if (caseId === "general") {
+                          return "General Documents";
+                        }
                         const caseDetails = getCaseDetails(parseInt(caseId));
                         return caseDetails ? `${caseDetails.accountNumber} - ${caseDetails.caseName}` : 'Case Documents';
                       })()}
                     </Badge>
-                    <span className="text-sm text-gray-500">({caseDocuments.length} files)</span>
+                    <span className="text-sm text-gray-500">({groupedDocuments[caseId].length} files)</span>
                   </div>
                   
                   <div className="space-y-2">
-                    {caseDocuments.map((doc: any) => (
+                    {groupedDocuments[caseId].map((doc: any) => (
                       <div
                         key={doc.id}
                         className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border gap-2 sm:gap-4"
