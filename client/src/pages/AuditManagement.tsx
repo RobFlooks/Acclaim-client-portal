@@ -947,8 +947,8 @@ export default function AuditManagement() {
                         Video File Retention
                       </CardTitle>
                       <CardDescription>
-                        Track video files and their retention status. Videos are deleted 14 days after upload if not downloaded, 
-                        or 7 days after download by the required party.
+                        Track video files and their retention status. Videos are deleted 7 days after upload if not downloaded, 
+                        or 72 hours after download by the required party.
                       </CardDescription>
                     </div>
                     <Button
@@ -1081,7 +1081,7 @@ export default function AuditManagement() {
                       <div className="text-sm text-gray-500 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
                         <strong>Retention Policy:</strong> Videos are automatically deleted after the retention period expires. 
                         Cleanup runs every 6 hours. Videos marked as "Awaiting" require the opposite party 
-                        (admin or user) to download them to start the 7-day post-download retention period.
+                        (admin or user) to download them to start the 72-hour post-download retention period.
                       </div>
                     </div>
                   )}

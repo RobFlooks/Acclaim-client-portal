@@ -443,7 +443,7 @@ export default function Documents() {
                         ) && (
                           <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
                             <p className="text-sm text-amber-800 dark:text-amber-200">
-                              <strong>Video Retention Notice:</strong> This video will be retained for 14 days, or 7 days after {user?.isAdmin ? 'the user' : 'an admin'} downloads it. Please ensure it is downloaded before the retention period expires.
+                              <strong>Video Retention Notice:</strong> This video will be retained for 7 days, or 72 hours after {user?.isAdmin ? 'the user' : 'an admin'} downloads it. Please ensure it is downloaded before the retention period expires.
                             </p>
                           </div>
                         )}

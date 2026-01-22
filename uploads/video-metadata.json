@@ -1,57 +1,5 @@
 {
   "videos": {
-    "53": {
-      "filePath": "uploads/185992852fdfae2f580a72b19a66dc5c",
-      "fileName": "36716291 CCTV (5).MP4",
-      "uploadedAt": "2026-01-22T13:58:31.174Z",
-      "uploadedByUserId": "jZJVUVcC3I",
-      "uploadedByAdmin": true,
-      "documentId": 53,
-      "organisationId": 4,
-      "caseId": 14,
-      "downloadedByRequiredParty": false,
-      "downloadedAt": null,
-      "requiredDownloaderType": "user"
-    },
-    "54": {
-      "filePath": "uploads/387c587c65982327830d47cbc55564ac",
-      "fileName": "36716291 CCTV (5).MP4",
-      "uploadedAt": "2026-01-22T14:04:17.935Z",
-      "uploadedByUserId": "jZJVUVcC3I",
-      "uploadedByAdmin": true,
-      "documentId": 54,
-      "organisationId": 4,
-      "caseId": 14,
-      "downloadedByRequiredParty": false,
-      "downloadedAt": null,
-      "requiredDownloaderType": "user"
-    },
-    "55": {
-      "filePath": "uploads/8d91c632a843a7a821bf0acab85c5889",
-      "fileName": "36716291 CCTV (5).MP4",
-      "uploadedAt": "2026-01-22T14:09:35.744Z",
-      "uploadedByUserId": "jZJVUVcC3I",
-      "uploadedByAdmin": true,
-      "documentId": 55,
-      "organisationId": 4,
-      "caseId": 14,
-      "downloadedByRequiredParty": false,
-      "downloadedAt": null,
-      "requiredDownloaderType": "user"
-    },
-    "63": {
-      "filePath": "uploads/e3842736b0cfffa75de9ffed8aca9156",
-      "fileName": "76.MP4",
-      "uploadedAt": "2026-01-22T14:45:19.113Z",
-      "uploadedByUserId": "jZJVUVcC3I",
-      "uploadedByAdmin": true,
-      "documentId": 63,
-      "organisationId": 4,
-      "caseId": 14,
-      "downloadedByRequiredParty": false,
-      "downloadedAt": null,
-      "requiredDownloaderType": "user"
-    },
     "64": {
       "filePath": "uploads/79f15389974b4aee56b70cc871bc2234",
       "fileName": "CCTV Evidence.MP4",
@@ -61,8 +9,8 @@
       "documentId": 64,
       "organisationId": 4,
       "caseId": 14,
-      "downloadedByRequiredParty": false,
-      "downloadedAt": null,
+      "downloadedByRequiredParty": true,
+      "downloadedAt": "2026-01-22T15:01:27.941Z",
       "requiredDownloaderType": "user"
     }
   }

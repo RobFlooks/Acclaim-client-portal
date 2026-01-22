@@ -121,7 +121,7 @@ app.use((req, res, next) => {
       // Then run every 6 hours
       setInterval(runVideoCleanup, 6 * 60 * 60 * 1000);
 
-      log("Video retention cleanup scheduled (runs every 6 hours, 14-day undownloaded / 7-day after download)");
+      log("Video retention cleanup scheduled (runs every 6 hours, 7-day undownloaded / 72-hour after download)");
     }
   );
 })();

@@ -4528,8 +4528,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const now = new Date();
-      const RETENTION_DAYS_NO_DOWNLOAD = 14;
-      const RETENTION_DAYS_AFTER_DOWNLOAD = 7;
+      const RETENTION_DAYS_NO_DOWNLOAD = 7;
+      const RETENTION_DAYS_AFTER_DOWNLOAD = 3; // 72 hours
       
       const enrichedVideos = validVideos.map(video => {
         const uploader = userMap.get(video.uploadedByUserId);
