@@ -1407,18 +1407,20 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                     id="file-upload"
                     type="file"
                     onChange={handleFileSelect}
-                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.mp4,.webm,.mov,.avi,.mkv,.m4v,.wmv"
                     className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 file:cursor-pointer cursor-pointer"
                   />
                   {selectedFile && (
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                         <div className="flex items-center space-x-3">
                           <FileText className="h-5 w-5 text-acclaim-teal" />
                           <div>
                             <p className="font-medium text-sm">{selectedFile.name}</p>
                             <p className="text-xs text-gray-500">
-                              {Math.round(selectedFile.size / 1024)}KB
+                              {selectedFile.size >= 1024 * 1024 
+                                ? `${(selectedFile.size / (1024 * 1024)).toFixed(1)}MB`
+                                : `${Math.round(selectedFile.size / 1024)}KB`}
                             </p>
                           </div>
                         </div>
@@ -1432,6 +1434,16 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                           {uploadDocumentMutation.isPending ? "Uploading..." : "Upload"}
                         </Button>
                       </div>
+                      {/* Video retention notice */}
+                      {['.mp4', '.webm', '.mov', '.avi', '.mkv', '.m4v', '.wmv'].some(ext => 
+                        selectedFile.name.toLowerCase().endsWith(ext)
+                      ) && (
+                        <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
+                          <p className="text-sm text-amber-800 dark:text-amber-200">
+                            <strong>Video Retention Notice:</strong> This video will be retained for 14 days, or 7 days after {user?.isAdmin ? 'the user' : 'an admin'} downloads it. Please ensure it is downloaded before the retention period expires.
+                          </p>
+                        </div>
+                      )}
                       <div>
                         <Label htmlFor="case-custom-filename" className="text-sm text-acclaim-teal font-medium">Rename file (optional)</Label>
                         <div className="flex items-center gap-1 mt-1">

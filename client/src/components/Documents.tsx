@@ -411,13 +411,13 @@ export default function Documents() {
                       id="file-input"
                       type="file"
                       onChange={handleFileSelect}
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.txt,.csv,.xlsx,.xls"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.txt,.csv,.xlsx,.xls,.mp4,.webm,.mov,.avi,.mkv,.m4v,.wmv"
                       className="mt-2"
                     />
                     {selectedFile && (
                       <div className="mt-2 space-y-2">
-                        <div className="p-2 bg-gray-50 rounded flex items-center justify-between">
-                          <span className="text-sm text-gray-600">
+                        <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded flex items-center justify-between">
+                          <span className="text-sm text-gray-600 dark:text-gray-300">
                             {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
                           </span>
                           <Button
@@ -428,6 +428,16 @@ export default function Documents() {
                             <X className="h-4 w-4" />
                           </Button>
                         </div>
+                        {/* Video retention notice */}
+                        {['.mp4', '.webm', '.mov', '.avi', '.mkv', '.m4v', '.wmv'].some(ext => 
+                          selectedFile.name.toLowerCase().endsWith(ext)
+                        ) && (
+                          <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
+                            <p className="text-sm text-amber-800 dark:text-amber-200">
+                              <strong>Video Retention Notice:</strong> This video will be retained for 14 days, or 7 days after {user?.isAdmin ? 'the user' : 'an admin'} downloads it. Please ensure it is downloaded before the retention period expires.
+                            </p>
+                          </div>
+                        )}
                         <div>
                           <Label htmlFor="custom-filename" className="text-sm text-acclaim-teal font-medium">Rename file (optional)</Label>
                           <div className="flex items-center gap-1 mt-1">
