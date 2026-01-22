@@ -707,18 +707,25 @@ Please log in to the Acclaim Portal to view and respond to this message.
         attachments.push(logoBase64);
       }
 
-      // Add user attachment if present (convert to base64)
+      // Add user attachment if present (convert to base64) - skip video files (too large for email)
       if (data.attachment && data.attachment.filePath) {
-        try {
-          const fileContent = fs.readFileSync(data.attachment.filePath);
-          attachments.push({
-            content: fileContent.toString('base64'),
-            filename: data.attachment.fileName,
-            type: data.attachment.fileType || 'application/octet-stream',
-            disposition: 'attachment'
-          });
-        } catch (error) {
-          console.error('Failed to read attachment file:', error);
+        const isVideoFile = VIDEO_EXTENSIONS.some(ext => 
+          data.attachment!.fileName.toLowerCase().endsWith(ext)
+        );
+        if (isVideoFile) {
+          console.log(`[Email] Skipping video attachment in user-to-admin message (too large for email): ${data.attachment.fileName}`);
+        } else {
+          try {
+            const fileContent = fs.readFileSync(data.attachment.filePath);
+            attachments.push({
+              content: fileContent.toString('base64'),
+              filename: data.attachment.fileName,
+              type: data.attachment.fileType || 'application/octet-stream',
+              disposition: 'attachment'
+            });
+          } catch (error) {
+            console.error('Failed to read attachment file:', error);
+          }
         }
       }
 
@@ -879,19 +886,26 @@ Portal: https://acclaim-api.azurewebsites.net/auth
         attachments.push(logoBase64);
       }
 
-      // Add user attachment if present (convert to base64)
+      // Add user attachment if present (convert to base64) - skip video files (too large for email)
       if (data.attachment && data.attachment.filePath) {
-        try {
-          const fileContent = fs.readFileSync(data.attachment.filePath);
-          attachments.push({
-            content: fileContent.toString('base64'),
-            filename: data.attachment.fileName,
-            type: data.attachment.fileType || 'application/octet-stream',
-            disposition: 'attachment'
-          });
-          console.log(`📎 Including attachment in admin-to-user email: ${data.attachment.fileName}`);
-        } catch (error) {
-          console.error('Failed to read attachment file for admin-to-user email:', error);
+        const isVideoFile = VIDEO_EXTENSIONS.some(ext => 
+          data.attachment!.fileName.toLowerCase().endsWith(ext)
+        );
+        if (isVideoFile) {
+          console.log(`[Email] Skipping video attachment in admin-to-user message (too large for email): ${data.attachment.fileName}`);
+        } else {
+          try {
+            const fileContent = fs.readFileSync(data.attachment.filePath);
+            attachments.push({
+              content: fileContent.toString('base64'),
+              filename: data.attachment.fileName,
+              type: data.attachment.fileType || 'application/octet-stream',
+              disposition: 'attachment'
+            });
+            console.log(`📎 Including attachment in admin-to-user email: ${data.attachment.fileName}`);
+          } catch (error) {
+            console.error('Failed to read attachment file for admin-to-user email:', error);
+          }
         }
       }
 
@@ -1872,9 +1886,16 @@ A detailed Excel spreadsheet and all uploaded files are attached to this email.
         console.error('Failed to read Excel file:', error);
       }
 
-      // Add uploaded files to attachments
+      // Add uploaded files to attachments (skip video files - too large for email)
       if (data.uploadedFiles && data.uploadedFiles.length > 0) {
         data.uploadedFiles.forEach(file => {
+          const isVideoFile = VIDEO_EXTENSIONS.some(ext => 
+            file.fileName.toLowerCase().endsWith(ext)
+          );
+          if (isVideoFile) {
+            console.log(`[Email] Skipping video attachment in case submission (too large for email): ${file.fileName}`);
+            return;
+          }
           try {
             const fileContent = fs.readFileSync(file.filePath);
             attachments.push({
