@@ -4494,6 +4494,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get video retention data for admin view
+  app.get("/api/admin/video-retention", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const videos = getAllTrackedVideos();
+      const allUsers = await storage.getAllUsers();
+      const allOrgs = await storage.getAllOrganisations();
+      const allCases = await storage.getAllCasesAdmin();
+      
+      // Create lookup maps
+      const userMap = new Map(allUsers.map(u => [u.id, u]));
+      const orgMap = new Map(allOrgs.map(o => [o.id, o]));
+      const caseMap = new Map(allCases.map(c => [c.id, c]));
+      
+      const now = new Date();
+      const RETENTION_DAYS_NO_DOWNLOAD = 14;
+      const RETENTION_DAYS_AFTER_DOWNLOAD = 7;
+      
+      const enrichedVideos = videos.map(video => {
+        const uploader = userMap.get(video.uploadedByUserId);
+        const org = video.organisationId ? orgMap.get(video.organisationId) : null;
+        const caseInfo = video.caseId ? caseMap.get(video.caseId) : null;
+        
+        // Calculate days remaining
+        let daysRemaining: number;
+        let status: string;
+        
+        if (video.downloadedByRequiredParty && video.downloadedAt) {
+          const downloadDate = new Date(video.downloadedAt);
+          const expiryDate = new Date(downloadDate.getTime() + RETENTION_DAYS_AFTER_DOWNLOAD * 24 * 60 * 60 * 1000);
+          daysRemaining = Math.ceil((expiryDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+          status = 'downloaded';
+        } else {
+          const uploadDate = new Date(video.uploadedAt);
+          const expiryDate = new Date(uploadDate.getTime() + RETENTION_DAYS_NO_DOWNLOAD * 24 * 60 * 60 * 1000);
+          daysRemaining = Math.ceil((expiryDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+          status = 'awaiting_download';
+        }
+        
+        return {
+          ...video,
+          uploaderName: uploader ? `${uploader.firstName} ${uploader.lastName}` : 'Unknown',
+          uploaderEmail: uploader?.email || 'Unknown',
+          organisationName: org?.name || null,
+          caseName: caseInfo?.caseName || null,
+          caseAccountNumber: caseInfo?.accountNumber || null,
+          daysRemaining: Math.max(0, daysRemaining),
+          status
+        };
+      });
+      
+      // Sort by days remaining (ascending - most urgent first)
+      enrichedVideos.sort((a, b) => a.daysRemaining - b.daysRemaining);
+      
+      res.json(enrichedVideos);
+    } catch (error) {
+      console.error("Error fetching video retention data:", error);
+      res.status(500).json({ message: "Failed to fetch video retention data" });
+    }
+  });
+
   // Get users with organisation assignments for broadcast feature
   app.get("/api/admin/users/with-organisations", isAuthenticated, isAdmin, isSuperAdmin, async (req: any, res) => {
     try {
