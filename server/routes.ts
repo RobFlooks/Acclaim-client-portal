@@ -4501,17 +4501,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allUsers = await storage.getAllUsers();
       const allOrgs = await storage.getAllOrganisations();
       const allCases = await storage.getAllCases();
+      const allDocuments = await storage.getDocumentsByOrganisationAdmin();
       
       // Create lookup maps
       const userMap = new Map(allUsers.map(u => [u.id, u]));
       const orgMap = new Map(allOrgs.map(o => [o.id, o]));
       const caseMap = new Map(allCases.map(c => [c.id, c]));
+      const documentIds = new Set(allDocuments.map(d => d.id));
+      
+      // Filter out videos whose documents no longer exist in the database
+      const validVideos = videos.filter(video => {
+        const exists = documentIds.has(video.documentId);
+        if (!exists) {
+          // Clean up stale entry from tracking
+          removeVideoTracking(video.documentId);
+          console.log(`[VideoRetention] Cleaned up stale tracking for deleted document ${video.documentId}`);
+        }
+        return exists;
+      });
       
       const now = new Date();
       const RETENTION_DAYS_NO_DOWNLOAD = 14;
       const RETENTION_DAYS_AFTER_DOWNLOAD = 7;
       
-      const enrichedVideos = videos.map(video => {
+      const enrichedVideos = validVideos.map(video => {
         const uploader = userMap.get(video.uploadedByUserId);
         const org = video.organisationId ? orgMap.get(video.organisationId) : null;
         const caseInfo = video.caseId ? caseMap.get(video.caseId) : null;
