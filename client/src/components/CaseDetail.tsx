@@ -32,6 +32,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { formatDate } from "@/lib/utils";
+import { validateFile, ACCEPTED_FILE_TYPES_STRING, MAX_FILE_SIZE_MB, ACCEPTED_FILE_TYPES_DISPLAY } from "@/lib/fileValidation";
 
 interface CaseDetailProps {
   case: any;
@@ -41,8 +42,10 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
   const [newMessage, setNewMessage] = useState("");
   const [messageSubject, setMessageSubject] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileValidationError, setFileValidationError] = useState<string | null>(null);
   const [customFileName, setCustomFileName] = useState("");
   const [messageAttachment, setMessageAttachment] = useState<File | null>(null);
+  const [messageAttachmentError, setMessageAttachmentError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("timeline");
   const [messageSearch, setMessageSearch] = useState("");
   const [documentSearch, setDocumentSearch] = useState("");
@@ -1393,14 +1396,37 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                 <Label htmlFor="file-upload" className="text-sm font-medium">
                   Upload Document
                 </Label>
+                <p className="text-xs text-gray-500 mt-1">
+                  Max {MAX_FILE_SIZE_MB}MB. Formats: {ACCEPTED_FILE_TYPES_DISPLAY}
+                </p>
                 <div className="mt-2 space-y-3">
                   <input
                     id="file-upload"
                     type="file"
-                    onChange={handleFileSelect}
-                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      if (file) {
+                        const validation = validateFile(file);
+                        if (!validation.isValid) {
+                          setFileValidationError(validation.error);
+                          setSelectedFile(null);
+                          setCustomFileName("");
+                          e.target.value = '';
+                          return;
+                        }
+                      }
+                      setFileValidationError(null);
+                      setSelectedFile(file);
+                      setCustomFileName("");
+                    }}
+                    accept={ACCEPTED_FILE_TYPES_STRING}
                     className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 file:cursor-pointer cursor-pointer"
                   />
+                  {fileValidationError && (
+                    <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 p-2 rounded">
+                      {fileValidationError}
+                    </p>
+                  )}
                   {selectedFile && (
                     <div className="space-y-3">
                       <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -1654,13 +1680,34 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
                   <Label htmlFor="message-attachment" className="text-sm font-medium text-gray-700">
                     Attach File (Optional)
                   </Label>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Max {MAX_FILE_SIZE_MB}MB. Formats: {ACCEPTED_FILE_TYPES_DISPLAY}
+                  </p>
                   <input
                     id="message-attachment"
                     type="file"
-                    onChange={(e) => setMessageAttachment(e.target.files?.[0] || null)}
-                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.zip,.rar,.xls,.xlsx,.csv"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      if (file) {
+                        const validation = validateFile(file);
+                        if (!validation.isValid) {
+                          setMessageAttachmentError(validation.error);
+                          setMessageAttachment(null);
+                          e.target.value = '';
+                          return;
+                        }
+                      }
+                      setMessageAttachmentError(null);
+                      setMessageAttachment(file);
+                    }}
+                    accept={ACCEPTED_FILE_TYPES_STRING}
                     className="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 file:cursor-pointer cursor-pointer"
                   />
+                  {messageAttachmentError && (
+                    <p className="text-sm text-red-600 mt-2 bg-red-50 dark:bg-red-900/20 p-2 rounded">
+                      {messageAttachmentError}
+                    </p>
+                  )}
                   {messageAttachment && (
                     <p className="text-sm text-gray-600 mt-1">
                       Selected: {messageAttachment.name} ({(messageAttachment.size / 1024 / 1024).toFixed(2)} MB)

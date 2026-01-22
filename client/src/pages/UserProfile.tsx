@@ -22,6 +22,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { updateUserSchema, changePasswordSchema } from "@shared/schema";
 import { z } from "zod";
 import { Link, useSearch } from "wouter";
+import { validateFile, ACCEPTED_FILE_TYPES_STRING, MAX_FILE_SIZE_MB, ACCEPTED_FILE_TYPES_DISPLAY } from "@/lib/fileValidation";
 
 type UpdateProfileForm = z.infer<typeof updateUserSchema>;
 type ChangePasswordForm = z.infer<typeof changePasswordSchema>;
@@ -88,6 +89,7 @@ export default function UserProfile() {
 
   // Organisation documents state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileValidationError, setFileValidationError] = useState<string | null>(null);
   const [customFileName, setCustomFileName] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [documentSearch, setDocumentSearch] = useState("");
@@ -2085,15 +2087,29 @@ export default function UserProfile() {
                       </Select>
                     </div>
                   )}
+                  <p className="text-xs text-gray-500 mb-2">
+                    Max {MAX_FILE_SIZE_MB}MB. Formats: {ACCEPTED_FILE_TYPES_DISPLAY}
+                  </p>
                   <div className="flex flex-col sm:flex-row items-center gap-4">
                     <Input
                       type="file"
                       onChange={(e) => {
                         const file = e.target.files?.[0] || null;
+                        if (file) {
+                          const validation = validateFile(file);
+                          if (!validation.isValid) {
+                            setFileValidationError(validation.error);
+                            setSelectedFile(null);
+                            setCustomFileName("");
+                            e.target.value = '';
+                            return;
+                          }
+                        }
+                        setFileValidationError(null);
                         setSelectedFile(file);
                         setCustomFileName("");
                       }}
-                      accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.xls,.xlsx,.csv"
+                      accept={ACCEPTED_FILE_TYPES_STRING}
                       className="flex-1"
                     />
                     <Button
@@ -2105,6 +2121,11 @@ export default function UserProfile() {
                       {isUploading ? "Uploading..." : "Upload"}
                     </Button>
                   </div>
+                  {fileValidationError && (
+                    <p className="text-sm text-red-600 mt-2 bg-red-50 dark:bg-red-900/20 p-2 rounded">
+                      {fileValidationError}
+                    </p>
+                  )}
                   {selectedFile && (
                     <div className="space-y-3">
                       <p className="text-sm text-gray-600">

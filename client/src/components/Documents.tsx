@@ -13,12 +13,14 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
+import { validateFile, ACCEPTED_FILE_TYPES_STRING, MAX_FILE_SIZE_MB, ACCEPTED_FILE_TYPES_DISPLAY } from "@/lib/fileValidation";
 import CaseDetail from "./CaseDetail";
 
 export default function Documents() {
   const [searchTerm, setSearchTerm] = useState("");
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileValidationError, setFileValidationError] = useState<string | null>(null);
   const [customFileName, setCustomFileName] = useState("");
   const [selectedCaseId, setSelectedCaseId] = useState<string>("");
   const [notifyOnUpload, setNotifyOnUpload] = useState(true);
@@ -397,13 +399,36 @@ export default function Documents() {
                   </div>
                   <div>
                     <Label htmlFor="file-input">Select Document</Label>
+                    <p className="text-xs text-gray-500 mt-1 mb-2">
+                      Max {MAX_FILE_SIZE_MB}MB. Formats: {ACCEPTED_FILE_TYPES_DISPLAY}
+                    </p>
                     <Input
                       id="file-input"
                       type="file"
-                      onChange={handleFileSelect}
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.txt,.csv,.xlsx,.xls"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        if (file) {
+                          const validation = validateFile(file);
+                          if (!validation.isValid) {
+                            setFileValidationError(validation.error);
+                            setSelectedFile(null);
+                            setCustomFileName("");
+                            e.target.value = '';
+                            return;
+                          }
+                        }
+                        setFileValidationError(null);
+                        setSelectedFile(file);
+                        setCustomFileName("");
+                      }}
+                      accept={ACCEPTED_FILE_TYPES_STRING}
                       className="mt-2"
                     />
+                    {fileValidationError && (
+                      <p className="text-sm text-red-600 mt-2 bg-red-50 dark:bg-red-900/20 p-2 rounded">
+                        {fileValidationError}
+                      </p>
+                    )}
                     {selectedFile && (
                       <div className="mt-2 space-y-2">
                         <div className="p-2 bg-gray-50 rounded flex items-center justify-between">

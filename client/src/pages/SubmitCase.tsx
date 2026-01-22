@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useLocation } from "wouter";
+import { validateFile, validateFiles, ACCEPTED_FILE_TYPES_STRING, MAX_FILE_SIZE_MB, ACCEPTED_FILE_TYPES_DISPLAY } from "@/lib/fileValidation";
 
 // Base schema without conditional validation
 const baseSubmitCaseSchema = z.object({
@@ -174,6 +175,7 @@ export default function SubmitCase() {
   const [singleInvoice, setSingleInvoice] = useState("");
   const [organisationNameValue, setOrganisationNameValue] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [fileValidationError, setFileValidationError] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submissionId, setSubmissionId] = useState<number | null>(null);
 
@@ -1251,21 +1253,43 @@ export default function SubmitCase() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    Upload Files (Max 10MB each)
+                    Upload Files (Max {MAX_FILE_SIZE_MB}MB each)
                   </label>
                   <input
                     type="file"
                     multiple
-                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.xls,.xlsx,.csv"
+                    accept={ACCEPTED_FILE_TYPES_STRING}
                     onChange={(e) => {
                       const files = Array.from(e.target.files || []);
-                      setUploadedFiles(prev => [...prev, ...files]);
+                      const validFiles: File[] = [];
+                      let hasError = false;
+                      
+                      for (const file of files) {
+                        const validation = validateFile(file);
+                        if (!validation.isValid) {
+                          setFileValidationError(validation.error);
+                          hasError = true;
+                          break;
+                        }
+                        validFiles.push(file);
+                      }
+                      
+                      if (!hasError) {
+                        setFileValidationError(null);
+                        setUploadedFiles(prev => [...prev, ...validFiles]);
+                      }
+                      e.target.value = '';
                     }}
                     className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#008a8a59] file:text-[#0f766e] hover:file:bg-[#008a8a80]"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Supported formats: PDF, DOC, DOCX, TXT, JPG, JPEG, PNG, GIF, XLS, XLSX, CSV
+                    Supported formats: {ACCEPTED_FILE_TYPES_DISPLAY}
                   </p>
+                  {fileValidationError && (
+                    <p className="text-sm text-red-600 mt-2 bg-red-50 dark:bg-red-900/20 p-2 rounded">
+                      {fileValidationError}
+                    </p>
+                  )}
                 </div>
 
                 {/* Display uploaded files */}
