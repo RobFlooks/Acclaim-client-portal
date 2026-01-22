@@ -1774,6 +1774,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           caseOrgId!,
           caseId
         );
+        
+        // Return with video retention info
+        const retentionInfo = getVideoRetentionInfo(document.id);
+        return res.json({
+          ...document,
+          isVideo: true,
+          retentionInfo,
+          retentionMessage: user.isAdmin 
+            ? 'This video will be retained for 14 days, or 7 days after the user downloads it.'
+            : 'This video will be retained for 14 days, or 7 days after an admin downloads it.'
+        });
       }
 
       res.json(document);

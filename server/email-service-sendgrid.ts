@@ -6,6 +6,13 @@ import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.m4v', '.wmv'];
+
+function isVideoFile(fileName: string): boolean {
+  const ext = path.extname(fileName).toLowerCase();
+  return VIDEO_EXTENSIONS.includes(ext);
+}
+
 // APIM endpoint for SendGrid
 const APIM_ENDPOINT = 'https://acclaim-api-apim.azure-api.net/sendgrid/v3/mail/send';
 
@@ -2046,20 +2053,24 @@ Please log in to the Acclaim Portal to view this document.
         attachments.push(logoBase64);
       }
 
-      // Attach the uploaded document if file path is provided
+      // Attach the uploaded document if file path is provided (skip video files - too large for email)
       if (data.filePath && fs.existsSync(data.filePath)) {
-        try {
-          const fileContent = fs.readFileSync(data.filePath);
-          const base64Content = fileContent.toString('base64');
-          attachments.push({
-            content: base64Content,
-            filename: data.fileName,
-            type: data.fileType || 'application/octet-stream',
-            disposition: 'attachment'
-          });
-          console.log(`[Email] Attached document: ${data.fileName}`);
-        } catch (attachError) {
-          console.error(`[Email] Failed to attach document: ${attachError}`);
+        if (isVideoFile(data.fileName)) {
+          console.log(`[Email] Skipping video attachment (too large for email): ${data.fileName}`);
+        } else {
+          try {
+            const fileContent = fs.readFileSync(data.filePath);
+            const base64Content = fileContent.toString('base64');
+            attachments.push({
+              content: base64Content,
+              filename: data.fileName,
+              type: data.fileType || 'application/octet-stream',
+              disposition: 'attachment'
+            });
+            console.log(`[Email] Attached document: ${data.fileName}`);
+          } catch (attachError) {
+            console.error(`[Email] Failed to attach document: ${attachError}`);
+          }
         }
       }
 

@@ -1,0 +1,17 @@
+{
+  "videos": {
+    "53": {
+      "filePath": "uploads/185992852fdfae2f580a72b19a66dc5c",
+      "fileName": "36716291 CCTV (5).MP4",
+      "uploadedAt": "2026-01-22T13:58:31.174Z",
+      "uploadedByUserId": "jZJVUVcC3I",
+      "uploadedByAdmin": true,
+      "documentId": 53,
+      "organisationId": 4,
+      "caseId": 14,
+      "downloadedByRequiredParty": false,
+      "downloadedAt": null,
+      "requiredDownloaderType": "user"
+    }
+  }
+}
