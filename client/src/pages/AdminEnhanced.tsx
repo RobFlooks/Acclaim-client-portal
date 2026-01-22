@@ -2015,6 +2015,7 @@ export default function AdminEnhanced() {
   const [showEditOrg, setShowEditOrg] = useState(false);
   const [showAssignUser, setShowAssignUser] = useState(false);
   const [selectedOrgId, setSelectedOrgId] = useState<string>("none");
+  const [orgAssignSearch, setOrgAssignSearch] = useState("");
   const [editingOrg, setEditingOrg] = useState<Organisation | null>(null);
   const [orgFormData, setOrgFormData] = useState<CreateOrganisationForm>({
     name: "",
@@ -5380,6 +5381,12 @@ export default function AdminEnhanced() {
             {/* Add to new organisation */}
             <div className="space-y-2">
               <Label htmlFor="newOrganisation" className="text-sm font-medium">Add to Organisation:</Label>
+              <Input
+                placeholder="Search organisations..."
+                value={orgAssignSearch}
+                onChange={(e) => setOrgAssignSearch(e.target.value)}
+                className="mb-2"
+              />
               <Select value={selectedOrgId} onValueChange={setSelectedOrgId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select organisation to add" />
@@ -5388,7 +5395,16 @@ export default function AdminEnhanced() {
                   {organisations?.filter((org: Organisation) => {
                     // Filter out already assigned organisations
                     const currentOrgIds = (selectedUser as any)?.organisations?.map((o: Organisation) => o.id) || [];
-                    return !currentOrgIds.includes(org.id) && org.id !== selectedUser?.organisationId;
+                    if (currentOrgIds.includes(org.id) || org.id === selectedUser?.organisationId) {
+                      return false;
+                    }
+                    // Filter by search term
+                    if (orgAssignSearch) {
+                      const searchLower = orgAssignSearch.toLowerCase();
+                      return org.name.toLowerCase().includes(searchLower) || 
+                             (org.externalRef && org.externalRef.toLowerCase().includes(searchLower));
+                    }
+                    return true;
                   }).map((org: Organisation) => (
                     <SelectItem key={org.id} value={org.id.toString()}>
                       <div className="flex flex-col">
@@ -5409,6 +5425,7 @@ export default function AdminEnhanced() {
               onClick={() => {
                 setShowAssignUser(false);
                 setSelectedOrgId("");
+                setOrgAssignSearch("");
               }}
               disabled={addUserToOrgMutation.isPending || removeUserFromOrgMutation.isPending}
             >
