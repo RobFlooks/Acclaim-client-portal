@@ -19,6 +19,9 @@ import {
   HardDrive,
   Calendar,
   Loader2,
+  Video,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -63,9 +66,32 @@ interface AuditLogStats {
   logsByAge: { period: string; count: number }[];
 }
 
+interface VideoFile {
+  id: number;
+  fileName: string;
+  fileSize: number | null;
+  fileType: string | null;
+  caseId: number | null;
+  caseName: string | null;
+  organisationId: number | null;
+  organisationName: string;
+  uploadedBy: string | null;
+  uploaderName: string;
+  uploaderEmail: string;
+  uploaderIsAdmin: boolean;
+  createdAt: string | null;
+  downloaded: boolean;
+  downloadInfo: {
+    downloadedAt: string;
+    downloadedBy: string;
+    downloadedByEmail: string;
+  } | null;
+  totalDownloads: number;
+}
+
 export default function AuditManagement() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<'overview' | 'logs' | 'analysis' | 'retention'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'logs' | 'analysis' | 'retention' | 'videos'>('overview');
   const [searchTerm, setSearchTerm] = useState("");
   const [tableFilter, setTableFilter] = useState("");
   const [operationFilter, setOperationFilter] = useState("");
@@ -103,6 +129,16 @@ export default function AuditManagement() {
     queryKey: ["/api/admin/audit/stats"],
     retry: false,
   });
+
+  // Fetch video files with download status
+  const { data: videoFiles, isLoading: videosLoading } = useQuery<VideoFile[]>({
+    queryKey: ["/api/admin/audit/videos"],
+    retry: false,
+  });
+
+  // State for video search
+  const [videoSearchTerm, setVideoSearchTerm] = useState("");
+  const [videoStatusFilter, setVideoStatusFilter] = useState<'all' | 'downloaded' | 'not_downloaded'>('all');
 
   // Cleanup mutation
   const cleanupMutation = useMutation({
@@ -223,11 +259,15 @@ export default function AuditManagement() {
         </div>
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="logs">Audit Logs</TabsTrigger>
             <TabsTrigger value="analysis">Analysis</TabsTrigger>
             <TabsTrigger value="retention">Retention</TabsTrigger>
+            <TabsTrigger value="videos">
+              <Video className="w-4 h-4 mr-1" />
+              Videos
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -903,6 +943,193 @@ export default function AuditManagement() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="videos">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Video className="w-5 h-5" />
+                  Video File Tracking
+                </CardTitle>
+                <CardDescription>
+                  Track video file uploads and downloads. Shows whether the intended recipient (admin or user) has downloaded the video.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {/* Search and filter controls */}
+                <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      placeholder="Search by filename, case, organisation, or uploader..."
+                      value={videoSearchTerm}
+                      onChange={(e) => setVideoSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <Select value={videoStatusFilter} onValueChange={(value) => setVideoStatusFilter(value as any)}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Videos</SelectItem>
+                      <SelectItem value="downloaded">Downloaded</SelectItem>
+                      <SelectItem value="not_downloaded">Not Downloaded</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {videosLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+                  </div>
+                ) : !videoFiles || videoFiles.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <Video className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p>No video files have been uploaded yet.</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Summary stats */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+                        <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                          {videoFiles.length}
+                        </div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">Total Videos</div>
+                      </div>
+                      <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 text-center">
+                        <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                          {videoFiles.filter(v => v.downloaded).length}
+                        </div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">Downloaded</div>
+                      </div>
+                      <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 text-center">
+                        <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                          {videoFiles.filter(v => !v.downloaded).length}
+                        </div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">Pending</div>
+                      </div>
+                    </div>
+
+                    {/* Videos table */}
+                    <div className="border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>File Name</TableHead>
+                            <TableHead className="hidden md:table-cell">Case</TableHead>
+                            <TableHead className="hidden lg:table-cell">Organisation</TableHead>
+                            <TableHead>Uploaded By</TableHead>
+                            <TableHead className="hidden sm:table-cell">Upload Date</TableHead>
+                            <TableHead className="text-center">Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {videoFiles
+                            .filter(video => {
+                              // Apply search filter
+                              if (videoSearchTerm) {
+                                const search = videoSearchTerm.toLowerCase();
+                                const matches = 
+                                  video.fileName.toLowerCase().includes(search) ||
+                                  video.caseName?.toLowerCase().includes(search) ||
+                                  video.organisationName.toLowerCase().includes(search) ||
+                                  video.uploaderName.toLowerCase().includes(search) ||
+                                  video.uploaderEmail.toLowerCase().includes(search);
+                                if (!matches) return false;
+                              }
+                              // Apply status filter
+                              if (videoStatusFilter === 'downloaded' && !video.downloaded) return false;
+                              if (videoStatusFilter === 'not_downloaded' && video.downloaded) return false;
+                              return true;
+                            })
+                            .map((video) => (
+                              <TableRow key={video.id}>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <Video className="w-4 h-4 text-purple-500 flex-shrink-0" />
+                                    <div>
+                                      <div className="font-medium truncate max-w-[200px]" title={video.fileName}>
+                                        {video.fileName}
+                                      </div>
+                                      {video.fileSize && (
+                                        <div className="text-xs text-gray-500">
+                                          {(video.fileSize / (1024 * 1024)).toFixed(2)} MB
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="hidden md:table-cell">
+                                  {video.caseName ? (
+                                    <span className="text-sm">{video.caseName}</span>
+                                  ) : (
+                                    <span className="text-gray-400 text-sm">No case</span>
+                                  )}
+                                </TableCell>
+                                <TableCell className="hidden lg:table-cell">
+                                  <span className="text-sm">{video.organisationName}</span>
+                                </TableCell>
+                                <TableCell>
+                                  <div>
+                                    <div className="font-medium text-sm">{video.uploaderName}</div>
+                                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                                      <Badge 
+                                        variant="outline" 
+                                        className={video.uploaderIsAdmin 
+                                          ? "text-purple-600 border-purple-300 dark:text-purple-400 dark:border-purple-600" 
+                                          : "text-blue-600 border-blue-300 dark:text-blue-400 dark:border-blue-600"
+                                        }
+                                      >
+                                        {video.uploaderIsAdmin ? 'Admin' : 'User'}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="hidden sm:table-cell text-sm text-gray-500">
+                                  {video.createdAt ? format(new Date(video.createdAt), 'dd/MM/yyyy HH:mm') : '-'}
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  {video.downloaded ? (
+                                    <div className="flex flex-col items-center gap-1">
+                                      <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 flex items-center gap-1">
+                                        <CheckCircle className="w-3 h-3" />
+                                        Downloaded
+                                      </Badge>
+                                      {video.downloadInfo && (
+                                        <div className="text-xs text-gray-500" title={`Downloaded by ${video.downloadInfo.downloadedBy}`}>
+                                          {format(new Date(video.downloadInfo.downloadedAt), 'dd/MM HH:mm')}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 flex items-center gap-1">
+                                      <XCircle className="w-3 h-3" />
+                                      Pending
+                                    </Badge>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    {/* Legend */}
+                    <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <h4 className="font-medium mb-2 text-sm">How download tracking works:</h4>
+                      <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                        <li>• If an <strong>admin</strong> uploads a video → Shows "Downloaded" when a <strong>user</strong> downloads it</li>
+                        <li>• If a <strong>user</strong> uploads a video → Shows "Downloaded" when an <strong>admin</strong> downloads it</li>
+                        <li>• Videos are not attached to notification emails due to size constraints</li>
+                      </ul>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

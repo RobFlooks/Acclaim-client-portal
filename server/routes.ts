@@ -1947,6 +1947,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "File not found on server" });
       }
 
+      // Log the download to audit log for tracking
+      try {
+        await storage.logAuditEvent({
+          tableName: 'documents',
+          recordId: documentId.toString(),
+          operation: 'DOWNLOAD',
+          fieldName: 'file',
+          oldValue: null,
+          newValue: document.fileName,
+          userId: userId,
+          userEmail: user.email,
+          ipAddress: req.ip || req.connection?.remoteAddress || 'unknown',
+          userAgent: req.headers['user-agent'] || 'unknown',
+          organisationId: document.organisationId,
+          description: `Document "${document.fileName}" downloaded by ${user.firstName} ${user.lastName} (${user.isAdmin ? 'admin' : 'user'})`
+        });
+      } catch (auditError) {
+        console.error("Failed to log document download:", auditError);
+        // Continue with download even if audit logging fails
+      }
+
       res.download(document.filePath, document.fileName);
     } catch (error) {
       console.error("Error downloading document:", error);
@@ -4576,6 +4597,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching item audit history:", error);
       res.status(500).json({ message: "Failed to fetch audit history" });
+    }
+  });
+
+  // Get all video files with download status for audit management
+  app.get("/api/admin/audit/videos", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      // Video file extensions to look for
+      const videoExtensions = [
+        '.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv', '.webm', 
+        '.m4v', '.mpg', '.mpeg', '.3gp', '.3g2', '.ogv', '.ts', 
+        '.mts', '.m2ts', '.vob', '.divx', '.xvid', '.rm', '.rmvb',
+        '.asf', '.swf', '.f4v'
+      ];
+      
+      // Get all documents
+      const allDocuments = await storage.getAllDocuments();
+      
+      // Filter to only video files
+      const videoDocuments = allDocuments.filter(doc => {
+        const lowerFileName = doc.fileName.toLowerCase();
+        return videoExtensions.some(ext => lowerFileName.endsWith(ext)) ||
+               (doc.fileType && doc.fileType.startsWith('video/'));
+      });
+      
+      // Get download audit logs for these documents
+      const downloadLogs = await storage.getAuditLogs({
+        tableName: 'documents',
+        operation: 'DOWNLOAD'
+      });
+      
+      // Get all users to determine uploader role
+      const allUsers = await storage.getAllUsers();
+      const userMap = new Map(allUsers.map(u => [u.id, u]));
+      
+      // Build response with download status
+      const videosWithStatus = await Promise.all(videoDocuments.map(async (doc) => {
+        const uploader = doc.uploadedBy ? userMap.get(doc.uploadedBy) : null;
+        const uploaderIsAdmin = uploader?.isAdmin || false;
+        
+        // Find downloads for this document
+        const docDownloads = downloadLogs.filter(log => log.recordId === doc.id.toString());
+        
+        // Determine if "correct" receiver has downloaded
+        // If admin uploaded -> user must download
+        // If user uploaded -> admin must download
+        let downloadedByReceiver = false;
+        let receiverDownloadInfo: { downloadedAt: string; downloadedBy: string; downloadedByEmail: string } | null = null;
+        
+        for (const download of docDownloads) {
+          if (!download.userId) continue;
+          const downloader = userMap.get(download.userId);
+          if (!downloader) continue;
+          
+          if (uploaderIsAdmin) {
+            // Admin uploaded, need a non-admin (user) to download
+            if (!downloader.isAdmin) {
+              downloadedByReceiver = true;
+              receiverDownloadInfo = {
+                downloadedAt: download.timestamp?.toISOString() || '',
+                downloadedBy: `${downloader.firstName} ${downloader.lastName}`,
+                downloadedByEmail: downloader.email
+              };
+              break;
+            }
+          } else {
+            // User uploaded, need an admin to download
+            if (downloader.isAdmin) {
+              downloadedByReceiver = true;
+              receiverDownloadInfo = {
+                downloadedAt: download.timestamp?.toISOString() || '',
+                downloadedBy: `${downloader.firstName} ${downloader.lastName}`,
+                downloadedByEmail: downloader.email
+              };
+              break;
+            }
+          }
+        }
+        
+        // Get organisation name
+        const org = doc.organisationId ? await storage.getOrganisation(doc.organisationId) : null;
+        
+        // Get case name if linked to a case
+        let caseName = null;
+        if (doc.caseId) {
+          const caseInfo = await storage.getCase(doc.caseId);
+          caseName = caseInfo?.caseName || null;
+        }
+        
+        return {
+          id: doc.id,
+          fileName: doc.fileName,
+          fileSize: doc.fileSize,
+          fileType: doc.fileType,
+          caseId: doc.caseId,
+          caseName,
+          organisationId: doc.organisationId,
+          organisationName: org?.name || 'Unknown',
+          uploadedBy: doc.uploadedBy,
+          uploaderName: uploader ? `${uploader.firstName} ${uploader.lastName}` : 'Unknown',
+          uploaderEmail: uploader?.email || 'Unknown',
+          uploaderIsAdmin,
+          createdAt: doc.createdAt,
+          downloaded: downloadedByReceiver,
+          downloadInfo: receiverDownloadInfo,
+          totalDownloads: docDownloads.length
+        };
+      }));
+      
+      // Sort by upload date, newest first
+      videosWithStatus.sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+      
+      res.json(videosWithStatus);
+    } catch (error) {
+      console.error("Error fetching video files:", error);
+      res.status(500).json({ message: "Failed to fetch video files" });
     }
   });
 

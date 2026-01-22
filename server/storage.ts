@@ -152,6 +152,7 @@ export interface IStorage {
   getDocumentsForOrganisation(organisationId: number): Promise<Document[]>;
   getOrganisationOnlyDocuments(organisationId: number): Promise<Document[]>; // Get documents not linked to any case
   getDocumentsForUser(userId: string): Promise<Document[]>; // Returns all documents for user (admin gets all, regular user gets org-filtered)
+  getAllDocuments(): Promise<Document[]>; // Admin only - get all documents for video tracking
   createDocument(document: InsertDocument): Promise<Document>;
   deleteDocument(id: number, organisationId: number): Promise<void>;
   deleteDocumentById(id: number): Promise<void>; // Admin only - delete document by ID without org restriction
@@ -1313,6 +1314,10 @@ export class DatabaseStorage implements IStorage {
   async getDocumentById(id: number): Promise<Document | undefined> {
     const [document] = await db.select().from(documents).where(eq(documents.id, id)).limit(1);
     return document;
+  }
+
+  async getAllDocuments(): Promise<Document[]> {
+    return await db.select().from(documents).orderBy(desc(documents.createdAt));
   }
 
   async getDocumentsForCase(caseId: number): Promise<any[]> {
