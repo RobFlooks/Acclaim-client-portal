@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ShieldAlert, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, EyeOff, Mail, Bell, BellOff, FilePlus, FileX, BarChart3, Search, Crown, Calendar, CalendarOff, Pencil, LogOut, RefreshCw, ChevronDown, ChevronUp, Clock, Send } from "lucide-react";
@@ -2016,6 +2018,7 @@ export default function AdminEnhanced() {
   const [showAssignUser, setShowAssignUser] = useState(false);
   const [selectedOrgId, setSelectedOrgId] = useState<string>("none");
   const [orgAssignSearch, setOrgAssignSearch] = useState("");
+  const [orgAssignPopoverOpen, setOrgAssignPopoverOpen] = useState(false);
   const [editingOrg, setEditingOrg] = useState<Organisation | null>(null);
   const [orgFormData, setOrgFormData] = useState<CreateOrganisationForm>({
     name: "",
@@ -5381,42 +5384,55 @@ export default function AdminEnhanced() {
             {/* Add to new organisation */}
             <div className="space-y-2">
               <Label htmlFor="newOrganisation" className="text-sm font-medium">Add to Organisation:</Label>
-              <Input
-                placeholder="Search organisations..."
-                value={orgAssignSearch}
-                onChange={(e) => setOrgAssignSearch(e.target.value)}
-                className="mb-2"
-              />
-              <Select value={selectedOrgId} onValueChange={setSelectedOrgId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select organisation to add" />
-                </SelectTrigger>
-                <SelectContent>
-                  {organisations?.filter((org: Organisation) => {
-                    // Filter out already assigned organisations
-                    const currentOrgIds = (selectedUser as any)?.organisations?.map((o: Organisation) => o.id) || [];
-                    if (currentOrgIds.includes(org.id) || org.id === selectedUser?.organisationId) {
-                      return false;
-                    }
-                    // Filter by search term
-                    if (orgAssignSearch) {
-                      const searchLower = orgAssignSearch.toLowerCase();
-                      return org.name.toLowerCase().includes(searchLower) || 
-                             (org.externalRef && org.externalRef.toLowerCase().includes(searchLower));
-                    }
-                    return true;
-                  }).map((org: Organisation) => (
-                    <SelectItem key={org.id} value={org.id.toString()}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{org.name}</span>
-                        {org.externalRef && (
-                          <span className="text-xs text-gray-500">Ref: {org.externalRef}</span>
-                        )}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={orgAssignPopoverOpen} onOpenChange={setOrgAssignPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={orgAssignPopoverOpen}
+                    className="w-full justify-between"
+                  >
+                    {selectedOrgId && selectedOrgId !== "none"
+                      ? organisations?.find((org: Organisation) => org.id.toString() === selectedOrgId)?.name
+                      : "Search and select organisation..."}
+                    <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[400px] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search organisations..." />
+                    <CommandList>
+                      <CommandEmpty>No organisation found.</CommandEmpty>
+                      <CommandGroup>
+                        {organisations?.filter((org: Organisation) => {
+                          // Filter out already assigned organisations
+                          const currentOrgIds = (selectedUser as any)?.organisations?.map((o: Organisation) => o.id) || [];
+                          return !currentOrgIds.includes(org.id) && org.id !== selectedUser?.organisationId;
+                        }).map((org: Organisation) => (
+                          <CommandItem
+                            key={org.id}
+                            value={`${org.name} ${org.externalRef || ''}`}
+                            onSelect={() => {
+                              setSelectedOrgId(org.id.toString());
+                              setOrgAssignPopoverOpen(false);
+                            }}
+                          >
+                            <div className="flex flex-col">
+                              <span className="font-medium">{org.name}</span>
+                              {org.externalRef && (
+                                <span className="text-xs text-muted-foreground">Ref: {org.externalRef}</span>
+                              )}
+                            </div>
+                            {selectedOrgId === org.id.toString() && (
+                              <Check className="ml-auto h-4 w-4" />
+                            )}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
           <div className="flex justify-end space-x-2">
@@ -5424,8 +5440,8 @@ export default function AdminEnhanced() {
               variant="outline"
               onClick={() => {
                 setShowAssignUser(false);
-                setSelectedOrgId("");
-                setOrgAssignSearch("");
+                setSelectedOrgId("none");
+                setOrgAssignPopoverOpen(false);
               }}
               disabled={addUserToOrgMutation.isPending || removeUserFromOrgMutation.isPending}
             >
