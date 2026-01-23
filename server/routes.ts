@@ -2562,6 +2562,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "You cannot remove your own super admin privileges" });
       }
 
+      // Ensure at least one super admin remains when removing super admin status
+      if (!newSuperAdminStatus && existingUser.isSuperAdmin) {
+        const allUsers = await storage.getAllUsers();
+        const superAdminCount = allUsers.filter(u => u.isSuperAdmin).length;
+        if (superAdminCount <= 1) {
+          return res.status(400).json({ 
+            message: "Cannot remove the last super admin. Please assign another super admin first." 
+          });
+        }
+      }
+
       // Only @chadlaw.co.uk emails can be super admins
       if (newSuperAdminStatus && !existingUser.email?.endsWith('@chadlaw.co.uk')) {
         return res.status(400).json({ 
