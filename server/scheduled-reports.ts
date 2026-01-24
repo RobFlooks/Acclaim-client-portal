@@ -223,7 +223,7 @@ function generateHtmlReport(
           <td>${formatDate(m.createdAt)}</td>
           <td>${m.subject || ''}</td>
           <td>${sender}</td>
-          <td class="message-preview">${truncateMessage(m.content, 120)}</td>
+          <td class="message-content">${m.content || ''}</td>
         </tr>
       `;
     });
@@ -276,7 +276,7 @@ function generateHtmlReport(
         .totals-row { font-weight: bold; background-color: #e5e7eb !important; }
         .footer { text-align: center; margin-top: 40px; color: #666; font-size: 12px; }
         .no-data { color: #666; font-style: italic; padding: 20px; text-align: center; }
-        .message-preview { max-width: 300px; word-wrap: break-word; }
+        .message-content { white-space: pre-wrap; word-wrap: break-word; max-width: 400px; }
         .case-messages { margin-bottom: 20px; }
         .case-header { font-size: 14px; color: #0d9488; margin: 15px 0 8px 0; padding-bottom: 5px; border-bottom: 2px solid #0d9488; }
       </style>
