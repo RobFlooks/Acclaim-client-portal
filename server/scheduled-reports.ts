@@ -24,6 +24,7 @@ export interface ScheduledReportSettings {
 export interface ReportBuffers {
   excel: Buffer;
   html: Buffer;
+  messagesCount: number;
 }
 
 // Generate a report by report ID (for test send and processing)
@@ -130,7 +131,8 @@ export async function generateScheduledReport(
 
   return {
     excel: Buffer.from(excelBuffer),
-    html: htmlBuffer
+    html: htmlBuffer,
+    messagesCount: messages.length
   };
 }
 
@@ -721,6 +723,12 @@ export async function processScheduledReports(): Promise<void> {
       }
 
       const reportBuffers = await generateScheduledReport(settings.userId, settings as ScheduledReportSettings);
+      
+      // Skip daily reports that include messages if there are no messages to report
+      if (settings.frequency === "daily" && settings.includeActivityReport && reportBuffers.messagesCount === 0) {
+        console.log(`  Skipping daily report - no messages to include`);
+        continue;
+      }
       
       const frequencyText = settings.frequency === "daily" ? "Daily" : settings.frequency === "weekly" ? "Weekly" : "Monthly";
       
