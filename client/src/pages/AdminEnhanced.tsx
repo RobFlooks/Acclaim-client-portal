@@ -4664,10 +4664,11 @@ export default function AdminEnhanced() {
                                 {' • '}ID: {report.id}
                               </div>
                               {isSuperAdmin && (
-                                <div className="flex items-center gap-2">
+                                <div className="flex flex-wrap items-center gap-2">
                                   <Button
                                     variant="outline"
                                     size="sm"
+                                    className="text-xs sm:text-sm"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       setSelectedReportForAudit(report);
@@ -4675,11 +4676,12 @@ export default function AdminEnhanced() {
                                     }}
                                   >
                                     <History className="h-3 w-3 mr-1" />
-                                    Audit Logs
+                                    <span className="hidden sm:inline">Audit </span>Logs
                                   </Button>
                                   <Button
                                     variant="outline"
                                     size="sm"
+                                    className="text-xs sm:text-sm"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       sendTestReportMutation.mutate(report.id);
@@ -4691,11 +4693,12 @@ export default function AdminEnhanced() {
                                     ) : (
                                       <Send className="h-3 w-3 mr-1" />
                                     )}
-                                    Send Test
+                                    <span className="hidden sm:inline">Send </span>Test
                                   </Button>
                                   <Button
                                     variant="outline"
                                     size="sm"
+                                    className="text-xs sm:text-sm"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       setEditingFromReportsTab(true);
