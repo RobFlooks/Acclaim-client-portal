@@ -4670,6 +4670,18 @@ export default function AdminEnhanced() {
                                     size="sm"
                                     onClick={(e) => {
                                       e.stopPropagation();
+                                      setSelectedReportForAudit(report);
+                                      setShowReportAuditDialog(true);
+                                    }}
+                                  >
+                                    <History className="h-3 w-3 mr-1" />
+                                    Audit Logs
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       sendTestReportMutation.mutate(report.id);
                                     }}
                                     disabled={sendTestReportMutation.isPending}
@@ -5685,6 +5697,17 @@ export default function AdminEnhanced() {
                         </p>
                       </div>
                       <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setSelectedReportForAudit(report);
+                            setShowReportAuditDialog(true);
+                          }}
+                          title="View audit logs"
+                        >
+                          <History className="h-4 w-4" />
+                        </Button>
                         <Button
                           size="sm"
                           variant="ghost"
