@@ -3327,6 +3327,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin: Get audit logs for a specific scheduled report
+  app.get('/api/admin/scheduled-reports/:id/audit-logs', isAuthenticated, isAdmin, isSuperAdmin, async (req: any, res) => {
+    try {
+      const id = req.params.id;
+      const auditLogs = await storage.getAuditLogs({ tableName: 'scheduled_reports', recordId: id });
+      res.json(auditLogs);
+    } catch (error) {
+      console.error("Error fetching report audit logs:", error);
+      res.status(500).json({ message: "Failed to fetch audit logs" });
+    }
+  });
+
   // Admin endpoint to set user role in organisation
   app.put('/api/admin/users/:userId/organisations/:orgId/role', isAuthenticated, isAdmin, async (req: any, res) => {
     try {

@@ -706,9 +706,20 @@ export async function processScheduledReports(): Promise<void> {
       const user = await storage.getUser(settings.userId);
       if (!user || !user.email) continue;
       
+      const frequencyLabel = settings.frequency === "daily" ? "Daily" : settings.frequency === "weekly" ? "Weekly" : "Monthly";
+      
       // Skip users who haven't logged in for the first time (still have temporary password)
       if (user.mustChangePassword) {
         console.log(`  Skipping - user ${user.email} has not completed first login`);
+        await storage.logAuditEvent({
+          tableName: 'scheduled_reports',
+          recordId: String(settings.id),
+          operation: 'SKIP',
+          userId: settings.userId,
+          userEmail: user.email,
+          description: `${frequencyLabel} report skipped - user has not completed first login`,
+          newValue: JSON.stringify({ reason: 'user_not_activated', recipient: user.email }),
+        });
         continue;
       }
 
@@ -719,6 +730,15 @@ export async function processScheduledReports(): Promise<void> {
       
       if (allOrgsDisabled) {
         console.log(`  Skipping - scheduled reports disabled for all user's organisations`);
+        await storage.logAuditEvent({
+          tableName: 'scheduled_reports',
+          recordId: String(settings.id),
+          operation: 'SKIP',
+          userId: settings.userId,
+          userEmail: user.email,
+          description: `${frequencyLabel} report skipped - scheduled reports disabled for all user's organisations`,
+          newValue: JSON.stringify({ reason: 'organisations_disabled', recipient: user.email }),
+        });
         continue;
       }
 
@@ -727,6 +747,15 @@ export async function processScheduledReports(): Promise<void> {
       // Skip daily reports that include messages if there are no messages to report
       if (settings.frequency === "daily" && settings.includeActivityReport && reportBuffers.messagesCount === 0) {
         console.log(`  Skipping daily report - no messages to include`);
+        await storage.logAuditEvent({
+          tableName: 'scheduled_reports',
+          recordId: String(settings.id),
+          operation: 'SKIP',
+          userId: settings.userId,
+          userEmail: user.email,
+          description: `${frequencyLabel} report skipped - no new messages to include`,
+          newValue: JSON.stringify({ reason: 'no_messages', recipient: user.email }),
+        });
         continue;
       }
       

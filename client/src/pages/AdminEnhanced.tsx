@@ -15,7 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ShieldAlert, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, EyeOff, Mail, Bell, BellOff, FilePlus, FileX, BarChart3, Search, Crown, Calendar, CalendarOff, Pencil, LogOut, RefreshCw, ChevronDown, ChevronUp, Clock, Send } from "lucide-react";
+import { Users, Building, Plus, Edit, Trash2, Shield, Key, Copy, UserPlus, AlertTriangle, ShieldCheck, ShieldAlert, ArrowLeft, Activity, FileText, CreditCard, Archive, ArchiveRestore, Download, Check, Eye, EyeOff, Mail, Bell, BellOff, FilePlus, FileX, BarChart3, Search, Crown, Calendar, CalendarOff, Pencil, LogOut, RefreshCw, ChevronDown, ChevronUp, Clock, Send, History } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { createUserSchema, updateUserSchema, createOrganisationSchema, updateOrganisationSchema } from "@shared/schema";
@@ -2051,6 +2051,10 @@ export default function AdminEnhanced() {
   const [showEditOrgReportForm, setShowEditOrgReportForm] = useState(false);
   const [editingFromReportsTab, setEditingFromReportsTab] = useState(false);
   
+  // State for viewing report audit logs
+  const [showReportAuditDialog, setShowReportAuditDialog] = useState(false);
+  const [selectedReportForAudit, setSelectedReportForAudit] = useState<any | null>(null);
+  
   // State for closed case management
   const [showClosedCaseManagement, setShowClosedCaseManagement] = useState(false);
 
@@ -2146,6 +2150,17 @@ export default function AdminEnhanced() {
       return response.json();
     },
     enabled: !!selectedOrgForReports?.id,
+  });
+
+  // Fetch audit logs for selected report
+  const { data: reportAuditLogs = [], isLoading: reportAuditLogsLoading } = useQuery<any[]>({
+    queryKey: ["/api/admin/scheduled-reports", selectedReportForAudit?.id, "audit-logs"],
+    queryFn: async () => {
+      if (!selectedReportForAudit?.id) return [];
+      const response = await apiRequest("GET", `/api/admin/scheduled-reports/${selectedReportForAudit.id}/audit-logs`);
+      return response.json();
+    },
+    enabled: !!selectedReportForAudit?.id && showReportAuditDialog,
   });
 
   // Create organisation mutation
@@ -5048,6 +5063,17 @@ export default function AdminEnhanced() {
                             variant="ghost"
                             size="sm"
                             onClick={() => {
+                              setSelectedReportForAudit(report);
+                              setShowReportAuditDialog(true);
+                            }}
+                            title="View audit logs"
+                          >
+                            <History className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
                               const recipient = report.recipientEmail || report.userEmail;
                               if (confirm(`Send a test report now to ${recipient}?`)) {
                                 sendTestReportMutation.mutate(report.id);
@@ -5903,6 +5929,105 @@ export default function AdminEnhanced() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Report Audit Logs Dialog */}
+      <Dialog open={showReportAuditDialog} onOpenChange={(open) => {
+        setShowReportAuditDialog(open);
+        if (!open) setSelectedReportForAudit(null);
+      }}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Audit Logs for Report #{selectedReportForAudit?.id}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedReportForAudit?.recipientEmail || selectedReportForAudit?.userEmail}
+              {selectedReportForAudit?.recipientName && ` (${selectedReportForAudit.recipientName})`}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-3">
+            {reportAuditLogsLoading ? (
+              <div className="text-center py-8 text-gray-500">Loading audit logs...</div>
+            ) : reportAuditLogs.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No audit logs found for this report</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {reportAuditLogs.map((log: any) => (
+                  <div key={log.id} className={`border rounded-lg p-3 text-sm ${
+                    log.operation === 'SEND' ? 'border-green-200 bg-green-50 dark:bg-green-950/30 dark:border-green-800' :
+                    log.operation === 'SKIP' ? 'border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800' :
+                    log.operation === 'ERROR' ? 'border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-800' :
+                    'border-gray-200 dark:border-gray-700'
+                  }`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant={
+                            log.operation === 'SEND' ? 'default' :
+                            log.operation === 'SKIP' ? 'secondary' :
+                            log.operation === 'ERROR' ? 'destructive' :
+                            'outline'
+                          } className={
+                            log.operation === 'SEND' ? 'bg-green-600' :
+                            log.operation === 'SKIP' ? 'bg-amber-500 text-white' :
+                            ''
+                          }>
+                            {log.operation}
+                          </Badge>
+                          <span className="text-gray-500 text-xs">
+                            {new Date(log.timestamp).toLocaleString('en-GB', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                        <p className="text-gray-700 dark:text-gray-300">{log.description}</p>
+                        {log.newValue && (
+                          <div className="mt-1 text-xs text-gray-500">
+                            {(() => {
+                              try {
+                                const data = JSON.parse(log.newValue);
+                                if (data.reason) {
+                                  return (
+                                    <span className="inline-flex items-center gap-1">
+                                      <span className="font-medium">Reason:</span>
+                                      {data.reason === 'no_messages' ? 'No new messages to include' :
+                                       data.reason === 'user_not_activated' ? 'User has not completed first login' :
+                                       data.reason === 'organisations_disabled' ? 'Scheduled reports disabled for organisations' :
+                                       data.reason}
+                                    </span>
+                                  );
+                                }
+                                return null;
+                              } catch {
+                                return null;
+                              }
+                            })()}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          <div className="flex justify-end pt-4 border-t">
+            <Button variant="outline" onClick={() => setShowReportAuditDialog(false)}>
+              Close
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
       </>
