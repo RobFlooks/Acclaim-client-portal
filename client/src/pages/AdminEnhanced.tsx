@@ -6041,9 +6041,8 @@ export default function AdminEnhanced() {
                         )}
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
             )}
           </div>
           
