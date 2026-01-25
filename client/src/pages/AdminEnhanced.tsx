@@ -5960,81 +5960,82 @@ export default function AdminEnhanced() {
         setShowReportAuditDialog(open);
         if (!open) setSelectedReportForAudit(null);
       }}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <History className="h-5 w-5" />
-              Audit Logs for Report #{selectedReportForAudit?.id}
+            <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <History className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+              <span className="truncate">Report #{selectedReportForAudit?.id} Audit Logs</span>
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-xs sm:text-sm truncate">
               {selectedReportForAudit?.recipientEmail || selectedReportForAudit?.userEmail}
               {selectedReportForAudit?.recipientName && ` (${selectedReportForAudit.recipientName})`}
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {reportAuditLogsLoading ? (
-              <div className="text-center py-8 text-gray-500">Loading audit logs...</div>
+              <div className="text-center py-6 sm:py-8 text-gray-500">Loading audit logs...</div>
             ) : reportAuditLogs.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No audit logs found for this report</p>
+              <div className="text-center py-6 sm:py-8 text-gray-500">
+                <History className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 opacity-50" />
+                <p className="text-sm">No audit logs found for this report</p>
               </div>
             ) : (
               <div className="space-y-2">
                 {reportAuditLogs.map((log: any) => (
-                  <div key={log.id} className={`border rounded-lg p-3 text-sm ${
+                  <div key={log.id} className={`border rounded-lg p-2 sm:p-3 text-xs sm:text-sm ${
                     log.operation === 'SEND' ? 'border-green-200 bg-green-50 dark:bg-green-950/30 dark:border-green-800' :
                     log.operation === 'SKIP' ? 'border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800' :
                     log.operation === 'ERROR' ? 'border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-800' :
                     'border-gray-200 dark:border-gray-700'
                   }`}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge variant={
-                            log.operation === 'SEND' ? 'default' :
-                            log.operation === 'SKIP' ? 'secondary' :
-                            log.operation === 'ERROR' ? 'destructive' :
-                            'outline'
-                          } className={
-                            log.operation === 'SEND' ? 'bg-green-600' :
-                            log.operation === 'SKIP' ? 'bg-amber-500 text-white' :
-                            ''
-                          }>
-                            {log.operation}
-                          </Badge>
-                          <span className="text-gray-500 text-xs">
-                            {new Date(log.timestamp).toLocaleString('en-GB', {
-                              day: 'numeric',
-                              month: 'short',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </span>
-                        </div>
-                        <p className="text-gray-700 dark:text-gray-300">{log.description}</p>
-                        {log.newValue && (
-                          <div className="mt-1 text-xs text-gray-500">
-                            {(() => {
-                              try {
-                                const data = JSON.parse(log.newValue);
-                                if (data.reason) {
-                                  return (
-                                    <span className="inline-flex items-center gap-1">
-                                      <span className="font-medium">Reason:</span>
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                        <Badge variant={
+                          log.operation === 'SEND' ? 'default' :
+                          log.operation === 'SKIP' ? 'secondary' :
+                          log.operation === 'ERROR' ? 'destructive' :
+                          'outline'
+                        } className={`text-xs ${
+                          log.operation === 'SEND' ? 'bg-green-600' :
+                          log.operation === 'SKIP' ? 'bg-amber-500 text-white' :
+                          ''
+                        }`}>
+                          {log.operation}
+                        </Badge>
+                        <span className="text-gray-500 text-xs">
+                          {new Date(log.timestamp).toLocaleString('en-GB', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                      <p className="text-gray-700 dark:text-gray-300 break-words">{log.description}</p>
+                      {log.newValue && (
+                        <div className="text-xs text-gray-500">
+                          {(() => {
+                            try {
+                              const data = JSON.parse(log.newValue);
+                              if (data.reason) {
+                                return (
+                                  <span className="inline-flex flex-wrap items-center gap-1">
+                                    <span className="font-medium">Reason:</span>
+                                    <span className="break-words">
                                       {data.reason === 'no_messages' ? 'No new messages to include' :
                                        data.reason === 'user_not_activated' ? 'User has not completed first login' :
                                        data.reason === 'organisations_disabled' ? 'Scheduled reports disabled for organisations' :
                                        data.reason}
                                     </span>
-                                  );
-                                }
-                                return null;
-                              } catch {
-                                return null;
+                                  </span>
+                                );
                               }
+                              return null;
+                            } catch {
+                              return null;
+                            }
                             })()}
                           </div>
                         )}
