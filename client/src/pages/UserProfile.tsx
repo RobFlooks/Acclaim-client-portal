@@ -429,10 +429,10 @@ export default function UserProfile() {
 
   // Refetch muted cases when the cases list changes (e.g., new cases added from SOS)
   useEffect(() => {
-    if (casesData) {
+    if (userCases) {
       refetchMutedCases();
     }
-  }, [casesData?.length, refetchMutedCases]);
+  }, [userCases?.length, refetchMutedCases]);
 
   // Mutation for toggling case mute
   const toggleCaseMuteMutation = useMutation({
