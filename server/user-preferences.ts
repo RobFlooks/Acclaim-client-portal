@@ -7,32 +7,62 @@ interface UserPreferences {
   autoMuteNewCases: Record<string, boolean>;
 }
 
-function ensureDataDir(): void {
-  const dataDir = path.dirname(PREFERENCES_FILE);
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
+let inMemoryPreferences: UserPreferences = { autoMuteNewCases: {} };
+let fileSystemAvailable = true;
+
+function ensureDataDir(): boolean {
+  try {
+    const dataDir = path.dirname(PREFERENCES_FILE);
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    return true;
+  } catch (error) {
+    console.warn('Unable to create data directory, using in-memory storage:', error);
+    fileSystemAvailable = false;
+    return false;
   }
 }
 
 function loadPreferences(): UserPreferences {
-  ensureDataDir();
+  if (!fileSystemAvailable) {
+    return inMemoryPreferences;
+  }
+  
+  if (!ensureDataDir()) {
+    return inMemoryPreferences;
+  }
+  
   try {
     if (fs.existsSync(PREFERENCES_FILE)) {
       const data = fs.readFileSync(PREFERENCES_FILE, 'utf-8');
-      return JSON.parse(data);
+      const prefs = JSON.parse(data);
+      inMemoryPreferences = prefs;
+      return prefs;
     }
   } catch (error) {
-    console.error('Error loading user preferences:', error);
+    console.warn('Error loading user preferences, using in-memory storage:', error);
+    fileSystemAvailable = false;
   }
-  return { autoMuteNewCases: {} };
+  return inMemoryPreferences;
 }
 
 function savePreferences(prefs: UserPreferences): void {
-  ensureDataDir();
+  inMemoryPreferences = prefs;
+  
+  if (!fileSystemAvailable) {
+    return;
+  }
+  
+  if (!ensureDataDir()) {
+    return;
+  }
+  
   try {
     fs.writeFileSync(PREFERENCES_FILE, JSON.stringify(prefs, null, 2), 'utf-8');
   } catch (error) {
-    console.error('Error saving user preferences:', error);
+    console.warn('Error saving user preferences to file, using in-memory only:', error);
+    fileSystemAvailable = false;
   }
 }
 
