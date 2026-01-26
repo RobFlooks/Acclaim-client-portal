@@ -18,6 +18,7 @@ export default function Cases() {
   const [selectedCase, setSelectedCase] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("active"); // active, closed, all
+  const [stageFilter, setStageFilter] = useState("all"); // all, pre-legal, claim, judgment, enforcement
   const [currentPage, setCurrentPage] = useState(1);
   const casesPerPage = 20;
   const { toast } = useToast();
@@ -80,7 +81,7 @@ export default function Cases() {
     }
   }, [cases]);
 
-  // Filter cases by search term and status
+  // Filter cases by search term, status, and stage
   const filteredCases = cases?.filter((case_: any) => {
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch = (
@@ -95,13 +96,17 @@ export default function Cases() {
       return matchesSearch;
     }
     
-    // Only apply status filter when no search term is present
+    // Apply status filter when no search term is present
     const isActive = case_.status !== "resolved" && case_.status?.toLowerCase() !== "closed";
     const matchesStatus = statusFilter === "all" || 
                          (statusFilter === "active" && isActive) ||
                          (statusFilter === "closed" && !isActive);
     
-    return matchesStatus;
+    // Apply stage filter
+    const caseStage = case_.stage?.toLowerCase() || "";
+    const matchesStage = stageFilter === "all" || caseStage === stageFilter;
+    
+    return matchesStatus && matchesStage;
   }) || [];
 
   // Pagination calculations
@@ -118,7 +123,7 @@ export default function Cases() {
   // Reset pagination when search or filter changes
   useEffect(() => {
     resetPagination();
-  }, [searchTerm, statusFilter]);
+  }, [searchTerm, statusFilter, stageFilter]);
 
   const getStageBadge = (status: string, stage: string) => {
     if (status === "resolved" || status?.toLowerCase() === "closed") {
@@ -210,29 +215,46 @@ export default function Cases() {
               />
             </div>
             
-            {/* Status Filter */}
-            <div className="flex items-center space-x-4">
+            {/* Filters Row */}
+            <div className="flex flex-wrap items-center gap-4">
+              {/* Status Filter */}
               <div className="flex items-center space-x-2">
                 <Filter className="h-4 w-4 text-gray-400" />
                 <label className="text-sm font-medium text-gray-700">Status:</label>
-              </div>
-              <div className="flex items-center space-x-2">
                 <Select value={statusFilter} onValueChange={setStatusFilter} disabled={!!searchTerm.trim()}>
-                  <SelectTrigger className={`w-[180px] ${searchTerm.trim() ? 'opacity-50' : ''}`}>
+                  <SelectTrigger className={`w-[140px] ${searchTerm.trim() ? 'opacity-50' : ''}`}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">Active Cases</SelectItem>
-                    <SelectItem value="closed">Closed Cases</SelectItem>
-                    <SelectItem value="all">All Cases</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="closed">Closed</SelectItem>
+                    <SelectItem value="all">All</SelectItem>
                   </SelectContent>
                 </Select>
-                {searchTerm.trim() && (
-                  <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                    Searching all cases
-                  </span>
-                )}
               </div>
+              
+              {/* Stage Filter */}
+              <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700">Stage:</label>
+                <Select value={stageFilter} onValueChange={setStageFilter} disabled={!!searchTerm.trim()}>
+                  <SelectTrigger className={`w-[160px] ${searchTerm.trim() ? 'opacity-50' : ''}`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Stages</SelectItem>
+                    <SelectItem value="pre-legal">Pre-Legal</SelectItem>
+                    <SelectItem value="claim">Claim</SelectItem>
+                    <SelectItem value="judgment">Judgment</SelectItem>
+                    <SelectItem value="enforcement">Enforcement</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {searchTerm.trim() && (
+                <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                  Searching all cases
+                </span>
+              )}
             </div>
           </div>
         </CardContent>
@@ -344,22 +366,25 @@ export default function Cases() {
               <p className="text-gray-500">
                 {searchTerm.trim() 
                   ? `No cases found matching "${searchTerm}" (searched across all cases)`
-                  : statusFilter !== "all" 
-                    ? `No ${statusFilter} cases found`
-                    : "No cases found"
+                  : stageFilter !== "all"
+                    ? `No ${statusFilter !== "all" ? statusFilter + " " : ""}cases found in ${stageFilter} stage`
+                    : statusFilter !== "all" 
+                      ? `No ${statusFilter} cases found`
+                      : "No cases found"
                 }
               </p>
-              {(searchTerm.trim() || statusFilter !== "active") && (
+              {(searchTerm.trim() || statusFilter !== "active" || stageFilter !== "all") && (
                 <Button
                   variant="outline"
                   className="mt-4"
                   onClick={() => {
                     setSearchTerm("");
                     setStatusFilter("active");
+                    setStageFilter("all");
                     resetPagination();
                   }}
                 >
-                  {searchTerm.trim() ? "Clear Search" : "Reset to Active Cases"}
+                  {searchTerm.trim() ? "Clear Search" : "Reset Filters"}
                 </Button>
               )}
             </div>
