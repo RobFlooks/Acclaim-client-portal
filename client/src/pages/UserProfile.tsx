@@ -493,6 +493,34 @@ export default function UserProfile() {
     },
   });
 
+  // Query for auto-mute new cases preference
+  const { data: autoMutePreference } = useQuery<{ autoMuteNewCases: boolean }>({
+    queryKey: ["/api/user/auto-mute-preference"],
+  });
+
+  // Mutation for toggling auto-mute new cases preference
+  const autoMuteMutation = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      return await apiRequest("POST", "/api/user/auto-mute-preference", { enabled });
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: data.autoMuteNewCases ? "Auto-Mute Enabled" : "Auto-Mute Disabled",
+        description: data.autoMuteNewCases 
+          ? "New cases will be automatically muted when added to the portal."
+          : "New cases will no longer be automatically muted.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/auto-mute-preference"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update auto-mute preference.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Fetch document audit logs (admin only)
   const { data: documentAuditLogs, isLoading: auditLoading } = useQuery<any[]>({
     queryKey: ["/api/admin/audit/item/document", auditDocumentId],
@@ -1352,6 +1380,30 @@ export default function UserProfile() {
                         ({mutedCasesData.mutedCaseIds.length} muted)
                       </span>
                     )}
+                  </div>
+                  
+                  {/* Auto-Mute New Cases Toggle */}
+                  <div className="flex items-center justify-between py-3 px-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <BellOff className="h-4 w-4 text-orange-500" />
+                        <span className="font-medium text-sm">Auto-Mute New Cases</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        When enabled, any new cases added to the portal will be automatically muted. You won't receive email notifications for these cases unless you manually unmute them.
+                      </p>
+                    </div>
+                    <div className="ml-4">
+                      <Button
+                        variant={autoMutePreference?.autoMuteNewCases ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => autoMuteMutation.mutate(!autoMutePreference?.autoMuteNewCases)}
+                        disabled={autoMuteMutation.isPending}
+                        className={autoMutePreference?.autoMuteNewCases ? "bg-orange-500 hover:bg-orange-600" : ""}
+                      >
+                        {autoMuteMutation.isPending ? "..." : autoMutePreference?.autoMuteNewCases ? "On" : "Off"}
+                      </Button>
+                    </div>
                   </div>
                   
                   {/* Search and Filter Controls */}

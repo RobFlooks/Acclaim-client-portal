@@ -37,6 +37,7 @@ import { fileURLToPath } from "url";
 import officegen from "officegen";
 import bcrypt from "bcrypt";
 import { emailService } from "./email-service";
+import { getAutoMuteNewCases, setAutoMuteNewCases } from "./user-preferences";
 import { sendGridEmailService } from "./email-service-sendgrid";
 import { setupAzureAuth } from "./azure-auth";
 import ExcelJS from "exceljs";
@@ -572,6 +573,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const newCase = await storage.createCase(caseData);
       
+      // Auto-mute the case if user has auto-mute preference enabled
+      if (getAutoMuteNewCases(userId)) {
+        await storage.muteCase(userId, newCase.id);
+      }
+      
       // Handle file uploads
       const uploadedFiles = req.files as Express.Multer.File[];
       
@@ -686,6 +692,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error unmuting all cases:", error);
       res.status(500).json({ message: "Failed to unmute all cases" });
+    }
+  });
+
+  // Get auto-mute new cases preference
+  app.get('/api/user/auto-mute-preference', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const autoMuteEnabled = getAutoMuteNewCases(userId);
+      res.json({ autoMuteNewCases: autoMuteEnabled });
+    } catch (error) {
+      console.error("Error getting auto-mute preference:", error);
+      res.status(500).json({ message: "Failed to get auto-mute preference" });
+    }
+  });
+
+  // Set auto-mute new cases preference
+  app.post('/api/user/auto-mute-preference', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { enabled } = req.body;
+      setAutoMuteNewCases(userId, enabled === true);
+      res.json({ success: true, autoMuteNewCases: enabled === true });
+    } catch (error) {
+      console.error("Error setting auto-mute preference:", error);
+      res.status(500).json({ message: "Failed to set auto-mute preference" });
     }
   });
 
@@ -5342,6 +5373,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Case activities are now only created via dedicated API endpoint
       // No automatic activity generation
       
+      // Auto-mute for users in this organisation who have auto-mute preference enabled
+      try {
+        const orgUsers = await storage.getUsersForOrganisation(organisation.id);
+        for (const user of orgUsers) {
+          if (getAutoMuteNewCases(user.id)) {
+            await storage.muteCase(user.id, newCase.id);
+          }
+        }
+      } catch (autoMuteError) {
+        console.error("Error applying auto-mute for new case:", autoMuteError);
+      }
+      
       return res.status(201).json({ 
         message: "Case created successfully", 
         case: newCase,
@@ -5956,8 +5999,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
               await storage.updateCase(existing.id, case_);
               results.cases.updated++;
             } else {
-              await storage.createCase(case_);
+              const newCase = await storage.createCase(case_);
               results.cases.created++;
+              
+              // Auto-mute for users in organisation who have auto-mute preference enabled
+              if (case_.organisationId) {
+                try {
+                  const orgUsers = await storage.getUsersForOrganisation(case_.organisationId);
+                  for (const user of orgUsers) {
+                    if (getAutoMuteNewCases(user.id)) {
+                      await storage.muteCase(user.id, newCase.id);
+                    }
+                  }
+                } catch (autoMuteError) {
+                  console.error("Error applying auto-mute for bulk case:", autoMuteError);
+                }
+              }
             }
           } catch (error) {
             results.cases.errors.push({ externalRef: case_.externalRef, error: error.message });
