@@ -5375,7 +5375,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Auto-mute for users in this organisation who have auto-mute preference enabled
       try {
-        const orgUsers = await storage.getUsersForOrganisation(organisation.id);
+        const orgUsers = await storage.getUsersInOrganisation(organisation.id);
         for (const user of orgUsers) {
           if (getAutoMuteNewCases(user.id)) {
             await storage.muteCase(user.id, newCase.id);
@@ -6005,7 +6005,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Auto-mute for users in organisation who have auto-mute preference enabled
               if (case_.organisationId) {
                 try {
-                  const orgUsers = await storage.getUsersForOrganisation(case_.organisationId);
+                  const orgUsers = await storage.getUsersInOrganisation(case_.organisationId);
                   for (const user of orgUsers) {
                     if (getAutoMuteNewCases(user.id)) {
                       await storage.muteCase(user.id, newCase.id);
