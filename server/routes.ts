@@ -477,11 +477,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.id;
       const user = await storage.getUser(userId);
-      const includeArchived = req.query.includeArchived === 'true';
-      
-      let cases = includeArchived 
-        ? await storage.getCasesForUserIncludingArchived(userId)
-        : await storage.getCasesForUser(userId);
+      let cases = await storage.getCasesForUser(userId);
       
       // Filter out cases the user is blocked from (unless admin)
       if (!user?.isAdmin) {

@@ -97,13 +97,10 @@ export default function Cases() {
     }
     
     // Apply status filter when no search term is present
-    // A case is considered "closed" if its stage is "closed" OR its status is "resolved"/"closed"
-    const isClosed = case_.stage?.toLowerCase() === "closed" || 
-                     case_.status === "resolved" || 
-                     case_.status?.toLowerCase() === "closed";
+    const isActive = case_.status !== "resolved" && case_.status?.toLowerCase() !== "closed";
     const matchesStatus = statusFilter === "all" || 
-                         (statusFilter === "active" && !isClosed) ||
-                         (statusFilter === "closed" && isClosed);
+                         (statusFilter === "active" && isActive) ||
+                         (statusFilter === "closed" && !isActive);
     
     // Apply stage filter
     const caseStage = case_.stage?.toLowerCase() || "";

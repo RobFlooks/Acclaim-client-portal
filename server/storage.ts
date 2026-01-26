@@ -88,9 +88,7 @@ export interface IStorage {
   
   // Case operations
   getCasesForOrganisation(organisationId: number): Promise<Case[]>;
-  getCasesForOrganisationIncludingArchived(organisationId: number): Promise<Case[]>;
   getCasesForUser(userId: string): Promise<Case[]>;
-  getCasesForUserIncludingArchived(userId: string): Promise<Case[]>;
   getUserOrganisations(userId: string): Promise<UserOrganisation[]>;
   getAllUserOrganisations(): Promise<UserOrganisation[]>;
   addUserToOrganisation(userId: string, organisationId: number, role?: string): Promise<UserOrganisation>;
@@ -749,95 +747,6 @@ export class DatabaseStorage implements IStorage {
     return casesWithCalculatedBalance.sort((a, b) => 
       new Date(b.lastActivityTime).getTime() - new Date(a.lastActivityTime).getTime()
     );
-  }
-
-  async getCasesForOrganisationIncludingArchived(organisationId: number): Promise<Case[]> {
-    // Get all cases for the organisation including archived ones
-    const allCases = await db
-      .select({
-        ...cases,
-        organisationName: organisations.name,
-      })
-      .from(cases)
-      .leftJoin(organisations, eq(cases.organisationId, organisations.id))
-      .where(eq(cases.organisationId, organisationId));
-
-    // For each case, get payments and last activity time
-    const casesWithCalculatedBalance = await Promise.all(
-      allCases.map(async (case_) => {
-        const casePayments = await db
-          .select()
-          .from(payments)
-          .where(eq(payments.caseId, case_.id));
-        
-        const totalPayments = casePayments.reduce((sum, payment) => 
-          sum + parseFloat(payment.amount), 0);
-        
-        const latestMessage = await db
-          .select()
-          .from(messages)
-          .where(eq(messages.caseId, case_.id))
-          .orderBy(desc(messages.createdAt))
-          .limit(1);
-        
-        const latestActivity = await db
-          .select()
-          .from(caseActivities)
-          .where(eq(caseActivities.caseId, case_.id))
-          .orderBy(desc(caseActivities.createdAt))
-          .limit(1);
-        
-        const caseUpdateTime = case_.updatedAt ? new Date(case_.updatedAt).getTime() : 0;
-        const messageUpdateTime = latestMessage.length > 0 ? new Date(latestMessage[0].createdAt).getTime() : 0;
-        const activityUpdateTime = latestActivity.length > 0 ? new Date(latestActivity[0].createdAt).getTime() : 0;
-        
-        const lastActivityTime = Math.max(caseUpdateTime, messageUpdateTime, activityUpdateTime);
-        
-        return {
-          ...case_,
-          outstandingAmount: case_.outstandingAmount,
-          totalPayments: totalPayments.toFixed(2),
-          lastActivityTime: new Date(lastActivityTime).toISOString(),
-          payments: casePayments
-        };
-      })
-    );
-
-    return casesWithCalculatedBalance.sort((a, b) => 
-      new Date(b.lastActivityTime).getTime() - new Date(a.lastActivityTime).getTime()
-    );
-  }
-
-  async getCasesForUserIncludingArchived(userId: string): Promise<Case[]> {
-    const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-    if (user.length === 0) {
-      return [];
-    }
-
-    const userRecord = user[0];
-
-    if (userRecord.isAdmin) {
-      return await this.getAllCasesIncludingArchived();
-    }
-
-    const userOrgs = await this.getUserOrganisations(userId);
-    if (userOrgs.length === 0 && !userRecord.organisationId) {
-      return [];
-    }
-
-    const orgIds = new Set<number>();
-    if (userRecord.organisationId) {
-      orgIds.add(userRecord.organisationId);
-    }
-    userOrgs.forEach(uo => orgIds.add(uo.organisationId));
-
-    const allCases: Case[] = [];
-    for (const orgId of orgIds) {
-      const orgCases = await this.getCasesForOrganisationIncludingArchived(orgId);
-      allCases.push(...orgCases);
-    }
-
-    return allCases;
   }
 
   async getAllCases(): Promise<Case[]> {
