@@ -422,10 +422,17 @@ export default function UserProfile() {
   });
 
   // Fetch muted cases
-  const { data: mutedCasesData } = useQuery<{ mutedCaseIds: number[] }>({
+  const { data: mutedCasesData, refetch: refetchMutedCases } = useQuery<{ mutedCaseIds: number[] }>({
     queryKey: ["/api/user/muted-cases"],
     retry: false,
   });
+
+  // Refetch muted cases when the cases list changes (e.g., new cases added from SOS)
+  useEffect(() => {
+    if (casesData) {
+      refetchMutedCases();
+    }
+  }, [casesData?.length, refetchMutedCases]);
 
   // Mutation for toggling case mute
   const toggleCaseMuteMutation = useMutation({
