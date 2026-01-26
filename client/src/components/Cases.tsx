@@ -24,17 +24,8 @@ export default function Cases() {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Include archived cases when filtering for closed or all cases
-  const includeArchived = statusFilter === "closed" || statusFilter === "all";
-  
   const { data: cases, isLoading, isFetching, dataUpdatedAt } = useQuery({
-    queryKey: ["/api/cases", { includeArchived }],
-    queryFn: async () => {
-      const url = includeArchived ? "/api/cases?includeArchived=true" : "/api/cases";
-      const response = await fetch(url, { credentials: "include" });
-      if (!response.ok) throw new Error("Failed to fetch cases");
-      return response.json();
-    },
+    queryKey: ["/api/cases"],
     refetchInterval: 10000, // Refresh every 10 seconds for cases
     staleTime: 0, // Always consider cases data stale to ensure fresh data
     onError: (error) => {
@@ -106,10 +97,13 @@ export default function Cases() {
     }
     
     // Apply status filter when no search term is present
-    const isActive = case_.status !== "resolved" && case_.status?.toLowerCase() !== "closed";
+    // A case is considered "closed" if its stage is "closed" OR its status is "resolved"/"closed"
+    const isClosed = case_.stage?.toLowerCase() === "closed" || 
+                     case_.status === "resolved" || 
+                     case_.status?.toLowerCase() === "closed";
     const matchesStatus = statusFilter === "all" || 
-                         (statusFilter === "active" && isActive) ||
-                         (statusFilter === "closed" && !isActive);
+                         (statusFilter === "active" && !isClosed) ||
+                         (statusFilter === "closed" && isClosed);
     
     // Apply stage filter
     const caseStage = case_.stage?.toLowerCase() || "";
