@@ -19,6 +19,7 @@ interface EmailNotificationData {
     outstandingAmount: string;
     status: string;
     stage: string;
+    caseHandler?: string;
   };
   attachment?: {
     fileName: string;
@@ -44,6 +45,7 @@ interface AdminToUserNotificationData {
     outstandingAmount: string;
     status: string;
     stage: string;
+    caseHandler?: string;
   };
   attachment?: {
     fileName: string;
@@ -80,6 +82,7 @@ interface ExternalMessageNotificationData {
     outstandingAmount: string;
     status: string;
     stage: string;
+    caseHandler?: string;
   };
 }
 
@@ -248,6 +251,12 @@ class EmailService {
                   <td style="padding: 4px 0; font-weight: bold; color: #475569;">Current Stage:</td>
                   <td style="padding: 4px 0; color: #1e293b;">${data.caseDetails.stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</td>
                 </tr>
+                ${data.caseDetails.caseHandler ? `
+                <tr>
+                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Case Handler:</td>
+                  <td style="padding: 4px 0; color: #1e293b;">${data.caseDetails.caseHandler}</td>
+                </tr>
+                ` : ''}
                 ` : ''}
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; color: #475569;">Subject:</td>
@@ -298,7 +307,8 @@ CASE DETAILS:
 - Original Amount: £${data.caseDetails.originalAmount}
 - Outstanding Amount: £${data.caseDetails.outstandingAmount}
 - Status: ${data.caseDetails.status.toUpperCase()}
-- Current Stage: ${data.caseDetails.stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+- Current Stage: ${data.caseDetails.stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}${data.caseDetails.caseHandler ? `
+- Case Handler: ${data.caseDetails.caseHandler}` : ''}
 ` : ''}
 Subject: ${data.messageSubject || 'New Message'}
 
@@ -607,6 +617,12 @@ To manage your notification preferences, visit your Profile settings in the port
                   <td style="padding: 4px 0; font-weight: bold; color: #475569;">Current Stage:</td>
                   <td style="padding: 4px 0; color: #1e293b;">${data.caseDetails.stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</td>
                 </tr>
+                ${data.caseDetails.caseHandler ? `
+                <tr>
+                  <td style="padding: 4px 0; font-weight: bold; color: #475569;">Case Handler:</td>
+                  <td style="padding: 4px 0; color: #1e293b;">${data.caseDetails.caseHandler}</td>
+                </tr>
+                ` : ''}
                 ` : ''}
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; color: #475569;">Update Type:</td>
@@ -659,7 +675,8 @@ CASE DETAILS:
 - Original Amount: £${data.caseDetails.originalAmount}
 - Outstanding Amount: £${data.caseDetails.outstandingAmount}
 - Status: ${data.caseDetails.status.toUpperCase()}
-- Current Stage: ${data.caseDetails.stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+- Current Stage: ${data.caseDetails.stage.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}${data.caseDetails.caseHandler ? `
+- Case Handler: ${data.caseDetails.caseHandler}` : ''}
 ` : ''}
 Update Type: ${data.messageType.toUpperCase()}
 Subject: ${data.messageSubject}

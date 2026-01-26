@@ -1379,7 +1379,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 outstandingAmount: messageCase.outstandingAmount.toString(),
                 status: messageCase.status,
                 stage: messageCase.stage,
-                assignedTo: messageCase.assignedTo,
+                caseHandler: messageCase.assignedTo || undefined,
               };
             }
           }
@@ -1447,7 +1447,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     outstandingAmount: messageCase.outstandingAmount,
                     status: messageCase.status,
                     stage: messageCase.stage,
-                    assignedTo: messageCase.assignedTo,
+                    caseHandler: messageCase.assignedTo || undefined,
                   };
                 }
               }
@@ -1508,7 +1508,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     outstandingAmount: messageCase.outstandingAmount,
                     status: messageCase.status,
                     stage: messageCase.stage,
-                    assignedTo: messageCase.assignedTo,
+                    caseHandler: messageCase.assignedTo || undefined,
                   };
                 }
               }
