@@ -2960,17 +2960,33 @@ export class DatabaseStorage implements IStorage {
     return results.map(r => r.caseId);
   }
 
-  // Case access restriction operations - now uses muted_cases table for simplicity
-  // When admin restricts a user, it mutes and hides the case
-  // When admin removes restriction, it unmutes the case
+  // Case access restriction operations - admin/owner blocks user from seeing a case
+  // This is separate from muting - restrictions hide the case AND block notifications
   async addCaseAccessRestriction(caseId: number, blockedUserId: string, createdBy: string): Promise<void> {
-    // Use muted_cases table - mute the case for the user
-    await this.muteCase(blockedUserId, caseId);
+    // Check if restriction already exists
+    const existing = await db.select()
+      .from(caseAccessRestrictions)
+      .where(and(
+        eq(caseAccessRestrictions.caseId, caseId),
+        eq(caseAccessRestrictions.blockedUserId, blockedUserId)
+      ))
+      .limit(1);
+    
+    if (existing.length === 0) {
+      await db.insert(caseAccessRestrictions).values({
+        caseId,
+        blockedUserId,
+        createdBy,
+      });
+    }
   }
 
   async removeCaseAccessRestriction(caseId: number, blockedUserId: string): Promise<void> {
-    // Use muted_cases table - unmute the case for the user
-    await this.unmuteCase(blockedUserId, caseId);
+    await db.delete(caseAccessRestrictions)
+      .where(and(
+        eq(caseAccessRestrictions.caseId, caseId),
+        eq(caseAccessRestrictions.blockedUserId, blockedUserId)
+      ));
   }
 
   async getCaseAccessRestrictions(caseId: number): Promise<string[]> {
