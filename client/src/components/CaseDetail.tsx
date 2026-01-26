@@ -644,23 +644,29 @@ export default function CaseDetail({ case: caseData }: CaseDetailProps) {
       if (activities && Array.isArray(activities)) {
         activities.forEach((activity: any) => {
           if (activity && activity.createdAt) {
+            // Remove codes like "TL0016", "AC0123" etc. from the description
+            let cleanTitle = activity.description || 'Activity';
+            cleanTitle = cleanTitle.replace(/^[A-Z]{2}\d{4}\s*[-:]?\s*/g, '').trim();
+            cleanTitle = cleanTitle.replace(/\s*\([A-Z]{2}\d{4}\)\s*/g, '').trim();
+            cleanTitle = cleanTitle.replace(/\s*-\s*[A-Z]{2}\d{4}\s*/g, '').trim();
+            
             timelineEvents.push({
               id: `activity_${activity.id}`,
               date: activity.createdAt,
               type: 'activity',
-              title: activity.description || 'Activity',
+              title: cleanTitle || 'Activity',
               description: activity.activityType || ''
             });
           }
         });
       }
       
-      // Sort events chronologically (only if we have valid events)
+      // Sort events reverse chronologically (newest first)
       if (timelineEvents.length > 0) {
         timelineEvents.sort((a, b) => {
           const dateA = new Date(a.date);
           const dateB = new Date(b.date);
-          return dateA.getTime() - dateB.getTime();
+          return dateB.getTime() - dateA.getTime();
         });
       }
       
