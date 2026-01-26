@@ -309,7 +309,7 @@ Please log in to the Acclaim Portal to respond to this message.
       `;
 
       const info = await this.transporter.sendMail({
-        from: '"Acclaim Credit Management & Recovery" <noreply@acclaim-portal.com>',
+        from: '"Acclaim Credit Management & Recovery" <email@acclaim.law>',
         to: adminEmail,
         subject: subject,
         text: textContent,
@@ -487,7 +487,7 @@ To manage your notification preferences, visit your Profile settings in the port
       `;
 
       const info = await this.transporter.sendMail({
-        from: '"Acclaim Credit Management & Recovery" <noreply@acclaim-portal.com>',
+        from: '"Acclaim Credit Management & Recovery" <email@acclaim.law>',
         to: data.userEmail,
         subject: subject,
         text: textContent,
@@ -674,7 +674,7 @@ To manage your notification preferences, visit your Profile settings in the port
       `;
 
       const info = await this.transporter.sendMail({
-        from: '"Acclaim Credit Management & Recovery" <noreply@acclaim-portal.com>',
+        from: '"Acclaim Credit Management & Recovery" <email@acclaim.law>',
         to: data.userEmail,
         subject: subject,
         text: textContent,
@@ -803,7 +803,7 @@ If you have any questions, please contact our support team.
       `;
 
       const info = await this.transporter.sendMail({
-        from: '"Acclaim Credit Management & Recovery" <noreply@acclaim-portal.com>',
+        from: '"Acclaim Credit Management & Recovery" <email@acclaim.law>',
         to: data.userEmail,
         subject: subject,
         text: textContent,
