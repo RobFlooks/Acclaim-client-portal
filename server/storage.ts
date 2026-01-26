@@ -2974,21 +2974,34 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCaseAccessRestrictions(caseId: number): Promise<string[]> {
-    // Get all users who have this case muted (which now means restricted)
-    const results = await db.select({ userId: mutedCases.userId })
-      .from(mutedCases)
-      .where(eq(mutedCases.caseId, caseId));
-    return results.map(r => r.userId);
+    // Get users who are blocked from this case by admin (NOT muted cases)
+    // Muted cases only affect email notifications, not case visibility
+    const results = await db.select({ blockedUserId: caseAccessRestrictions.blockedUserId })
+      .from(caseAccessRestrictions)
+      .where(eq(caseAccessRestrictions.caseId, caseId));
+    return results.map(r => r.blockedUserId);
   }
 
   async isUserBlockedFromCase(userId: string, caseId: number): Promise<boolean> {
-    // Use muted_cases table - if case is muted, user is blocked
-    return this.isCaseMuted(userId, caseId);
+    // Check admin-set case access restrictions (NOT muted cases)
+    // Muted cases only affect email notifications, not case visibility
+    const result = await db.select()
+      .from(caseAccessRestrictions)
+      .where(and(
+        eq(caseAccessRestrictions.blockedUserId, userId),
+        eq(caseAccessRestrictions.caseId, caseId)
+      ))
+      .limit(1);
+    return result.length > 0;
   }
 
   async getBlockedCasesForUser(userId: string): Promise<number[]> {
-    // Use muted_cases table - muted cases are now also blocked
-    return this.getMutedCasesForUser(userId);
+    // Only return admin-set case access restrictions (NOT muted cases)
+    // Muted cases only affect email notifications, not case visibility
+    const results = await db.select({ caseId: caseAccessRestrictions.caseId })
+      .from(caseAccessRestrictions)
+      .where(eq(caseAccessRestrictions.blockedUserId, userId));
+    return results.map(r => r.caseId);
   }
 
   async getAdminRestrictedCasesForUser(userId: string): Promise<number[]> {
