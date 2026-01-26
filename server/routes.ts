@@ -652,15 +652,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/user/mute-all-cases', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const userOrgs = await storage.getUserOrganisations(userId);
-      const orgIds = userOrgs.map((o: any) => o.id);
-      
-      if (orgIds.length === 0) {
-        return res.json({ success: true, mutedCount: 0 });
-      }
       
       // Get all cases for user's organisations
-      const allCases = await storage.getCasesForOrganisations(orgIds);
+      const allCases = await storage.getCasesForUser(userId);
       let mutedCount = 0;
       
       for (const caseItem of allCases) {
