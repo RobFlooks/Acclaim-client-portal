@@ -13,7 +13,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 import { useQueryClient } from "@tanstack/react-query";
-import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft, Bell, Building2, FileText, Download, Trash2, Upload, Search, Sun, Moon, HelpCircle, Briefcase, MessageSquare, BarChart3, Crown, ShieldCheck, ShieldOff, Loader2, Users, ChevronDown, ChevronUp, UserPlus, UserMinus, Send, Eye } from "lucide-react";
+import { User, Settings, Key, Phone, Mail, Calendar, Shield, ArrowLeft, Bell, BellOff, Building2, FileText, Download, Trash2, Upload, Search, Sun, Moon, HelpCircle, Briefcase, MessageSquare, BarChart3, Crown, ShieldCheck, ShieldOff, Loader2, Users, ChevronDown, ChevronUp, UserPlus, UserMinus, Send, Eye } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -446,6 +446,48 @@ export default function UserProfile() {
       toast({
         title: "Error",
         description: "Failed to update case notification setting.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation for muting all cases
+  const muteAllCasesMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", "/api/user/mute-all-cases");
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "All Cases Muted",
+        description: `${data.mutedCount} case(s) have been muted. You will not receive email notifications for any cases.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/muted-cases"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to mute all cases.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation for unmuting all cases
+  const unmuteAllCasesMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("POST", "/api/user/unmute-all-cases");
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "All Cases Unmuted",
+        description: `${data.unmutedCount} case(s) have been unmuted. You will now receive email notifications for all cases.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/muted-cases"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to unmute all cases.",
         variant: "destructive",
       });
     },
@@ -1273,7 +1315,7 @@ export default function UserProfile() {
                 <span>Case Notifications</span>
               </CardTitle>
               <CardDescription>
-                Control notifications for individual cases. Muted cases won't send you email notifications.
+                Control email notifications for individual cases. When a case is muted, you will <strong>not</strong> receive any email alerts about new messages or document uploads for that case.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -1283,6 +1325,35 @@ export default function UserProfile() {
                 <p className="text-sm text-gray-500">No cases found.</p>
               ) : (
                 <div className="space-y-3">
+                  {/* Quick Actions */}
+                  <div className="flex flex-wrap gap-2 pb-2 border-b border-gray-200 dark:border-gray-700">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => muteAllCasesMutation.mutate()}
+                      disabled={muteAllCasesMutation.isPending || unmuteAllCasesMutation.isPending}
+                      className="text-xs"
+                    >
+                      <BellOff className="h-3 w-3 mr-1" />
+                      {muteAllCasesMutation.isPending ? "Muting..." : "Mute All Cases"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => unmuteAllCasesMutation.mutate()}
+                      disabled={muteAllCasesMutation.isPending || unmuteAllCasesMutation.isPending}
+                      className="text-xs"
+                    >
+                      <Bell className="h-3 w-3 mr-1" />
+                      {unmuteAllCasesMutation.isPending ? "Unmuting..." : "Unmute All Cases"}
+                    </Button>
+                    {mutedCasesData?.mutedCaseIds && mutedCasesData.mutedCaseIds.length > 0 && (
+                      <span className="text-xs text-muted-foreground flex items-center">
+                        ({mutedCasesData.mutedCaseIds.length} muted)
+                      </span>
+                    )}
+                  </div>
+                  
                   {/* Search and Filter Controls */}
                   <div className="flex flex-col sm:flex-row gap-2">
                     <div className="relative flex-1">

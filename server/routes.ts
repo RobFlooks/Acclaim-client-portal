@@ -648,6 +648,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bulk mute all cases for user
+  app.post('/api/user/mute-all-cases', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const userOrgs = await storage.getUserOrganisations(userId);
+      const orgIds = userOrgs.map((o: any) => o.id);
+      
+      if (orgIds.length === 0) {
+        return res.json({ success: true, mutedCount: 0 });
+      }
+      
+      // Get all cases for user's organisations
+      const allCases = await storage.getCasesForOrganisations(orgIds);
+      let mutedCount = 0;
+      
+      for (const caseItem of allCases) {
+        const alreadyMuted = await storage.isCaseMuted(userId, caseItem.id);
+        if (!alreadyMuted) {
+          await storage.muteCase(userId, caseItem.id);
+          mutedCount++;
+        }
+      }
+      
+      res.json({ success: true, mutedCount });
+    } catch (error) {
+      console.error("Error muting all cases:", error);
+      res.status(500).json({ message: "Failed to mute all cases" });
+    }
+  });
+
+  // Bulk unmute all cases for user
+  app.post('/api/user/unmute-all-cases', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const mutedCaseIds = await storage.getMutedCasesForUser(userId);
+      
+      for (const caseId of mutedCaseIds) {
+        await storage.unmuteCase(userId, caseId);
+      }
+      
+      res.json({ success: true, unmutedCount: mutedCaseIds.length });
+    } catch (error) {
+      console.error("Error unmuting all cases:", error);
+      res.status(500).json({ message: "Failed to unmute all cases" });
+    }
+  });
+
   // Scheduled reports endpoints - read-only for users (admin configures reports)
   app.get('/api/user/scheduled-reports', isAuthenticated, async (req: any, res) => {
     try {
