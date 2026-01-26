@@ -7,7 +7,8 @@ import Reports from "@/components/Reports";
 import Documents from "@/components/Documents";
 import ChadwickLawrence from "@/components/ChadwickLawrence";
 
-import { Bell, Menu, X, ShieldCheck } from "lucide-react";
+import { Bell, Menu, X, ShieldCheck, BellOff } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
@@ -57,6 +58,11 @@ export default function Home() {
       setActiveSection(section);
     }
   }, [location]);
+
+  // Fetch auto-mute preference
+  const { data: autoMuteData } = useQuery<{ autoMuteNewCases: boolean }>({
+    queryKey: ["/api/user/auto-mute-preference"],
+  });
 
   // Handle notification bell click
   const handleNotificationClick = () => {
@@ -182,6 +188,19 @@ export default function Home() {
                     {(user as any).isSuperAdmin ? 'Admin+' : 'Admin'}
                   </span>
                 </div>
+              )}
+              {autoMuteData?.autoMuteNewCases && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1 px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-md text-xs cursor-help">
+                      <BellOff className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">Auto-mute on</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-xs">
+                    <p>New cases will be automatically muted. You won't receive email notifications for new cases unless you turn this off in your profile settings.</p>
+                  </TooltipContent>
+                </Tooltip>
               )}
               <Button variant="ghost" size="icon" className="relative" onClick={handleNotificationClick}>
                 <Bell className="h-5 w-5" />
