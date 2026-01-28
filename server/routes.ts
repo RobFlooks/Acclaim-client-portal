@@ -5084,6 +5084,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const organisation = await storage.getOrganisation(case_.organisationId);
           
           for (const user of organisationUsers) {
+            // Check if this case is muted by the user or if user is blocked from the case
+            const isCaseMuted = await storage.isCaseMuted(user.id, case_.id);
+            const isBlockedFromCase = await storage.isUserBlockedFromCase(user.id, case_.id);
+            
+            if (isCaseMuted) {
+              console.log(`[External API] Skipping notification for user ${user.id} - case ${case_.id} is muted`);
+              continue;
+            }
+            if (isBlockedFromCase) {
+              console.log(`[External API] Skipping notification for user ${user.id} - user is blocked from case ${case_.id}`);
+              continue;
+            }
+            
             // Check user's email notification preferences and that they have logged in at least once
             if (user.emailNotifications && user.email && !user.mustChangePassword) {
               try {
