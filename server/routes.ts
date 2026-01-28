@@ -2527,6 +2527,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.params;
       const userData = updateUserSchema.parse(req.body);
+      
+      // Check if target user is an admin
+      const targetUser = await storage.getUser(userId);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Only super admins can change admin users' first/last names
+      if (targetUser.isAdmin && !req.user.isSuperAdmin) {
+        // Non-super admin trying to edit an admin user's name - strip firstName and lastName
+        delete userData.firstName;
+        delete userData.lastName;
+      }
 
       const user = await storage.updateUser(userId, userData);
       if (!user) {
@@ -4117,8 +4130,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const userData = updateUserSchema.parse(req.body);
 
-      // Admins cannot change their first or last name
-      if (req.user.isAdmin) {
+      // Admins cannot change their first or last name (unless they are super admins)
+      if (req.user.isAdmin && !req.user.isSuperAdmin) {
         delete userData.firstName;
         delete userData.lastName;
       }

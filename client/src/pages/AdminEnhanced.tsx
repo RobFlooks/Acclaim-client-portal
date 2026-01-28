@@ -2714,6 +2714,41 @@ export default function AdminEnhanced() {
     },
   });
 
+  // Update user name mutation (super admins only for admin users)
+  const updateUserNameMutation = useMutation({
+    mutationFn: async ({ userId, firstName, lastName }: { userId: string; firstName: string; lastName: string }) => {
+      const response = await apiRequest("PUT", `/api/admin/users/${userId}`, { firstName, lastName });
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "User name updated successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users-with-orgs"] });
+      setShowEditUser(false);
+      setEditingUser(null);
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update user name",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Toggle super admin status mutation (super admins only)
   const toggleSuperAdminMutation = useMutation({
     mutationFn: async ({ userId, makeSuperAdmin }: { userId: string; makeSuperAdmin: boolean }) => {
@@ -3373,6 +3408,58 @@ export default function AdminEnhanced() {
                     </div>
                   </DialogContent>
                 </Dialog>
+
+                {/* Edit User Name Dialog (Super Admins only) */}
+                <Dialog open={showEditUser} onOpenChange={setShowEditUser}>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Edit User Name</DialogTitle>
+                      <DialogDescription>
+                        Update the first and last name for {editingUser?.email}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="editFirstName">First Name</Label>
+                        <Input
+                          id="editFirstName"
+                          value={editingUser?.firstName || ""}
+                          onChange={(e) => setEditingUser(prev => prev ? { ...prev, firstName: e.target.value } : null)}
+                          placeholder="First name"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="editLastName">Last Name</Label>
+                        <Input
+                          id="editLastName"
+                          value={editingUser?.lastName || ""}
+                          onChange={(e) => setEditingUser(prev => prev ? { ...prev, lastName: e.target.value } : null)}
+                          placeholder="Last name"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" onClick={() => setShowEditUser(false)}>
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          if (editingUser && editingUser.firstName && editingUser.lastName) {
+                            updateUserNameMutation.mutate({
+                              userId: editingUser.id,
+                              firstName: editingUser.firstName,
+                              lastName: editingUser.lastName
+                            });
+                          }
+                        }}
+                        disabled={updateUserNameMutation.isPending || !editingUser?.firstName?.trim() || !editingUser?.lastName?.trim()}
+                        className="bg-acclaim-teal hover:bg-acclaim-teal/90"
+                      >
+                        {updateUserNameMutation.isPending ? "Saving..." : "Save Changes"}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </CardHeader>
             <CardContent>
@@ -3650,6 +3737,20 @@ export default function AdminEnhanced() {
                         )}
                         Admin
                       </Button>
+                      {isSuperAdmin && user.isAdmin && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setEditingUser(user);
+                            setShowEditUser(true);
+                          }}
+                          title="Edit admin user's name"
+                        >
+                          <Pencil className="h-3 w-3 mr-1" />
+                          Name
+                        </Button>
+                      )}
                       {isSuperAdmin && user.isAdmin && user.email?.endsWith('@chadlaw.co.uk') && (
                         <Button
                           variant="outline"
@@ -3974,6 +4075,19 @@ export default function AdminEnhanced() {
                                 <Shield className="h-3 w-3" />
                               )}
                             </Button>
+                            {isSuperAdmin && user.isAdmin && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setEditingUser(user);
+                                  setShowEditUser(true);
+                                }}
+                                title="Edit admin user's name"
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                            )}
                             {isSuperAdmin && user.isAdmin && user.email?.endsWith('@chadlaw.co.uk') && (
                               <Button
                                 variant="outline"
