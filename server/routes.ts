@@ -1279,11 +1279,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Admin can access any case across all organisations
           case_ = await storage.getCaseById(caseId);
         } else {
-          // Regular users can only access cases from their organisation
-          if (!user.organisationId) {
+          // Regular users - check organisation access via junction table or direct field
+          const userOrgs = await storage.getUserOrganisations(userId);
+          const allUserOrgIds = new Set<number>();
+          
+          if (user.organisationId) {
+            allUserOrgIds.add(user.organisationId);
+          }
+          userOrgs.forEach(uo => allUserOrgIds.add(uo.organisationId));
+          
+          if (allUserOrgIds.size === 0) {
             return res.status(404).json({ message: "User organisation not found" });
           }
-          case_ = await storage.getCase(caseId, user.organisationId);
+          
+          // Check if user has access to the case via any of their organisations
+          const potentialCase = await storage.getCaseById(caseId);
+          if (potentialCase && allUserOrgIds.has(potentialCase.organisationId)) {
+            case_ = potentialCase;
+          }
         }
         
         if (!case_) {
