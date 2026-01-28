@@ -1420,24 +1420,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // User-to-admin notification - route to case handler's email if available
         // Do NOT notify other users associated with the case - only admin receives user messages
         try {
-          // Get organisation name
-          let organisationName = "Unknown Organisation";
-          if (user.organisationId) {
-            const organisation = await storage.getOrganisation(user.organisationId);
-            if (organisation) {
-              organisationName = organisation.name;
-            }
-          }
-
           // Get case reference and details if this is a case-specific message
           let caseReference = undefined;
           let caseDetails = undefined;
           let caseHandler: string | null = null;
+          let organisationName = "Unknown Organisation";
+          
           if (messageData.caseId) {
             const messageCase = await storage.getCaseById(messageData.caseId);
             if (messageCase) {
               caseReference = messageCase.accountNumber;
               caseHandler = messageCase.assignedTo;
+              
+              // Get organisation name from the case's organisation
+              const caseOrg = await storage.getOrganisation(messageCase.organisationId);
+              if (caseOrg) {
+                organisationName = caseOrg.name;
+              }
+              
               caseDetails = {
                 caseName: messageCase.caseName,
                 debtorType: messageCase.debtorType,
@@ -1445,8 +1445,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 outstandingAmount: messageCase.outstandingAmount.toString(),
                 status: messageCase.status,
                 stage: messageCase.stage,
-                caseHandler: messageCase.assignedTo || undefined,
+                assignedTo: messageCase.assignedTo || 'Not assigned',
               };
+            }
+          } else {
+            // Non-case message - try to get org from user
+            if (user.organisationId) {
+              const userOrg = await storage.getOrganisation(user.organisationId);
+              if (userOrg) {
+                organisationName = userOrg.name;
+              }
+            } else {
+              // Check junction table
+              const userOrgs = await storage.getUserOrganisations(userId);
+              if (userOrgs.length > 0) {
+                const firstOrg = await storage.getOrganisation(userOrgs[0].organisationId);
+                if (firstOrg) {
+                  organisationName = firstOrg.name;
+                }
+              }
             }
           }
           
