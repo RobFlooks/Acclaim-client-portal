@@ -786,7 +786,7 @@ Please log in to the Acclaim Portal to view and respond to this message.
                     <td style="background-color: #008b8b; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
                       <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
                       <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Message from Acclaim</h1>
-                      ${data.caseReference ? `<p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
+                      ${data.caseReference && data.caseDetails?.caseName ? `<p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">${data.caseDetails.caseName} (${data.caseReference})</p>` : data.caseReference ? `<p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
                     </td>
                   </tr>
                   
@@ -806,8 +806,8 @@ Please log in to the Acclaim Portal to view and respond to this message.
                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                           ${data.caseReference ? `
                           <tr>
-                            <td style="padding: 6px 0; color: #64748b; font-size: 13px; width: 120px;">Case Ref</td>
-                            <td style="padding: 6px 0; color: #1e293b; font-size: 14px; font-weight: 500;">${data.caseReference}</td>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px; width: 120px;">Case</td>
+                            <td style="padding: 6px 0; color: #1e293b; font-size: 14px; font-weight: 500;">${data.caseDetails?.caseName ? `${data.caseDetails.caseName} (${data.caseReference})` : data.caseReference}</td>
                           </tr>
                           ` : ''}
                           ${data.messageSubject ? `
@@ -880,7 +880,7 @@ Please log in to the Acclaim Portal to view and respond to this message.
 
       const textContent = `
 Message from Acclaim
-${data.caseReference ? `Case Reference: ${data.caseReference}` : ''}
+${data.caseReference ? `Case: ${data.caseDetails?.caseName ? `${data.caseDetails.caseName} (${data.caseReference})` : data.caseReference}` : ''}
 ${data.messageSubject ? `Subject: ${data.messageSubject}` : ''}
 
 Message:
@@ -2151,7 +2151,7 @@ Please log in to the Acclaim Portal to view this document.
                     <td style="background-color: #008b8b; background: linear-gradient(135deg, #008b8b 0%, #006666 100%); padding: 40px 40px 30px 40px; text-align: center;">
                       <img src="cid:logo" alt="Acclaim" style="height: 36px; width: auto; margin-bottom: 16px;" />
                       <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">New Document Available</h1>
-                      ${data.caseReference ? `<p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
+                      ${data.caseReference && data.caseName ? `<p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">${data.caseName} (${data.caseReference})</p>` : data.caseReference ? `<p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Case: ${data.caseReference}</p>` : ''}
                     </td>
                   </tr>
                   
@@ -2226,8 +2226,7 @@ New Document Available
 
 A new document has been uploaded to your portal.
 
-${data.caseReference ? `Case Reference: ${data.caseReference}` : ''}
-${data.caseName ? `Case Name: ${data.caseName}` : ''}
+${data.caseReference ? `Case: ${data.caseName ? `${data.caseName} (${data.caseReference})` : data.caseReference}` : ''}
 File Name: ${data.fileName}
 File Size: ${formatFileSize(data.fileSize)}
 Uploaded: ${data.uploadedAt.toLocaleString('en-GB')}
