@@ -47,6 +47,27 @@ import { loginRateLimiter } from "./rate-limiter";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const DEFAULT_ADMIN_EMAIL = "email@acclaim.law";
+
+async function getAdminEmailForCase(caseAssignedTo: string | null | undefined): Promise<string> {
+  if (!caseAssignedTo) {
+    return DEFAULT_ADMIN_EMAIL;
+  }
+  
+  try {
+    const admin = await storage.getAdminByName(caseAssignedTo);
+    if (admin && admin.email) {
+      console.log(`[Email Routing] Found admin "${admin.firstName} ${admin.lastName}" (${admin.email}) for case handler "${caseAssignedTo}"`);
+      return admin.email;
+    }
+    console.log(`[Email Routing] No admin found matching case handler "${caseAssignedTo}", using default email`);
+  } catch (error) {
+    console.error(`[Email Routing] Error finding admin for case handler "${caseAssignedTo}":`, error);
+  }
+  
+  return DEFAULT_ADMIN_EMAIL;
+}
+
 const upload = multer({
   dest: "uploads/",
   limits: { fileSize: 25 * 1024 * 1024 }, // 25MB limit
@@ -1383,11 +1404,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Send email notifications
       if (!user.isAdmin) {
-        // User-to-admin notification - only send to email@acclaim.law
+        // User-to-admin notification - route to case handler's email if available
         // Do NOT notify other users associated with the case - only admin receives user messages
         try {
-          const adminEmail = "email@acclaim.law";
-          
           // Get organisation name
           let organisationName = "Unknown Organisation";
           if (user.organisationId) {
@@ -1400,10 +1419,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Get case reference and details if this is a case-specific message
           let caseReference = undefined;
           let caseDetails = undefined;
+          let caseHandler: string | null = null;
           if (messageData.caseId) {
             const messageCase = await storage.getCaseById(messageData.caseId);
             if (messageCase) {
               caseReference = messageCase.accountNumber;
+              caseHandler = messageCase.assignedTo;
               caseDetails = {
                 caseName: messageCase.caseName,
                 debtorType: messageCase.debtorType,
@@ -1415,6 +1436,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               };
             }
           }
+          
+          // Route to case handler's email if available, otherwise default
+          const adminEmail = await getAdminEmailForCase(caseHandler);
 
           // Prepare attachment data if present
           let attachmentData = undefined;
@@ -1757,8 +1781,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const organisationName = org?.name || 'Unknown Organisation';
       
       if (!user.isAdmin && notifyAdmin) {
-        // User uploaded - notify admins
+        // User uploaded - notify case handler or default admin
         try {
+          const adminEmail = await getAdminEmailForCase(case_.assignedTo);
           await sendGridEmailService.sendDocumentUploadNotificationToAdmin({
             uploaderName: `${user.firstName} ${user.lastName}`,
             uploaderEmail: user.email,
@@ -1770,8 +1795,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             caseReference: case_.accountNumber,
             caseName: case_.caseName,
             uploadedAt: new Date(),
-          }, 'email@acclaim.law');
-          console.log('[Documents] Sent document upload notification to admin');
+          }, adminEmail);
+          console.log(`[Documents] Sent document upload notification to ${adminEmail}`);
         } catch (emailError) {
           console.error('[Documents] Failed to send admin notification:', emailError);
         }
@@ -2188,8 +2213,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const organisationName = org?.name || 'Unknown Organisation';
       
       if (!user.isAdmin && notifyAdmin) {
-        // User uploaded - notify admins
+        // User uploaded - notify case handler or default admin
         try {
+          const adminEmail = await getAdminEmailForCase(case_.assignedTo);
           await sendGridEmailService.sendDocumentUploadNotificationToAdmin({
             uploaderName: `${user.firstName} ${user.lastName}`,
             uploaderEmail: user.email,
@@ -2201,8 +2227,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             caseReference: case_.accountNumber,
             caseName: case_.caseName,
             uploadedAt: new Date(),
-          }, 'email@acclaim.law');
-          console.log('[Case Documents] Sent document upload notification to admin');
+          }, adminEmail);
+          console.log(`[Case Documents] Sent document upload notification to ${adminEmail}`);
         } catch (emailError) {
           console.error('[Case Documents] Failed to send admin notification:', emailError);
         }
