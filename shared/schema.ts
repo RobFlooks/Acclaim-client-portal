@@ -548,6 +548,13 @@ export const updateUserSchema = z.object({
   phone: z.string().optional(),
 });
 
+export const adminUpdateUserSchema = z.object({
+  firstName: z.string().min(1, "First name is required").optional(),
+  lastName: z.string().min(1, "Last name is required").optional(),
+  phone: z.string().optional(),
+  email: z.string().email("Valid email is required").optional(),
+});
+
 export const updateNotificationPreferencesSchema = z.object({
   emailNotifications: z.boolean(),
   documentNotifications: z.boolean().optional(),

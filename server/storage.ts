@@ -1812,18 +1812,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUser(userId: string, userData: {
-    firstName: string;
-    lastName: string;
+    firstName?: string;
+    lastName?: string;
     phone?: string;
+    email?: string;
   }): Promise<User | null> {
+    const updateData: any = { updatedAt: new Date() };
+    if (userData.firstName !== undefined) updateData.firstName = userData.firstName;
+    if (userData.lastName !== undefined) updateData.lastName = userData.lastName;
+    if (userData.phone !== undefined) updateData.phone = userData.phone;
+    if (userData.email !== undefined) updateData.email = userData.email;
+    
     const [user] = await db
       .update(users)
-      .set({
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        phone: userData.phone,
-        updatedAt: new Date(),
-      })
+      .set(updateData)
       .where(eq(users.id, userId))
       .returning();
 

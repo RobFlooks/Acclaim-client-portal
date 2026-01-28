@@ -2714,10 +2714,12 @@ export default function AdminEnhanced() {
     },
   });
 
-  // Update user name mutation (super admins only for admin users)
+  // Update user details mutation (super admins only for admin users, email changes require super admin)
   const updateUserNameMutation = useMutation({
-    mutationFn: async ({ userId, firstName, lastName }: { userId: string; firstName: string; lastName: string }) => {
-      const response = await apiRequest("PUT", `/api/admin/users/${userId}`, { firstName, lastName });
+    mutationFn: async ({ userId, firstName, lastName, email }: { userId: string; firstName: string; lastName: string; email?: string }) => {
+      const payload: any = { firstName, lastName };
+      if (email) payload.email = email;
+      const response = await apiRequest("PUT", `/api/admin/users/${userId}`, payload);
       return await response.json();
     },
     onSuccess: () => {
@@ -3409,13 +3411,13 @@ export default function AdminEnhanced() {
                   </DialogContent>
                 </Dialog>
 
-                {/* Edit User Name Dialog (Super Admins only) */}
+                {/* Edit User Details Dialog (Super Admins only) */}
                 <Dialog open={showEditUser} onOpenChange={setShowEditUser}>
                   <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                      <DialogTitle>Edit User Name</DialogTitle>
+                      <DialogTitle>Edit User Details</DialogTitle>
                       <DialogDescription>
-                        Update the first and last name for {editingUser?.email}
+                        Update details for {editingUser?.email}
                       </DialogDescription>
                     </DialogHeader>
                     <div className="py-4 space-y-4">
@@ -3437,6 +3439,17 @@ export default function AdminEnhanced() {
                           placeholder="Last name"
                         />
                       </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="editEmail">Email Address</Label>
+                        <Input
+                          id="editEmail"
+                          type="email"
+                          value={editingUser?.email || ""}
+                          onChange={(e) => setEditingUser(prev => prev ? { ...prev, email: e.target.value } : null)}
+                          placeholder="Email address"
+                        />
+                        <p className="text-xs text-amber-600">Warning: Changing email will affect the user's login credentials.</p>
+                      </div>
                     </div>
                     <div className="flex justify-end gap-2">
                       <Button variant="outline" onClick={() => setShowEditUser(false)}>
@@ -3444,15 +3457,16 @@ export default function AdminEnhanced() {
                       </Button>
                       <Button
                         onClick={() => {
-                          if (editingUser && editingUser.firstName && editingUser.lastName) {
+                          if (editingUser && editingUser.firstName && editingUser.lastName && editingUser.email) {
                             updateUserNameMutation.mutate({
                               userId: editingUser.id,
                               firstName: editingUser.firstName,
-                              lastName: editingUser.lastName
+                              lastName: editingUser.lastName,
+                              email: editingUser.email
                             });
                           }
                         }}
-                        disabled={updateUserNameMutation.isPending || !editingUser?.firstName?.trim() || !editingUser?.lastName?.trim()}
+                        disabled={updateUserNameMutation.isPending || !editingUser?.firstName?.trim() || !editingUser?.lastName?.trim() || !editingUser?.email?.trim()}
                         className="bg-acclaim-teal hover:bg-acclaim-teal/90"
                       >
                         {updateUserNameMutation.isPending ? "Saving..." : "Save Changes"}
@@ -3737,7 +3751,7 @@ export default function AdminEnhanced() {
                         )}
                         Admin
                       </Button>
-                      {isSuperAdmin && user.isAdmin && (
+                      {isSuperAdmin && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -3745,10 +3759,10 @@ export default function AdminEnhanced() {
                             setEditingUser(user);
                             setShowEditUser(true);
                           }}
-                          title="Edit admin user's name"
+                          title="Edit user details"
                         >
                           <Pencil className="h-3 w-3 mr-1" />
-                          Name
+                          Edit
                         </Button>
                       )}
                       {isSuperAdmin && user.isAdmin && user.email?.endsWith('@chadlaw.co.uk') && (
@@ -4075,7 +4089,7 @@ export default function AdminEnhanced() {
                                 <Shield className="h-3 w-3" />
                               )}
                             </Button>
-                            {isSuperAdmin && user.isAdmin && (
+                            {isSuperAdmin && (
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -4083,7 +4097,7 @@ export default function AdminEnhanced() {
                                   setEditingUser(user);
                                   setShowEditUser(true);
                                 }}
-                                title="Edit admin user's name"
+                                title="Edit user details"
                               >
                                 <Pencil className="h-3 w-3" />
                               </Button>

@@ -9,6 +9,7 @@ import {
   insertDocumentSchema,
   createUserSchema,
   updateUserSchema,
+  adminUpdateUserSchema,
   updateNotificationPreferencesSchema,
   changePasswordSchema,
   resetPasswordSchema,
@@ -2526,7 +2527,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/admin/users/:userId', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const { userId } = req.params;
-      const userData = updateUserSchema.parse(req.body);
+      const userData = adminUpdateUserSchema.parse(req.body);
       
       // Check if target user is an admin
       const targetUser = await storage.getUser(userId);
@@ -2539,6 +2540,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Non-super admin trying to edit an admin user's name - strip firstName and lastName
         delete userData.firstName;
         delete userData.lastName;
+      }
+      
+      // Only super admins can change email addresses (for any user)
+      if (userData.email && !req.user.isSuperAdmin) {
+        return res.status(403).json({ message: "Only super admins can change email addresses" });
+      }
+      
+      // Check email uniqueness if email is being changed
+      if (userData.email && userData.email !== targetUser.email) {
+        const existingUser = await storage.getUserByEmail(userData.email);
+        if (existingUser && existingUser.id !== userId) {
+          return res.status(400).json({ message: "Email address is already in use by another user" });
+        }
       }
 
       const user = await storage.updateUser(userId, userData);
