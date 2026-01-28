@@ -4117,6 +4117,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const userData = updateUserSchema.parse(req.body);
 
+      // Admins cannot change their first or last name
+      if (req.user.isAdmin) {
+        delete userData.firstName;
+        delete userData.lastName;
+      }
+
       const user = await storage.updateUser(userId, userData);
       if (!user) {
         return res.status(404).json({ message: "User not found" });

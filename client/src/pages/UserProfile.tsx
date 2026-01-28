@@ -1112,6 +1112,8 @@ export default function UserProfile() {
                       onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
                       placeholder="Enter your first name"
                       required
+                      disabled={userProfile?.isAdmin}
+                      className={userProfile?.isAdmin ? "bg-gray-50" : ""}
                     />
                   </div>
                   <div className="space-y-2">
@@ -1122,9 +1124,14 @@ export default function UserProfile() {
                       onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
                       placeholder="Enter your last name"
                       required
+                      disabled={userProfile?.isAdmin}
+                      className={userProfile?.isAdmin ? "bg-gray-50" : ""}
                     />
                   </div>
                 </div>
+                {userProfile?.isAdmin && (
+                  <p className="text-sm text-gray-500">Admin names cannot be changed here. Please contact system support if you need to update your name.</p>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone Number</Label>
                   <Input
